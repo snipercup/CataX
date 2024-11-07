@@ -43,14 +43,15 @@ func Physics_Update(_delta: float):
 		handle_mob_movement()
 
 func handle_mob_movement():
-	var chunk_position = mob.get_chunk_from_position(target_location)
-	
-	# Check if the target location has a navigation map
-	if Helper.chunk_navigation_maps.has(chunk_position):
-		move_mob_to_target() # Continue moving
-	else:
-		# If there's no navigation map for the target location, stop moving
-		is_looking_to_move = false
+	move_mob_to_target() # Continue moving
+	#var chunk_position = mob.get_chunk_from_position(target_location)
+	#
+	## Check if the target location has a navigation map
+	#if Helper.chunk_navigation_maps.has(chunk_position):
+		#move_mob_to_target() # Continue moving
+	#else:
+		## If there's no navigation map for the target location, stop moving
+		#is_looking_to_move = false
 
 func move_mob_to_target():
 	var dir = mob.to_local(nav_agent.get_next_path_position()).normalized()

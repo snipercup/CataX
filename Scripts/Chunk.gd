@@ -424,24 +424,41 @@ func save_chunk():
 func add_mesh_to_navigation_data(blockposition: Vector3, blockrotation: int, blockshape: String):
 	var block_global_position: Vector3 = blockposition# + mypos
 	var blockrange: float = 0.5
+	var extend: float = 1.0 # Amount to extend for edge blocks
 	
 	# Check if there's a block directly above the current block
 	var above_key = str(blockposition.x) + "," + str(block_global_position.y + 1) + "," + str(blockposition.z)
 	if block_positions.has(above_key):
 		# There's a block directly above, so we don't add a face for the current block's top
 		return
+	
+	# Determine if the block is at the edge of the chunk
+	var is_edge_x = blockposition.x == 0 || blockposition.x == LEVEL_WIDTH - 1
+	var is_edge_z = blockposition.z == 0 || blockposition.z == LEVEL_HEIGHT - 1
+
+	# Adjust vertices for edge blocks
+	var adjustment_x
+	var adjustment_z
+	if is_edge_x:
+		adjustment_x = extend
+	else:
+		adjustment_x = 0
+	if is_edge_z:
+		adjustment_z = extend
+	else:
+		adjustment_z = 0
 
 	if blockshape == "cube":
 		# Top face of a block, the block size is 1x1x1 for simplicity.
 		var top_face_vertices = PackedVector3Array([
 			# First triangle
-			Vector3(-blockrange, 0.5, -blockrange), # Top-left
-			Vector3(blockrange, 0.5, -blockrange),  # Top-right
-			Vector3(blockrange, 0.5, blockrange),   # Bottom-right
+			Vector3(-blockrange - adjustment_x, 0.5, -blockrange - adjustment_z), # Top-left
+			Vector3(blockrange + adjustment_x, 0.5, -blockrange - adjustment_z), # Top-right
+			Vector3(blockrange + adjustment_x, 0.5, blockrange + adjustment_z), # Bottom-right
 			# Second triangle
-			Vector3(-blockrange, 0.5, -blockrange), # Top-left (repeated for the second triangle)
-			Vector3(blockrange, 0.5, blockrange),   # Bottom-right (repeated for the second triangle)
-			Vector3(-blockrange, 0.5, blockrange)   # Bottom-left
+			Vector3(-blockrange - adjustment_x, 0.5, -blockrange - adjustment_z), # Top-left (repeated for the second triangle)
+			Vector3(blockrange + adjustment_x, 0.5, blockrange + adjustment_z), # Bottom-right (repeated for the second triangle)
+			Vector3(-blockrange - adjustment_x, 0.5, blockrange + adjustment_z)  # Bottom-left
 		])
 		# Add the top face as two triangles.
 		mutex.lock()
@@ -519,13 +536,20 @@ func _on_finish_baking():
 # Setup the navigation for this chunk. It gets a new map and a new region
 # You can fiddle with the numbers to improve agent navigation
 func setup_navigation():
+	# Use the default navigation map instead of creating a new one
+	var navigation_map_id = get_world_3d().get_navigation_map()
+
+	# The navigation region of this chunk is associated with its own navigation map
+	# The cell size should be the same as the navigation_mesh.cell_size
+	NavigationServer3D.map_set_cell_size(navigation_map_id, 0.1)
+	
 	# Adjust the navigation mesh settings as before
 	navigation_mesh.cell_size = 0.1
 	navigation_mesh.agent_height = 0.5
 	# Changing the agent_radius will also make the navigation mesh grow or shrink.
 	navigation_mesh.agent_radius = 0.2
 	navigation_mesh.agent_max_slope = 46
-	navigation_mesh.border_size = 0.0
+	navigation_mesh.border_size = 1
 
 	var chunk_overlap: float = 2
 	# Define the AABB and offset
@@ -539,7 +563,7 @@ func setup_navigation():
 		0,
 		(chunk_overlap / 2) * -1
 	)
-	var aabbpos: Vector3 = mypos + Vector3(0,-12,0)
+	var aabbpos: Vector3 = Vector3(0,-12,0)
 
 	# Set the baking AABB using mypos as the position
 	navigation_mesh.set_filter_baking_aabb(AABB(aabbpos, aabb_size))
@@ -548,14 +572,6 @@ func setup_navigation():
 	# Create a new navigation region for this chunk
 	navigation_region = NavigationRegion3D.new()
 	add_child(navigation_region)
-
-	# Use the default navigation map instead of creating a new one
-	var navigation_map_id = get_world_3d().get_navigation_map()
-
-	# The navigation region of this chunk is associated with its own navigation map
-	# The cell size should be the same as the navigation_mesh.cell_size
-	NavigationServer3D.map_set_cell_size(navigation_map_id, 0.1)
-
 	# Set the default navigation map to the navigation region
 	navigation_region.set_navigation_map(navigation_map_id)
 
