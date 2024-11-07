@@ -147,14 +147,15 @@ func _physics_process(_delta):
 
 
 func update_navigation_agent_map(chunk_position: Vector2):
+	nav_agent.set_navigation_map(get_world_3d().get_navigation_map())
 	# Assume 'chunk_navigation_maps' is a global dictionary mapping chunk positions to navigation map IDs
-	var navigation_map_id = Helper.chunk_navigation_maps.get(chunk_position)
-	if navigation_map_id:
-		nav_agent.set_navigation_map(navigation_map_id)
-	else:
-		print_debug("Tried to set navigation_map_id at "+str(chunk_position)+", but it was null. last_position = " + str(last_position) + ", last_chunk = " + str(last_chunk))
-		# Set the last chunk to one that doesn't exist so it will try to get a new map
-		last_chunk = Vector2(0.1,0.1)
+	#var navigation_map_id = Helper.chunk_navigation_maps.get(chunk_position)
+	#if navigation_map_id:
+		#nav_agent.set_navigation_map(navigation_map_id)
+	#else:
+		#print_debug("Tried to set navigation_map_id at "+str(chunk_position)+", but it was null. last_position = " + str(last_position) + ", last_chunk = " + str(last_chunk))
+		## Set the last chunk to one that doesn't exist so it will try to get a new map
+		#last_chunk = Vector2(0.1,0.1)
 
 # When the mob gets hit by an attack
 # attack: a dictionary with the "damage" and "hit_chance" properties

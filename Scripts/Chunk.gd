@@ -26,9 +26,6 @@ const MAX_LEVELS = 21
 const LEVEL_WIDTH = 32
 const LEVEL_HEIGHT = 32
 var _mapleveldata: Array = [] # Holds the data for each level in this chunk
-# Each chunk has it's own navigationmap because merging many navigationregions inside one general map
-# will cause the game to stutter. The map for this chunk has one region and one navigationmesh
-var navigation_map_id: RID
 # This is a class variable to track block positions and data. It will contain:
 # The position represented by a Vector3 in local coordinates
 # The rotation represented by an int in degrees (0-360)
@@ -67,10 +64,6 @@ func _ready():
 	chunk_unloaded.connect(_finish_unload)
 	source_geometry_data = NavigationMeshSourceGeometryData3D.new()
 	setup_navigation()
-	# The Helper keeps track of which navigationmap belongs to which chunk. When a navigationagent
-	# crosses the chunk boundary, it will get the current chunk's navigationmap id to work with
-	chunk_ready.connect(Helper.on_chunk_loaded.bind({"mypos": mypos, "map": navigation_map_id}))
-	chunk_unloaded.connect(Helper.on_chunk_unloaded.bind({"mypos": mypos}))
 	transform.origin = Vector3(mypos)
 	add_to_group("chunks")
 	furniture_static_spawner = FurnitureStaticSpawner.new(self)
@@ -529,25 +522,43 @@ func setup_navigation():
 	# Adjust the navigation mesh settings as before
 	navigation_mesh.cell_size = 0.1
 	navigation_mesh.agent_height = 0.5
-	# Changint the agent_radius will also make the navigationmesh grow or shrink. This is because 
-	# there is a margin around the navigationmesh to prevent agents from colliding with the wall.
+	# Changing the agent_radius will also make the navigation mesh grow or shrink.
 	navigation_mesh.agent_radius = 0.2
 	navigation_mesh.agent_max_slope = 46
+	navigation_mesh.border_size = 0.0
+
+	var chunk_overlap: float = 2
+	# Define the AABB and offset
+	var aabb_size = Vector3(
+		LEVEL_WIDTH + chunk_overlap,
+		MAX_LEVELS * 2,
+		LEVEL_HEIGHT + chunk_overlap
+	)
+	var bounding_box_offset = Vector3(
+		(chunk_overlap / 2) * -1,
+		0,
+		(chunk_overlap / 2) * -1
+	)
+	var aabbpos: Vector3 = mypos + Vector3(0,-12,0)
+
+	# Set the baking AABB using mypos as the position
+	navigation_mesh.set_filter_baking_aabb(AABB(aabbpos, aabb_size))
+	navigation_mesh.set_filter_baking_aabb_offset(bounding_box_offset)
 
 	# Create a new navigation region for this chunk
 	navigation_region = NavigationRegion3D.new()
 	add_child(navigation_region)
 
-	# Create a new navigation map specifically for this chunk
-	navigation_map_id = NavigationServer3D.map_create()
-	NavigationServer3D.map_set_active(navigation_map_id, true)
+	# Use the default navigation map instead of creating a new one
+	var navigation_map_id = get_world_3d().get_navigation_map()
 
 	# The navigation region of this chunk is associated with its own navigation map
 	# The cell size should be the same as the navigation_mesh.cell_size
 	NavigationServer3D.map_set_cell_size(navigation_map_id, 0.1)
 
-	# Set the new navigation map to the navigation region
+	# Set the default navigation map to the navigation region
 	navigation_region.set_navigation_map(navigation_map_id)
+
 
 
 # This function creates a atlas texture which is a combination of the textures that we need

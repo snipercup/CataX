@@ -1,9 +1,5 @@
 extends Node3D
 
-# Contains the navigationmap for each chunk, used to give mobs the proper navigationmap
-# When crossing chunk boundary
-var chunk_navigation_maps: Dictionary = {}
-
 # Overmap data
 var position_coord: Vector2 = Vector2(0, 0)
 var mapseed: int # Is generated once per game. Defines the unique map!
@@ -58,7 +54,6 @@ func reset():
 	mapseed = 0
 	position_coord = Vector2(0, 0)
 	save_helper.current_save_folder = ""
-	chunk_navigation_maps.clear()
 	ItemManager.player_equipment.reset_to_default()
 
 
@@ -83,7 +78,6 @@ func save_and_exit_game():
 #global_pos is the absolute position on the overmap
 #see overmap.gd for how global_pos is used there
 func initiate_game() -> void:
-	chunk_navigation_maps.clear()
 	get_tree().change_scene_to_file.bind("res://level_generation.tscn").call_deferred()
 
 
@@ -126,24 +120,6 @@ func raycast(start_position: Vector3, end_position: Vector3, layer: int, object_
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(start_position, end_position, layer, object_to_ignore)
 	return space_state.intersect_ray(query)
-
-
-# Called when a chunk emits its loaded signal. We save the navigationmap RID to a dictionary
-# This can then be used by navigationagents that are present on the chunk
-func on_chunk_loaded(data: Dictionary):
-	# `mypos` is a Vector3, we only use the x and z since y is constant 0
-	var chunk_position = Vector2(data["mypos"].x, data["mypos"].z)
-	chunk_navigation_maps[chunk_position] = data["map"]
-
-
-# Called when a chunk emits its unloaded signal. We remove the chunk from the navigationmaps
-# Dictionary. The chunk is responsible for unloading the navigationmap itself
-func on_chunk_unloaded(data: Dictionary):
-	var chunk_position = Vector2(data["mypos"].x, data["mypos"].z)
-	if chunk_navigation_maps.has(chunk_position):
-		var navigation_map_id = chunk_navigation_maps[chunk_position]
-		NavigationServer3D.free_rid(navigation_map_id)
-		chunk_navigation_maps.erase(chunk_position)
 
 
 # When the user exits the game and returns to the main menu
