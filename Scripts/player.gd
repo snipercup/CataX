@@ -309,8 +309,8 @@ func _on_food_item_used(usedItem: InventoryItem) -> void:
 		was_used = true
 
 	if was_used:
-		var stack_size: int = InventoryStacked.get_item_stack_size(usedItem)
-		InventoryStacked.set_item_stack_size(usedItem,stack_size-1)
+		var stack_size: int = usedItem.get_stack_size()
+		usedItem.set_stack_size(stack_size-1)
 
 
 # The player has selected one or more items in the inventory and selected
@@ -329,8 +329,8 @@ func _on_medical_item_used(usedItem: InventoryItem) -> void:
 
 	# If any attribute was modified, reduce the item stack size by 1
 	if was_used:
-		var stack_size: int = InventoryStacked.get_item_stack_size(usedItem)
-		InventoryStacked.set_item_stack_size(usedItem, stack_size - 1)
+		var stack_size: int = usedItem.get_stack_size()
+		usedItem.set_stack_size(stack_size - 1)
 
 
 # Function to apply specific amounts to each attribute

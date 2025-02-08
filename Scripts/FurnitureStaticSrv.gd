@@ -122,7 +122,7 @@ class FurnitureTransform:
 
 # Inner Container Class
 class FurnitureContainer:
-	var inventory: InventoryStacked
+	var inventory: Inventory
 	var itemgroup: String # The ID of an itemgroup that it creates loot from
 	var sprite_mesh: PlaneMesh
 	var sprite_instance: RID # RID to the quadmesh that displays the containersprite
@@ -142,13 +142,11 @@ class FurnitureContainer:
 		_initialize_inventory()
 
 	func _initialize_inventory():
-		inventory = InventoryStacked.new()
-		inventory.capacity = 1000
-		inventory.item_protoset = ItemManager.item_protosets
+		inventory = ItemManager.initialize_inventory()
 		inventory.item_removed.connect(_on_item_removed)
 		inventory.item_added.connect(_on_item_added)
 	
-	func get_inventory() -> InventoryStacked:
+	func get_inventory() -> Inventory:
 		return inventory
 
 	# Function to create an additional sprite to represent the container
@@ -183,7 +181,7 @@ class FurnitureContainer:
 		
 		# Pick a random item from the inventory
 		var random_item: InventoryItem = items.pick_random()
-		var item_id = random_item.prototype_id
+		var item_id = random_item.get_prototype().get_id()
 		
 		# Get the ShaderMaterial for the item
 		material = Runtimedata.items.get_shader_material_by_id(item_id)
@@ -201,12 +199,12 @@ class FurnitureContainer:
 				# Create and add the item to the inventory
 				var item = inventory.create_and_add_item(item_id)
 				# Set the item stack size
-				InventoryStacked.set_item_stack_size(item, stack_size)
+				item.set_stack_size(stack_size)
 				# Decrease the remaining quantity
 				quantity -= stack_size
 
 	func insert_item(item: InventoryItem) -> bool:
-		var iteminv: InventoryStacked = item.get_inventory()
+		var iteminv: Inventory = item.get_inventory()
 		if iteminv == inventory:
 			return false # Can't insert into itself
 		if not iteminv.transfer_autosplitmerge(item, inventory):
@@ -412,7 +410,7 @@ class QueueItem:
 
 
 class CraftingContainer:
-	var inventory: InventoryStacked
+	var inventory: Inventory
 	var crafting_queue: Array[QueueItem] = []  # Queue of QueueItem instances
 	# Variables to manage crafting
 	var last_update_time: float = 0.0  # Last time the crafting queue was updated
@@ -429,12 +427,12 @@ class CraftingContainer:
 
 	# Initializes the inventory with default capacity and item prototypes
 	func _initialize_inventory():
-		inventory = InventoryStacked.new()
+		inventory = Inventory.new()
 		inventory.capacity = 500  # Adjust capacity as needed for crafting
 		inventory.item_protoset = ItemManager.item_protosets
 
 	# Retrieves the inventory instance
-	func get_inventory() -> InventoryStacked:
+	func get_inventory() -> Inventory:
 		return inventory
 
 	# Adds an item ID to the crafting queue
@@ -605,8 +603,8 @@ class CraftingContainer:
 		if inventory.has_item_by_id(ingredient_id):
 			var items: Array = inventory.get_items_by_id(ingredient_id)
 			
-			for item in items:
-				var stack_size = InventoryStacked.get_item_stack_size(item)
+			for item: InventoryItem in items:
+				var stack_size = item.get_stack_size()
 				available_amount += stack_size
 		return available_amount
 
@@ -692,7 +690,7 @@ class Consumption:
 			return
 		
 		# Get the container inventory
-		var container_inventory: InventoryStacked = parent_furniture.container.get_inventory()
+		var container_inventory: Inventory = parent_furniture.container.get_inventory()
 		
 		# Keep consuming items as long as there is room in the pool
 		while get_available_pool_capacity() > 0:
@@ -707,15 +705,15 @@ class Consumption:
 					continue
 				
 				# Check if the inventory contains an item with the prototype_id matching the item_id
-				if container_inventory.has_item_by_id(item_id):
+				if container_inventory.has_item_with_prototype_id(item_id):
 					# Get the first item matching the item_id
 					var items: Array[InventoryItem] = container_inventory.get_items_by_id(item_id)
 					if items.size() > 0:
 						var item_to_consume: InventoryItem = items[0]  # Get the first item
-						var current_stack_size: int = InventoryStacked.get_item_stack_size(item_to_consume)
+						var current_stack_size: int = item_to_consume.get_stack_size()
 						
 						# Attempt to subtract 1 from the current stack size
-						if InventoryStacked.set_item_stack_size(item_to_consume, current_stack_size - 1):
+						if item_to_consume.set_stack_size(current_stack_size - 1):
 							# If successful, add the item's value to the current_pool
 							set_current_pool(get_current_pool() + item_value)
 							
@@ -1159,12 +1157,12 @@ func can_be_disassembled() -> bool:
 
 
 # Returns the inventorystacked that this container holds
-func get_inventory() -> InventoryStacked:
+func get_inventory() -> Inventory:
 	return container.get_inventory()
 
 
 # Returns the inventorystacked that this crafting container holds
-func get_crafting_inventory() -> InventoryStacked:
+func get_crafting_inventory() -> Inventory:
 	return crafting_container.get_inventory()
 
 
@@ -1266,8 +1264,8 @@ func deserialize_crafting_container(data: Dictionary):
 # Function to transfer an item between containers dynamically
 func transfer_item_between_containers(source_container: Object, item_id: String, quantity: int) -> bool:
 	# Determine source and target inventories based on the source container type
-	var source_inventory: InventoryStacked
-	var target_inventory: InventoryStacked
+	var source_inventory: Inventory
+	var target_inventory: Inventory
 
 	if source_container is FurnitureContainer and crafting_container:
 		source_inventory = source_container.get_inventory()
@@ -1285,7 +1283,7 @@ func transfer_item_between_containers(source_container: Object, item_id: String,
 
 	# Transfer the items
 	for item in items:
-		var stack_size = InventoryStacked.get_item_stack_size(item)
+		var stack_size = item.get_stack_size()
 		if stack_size > quantity:
 			# Split the stack and transfer only the required quantity
 			var split_item = source_inventory.split(item, quantity)
@@ -1315,7 +1313,7 @@ func get_item_count_in_container(mycontainer: Object, item_id: String) -> int:
 			var items = target_inventory.get_items_by_id(item_id)
 			var total_count = 0
 			for item in items:
-				total_count += InventoryStacked.get_item_stack_size(item)
+				total_count += item.get_stack_size()
 			return total_count
 	return 0
 
@@ -1356,7 +1354,7 @@ func get_available_ingredient_amount(ingredient_id: String) -> int:
 	if inventory.has_item_by_id(ingredient_id):
 		var items: Array = inventory.get_items_by_id(ingredient_id)
 		for item in items:
-			available_amount += InventoryStacked.get_item_stack_size(item)
+			available_amount += item.get_stack_size()
 	return available_amount
 
 

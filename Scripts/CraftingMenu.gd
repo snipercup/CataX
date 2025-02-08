@@ -167,7 +167,7 @@ func update_item_button_color(item: RItem) -> void:
 # - We get the item references from the inventory item
 # - For each item reference, update the button that represents the item in the ui
 func _update_button_from_inventory_item(item: InventoryItem) -> void:
-	var ritem: RItem = Runtimedata.items.by_id(item.get("prototype_id"))
+	var ritem: RItem = Runtimedata.items.by_id(item.get_prototype().get_id())
 	var item_references = ritem.referenced_items
 	if item_references:
 		for item_reference: String in item_references:

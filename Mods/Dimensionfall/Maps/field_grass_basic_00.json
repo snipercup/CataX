@@ -6505,6 +6505,10 @@
 						"rotation": 0
 					}
 				],
+				"furniture": {
+					"id": "cabinet_wood_00",
+					"itemgroups": []
+				},
 				"id": "grass_plain_01",
 				"rotation": 90
 			},
@@ -7633,6 +7637,10 @@
 						"rotation": 0
 					}
 				],
+				"furniture": {
+					"id": "Tree_00",
+					"itemgroups": []
+				},
 				"id": "grass_plain_01",
 				"rotation": 180
 			},
@@ -8755,6 +8763,10 @@
 						"rotation": 0
 					}
 				],
+				"furniture": {
+					"id": "clothing_rack",
+					"itemgroups": []
+				},
 				"id": "grass_dirt_01",
 				"rotation": 180
 			},
@@ -9888,6 +9900,10 @@
 						"rotation": 0
 					}
 				],
+				"furniture": {
+					"id": "trash_bin",
+					"itemgroups": []
+				},
 				"id": "grass_plain_01"
 			},
 			{
@@ -11025,6 +11041,10 @@
 						"rotation": 0
 					}
 				],
+				"furniture": {
+					"id": "campfire_off",
+					"itemgroups": []
+				},
 				"id": "grass_dirt_00"
 			},
 			{
@@ -11553,6 +11573,9 @@
 					}
 				],
 				"id": "grass_plain_01",
+				"itemgroups": [
+					"test_items"
+				],
 				"rotation": 90
 			},
 			{
@@ -12155,6 +12178,10 @@
 						"rotation": 0
 					}
 				],
+				"furniture": {
+					"id": "campfire_on",
+					"itemgroups": []
+				},
 				"id": "grass_dirt_02"
 			},
 			{

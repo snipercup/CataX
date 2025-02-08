@@ -21,7 +21,7 @@ var is_animating_hit: bool = false
 var current_health: float = 10.0
 var original_material_color: Color = Color(1, 1, 1)  # Store the original material color
 # Variables to manage the container if this furniture is a container
-var inventory: InventoryStacked  # Holds the inventory for the container
+var inventory: Inventory  # Holds the inventory for the container
 var itemgroup: String  # The ID of an itemgroup that it creates loot from
 
 
@@ -399,9 +399,7 @@ func add_container() -> void:
 
 # Create and initialize the inventory
 func _create_inventory() -> void:
-	inventory = InventoryStacked.new()
-	inventory.capacity = 1000
-	inventory.item_protoset = ItemManager.item_protosets
+	inventory = ItemManager.initialize_inventory()
 	inventory.item_added.connect(_on_item_added)
 
 # Populate the container with items from an itemgroup
@@ -446,8 +444,8 @@ func _add_item_to_inventory(item_id: String, quantity: int) -> void:
 	if ritem and quantity > 0:
 		while quantity > 0:
 			var stack_size = min(quantity, ritem.max_stack_size)
-			var item = inventory.create_and_add_item(item_id)
-			InventoryStacked.set_item_stack_size(item, stack_size)
+			var item: InventoryItem = inventory.create_and_add_item(item_id)
+			item.set_stack_size(stack_size)
 			quantity -= stack_size
 
 # Deserialize and apply saved container data
@@ -487,7 +485,7 @@ func populate_container_from_itemgroup() -> String:
 
 
 # Returns the inventorystacked that this furniture holds
-func get_inventory() -> InventoryStacked:
+func get_inventory() -> Inventory:
 	return inventory
 
 

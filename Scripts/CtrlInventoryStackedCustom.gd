@@ -22,8 +22,8 @@ extends Control
 @export var WeightBar: ProgressBar
 # A visual element to show volume capacity
 @export var VolumeBar: ProgressBar
-# The currently attached InventoryStacked that holds the items
-@export var myInventory: InventoryStacked
+# The currently attached Inventory that holds the items
+@export var myInventory: Inventory
 @export var max_weight: int = 1000
 @export var max_volume: int = 1000
 @export var listItemContainer: PackedScene
@@ -105,18 +105,18 @@ func _disconnect_inventory_signals():
 		myInventory.item_added.disconnect(_on_inventory_item_added)
 	if myInventory.item_removed.is_connected(_on_inventory_item_removed):
 		myInventory.item_removed.disconnect(_on_inventory_item_removed)
-	if myInventory.item_modified.is_connected(_on_inventory_item_modified):
-		myInventory.item_modified.disconnect(_on_inventory_item_modified)
-	if myInventory.contents_changed.is_connected(_on_inventory_contents_changed):
-		myInventory.contents_changed.disconnect(_on_inventory_contents_changed)
+	if myInventory.item_property_changed.is_connected(_on_inventory_item_modified):
+		myInventory.item_property_changed.disconnect(_on_inventory_item_modified)
+	if myInventory.item_moved.is_connected(_on_inventory_contents_changed):
+		myInventory.item_moved.disconnect(_on_inventory_contents_changed)
 
 
 func _connect_inventory_signals():
-	# Connect signals from InventoryStacked to this control script
+	# Connect signals from Inventory to this control script
 	myInventory.item_added.connect(_on_inventory_item_added)
 	myInventory.item_removed.connect(_on_inventory_item_removed)
-	myInventory.item_modified.connect(_on_inventory_item_modified)
-	myInventory.contents_changed.connect(_on_inventory_contents_changed)
+	myInventory.item_property_changed.connect(_on_inventory_item_modified)
+	myInventory.item_moved.connect(_on_inventory_contents_changed)
 
 
 func _on_inventory_item_added(item: InventoryItem):
@@ -146,7 +146,7 @@ func update_inventory_list(changedItem: InventoryItem, action: String):
 	# Clear and repopulate the inventory list
 	_deselect_and_clear_current_inventory()
 	_add_header_row_to_grid()
-	for item in myInventory.get_children():
+	for item: InventoryItem in myInventory.get_items():
 		var add_item: bool = true
 		if item and item == changedItem:
 			match action:
@@ -159,7 +159,7 @@ func update_inventory_list(changedItem: InventoryItem, action: String):
 				_, "contentschanged":
 					add_item = true
 		if add_item:
-			var row_name = "item_row_" + str(item.get_name())
+			var row_name = "item_row_" + str(item.get_instance_id())
 			_add_item_to_grid(item, row_name)
 	_update_bars(changedItem, action)
 
@@ -302,7 +302,7 @@ func _create_ui_element(property: String, item: InventoryItem, row_name: String)
 			element.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		"stack_size":
 			# Assuming stack size is a property of the item
-			element.set_label_text(str(InventoryStacked.get_item_stack_size(item)))
+			element.set_label_text(str(item.get_stack_size()))
 		"weight", "volume":
 			element.set_label_text(str(item.get_property(property, 0)))
 		"favorite":
@@ -311,7 +311,7 @@ func _create_ui_element(property: String, item: InventoryItem, row_name: String)
 			element.set_label_text("*" if favorite else "")
 	# The name will be something like weight_Node_211748 or icon_Node_211748
 	# Now we can use the name to get information about the property
-	element.name = property + "_" + str(item.get_name())
+	element.name = property + "_" + str(item.get_instance_id())
 	# Connect the gui_input signal to the _on_grid_cell_gui_input function
 	element.gui_input.connect(_on_grid_cell_gui_input.bind(element))
 	
@@ -392,8 +392,8 @@ func _populate_inventory_list():
 	_deselect_and_clear_current_inventory()
 	_add_header_row_to_grid()
 	# Loop over inventory items and add them to the grid
-	for item in myInventory.get_children():
-		var row_name = "item_row_" + str(item.get_name())
+	for item: InventoryItem in myInventory.get_items():
+		var row_name = "item_row_" + str(item.get_instance_id())
 		_add_item_to_grid(item, row_name)
 
 
@@ -402,7 +402,7 @@ func _update_bars(changedItem: InventoryItem, action: String):
 		return
 	var total_weight = 0
 	var total_volume = 0
-	for item in myInventory.get_children():
+	for item: InventoryItem in myInventory.get_items():
 		if action == "removed":
 			# Something was removed. If it was the current item, do not count it
 			if changedItem != item:
@@ -555,7 +555,7 @@ func transfer(item: InventoryItem, destinationControl: Control) -> bool:
 
 # Helper function to get the inventory from a Control node
 # This assumes that the Control node has a property or a method to access its inventory
-func _get_inventory_from_control(control: Control) -> InventoryStacked:
+func _get_inventory_from_control(control: Control) -> Inventory:
 	if control.has_method("get_inventory"):
 		return control.get_inventory()
 	elif control.has("inventory"):
@@ -573,13 +573,13 @@ func get_selected_inventory_items() -> Array[InventoryItem]:
 
 
 # Function to get selected inventory items
-func get_inventory() -> InventoryStacked:
+func get_inventory() -> Inventory:
 	return myInventory
 
 
 # Called when this inventory list is connected to a new inventory
 # For example, when the user selects a container from a list in the UI
-func set_inventory(new_inventory: InventoryStacked):
+func set_inventory(new_inventory: Inventory):
 	# Step 1: Deselect and clear the current inventory display
 	_deselect_and_clear_current_inventory()
 	_disconnect_inventory_signals()
@@ -779,7 +779,7 @@ func get_items() -> Array:
 
 
 # Transfers an item from this inventory to the destination inventory
-func transfer_autosplitmerge(item: InventoryItem, destination: InventoryStacked) -> bool:
+func transfer_autosplitmerge(item: InventoryItem, destination: Inventory) -> bool:
 	return myInventory.transfer_autosplitmerge(item, destination)
 
 

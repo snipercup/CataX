@@ -6,7 +6,7 @@ extends Node3D
 # items from it when it's in proximity
 
 
-var inventory: InventoryStacked
+var inventory: Inventory
 var containerpos: Vector3
 var sprite_3d: Sprite3D
 var containertexture: Texture # The texture set for this container
@@ -137,7 +137,7 @@ func _add_item_to_inventory(item_id: String, quantity: int):
 			# Create and add the item to the inventory
 			var item = inventory.create_and_add_item(item_id)
 			# Set the item stack size
-			InventoryStacked.set_item_stack_size(item, stack_size)
+			item.set_stack_size(stack_size)
 			# Decrease the remaining quantity
 			quantity -= stack_size
 
@@ -157,11 +157,9 @@ func deserialize_and_apply_items(items_data: Dictionary):
 		_on_item_removed(null)
 
 
-# Creates a new InventoryStacked to hold items in it
+# Creates a new Inventory to hold items in it
 func _create_inventory():
-	inventory = InventoryStacked.new()
-	inventory.capacity = 1000
-	inventory.item_protoset = ItemManager.item_protosets
+	inventory = ItemManager.initialize_inventory()
 	add_child.call_deferred(inventory)
 	inventory.item_removed.connect(_on_item_removed)
 	inventory.item_added.connect(_on_item_added)
@@ -220,7 +218,7 @@ func _create_area3d():
 	area3d.add_child.call_deferred(collisionshape3d)
 
 
-# Returns an array of InventoryItems that are in the InventoryStacked
+# Returns an array of InventoryItems that are in the Inventory
 func get_items():
 	return inventory.get_children()
 
@@ -244,7 +242,7 @@ func get_sprite():
 
 
 # Returns the inventorystacked that this container holds
-func get_inventory() -> InventoryStacked:
+func get_inventory() -> Inventory:
 	return inventory
 
 
@@ -275,7 +273,7 @@ func add_item(item_id: String):
 
 
 func insert_item(item: InventoryItem) -> bool:
-	var iteminv: InventoryStacked = item.get_inventory()
+	var iteminv: Inventory = item.get_inventory()
 	if iteminv == inventory:
 		return false # Can't insert into itself
 	if not iteminv.transfer_autosplitmerge(item, inventory):
@@ -309,8 +307,8 @@ func set_random_inventory_item_texture():
 		return
 	
 	# Pick a random item from the inventory
-	var random_item = items.pick_random()
-	var item_id = random_item.prototype_id
+	var random_item: InventoryItem = items.pick_random()
+	var item_id = random_item.get_prototype().get_id()
 	
 	# Set the sprite_3d texture to the item's sprite
 	sprite_3d.texture = Runtimedata.items.sprite_by_id(item_id)

@@ -163,6 +163,11 @@
 			"store_groceries"
 		]
 	},
+	"test_items": {
+		"maps": [
+			"field_grass_basic_00"
+		]
+	},
 	"tree_destroyed": {
 		"furnitures": [
 			"campfire_off",

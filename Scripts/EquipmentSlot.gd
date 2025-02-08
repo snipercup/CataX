@@ -15,7 +15,7 @@ extends Control
 
 
 # The inventory to pull ammo from and to drop items into
-@export var myInventory: InventoryStacked
+@export var myInventory: Inventory
 @export var myInventoryCtrl: Control
 @export var backgroundColor: ColorRect
 @export var myIcon: TextureRect

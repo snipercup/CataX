@@ -210,15 +210,15 @@ func add_quest_step(quest: ScriptQuest, step: Dictionary) -> bool:
 
 
 # An item is added to the player inventory. Now we need to update the quests
-func _on_inventory_item_added(item: InventoryItem, _inventory: InventoryStacked):
+func _on_inventory_item_added(item: InventoryItem, _inventory: Inventory):
 	update_quest_by_inventory(item)
 
 # An item is removed to the player inventory. Now we need to update the quests
-func _on_inventory_item_removed(item: InventoryItem, _inventory: InventoryStacked):
+func _on_inventory_item_removed(item: InventoryItem, _inventory: Inventory):
 	update_quest_by_inventory(item)
 
 # An item is modified to the player inventory. Now we need to update the quests
-func _on_inventory_item_modified(item: InventoryItem, _inventory: InventoryStacked):
+func _on_inventory_item_modified(item: InventoryItem, _inventory: Inventory):
 	update_quest_by_inventory(item)
 
 
@@ -230,14 +230,15 @@ func update_quest_by_inventory(item: InventoryItem):
 
 	# Include counts for equipped items
 	for equipped_item in equipped_items:
-		if equipped_item.prototype_id in item_counts:
-			item_counts[equipped_item.prototype_id] += 1
+		var equipped_id: String = equipped_item.get_prototype().get_id()
+		if equipped_id in item_counts:
+			item_counts[equipped_id] += 1
 		else:
-			item_counts[equipped_item.prototype_id] = 1
+			item_counts[equipped_id] = 1
 
 	# Check if the player has the item; if not, set its count to 0
-	if item and not ItemManager.playerInventory.has_item_by_id(item.prototype_id) and item not in equipped_items:
-		item_counts[item.prototype_id] = 0
+	if item and not ItemManager.playerInventory.get_item_with_prototype_id(item.get_prototype().get_id()) and item not in equipped_items:
+		item_counts[item.get_prototype().get_id()] = 0
 
 	# Get the current quests in progress
 	var quests_in_progress = QuestManager.get_quests_in_progress()

@@ -110,7 +110,7 @@ class FurnitureTransform:
 
 # Inner Container Class
 class FurnitureContainer:
-	var inventory: InventoryStacked
+	var inventory: Inventory
 	var itemgroup: String # The ID of an itemgroup that it creates loot from
 	var sprite_mesh: PlaneMesh
 	var sprite_instance: RID # RID to the quadmesh that displays the containersprite
@@ -128,11 +128,11 @@ class FurnitureContainer:
 		_initialize_inventory()
 
 	func _initialize_inventory():
-		inventory = InventoryStacked.new()
+		inventory = Inventory.new()
 		inventory.capacity = 1000
 		inventory.item_protoset = ItemManager.item_protosets
 	
-	func get_inventory() -> InventoryStacked:
+	func get_inventory() -> Inventory:
 		return inventory
 
 	# Function to create an additional sprite to represent the container
@@ -475,7 +475,7 @@ func can_be_disassembled() -> bool:
 
 
 # Returns the inventorystacked that this container holds
-func get_inventory() -> InventoryStacked:
+func get_inventory() -> Inventory:
 	return container.get_inventory()
 
 
@@ -506,7 +506,7 @@ func get_item_count_in_container(mycontainer: Object, item_id: String) -> int:
 			var items = target_inventory.get_items_by_id(item_id)
 			var total_count = 0
 			for item in items:
-				total_count += InventoryStacked.get_item_stack_size(item)
+				total_count += item.get_stack_size()
 			return total_count
 	return 0
 
@@ -522,7 +522,7 @@ func get_available_ingredient_amount(ingredient_id: String) -> int:
 	if inventory.has_item_by_id(ingredient_id):
 		var items: Array = inventory.get_items_by_id(ingredient_id)
 		for item in items:
-			available_amount += InventoryStacked.get_item_stack_size(item)
+			available_amount += item.get_stack_size()
 	return available_amount
 
 

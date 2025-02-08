@@ -1,14 +1,14 @@
 extends Control
 
 # This node holds the data of the items in the container that is selected in the containerList
-@export var proximity_inventory: InventoryStacked
+@export var proximity_inventory: Inventory
 # This node visualizes the items in the container that is selected in the containerList
 @export var proximity_inventory_control: Control
 
 # The node that visualizes the player inventory
 @export var inventory_control : Control
 # The player inventory
-@export var inventory : InventoryStacked
+@export var inventory : Inventory
 # Holds a list of containers represented by their sprite
 @export var containerList : VBoxContainer
 @export var containerListItem : PackedScene
@@ -50,7 +50,7 @@ func setup_inventory_controls():
 	initialize_inventory_control(inventory_control, inventory)
 	initialize_inventory_control(proximity_inventory_control, proximity_inventory)
 
-func initialize_inventory_control(control: Control, inv: InventoryStacked):
+func initialize_inventory_control(control: Control, inv: Inventory):
 	control.myInventory = inv
 	control.initialize_list()
 	control.mouse_entered_item.connect(_on_inventory_item_mouse_entered)
@@ -220,7 +220,7 @@ func _on_inventory_grid_stacked_item_added(item):
 			original_parent.remove_item(original_item)  # Remove from original parent 
 
 
-func get_inventory() -> InventoryStacked:
+func get_inventory() -> Inventory:
 	return inventory
 
 
@@ -390,12 +390,12 @@ func transfer_autosplitmerge_list(items: Array, src: Control, dest: Control) -> 
 # Function to handle double-clicking a grid cell in the inventory grid
 func _on_grid_cell_double_clicked(item: InventoryItem):
 	var source_inventory = item.get_inventory()
-	var destination_inventory: InventoryStacked
+	var destination_inventory: Inventory
 
 	# Determine the destination inventory based on the source inventory
 	if source_inventory == inventory:
 		# Check if the current proximity inventory is the default set in the ItemManager
-		var proximityinventory: InventoryStacked = proximity_inventory_control.get_inventory()
+		var proximityinventory: Inventory = proximity_inventory_control.get_inventory()
 		if proximityinventory == ItemManager.proximityInventory:
 			print_debug("Attempt to transfer to default proximity inventory aborted.")
 			return  # Exit the function early if the condition is met
@@ -406,5 +406,5 @@ func _on_grid_cell_double_clicked(item: InventoryItem):
 		is_showing_tooltip = false
 
 	# Attempt to transfer the item
-	if not destination_inventory or not source_inventory.transfer_autosplitmerge(item, destination_inventory):
+	if not destination_inventory or not destination_inventory.add_item_autosplitmerge(item):
 		print("Failed to transfer item!")

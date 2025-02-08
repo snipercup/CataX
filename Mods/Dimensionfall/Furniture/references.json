@@ -197,18 +197,21 @@
 			"generichouse_t",
 			"industrial_control_center",
 			"warehouse_storage",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"field_grass_basic_00"
 		]
 	},
 	"campfire_off": {
 		"maps": [
 			"forest_camp_00",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"field_grass_basic_00"
 		]
 	},
 	"campfire_on": {
 		"maps": [
-			"forest_camp_00"
+			"forest_camp_00",
+			"field_grass_basic_00"
 		]
 	},
 	"car_00": {
@@ -291,7 +294,8 @@
 	},
 	"clothing_rack": {
 		"maps": [
-			"store_electronic_clothing"
+			"store_electronic_clothing",
+			"field_grass_basic_00"
 		]
 	},
 	"control_panel": {
@@ -734,7 +738,8 @@
 			"store_electronic_clothing",
 			"industrial_control_center",
 			"military_bunker",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"field_grass_basic_00"
 		]
 	},
 	"truck_wreck_01": {

@@ -6,17 +6,17 @@ extends Node
 
 
 # The inventory of the player
-var playerInventory: InventoryStacked = null
+var playerInventory: Inventory = null
 # This inventory will hold items that are close to the player
-var proximityInventory: InventoryStacked = null
+var proximityInventory: Inventory = null
 
 var proximityInventories = {}  # Dictionary to hold inventories and their items
 var allAccessibleItems: Array[InventoryItem] = []  # List to hold all accessible InventoryItems
 # The max volume that the inventory can hold. This is extra functionality on top of the "capacity"
-# property of the InventoryStacked. An item's "volume" property counts towards this max inventory
+# property of the Inventory. An item's "volume" property counts towards this max inventory
 # volume, while an item's "weight" property counts towards the inventory's "capacity" property
 var player_max_inventory_volume: int = 1000
-var item_protosets: Resource = preload("res://ItemProtosets.tres")
+var item_protosets: JSON
  # Keeps track of player equipment, used for saving
 var player_equipment: PlayerEquipment = null
 
@@ -100,6 +100,7 @@ class PlayerEquipment:
 
 
 func _ready():
+	item_protosets = JSON.new()
 	# Connect signals for game start, load, and end
 	Helper.signal_broker.game_started.connect(_on_game_started_loaded.bind(true))
 	Helper.signal_broker.game_loaded.connect(_on_game_started_loaded.bind(false))
@@ -124,14 +125,14 @@ func update_accessible_items_list() -> void:
 
 	# Determine what's been added
 	for item: InventoryItem in new_items:
-		var item_id = item.prototype_id  # uniquely identify items
+		var item_id = item.get_prototype().get_id()  # uniquely identify items
 		if old_count.get(item_id, 0) < new_count[item_id]:
 			items_added.append(item)
 			old_count[item_id] = old_count.get(item_id, 0) + 1
 
 	# Determine what's been removed
 	for item: InventoryItem in old_items:
-		var item_id = item.prototype_id  # uniquely identify items
+		var item_id = item.get_prototype().get_id()  # uniquely identify items
 		if new_count.get(item_id, 0) < old_count[item_id]:
 			items_removed.append(item)
 			new_count[item_id] = new_count.get(item_id, 0) + 1
@@ -147,15 +148,18 @@ func update_accessible_items_list() -> void:
 func count_items(items: Array) -> Dictionary:
 	var count = {}
 	for item in items:
-		var item_id = item.prototype_id  # uniquely identify items
+		var item_id = item.get_prototype().get_id()  # uniquely identify items
 		count[item_id] = count.get(item_id, 0) + 1
 	return count
 
 
-func initialize_inventory() -> InventoryStacked:
-	var newInventory = InventoryStacked.new()
-	newInventory.capacity = 1000
-	newInventory.item_protoset = item_protosets
+func initialize_inventory() -> Inventory:
+	var newInventory = Inventory.new()
+	var newweightconstraint: WeightConstraint = WeightConstraint.new()
+	newweightconstraint.inventory = newInventory
+	newweightconstraint.capacity = 1000
+	newInventory.add_child(newweightconstraint)
+	newInventory.protoset = item_protosets
 	return newInventory
 
 
@@ -169,7 +173,11 @@ func create_starting_items():
 	# Create starting equipment. The items are not added to the playerInventory, 
 	# only to the equipment slots.
 	for wearableslot: RWearableSlot in Runtimedata.wearableslots.get_all().values():
-		player_equipment.EquipmentItemList[wearableslot.id] = playerInventory.create_item(wearableslot.starting_item)
+		var starting_item_id: String = wearableslot.starting_item
+		#var new_item_data: JSON = JSON.new()
+		#new_item_data.set_data(ItemManager.item_protosets.data[starting_item_id])
+		var new_item: InventoryItem = InventoryItem.new(ItemManager.item_protosets,starting_item_id)
+		player_equipment.EquipmentItemList[wearableslot.id] = new_item
 
 
 # The actual reloading is executed on the item
@@ -250,7 +258,7 @@ func find_compatible_magazine(gun: InventoryItem) -> InventoryItem:
 
 	var inventoryItems: Array = playerInventory.get_items()  # Retrieve all items in the inventory
 	for item in inventoryItems:
-		if item.get_property("Magazine") and compatible_magazines.has(item.get("prototype_id")):
+		if item.get_property("Magazine") and compatible_magazines.has(item.get("get_prototype().get_id()")):
 			var magazine = item.get_property("Magazine")
 			if magazine and magazine.has("current_ammo"):
 				var currentAmmo: int = int(magazine["current_ammo"])
@@ -320,7 +328,7 @@ func reload_magazine(magazine: InventoryItem) -> void:
 				break  # No more ammo of the required type is available
 			
 			# Calculate how much ammo can be loaded from this stack
-			var stack_size: int = InventoryStacked.get_item_stack_size(ammo_item)
+			var stack_size: int = ammo_item.get_stack_size()
 			var ammo_to_load: int = min(needed_ammo, stack_size)
 			
 			# Update totals based on the ammo loaded
@@ -329,7 +337,7 @@ func reload_magazine(magazine: InventoryItem) -> void:
 			
 			# Decrease the stack size of the ammo item in the inventory
 			var new_stack_size: int = stack_size - ammo_to_load
-			InventoryStacked.set_item_stack_size(ammo_item, new_stack_size)
+			ammo_item.set_stack_size(new_stack_size)
 		
 		# Update the current_ammo property of the magazine
 		if total_ammo_loaded > 0:
@@ -339,7 +347,7 @@ func reload_magazine(magazine: InventoryItem) -> void:
 
 # Function to remove an item from the inventory
 func remove_inventory_item(item: InventoryItem) -> bool:
-	var iteminventory: InventoryStacked = item.get_inventory()
+	var iteminventory: Inventory = item.get_inventory()
 	if iteminventory.has_item(item):
 		if iteminventory.remove_item(item):
 			return true
@@ -379,7 +387,7 @@ func on_crafting_menu_start_craft(item: RItem, recipe: RItem.CraftRecipe):
 			craft_failed.emit(item, recipe, "Failed to remove resources!")
 			return
 		var newitem = playerInventory.create_and_add_item(item_id)
-		InventoryStacked.set_item_stack_size(newitem, recipe["craft_amount"])
+		newitem.set_stack_size(recipe["craft_amount"])
 		craft_successful.emit(item, recipe)
 
 
@@ -402,9 +410,9 @@ func has_sufficient_item_amount(item_id: String, required_amount: int) -> bool:
 	var total_amount = 0
 
 	# Loop through the allAccessibleItems list to count the occurrences of the specified item_id
-	for item in allAccessibleItems:
-		if item.prototype_id == item_id:
-			total_amount += InventoryStacked.get_item_stack_size(item)
+	for item: InventoryItem in allAccessibleItems:
+		if item.get_prototype().get_id() == item_id:
+			total_amount += item.get_stack_size()
 
 	# Check if the total amount meets or exceeds the required amount
 	return total_amount >= required_amount
@@ -430,7 +438,7 @@ func remove_required_resources_for_recipe(recipe: RItem.CraftRecipe, items_sourc
 # Helper function to remove a specific amount of a resource by ID.
 func remove_resource(item_id: String, amount: int, items_source: Array[InventoryItem]) -> bool:
 	# Use the filter method to get items matching the item_id
-	var items_to_modify = items_source.filter(func(item): return item.prototype_id == item_id)
+	var items_to_modify = items_source.filter(func(item): return item.get_prototype().get_id() == item_id)
 	var amount_to_remove = amount
 
 	# Try to remove the required amount from the collected items
@@ -438,7 +446,7 @@ func remove_resource(item_id: String, amount: int, items_source: Array[Inventory
 		if amount_to_remove <= 0:
 			break  # Stop if we have removed enough of the item.
 
-		var current_stack_size = InventoryStacked.get_item_stack_size(item)
+		var current_stack_size = item.get_stack_size()
 		if current_stack_size <= amount_to_remove:
 			# If the current item stack size is less than or equal to the amount we need to remove,
 			# remove this item completely.
@@ -450,7 +458,7 @@ func remove_resource(item_id: String, amount: int, items_source: Array[Inventory
 		else:
 			# If the current item stack has more than we need, reduce its stack size.
 			var new_stack_size = current_stack_size - amount_to_remove
-			if not InventoryStacked.set_item_stack_size(item, new_stack_size):
+			if not item.set_stack_size(new_stack_size):
 				return false  # Return false if we fail to set the new stack size.
 			amount_to_remove = 0  # Set to 0 as we have removed enough.
 
@@ -475,13 +483,13 @@ func _on_container_exited_proximity(container: Node3D):
 func connect_inventory_signals(inventory: Inventory):
 	inventory.item_added.connect(_on_inventory_item_added.bind(inventory))
 	inventory.item_removed.connect(_on_inventory_item_removed.bind(inventory))
-	inventory.item_modified.connect(_on_inventory_item_modified.bind(inventory))
+	inventory.item_property_changed.connect(_on_inventory_item_modified.bind(inventory))
 
 
 func disconnect_inventory_signals(inventory: Inventory):
 	inventory.item_added.disconnect(_on_inventory_item_added)
 	inventory.item_removed.disconnect(_on_inventory_item_removed)
-	inventory.item_modified.disconnect(_on_inventory_item_modified)
+	inventory.item_property_changed.disconnect(_on_inventory_item_modified)
 
 
 func _on_inventory_item_added(item, inventory):
@@ -500,8 +508,8 @@ func _on_inventory_item_modified(item, inventory):
 
 
 func add_item_by_id_and_amount(itemid: String, amount: int):
-	var newitem = playerInventory.create_and_add_item(itemid)
-	InventoryStacked.set_item_stack_size(newitem, amount)
+	var newitem: InventoryItem = playerInventory.create_and_add_item(itemid)
+	newitem.set_stack_size(amount)
 
 
 # When the player starts a new game or loads a saved game
@@ -554,8 +562,8 @@ func count_player_inventory_items_by_id() -> Dictionary:
 	var item_counts = {}
 
 	for inv_item: InventoryItem in playerInventory.get_items():
-		var item_id = inv_item.prototype_id
-		var stack_size = InventoryStacked.get_item_stack_size(inv_item)
+		var item_id = inv_item.get_prototype().get_id()
+		var stack_size = inv_item.get_stack_size()
 
 		item_counts[item_id] = item_counts.get(item_id, 0) + stack_size
 
@@ -566,8 +574,8 @@ func count_player_inventory_items_by_id() -> Dictionary:
 func get_item_amount(item_id: String) -> int:
 	var total_amount = 0
 	for inv_item: InventoryItem in playerInventory.get_items():
-		if inv_item.prototype_id == item_id:
-			var stack_size = InventoryStacked.get_item_stack_size(inv_item)
+		if inv_item.get_prototype().get_id() == item_id:
+			var stack_size = inv_item.get_stack_size()
 			total_amount += stack_size
 
 	return total_amount
@@ -576,8 +584,8 @@ func get_item_amount(item_id: String) -> int:
 func get_accessibleitem_amount(item_id: String) -> int:
 	var total_amount = 0
 	for inv_item: InventoryItem in allAccessibleItems:
-		if inv_item.prototype_id == item_id:
-			var stack_size = InventoryStacked.get_item_stack_size(inv_item)
+		if inv_item.get_prototype().get_id() == item_id:
+			var stack_size = inv_item.get_stack_size()
 			total_amount += stack_size
 
 	return total_amount
@@ -599,8 +607,8 @@ func set_max_inventory_volume(new_volume: int) -> void:
 	player_max_inventory_volume_changed.emit()
 
 
-# Function to get InventoryItems from allAccessibleItems that are not present in the provided InventoryStacked.
-func get_items_not_in_inventory(inventory: InventoryStacked) -> Array:
+# Function to get InventoryItems from allAccessibleItems that are not present in the provided Inventory.
+func get_items_not_in_inventory(inventory: Inventory) -> Array:
 	var inventory_items = inventory.get_items()
 	var inventory_item_set = {}
 
@@ -617,15 +625,15 @@ func get_items_not_in_inventory(inventory: InventoryStacked) -> Array:
 	return items_not_in_inventory
 
 # Function to check if the total stack size of a specific item ID in items not present in the provided inventory exceeds a given amount.
-func has_sufficient_amount_not_in_inventory(inventory: InventoryStacked, item_id: String, required_amount: int) -> bool:
+func has_sufficient_amount_not_in_inventory(inventory: Inventory, item_id: String, required_amount: int) -> bool:
 	# Get items not in the provided inventory
 	var items_not_in_inventory = get_items_not_in_inventory(inventory)
 
 	# Calculate the total stack size of the specified item ID
 	var total_amount = 0
-	for item in items_not_in_inventory:
-		if item.prototype_id == item_id:
-			total_amount += InventoryStacked.get_item_stack_size(item)
+	for item: InventoryItem in items_not_in_inventory:
+		if item.get_prototype().get_id() == item_id:
+			total_amount += item.get_stack_size()
 
 		# If the total amount already exceeds the required amount, return true
 		if total_amount >= required_amount:
@@ -638,16 +646,16 @@ func has_sufficient_amount_not_in_inventory(inventory: InventoryStacked, item_id
 func _gather_all_accessible_items() -> Array[InventoryItem]:
 	var items: Array[InventoryItem] = []
 	items += playerInventory.get_items()
-	for inventory: InventoryStacked in proximityInventories.values():
+	for inventory: Inventory in proximityInventories.values():
 		items += inventory.get_items()
 	return items
 
 
 # Function to transfer items from the list returned by get_items_not_in_inventory to a target inventory.
 # It will attempt to transfer as close as possible to the required amount.
-func transfer_items_to_inventory(target_inventory: InventoryStacked, item_id: String, required_amount: int) -> void:
+func transfer_items_to_inventory(target_inventory: Inventory, item_id: String, required_amount: int) -> void:
 	# Use the filter method to get items matching the item_id
-	var items_to_modify = get_items_not_in_inventory(target_inventory).filter(func(item): return item.prototype_id == item_id)
+	var items_to_modify = get_items_not_in_inventory(target_inventory).filter(func(item): return item.get_prototype().get_id() == item_id)
 	
 	var amount_to_transfer = required_amount
 
@@ -656,7 +664,7 @@ func transfer_items_to_inventory(target_inventory: InventoryStacked, item_id: St
 		if amount_to_transfer <= 0:
 			break  # Stop if we've transferred enough
 
-		var current_stack_size = InventoryStacked.get_item_stack_size(item)
+		var current_stack_size = item.get_stack_size()
 		if current_stack_size <= amount_to_transfer:
 			# If the current stack size is less than or equal to the amount we need to transfer,
 			# transfer this item completely.
@@ -678,3 +686,8 @@ func transfer_items_to_inventory(target_inventory: InventoryStacked, item_id: St
 
 	# Update the accessible items list after transfer
 	update_accessible_items_list()
+
+
+func update_protoset(data: Dictionary):
+	item_protosets.set_data(data)  # Save the dictionary
+	

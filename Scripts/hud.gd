@@ -28,8 +28,6 @@ var progress_bar_timer_max_time : float
 
 var is_progress_bar_well_progressing_i_guess = false
 
-
-@export var item_protoset : ItemProtoset
 	
 func _process(_delta):
 	if is_progress_bar_well_progressing_i_guess:
