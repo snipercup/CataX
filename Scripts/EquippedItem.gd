@@ -297,7 +297,7 @@ func can_weapon_reload() -> bool:
 	return false
 
 # When the properties of the held item change
-func _on_helditem_properties_changed():
+func _on_helditem_properties_changed(_property: String):
 	if heldItem and heldItem.get_property("Ranged"):
 		if heldItem.get_property("current_magazine") == null:
 			on_magazine_removed()
@@ -467,7 +467,7 @@ func setup_ranged_weapon_properties(equippedItem: InventoryItem):
 	reload_speed = float(ranged_properties.get("reload_speed", default_reload_speed))
 	visible = true
 	Helper.signal_broker.player_ammo_changed.emit(0, 0, slot_idx)  # Signal to update ammo display for ranged weapons
-	heldItem.properties_changed.connect(_on_helditem_properties_changed)
+	heldItem.property_changed.connect(_on_helditem_properties_changed)
 
 # Setup the properties for melee weapons
 func setup_melee_weapon_properties(equippedItem: InventoryItem):

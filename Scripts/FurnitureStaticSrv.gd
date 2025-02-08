@@ -207,7 +207,7 @@ class FurnitureContainer:
 		var iteminv: Inventory = item.get_inventory()
 		if iteminv == inventory:
 			return false # Can't insert into itself
-		if not iteminv.transfer_autosplitmerge(item, inventory):
+		if not inventory.add_item_autosplitmerge(item):
 			print_debug("Failed to transfer item: " + str(item))
 		return true
 
@@ -427,9 +427,7 @@ class CraftingContainer:
 
 	# Initializes the inventory with default capacity and item prototypes
 	func _initialize_inventory():
-		inventory = Inventory.new()
-		inventory.capacity = 500  # Adjust capacity as needed for crafting
-		inventory.item_protoset = ItemManager.item_protosets
+		inventory = ItemManager.initialize_inventory()
 
 	# Retrieves the inventory instance
 	func get_inventory() -> Inventory:
@@ -600,8 +598,8 @@ class CraftingContainer:
 	func get_available_ingredient_amount(ingredient_id: String) -> int:
 		var available_amount: int = 0
 		
-		if inventory.has_item_by_id(ingredient_id):
-			var items: Array = inventory.get_items_by_id(ingredient_id)
+		if inventory.has_item_with_prototype_id(ingredient_id):
+			var items: Array = inventory.get_items_with_prototype_id(ingredient_id)
 			
 			for item: InventoryItem in items:
 				var stack_size = item.get_stack_size()
@@ -707,7 +705,7 @@ class Consumption:
 				# Check if the inventory contains an item with the prototype_id matching the item_id
 				if container_inventory.has_item_with_prototype_id(item_id):
 					# Get the first item matching the item_id
-					var items: Array[InventoryItem] = container_inventory.get_items_by_id(item_id)
+					var items: Array[InventoryItem] = container_inventory.get_items_with_prototype_id(item_id)
 					if items.size() > 0:
 						var item_to_consume: InventoryItem = items[0]  # Get the first item
 						var current_stack_size: int = item_to_consume.get_stack_size()
@@ -727,8 +725,6 @@ class Consumption:
 							print("Failed to consume item: ", item_id, ". Could not reduce stack size.")
 					else:
 						print("No items available to consume for item_id: ", item_id)
-				else:
-					print("Item with prototype_id ", item_id, " not found in the inventory.")
 			
 			# If no items were consumed, exit the loop
 			if not consumed_item:
@@ -1277,7 +1273,7 @@ func transfer_item_between_containers(source_container: Object, item_id: String,
 		return false  # Either containers are not initialized or type is invalid
 
 	# Get the items from the source inventory
-	var items = source_inventory.get_items_by_id(item_id)
+	var items = source_inventory.get_items_with_prototype_id(item_id)
 	if items.is_empty():
 		return false  # Item not found in source
 
@@ -1287,10 +1283,10 @@ func transfer_item_between_containers(source_container: Object, item_id: String,
 		if stack_size > quantity:
 			# Split the stack and transfer only the required quantity
 			var split_item = source_inventory.split(item, quantity)
-			return target_inventory.transfer_autosplitmerge(split_item, target_inventory)
+			return target_inventory.add_item_autosplitmerge(split_item)
 		else:
 			# Transfer the whole stack
-			if target_inventory.transfer_autosplitmerge(item, target_inventory):
+			if target_inventory.add_item_autosplitmerge(item):
 				quantity -= stack_size  # Adjust the remaining quantity to transfer
 				if quantity <= 0:
 					return true
@@ -1351,8 +1347,8 @@ func get_furniture_name() -> String:
 func get_available_ingredient_amount(ingredient_id: String) -> int:
 	var inventory = container.get_inventory()
 	var available_amount: int = 0
-	if inventory.has_item_by_id(ingredient_id):
-		var items: Array = inventory.get_items_by_id(ingredient_id)
+	if inventory.get_item_with_prototype_id(ingredient_id):
+		var items: Array = inventory.get_items_with_prototype_id(ingredient_id)
 		for item in items:
 			available_amount += item.get_stack_size()
 	return available_amount

@@ -128,9 +128,7 @@ class FurnitureContainer:
 		_initialize_inventory()
 
 	func _initialize_inventory():
-		inventory = Inventory.new()
-		inventory.capacity = 1000
-		inventory.item_protoset = ItemManager.item_protosets
+		inventory = ItemManager.initialize_inventory()
 	
 	func get_inventory() -> Inventory:
 		return inventory
@@ -519,8 +517,8 @@ func get_furniture_name() -> String:
 func get_available_ingredient_amount(ingredient_id: String) -> int:
 	var inventory = container.get_inventory()
 	var available_amount: int = 0
-	if inventory.has_item_by_id(ingredient_id):
-		var items: Array = inventory.get_items_by_id(ingredient_id)
+	if inventory.has_item_with_prototype_id(ingredient_id):
+		var items: Array = inventory.get_items_with_prototype_id(ingredient_id)
 		for item in items:
 			available_amount += item.get_stack_size()
 	return available_amount

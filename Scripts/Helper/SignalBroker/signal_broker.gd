@@ -103,11 +103,11 @@ signal inventory_operation_finished()
 # item: The InventoryItem that was added, removed or modified
 # inventory: the Inventory that emitted the original signal of the item being added/removed
 @warning_ignore("unused_signal")
-signal playerInventory_item_added(item: InventoryItem, inventory: Inventory)
+signal playerInventory_item_added(item: InventoryItem)
 @warning_ignore("unused_signal")
-signal playerInventory_item_removed(item: InventoryItem, inventory: Inventory)
+signal playerInventory_item_removed(item: InventoryItem)
 @warning_ignore("unused_signal")
-signal playerInventory_item_modified(item: InventoryItem, inventory: Inventory)
+signal playerInventory_item_modified(item: InventoryItem, property: String)
 
 # When the player's stats and skill and attributes changes
 @warning_ignore("unused_signal")

@@ -129,7 +129,7 @@ func _on_inventory_item_removed(item: InventoryItem):
 	update_inventory_list(item, "removed")
 
 
-func _on_inventory_item_modified(item: InventoryItem):
+func _on_inventory_item_modified(item: InventoryItem, _property: String):
 	# Handle item modified in inventory
 	update_inventory_list(item, "modified")
 
@@ -698,7 +698,7 @@ func _handle_item_drop(dropped_data, _newpos) -> void:
 			Helper.signal_broker.inventory_operation_started.emit()
 			for item in items_to_transfer:
 				# Transfer the item to the current inventory
-				item_inventory.transfer_automerge(item, myInventory)
+				myInventory.add_item_autosplitmerge(item)
 			Helper.signal_broker.inventory_operation_finished.emit()
 
 
@@ -751,7 +751,7 @@ func get_items_that_fit_by_volume(items: Array) -> Array:
 	var remaining_volume = get_remaining_volume()
 
 	# Iterate over the items to check if they can fit
-	for item in items:
+	for item: InventoryItem in items:
 		var item_volume = item.get_property("volume", 0)
 		if item_volume <= remaining_volume:
 			fitting_items.append(item)
@@ -763,7 +763,7 @@ func get_items_that_fit_by_volume(items: Array) -> Array:
 func get_used_volume() -> float:
 	var total_current_volume = 0.0
 	# Calculate the total current volume in the inventory
-	for item in myInventory.get_children():
+	for item: InventoryItem in myInventory.get_items():
 		total_current_volume += item.get_property("volume", 0)
 	return total_current_volume
 
@@ -775,12 +775,12 @@ func get_remaining_volume() -> float:
 		return max_volume - get_used_volume()
 
 func get_items() -> Array:
-	return myInventory.get_children()
+	return myInventory.get_items()
 
 
 # Transfers an item from this inventory to the destination inventory
 func transfer_autosplitmerge(item: InventoryItem, destination: Inventory) -> bool:
-	return myInventory.transfer_autosplitmerge(item, destination)
+	return destination.add_item_autosplitmerge(item)
 
 
 # Function to handle item transfer on double-click

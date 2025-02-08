@@ -210,15 +210,15 @@ func add_quest_step(quest: ScriptQuest, step: Dictionary) -> bool:
 
 
 # An item is added to the player inventory. Now we need to update the quests
-func _on_inventory_item_added(item: InventoryItem, _inventory: Inventory):
+func _on_inventory_item_added(item: InventoryItem):
 	update_quest_by_inventory(item)
 
 # An item is removed to the player inventory. Now we need to update the quests
-func _on_inventory_item_removed(item: InventoryItem, _inventory: Inventory):
+func _on_inventory_item_removed(item: InventoryItem):
 	update_quest_by_inventory(item)
 
 # An item is modified to the player inventory. Now we need to update the quests
-func _on_inventory_item_modified(item: InventoryItem, _inventory: Inventory):
+func _on_inventory_item_modified(item: InventoryItem, _property: String):
 	update_quest_by_inventory(item)
 
 

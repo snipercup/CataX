@@ -258,7 +258,7 @@ func find_compatible_magazine(gun: InventoryItem) -> InventoryItem:
 
 	var inventoryItems: Array = playerInventory.get_items()  # Retrieve all items in the inventory
 	for item in inventoryItems:
-		if item.get_property("Magazine") and compatible_magazines.has(item.get("get_prototype().get_id()")):
+		if item.get_property("Magazine") and compatible_magazines.has(item.get_prototype().get_id()):
 			var magazine = item.get_property("Magazine")
 			if magazine and magazine.has("current_ammo"):
 				var currentAmmo: int = int(magazine["current_ammo"])
@@ -323,7 +323,7 @@ func reload_magazine(magazine: InventoryItem) -> void:
 		
 		# Find and consume ammo from the inventory
 		while needed_ammo > 0:
-			var ammo_item: InventoryItem = playerInventory.get_item_by_id(ammo_type)
+			var ammo_item: InventoryItem = playerInventory.get_item_with_prototype_id(ammo_type)
 			if not ammo_item:
 				break  # No more ammo of the required type is available
 			
@@ -481,9 +481,9 @@ func _on_container_exited_proximity(container: Node3D):
 
 
 func connect_inventory_signals(inventory: Inventory):
-	inventory.item_added.connect(_on_inventory_item_added.bind(inventory))
-	inventory.item_removed.connect(_on_inventory_item_removed.bind(inventory))
-	inventory.item_property_changed.connect(_on_inventory_item_modified.bind(inventory))
+	inventory.item_added.connect(_on_inventory_item_added)
+	inventory.item_removed.connect(_on_inventory_item_removed)
+	inventory.item_property_changed.connect(_on_inventory_item_modified)
 
 
 func disconnect_inventory_signals(inventory: Inventory):
@@ -492,18 +492,18 @@ func disconnect_inventory_signals(inventory: Inventory):
 	inventory.item_property_changed.disconnect(_on_inventory_item_modified)
 
 
-func _on_inventory_item_added(item, inventory):
-	Helper.signal_broker.playerInventory_item_added.emit(item, inventory)
+func _on_inventory_item_added(item):
+	Helper.signal_broker.playerInventory_item_added.emit(item)
 	update_accessible_items_list()
 
 
-func _on_inventory_item_removed(item, inventory):
-	Helper.signal_broker.playerInventory_item_removed.emit(item, inventory)
+func _on_inventory_item_removed(item):
+	Helper.signal_broker.playerInventory_item_removed.emit(item)
 	update_accessible_items_list()
 
 
-func _on_inventory_item_modified(item, inventory):
-	Helper.signal_broker.playerInventory_item_modified.emit(item, inventory)
+func _on_inventory_item_modified(item: InventoryItem, property: String):
+	Helper.signal_broker.playerInventory_item_modified.emit(item, property)
 	update_accessible_items_list()
 
 
@@ -669,20 +669,20 @@ func transfer_items_to_inventory(target_inventory: Inventory, item_id: String, r
 			# If the current stack size is less than or equal to the amount we need to transfer,
 			# transfer this item completely.
 
-			if target_inventory.transfer_automerge(item, target_inventory):
+			if target_inventory.add_item_autosplitmerge(item):
 				amount_to_transfer -= current_stack_size
 			else:
 				print_debug("Failed to transfer full stack. Skipping item.")
 		else:
 			# If the current stack has more than we need, split the stack and transfer the split item
-			var split_item = item.get_inventory().split(item, amount_to_transfer)
+			var split_item = item.get_inventory().split_stack(item, amount_to_transfer)
 
 			# Attempt to transfer the split item
-			if split_item and target_inventory.transfer_automerge(split_item, target_inventory):
+			if split_item and target_inventory.add_item_autosplitmerge(split_item):
 				amount_to_transfer -= amount_to_transfer
 			else:
 				# If transfer failed, merge the split item back into the original stack
-				item.get_inventory().merge(split_item)
+				item.get_inventory().merge_stacks(split_item)
 
 	# Update the accessible items list after transfer
 	update_accessible_items_list()

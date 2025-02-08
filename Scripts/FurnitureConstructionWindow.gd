@@ -43,20 +43,31 @@ func _connect_furniture_signals():
 	if not furniture_instance.about_to_be_destroyed.is_connected(_on_furniture_about_to_be_destroyed):
 		furniture_instance.about_to_be_destroyed.connect(_on_furniture_about_to_be_destroyed)
 
-	# Connect inventory contents_changed signal
+	# Connect inventory signals
 	var my_inventory = furniture_instance.get_inventory()
-	if my_inventory.contents_changed.is_connected(_on_inventory_contents_changed):
-		my_inventory.contents_changed.disconnect(_on_inventory_contents_changed)
-	my_inventory.contents_changed.connect(_on_inventory_contents_changed)
+	
+	# Disconnect old signals if they were previously connected
+	if my_inventory.item_added.is_connected(_on_inventory_contents_changed):
+		my_inventory.item_added.disconnect(_on_inventory_contents_changed)
+	if my_inventory.item_removed.is_connected(_on_inventory_contents_changed):
+		my_inventory.item_removed.disconnect(_on_inventory_contents_changed)
+
+	# Connect item_added and item_removed to _on_inventory_contents_changed
+	my_inventory.item_added.connect(_on_inventory_contents_changed)
+	my_inventory.item_removed.connect(_on_inventory_contents_changed)
 
 
 # Disconnects signals from the previous furniture_instance.
 func _disconnect_furniture_signals():
 	if furniture_instance:
-		# Disconnect inventory contents_changed signal
+		# Disconnect inventory signals
 		var my_inventory = furniture_instance.get_inventory()
-		if my_inventory.contents_changed.is_connected(_on_inventory_contents_changed):
-			my_inventory.contents_changed.disconnect(_on_inventory_contents_changed)
+		
+		# Disconnect item_added and item_removed signals
+		if my_inventory.item_added.is_connected(_on_inventory_contents_changed):
+			my_inventory.item_added.disconnect(_on_inventory_contents_changed)
+		if my_inventory.item_removed.is_connected(_on_inventory_contents_changed):
+			my_inventory.item_removed.disconnect(_on_inventory_contents_changed)
 
 
 # Callback for furniture interaction. Only for FurnitureBlueprintSrv types
@@ -206,7 +217,7 @@ func _on_all_accessible_items_changed(_items_added: Array, _items_removed: Array
 
 
 # Callback for when the inventory contents change.
-func _on_inventory_contents_changed():
+func _on_inventory_contents_changed(_item: InventoryItem):
 	if furniture_instance:
 		_refresh_ingredient_list()
 		_update_construct_button()
