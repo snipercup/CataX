@@ -16,7 +16,7 @@ var allAccessibleItems: Array[InventoryItem] = []  # List to hold all accessible
 # property of the Inventory. An item's "volume" property counts towards this max inventory
 # volume, while an item's "weight" property counts towards the inventory's "capacity" property
 var player_max_inventory_volume: int = 1000
-var item_protosets: JSON
+var item_protosets: JSON = preload("res://ItemProtosets.JSON")
  # Keeps track of player equipment, used for saving
 var player_equipment: PlayerEquipment = null
 

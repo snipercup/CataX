@@ -129,6 +129,12 @@ func save_items_protoset() -> void:
 		save_data[item.id] = item.get_data()  # Store item data using its ID as the key
 
 	ItemManager.update_protoset(save_data)  # Save the dictionary
+	
+	var save_result = ResourceSaver.save(ItemManager.item_protosets, "res://ItemProtosets.JSON")
+	if save_result != OK:
+		print_debug("Failed to save updated ItemProtoset resource to:", "res://ItemProtosets.JSON")
+	else:
+		print_debug("ItemProtoset resource updated and saved successfully to:", "res://ItemProtosets.JSON")
 
 
 func get_first_recipe_by_id(item_id: String) -> RItem.CraftRecipe:

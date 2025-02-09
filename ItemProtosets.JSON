@@ -1,0 +1,2755 @@
+{
+	"plank_2x4": {
+		"id": "plank_2x4",
+		"name": "Plank 2x4",
+		"description": "A wooden plank that could be used for all kinds of crafting and construction",
+		"weight": 2,
+		"volume": 300,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "plank.png",
+		"image": "./Mods/Dimensionfall/Items/plank.png"
+	},
+	"steel_scrap": {
+		"id": "steel_scrap",
+		"name": "Steel scrap",
+		"description": "Some metal bits and pieces. Useful for something, right?",
+		"weight": 0.25,
+		"volume": 15,
+		"stack_size": 2,
+		"max_stack_size": 100,
+		"sprite": "steel_scrap.png",
+		"image": "./Mods/Dimensionfall/Items/steel_scrap.png"
+	},
+	"bullet_9mm": {
+		"id": "bullet_9mm",
+		"name": "bullet 9mm",
+		"description": "Standard type of ammunition. Very common.",
+		"weight": 0.01,
+		"volume": 0.1,
+		"stack_size": 20,
+		"max_stack_size": 100,
+		"sprite": "9mm.png",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"Ammo": {
+			"damage": 25
+		}
+	},
+	"pistol_magazine": {
+		"id": "pistol_magazine",
+		"name": "Pistol magazine",
+		"description": "In order for your pistol to fire a bullet, it needs to have a magazine loaded with bullets",
+		"weight": 0.25,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "pistol_magazine.png",
+		"image": "./Mods/Dimensionfall/Items/pistol_magazine.png",
+		"Craft": [
+			{
+				"craft_amount": 1,
+				"craft_time": 10,
+				"flags": {
+					"requires_light": true
+				},
+				"required_resources": [
+					{
+						"amount": 1,
+						"id": "steel_scrap"
+					},
+					{
+						"amount": 10,
+						"id": "bullet_9mm"
+					}
+				],
+				"skill_requirement": {
+					"id": "fabrication",
+					"level": 1
+				},
+				"skill_progression": {
+					"id": "fabrication",
+					"xp": 10
+				}
+			}
+		],
+		"Magazine": {
+			"current_ammo": 19,
+			"max_ammo": 20,
+			"used_ammo": "bullet_9mm"
+		}
+	},
+	"pistol_9mm": {
+		"id": "pistol_9mm",
+		"name": "Pistol 9mm",
+		"description": "A standard issue pistol that uses 9mm ammunition",
+		"weight": 2,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "pistol_32.png",
+		"image": "./Mods/Dimensionfall/Items/pistol_32.png",
+		"Ranged": {
+			"firing_speed": 0.4,
+			"range": 1000,
+			"recoil": 10,
+			"reload_speed": 1.5,
+			"spread": 5,
+			"sway": 5,
+			"used_ammo": "9mm",
+			"used_magazine": "pistol_magazine",
+			"used_skill": {
+				"skill_id": "handguns",
+				"xp": 1
+			}
+		}
+	},
+	"rifle_m4a1": {
+		"id": "rifle_m4a1",
+		"name": "M4a1 rifle",
+		"description": "A standard issue rifle that uses 9mm ammunition",
+		"weight": 4,
+		"volume": 300,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "rifle_64_32.png",
+		"image": "./Mods/Dimensionfall/Items/rifle_64_32.png",
+		"Ranged": {
+			"firing_speed": 0.2,
+			"range": 1000,
+			"recoil": 15,
+			"reload_speed": 2.5,
+			"spread": 8,
+			"sway": 5,
+			"used_ammo": "9mm",
+			"used_magazine": "pistol_magazine",
+			"used_skill": {
+				"skill_id": "rifle",
+				"xp": 1
+			}
+		}
+	},
+	"chugunov_mpap": {
+		"id": "chugunov_mpap",
+		"name": "Chugunov MPAP",
+		"description": "Chugun in Russian is for cast steel, MPAP is \"Multi Purpose Automatic Pistol\"",
+		"weight": 3,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "chugunov_mpap_32_28.png",
+		"image": "./Mods/Dimensionfall/Items/chugunov_mpap_32_28.png",
+		"Ranged": {
+			"firing_speed": 0.25,
+			"range": 1000,
+			"recoil": 20,
+			"reload_speed": 2.5,
+			"spread": 5,
+			"sway": 5,
+			"used_ammo": "9mm",
+			"used_magazine": "chugunov_mpap_magazine",
+			"used_skill": {
+				"skill_id": "smg",
+				"xp": 1
+			}
+		}
+	},
+	"chugunov_mpap_magazine": {
+		"id": "chugunov_mpap_magazine",
+		"name": "Chuganov MPAP magazine",
+		"description": "A magazine to be loaded into a Chuganov MPAP",
+		"weight": 0.25,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "chugunov_mpap_magazine_16_32.png",
+		"image": "./Mods/Dimensionfall/Items/chugunov_mpap_magazine_16_32.png",
+		"Magazine": {
+			"current_ammo": 30,
+			"max_ammo": 30,
+			"used_ammo": "bullet_7.62x26"
+		}
+	},
+	"bottle_plastic_empty": {
+		"id": "bottle_plastic_empty",
+		"name": "Empty plastic bottle",
+		"description": "This plastic bottle only contains air",
+		"weight": 0.1,
+		"volume": 15,
+		"stack_size": 2,
+		"max_stack_size": 10,
+		"sprite": "bottle_empty_32.png",
+		"image": "./Mods/Dimensionfall/Items/bottle_empty_32.png"
+	},
+	"bottle_plastic_water": {
+		"id": "bottle_plastic_water",
+		"name": "Plastic bottle with water",
+		"description": "This plastic bottle is filled with water",
+		"weight": 0.25,
+		"volume": 15,
+		"stack_size": 2,
+		"max_stack_size": 10,
+		"sprite": "bottle_water_32.png",
+		"image": "./Mods/Dimensionfall/Items/bottle_water_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 20,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"canned_food": {
+		"id": "canned_food",
+		"name": "Canned food\t",
+		"description": "The contents will satisfy your hunger",
+		"weight": 0.25,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "canned_food_32.png",
+		"image": "./Mods/Dimensionfall/Items/canned_food_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 25,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"machete": {
+		"id": "machete",
+		"name": "Machete",
+		"description": "A sharp blade with a handle for excellent control",
+		"weight": 4,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "machete_32.png",
+		"image": "./Mods/Dimensionfall/Items/machete_32.png",
+		"Melee": {
+			"damage": 25,
+			"reach": 1,
+			"used_skill": {
+				"skill_id": "cutting",
+				"xp": 10
+			}
+		}
+	},
+	"wood_arrow_basic": {
+		"id": "wood_arrow_basic",
+		"name": "Basic wooden arrow",
+		"description": "Anyone is able to craft this simple arrow",
+		"weight": 0.1,
+		"volume": 1,
+		"stack_size": 5,
+		"max_stack_size": 20,
+		"sprite": "arrow_basic_32.png",
+		"image": "./Mods/Dimensionfall/Items/arrow_basic_32.png"
+	},
+	"hammer": {
+		"id": "hammer",
+		"name": "Hammer",
+		"description": "A stick with a block of steel on it. It is used to apply force to objects like nails",
+		"weight": 2,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "hammer_32.png",
+		"image": "./Mods/Dimensionfall/Items/hammer_32.png"
+	},
+	"screwdriver": {
+		"id": "screwdriver",
+		"name": "Screwdriver",
+		"description": "A handle with a rod of steel in it. The tip can be flat or shaped like a star. Useful for construction projects",
+		"weight": 0.5,
+		"volume": 20,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "screwdriver_32.png",
+		"image": "./Mods/Dimensionfall/Items/screwdriver_32.png",
+		"Craft": [
+			{
+				"craft_amount": 1,
+				"craft_time": 1,
+				"flags": {
+					"requires_light": true
+				},
+				"required_resources": [
+					{
+						"amount": 1,
+						"id": "steel_scrap"
+					},
+					{
+						"amount": 1,
+						"id": "bottle_plastic_empty"
+					}
+				]
+			}
+		]
+	},
+	"bandage_basic": {
+		"id": "bandage_basic",
+		"name": "Bandage",
+		"description": "A basic bandage that will help to heal a wound",
+		"weight": 0.1,
+		"volume": 1,
+		"stack_size": 3,
+		"max_stack_size": 20,
+		"sprite": "bandage_32.png",
+		"image": "./Mods/Dimensionfall/Items/bandage_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_leg_health"
+				}
+			],
+			"amount": 25,
+			"order": "Lowest first"
+		}
+	},
+	"bottle_antibiotics": {
+		"id": "bottle_antibiotics",
+		"name": "Bottle of antibiotics",
+		"description": "A small bottle that contains antibiotics. It helps to recover from disease.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "antibiotics_32.png",
+		"image": "./Mods/Dimensionfall/Items/antibiotics_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_leg_health"
+				}
+			],
+			"amount": 10,
+			"order": "Lowest first"
+		}
+	},
+	"jacket": {
+		"id": "jacket",
+		"name": "Jacket",
+		"description": "A piece of clothing to wear on the torso. It will keep you warm and offers a bit of protection.",
+		"weight": 1,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "jacket_32.png",
+		"image": "./Mods/Dimensionfall/Items/jacket_32.png",
+		"Wearable": {
+			"slot": "torso",
+			"player_attributes": []
+		}
+	},
+	"boots": {
+		"id": "boots",
+		"name": "Boots",
+		"description": "Comfortable footwear to keep your feet safe",
+		"weight": 1,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "boots_32.png",
+		"image": "./Mods/Dimensionfall/Items/boots_32.png",
+		"Wearable": {
+			"slot": "feet",
+			"player_attributes": []
+		}
+	},
+	"jerrycan_gasoline": {
+		"id": "jerrycan_gasoline",
+		"name": "Jerrycan of gasoline",
+		"description": "A large container that holds gasoline",
+		"weight": 10,
+		"volume": 400,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "jerrycan_gas_32.png",
+		"image": "./Mods/Dimensionfall/Items/jerrycan_gas_32.png"
+	},
+	"can_oil": {
+		"id": "can_oil",
+		"name": "Can of oil",
+		"description": "It's a can that contains oil. It has a spout that allows you to pour it out.",
+		"weight": 2,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "can_oil_32.png",
+		"image": "./Mods/Dimensionfall/Items/can_oil_32.png"
+	},
+	"radio_handheld": {
+		"id": "radio_handheld",
+		"name": "Handheld radio",
+		"description": "A small radio that can be powered by batteries or an electical cord.",
+		"weight": 1,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "battery_powered_radio_32.png",
+		"image": "./Mods/Dimensionfall/Items/battery_powered_radio_32.png"
+	},
+	"flashlight_basic": {
+		"id": "flashlight_basic",
+		"name": "Flashlight",
+		"description": "A basic battery powered flashlight. It will shine a beam of light when it is turned on",
+		"weight": 0.5,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "flashlight_32.png",
+		"image": "./Mods/Dimensionfall/Items/flashlight_32.png"
+	},
+	"can_beer": {
+		"id": "can_beer",
+		"name": "Can of beer",
+		"description": "It's a can that contains beer. Don't drink a lot of it or you will get drunk",
+		"weight": 0.5,
+		"volume": 50,
+		"stack_size": 2,
+		"max_stack_size": 5,
+		"sprite": "can_beer_32.png",
+		"image": "./Mods/Dimensionfall/Items/can_beer_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 35,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"gas_mask": {
+		"id": "gas_mask",
+		"name": "Gas mask",
+		"description": "A piece of clothing that offers protection from environmental hazards",
+		"weight": 1,
+		"volume": 80,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "gasmask_32.png",
+		"image": "./Mods/Dimensionfall/Items/gasmask_32.png",
+		"Wearable": {
+			"slot": "head",
+			"player_attributes": []
+		}
+	},
+	"vest_ballistic": {
+		"id": "vest_ballistic",
+		"name": "Ballistic vest",
+		"description": "A piece of clothing that offers protection from ballistic forces",
+		"weight": 4,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "vest_ballistic_32.png",
+		"image": "./Mods/Dimensionfall/Items/vest_ballistic_32.png",
+		"Wearable": {
+			"slot": "torso",
+			"player_attributes": []
+		}
+	},
+	"compass": {
+		"id": "compass",
+		"name": "Compass",
+		"description": "A device that shows your orientation relative to the earth's poles",
+		"weight": 0.1,
+		"volume": 6,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "compass_32.png",
+		"image": "./Mods/Dimensionfall/Items/compass_32.png"
+	},
+	"battery_small": {
+		"id": "battery_small",
+		"name": "Small battery",
+		"description": "A very common type of battery that fits most battery-powered devices",
+		"weight": 0.1,
+		"volume": 0.01,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "battery_32.png",
+		"image": "./Mods/Dimensionfall/Items/battery_32.png"
+	},
+	"solar_panel": {
+		"id": "solar_panel",
+		"name": "Solar panel",
+		"description": "A large panel that draws power from the sun",
+		"weight": 10,
+		"volume": 500,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "solar_panel_32.png",
+		"image": "./Mods/Dimensionfall/Items/solar_panel_32.png"
+	},
+	"map_paper": {
+		"id": "map_paper",
+		"name": "Paper map",
+		"description": "A large piece of paper that visualizes the area around you",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "map_paper_32.png",
+		"image": "./Mods/Dimensionfall/Items/map_paper_32.png"
+	},
+	"tarp": {
+		"id": "tarp",
+		"name": "Tarp",
+		"description": "A piece of fabric and some strings. You can deploy it to get some shelter from the weather",
+		"weight": 3,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "tarp_32.png",
+		"image": "./Mods/Dimensionfall/Items/tarp_32.png"
+	},
+	"tent": {
+		"id": "tent",
+		"name": "Tent",
+		"description": "A piece of fabric and some strings. You can deploy it to get some shelter from the weather. It is currently folded to save space.",
+		"weight": 9,
+		"volume": 600,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "tent_32.png",
+		"image": "./Mods/Dimensionfall/Items/tent_32.png"
+	},
+	"guide_survival_basic": {
+		"id": "guide_survival_basic",
+		"name": "Basic survival guide",
+		"description": "A small book explaining the very basics of survival",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "survival_guide_32.png",
+		"image": "./Mods/Dimensionfall/Items/survival_guide_32.png"
+	},
+	"book_novel": {
+		"id": "book_novel",
+		"name": "Novel",
+		"description": "A book containing an entertaining story",
+		"weight": 0.4,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "book_novel_32.png",
+		"image": "./Mods/Dimensionfall/Items/book_novel_32.png"
+	},
+	"bottle_disinfectant": {
+		"id": "bottle_disinfectant",
+		"name": "Bottle of disinfectant",
+		"description": "A small bottle that contains disinfectant. It helps to disinfect wounds",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "bottle_disinfectant_32.png",
+		"image": "./Mods/Dimensionfall/Items/bottle_disinfectant_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_leg_health"
+				}
+			],
+			"amount": 10,
+			"order": "Lowest first"
+		}
+	},
+	"radio_two_way": {
+		"id": "radio_two_way",
+		"name": "Two way radio",
+		"description": "A small radio that allows you to communicate with someone over a large distance",
+		"weight": 1,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "radio_two_way_32.png",
+		"image": "./Mods/Dimensionfall/Items/radio_two_way_32.png"
+	},
+	"firestarter_basic": {
+		"id": "firestarter_basic",
+		"name": "Firestarter",
+		"description": "A small device that provides a spark that can be used to light a fire. No power or fuel required.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "firestarter_32.png",
+		"image": "./Mods/Dimensionfall/Items/firestarter_32.png"
+	},
+	"kit_fishing_small": {
+		"id": "kit_fishing_small",
+		"name": "Small fishing kit",
+		"description": "\n    A true survival fishing kit in a very small, lightweight package!\n    Contains 118 foot line and winder\n    2 lures, 2 hooks\n    2 swivels, 2 weghts\n    Comes in a strong durable heavy duty resealable plastic bag",
+		"weight": 0.4,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "kit_fishing_small_32.png",
+		"image": "./Mods/Dimensionfall/Items/kit_fishing_small_32.png"
+	},
+	"kitchen_knife": {
+		"id": "kitchen_knife",
+		"name": "Kitchen Knife",
+		"description": "A versatile kitchen tool, essential for slicing, dicing, and chopping food.",
+		"weight": 0.4,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "kitchen_knife_64_32.png",
+		"image": "./Mods/Dimensionfall/Items/kitchen_knife_64_32.png"
+	},
+	"portable_stove": {
+		"id": "portable_stove",
+		"name": "Portable Stove",
+		"description": "A compact and portable stove, perfect for cooking meals during survival situations.",
+		"weight": 3,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "portable_stove_64_32.png",
+		"image": "./Mods/Dimensionfall/Items/portable_stove_64_32.png"
+	},
+	"cooking_pot": {
+		"id": "cooking_pot",
+		"name": "Cooking Pot",
+		"description": "A durable cooking pot, essential for boiling water and preparing meals.",
+		"weight": 3,
+		"volume": 350,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "cooking_pot_32.png",
+		"image": "./Mods/Dimensionfall/Items/cooking_pot_32.png"
+	},
+	"can_opener": {
+		"id": "can_opener",
+		"name": "Can opener",
+		"description": "A small tool crucial for opening canned food, an essential for survival.",
+		"weight": 0.2,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "can_opener_64_32.png",
+		"image": "./Mods/Dimensionfall/Items/can_opener_64_32.png"
+	},
+	"cutting_board": {
+		"id": "cutting_board",
+		"name": "Cutting Board",
+		"description": "A sturdy cutting board, ideal for preparing food safely and efficiently.",
+		"weight": 1,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "cutting_board_64_32.png",
+		"image": "./Mods/Dimensionfall/Items/cutting_board_64_32.png",
+		"Craft": [
+			{
+				"craft_amount": 1,
+				"craft_time": 10,
+				"flags": {
+					"hand_craftable": false,
+					"requires_light": true
+				},
+				"required_resources": [
+					{
+						"amount": 1,
+						"id": "plank_2x4"
+					}
+				],
+				"skill_requirement": {
+					"id": "fabrication",
+					"level": 1
+				},
+				"skill_progression": {
+					"id": "fabrication",
+					"xp": 10
+				}
+			}
+		]
+	},
+	"mixing_bowl": {
+		"id": "mixing_bowl",
+		"name": "Mixing Bowl",
+		"description": "A large bowl used for mixing ingredients, indispensable for any cooking or baking tasks.",
+		"weight": 0.5,
+		"volume": 250,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "mixing_bowl_32.png",
+		"image": "./Mods/Dimensionfall/Items/mixing_bowl_32.png"
+	},
+	"tea_kettle": {
+		"id": "tea_kettle",
+		"name": "Tea Kettle",
+		"description": "A metal kettle perfect for boiling water to make tea or instant meals.",
+		"weight": 1,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "tea_kettle_32.png",
+		"image": "./Mods/Dimensionfall/Items/tea_kettle_32.png"
+	},
+	"spice_rack": {
+		"id": "spice_rack",
+		"name": "Spice Rack",
+		"description": "A small rack containing various spices to enhance the flavor of food.",
+		"weight": 1,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "spice_rack_32.png",
+		"image": "./Mods/Dimensionfall/Items/spice_rack_32.png"
+	},
+	"measuring_cup": {
+		"id": "measuring_cup",
+		"name": "Measuring Cup",
+		"description": "A measuring cup, essential for precisely measuring ingredients for recipes.",
+		"weight": 0.3,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "measuring_cup_32.png",
+		"image": "./Mods/Dimensionfall/Items/measuring_cup_32.png"
+	},
+	"rolling_pin": {
+		"id": "rolling_pin",
+		"name": "Rolling Pin",
+		"description": "A wooden rolling pin, essential for flattening dough for baking.",
+		"weight": 0.5,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "rolling_pin_64_32.png",
+		"image": "./Mods/Dimensionfall/Items/rolling_pin_64_32.png",
+		"Craft": [
+			{
+				"craft_amount": 1,
+				"craft_time": 10,
+				"flags": {
+					"requires_light": true
+				},
+				"required_resources": [
+					{
+						"amount": 1,
+						"id": "plank_2x4"
+					}
+				],
+				"skill_requirement": {
+					"id": "fabrication",
+					"level": 2
+				},
+				"skill_progression": {
+					"id": "fabrication",
+					"xp": 15
+				}
+			}
+		]
+	},
+	"frying_pan": {
+		"id": "frying_pan",
+		"name": "Frying Pan",
+		"description": "A heavy-duty frying pan, perfect for cooking everything from eggs to stir-fry.",
+		"weight": 2,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "frying_pan_32.png",
+		"image": "./Mods/Dimensionfall/Items/frying_pan_32.png"
+	},
+	"steel_colander": {
+		"id": "steel_colander",
+		"name": "Colander",
+		"description": "A metal colander, ideal for draining pasta or washing vegetables.",
+		"weight": 0.7,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "steel_colander_32.png",
+		"image": "./Mods/Dimensionfall/Items/steel_colander_32.png"
+	},
+	"peeler": {
+		"id": "peeler",
+		"name": "Peeler",
+		"description": "A handy peeler, perfect for skinning vegetables and fruits with ease.",
+		"weight": 0.1,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "peeler_32.png",
+		"image": "./Mods/Dimensionfall/Items/peeler_32.png"
+	},
+	"grater": {
+		"id": "grater",
+		"name": "Grater",
+		"description": "A metal grater, essential for shredding cheese, vegetables, and more.",
+		"weight": 0.3,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "grater_32.png",
+		"image": "./Mods/Dimensionfall/Items/grater_32.png"
+	},
+	"toaster": {
+		"id": "toaster",
+		"name": "Toaster",
+		"description": "A compact electric toaster, ideal for toasting bread quickly.",
+		"weight": 1.5,
+		"volume": 300,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "toaster_32.png",
+		"image": "./Mods/Dimensionfall/Items/toaster_32.png"
+	},
+	"blender": {
+		"id": "blender",
+		"name": "Blender",
+		"description": "An electric blender, perfect for making smoothies, soups, and other blended concoctions.",
+		"weight": 2,
+		"volume": 300,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "blender_32.png",
+		"image": "./Mods/Dimensionfall/Items/blender_32.png"
+	},
+	"coffee_maker": {
+		"id": "coffee_maker",
+		"name": "Coffee Maker",
+		"description": "A coffee maker, essential for brewing the perfect cup of coffee to start your day.",
+		"weight": 2.5,
+		"volume": 300,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "coffeemaker_32.png",
+		"image": "./Mods/Dimensionfall/Items/coffeemaker_32.png"
+	},
+	"microwave_oven": {
+		"id": "microwave_oven",
+		"name": "Microwave Oven",
+		"description": "A microwave oven, perfect for quickly heating or cooking food.",
+		"weight": 12,
+		"volume": 400,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "microwave_oven_32.png",
+		"image": "./Mods/Dimensionfall/Items/microwave_oven_32.png"
+	},
+	"dish_rack": {
+		"id": "dish_rack",
+		"name": "Dish Rack",
+		"description": "A dish rack, useful for organizing and drying dishes after washing.",
+		"weight": 1,
+		"volume": 400,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "dish_rack_32.png",
+		"image": "./Mods/Dimensionfall/Items/dish_rack_32.png"
+	},
+	"pressure_cooker": {
+		"id": "pressure_cooker",
+		"name": "Pressure Cooker",
+		"description": "A pressure cooker, ideal for fast cooking and preserving nutrients in food.",
+		"weight": 5,
+		"volume": 400,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "pressure_cooker_32.png",
+		"image": "./Mods/Dimensionfall/Items/pressure_cooker_32.png"
+	},
+	"bread_maker": {
+		"id": "bread_maker",
+		"name": "Bread Maker",
+		"description": "A bread maker, perfect for effortlessly baking fresh bread at home.",
+		"weight": 5,
+		"volume": 300,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "bread_maker_32.png",
+		"image": "./Mods/Dimensionfall/Items/bread_maker_32.png"
+	},
+	"nails": {
+		"id": "nails",
+		"name": "Nails",
+		"description": "Small but crucial for holding together wooden structures and crafting. Often found in the remnants of furniture and buildings.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 10,
+		"max_stack_size": 100,
+		"sprite": "nails_32.png",
+		"image": "./Mods/Dimensionfall/Items/nails_32.png"
+	},
+	"log": {
+		"id": "log",
+		"name": "Log",
+		"description": "Large pieces of wood obtained from cutting down trees. Useful for building and crafting larger items.",
+		"weight": 10,
+		"volume": 500,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "log_32.png",
+		"image": "./Mods/Dimensionfall/Items/log_32.png"
+	},
+	"screw": {
+		"id": "screw",
+		"name": "Screw",
+		"description": "Versatile fasteners used in both wooden and metal constructions. Can be scavenged from disassembled furniture and machinery.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 10,
+		"max_stack_size": 100,
+		"sprite": "screw_32.png",
+		"image": "./Mods/Dimensionfall/Items/screw_32.png"
+	},
+	"branch": {
+		"id": "branch",
+		"name": "Branch",
+		"description": "Smaller pieces of wood that can be used for kindling, basic crafting, and creating primitive tools.",
+		"weight": 2,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "branches_32.png",
+		"image": "./Mods/Dimensionfall/Items/branches_32.png"
+	},
+	"leaf": {
+		"id": "leaf",
+		"name": "Leaf",
+		"description": "Can be used for camouflage, crafting bedding, or as a basic source of compost.",
+		"weight": 0.01,
+		"volume": 1,
+		"stack_size": 5,
+		"max_stack_size": 50,
+		"sprite": "leaves_32.png",
+		"image": "./Mods/Dimensionfall/Items/leaves_32.png"
+	},
+	"pine_branch": {
+		"id": "pine_branch",
+		"name": "Pine Branch",
+		"description": "Resinous branches that can be used for kindling or basic crafting.",
+		"weight": 2,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "pine_branch_32.png",
+		"image": "./Mods/Dimensionfall/Items/pine_branch_32.png"
+	},
+	"clay": {
+		"id": "clay",
+		"name": "Clay",
+		"description": "Natural material that can be molded when wet and hardens when dried, useful for creating pottery, bricks, and reinforcing structures.",
+		"weight": 1,
+		"volume": 20,
+		"stack_size": 5,
+		"max_stack_size": 20,
+		"sprite": "clay_32.png",
+		"image": "./Mods/Dimensionfall/Items/clay_32.png"
+	},
+	"soil": {
+		"id": "soil",
+		"name": "Soil",
+		"description": "Basic resource for growing plants and creating makeshift gardens for food production.",
+		"weight": 5,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "soil_32.png",
+		"image": "./Mods/Dimensionfall/Items/soil_32.png"
+	},
+	"hinge": {
+		"id": "hinge",
+		"name": "Hinge",
+		"description": "Metal parts that allow doors and cabinets to open and close. Can be used in various mechanical constructions.",
+		"weight": 0.2,
+		"volume": 5,
+		"stack_size": 5,
+		"max_stack_size": 50,
+		"sprite": "hinge_32.png",
+		"image": "./Mods/Dimensionfall/Items/hinge_32.png"
+	},
+	"plant_remnants": {
+		"id": "plant_remnants",
+		"name": "Plant Remnants",
+		"description": "Useful for creating compost, crafting, or even as emergency food sources.",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 5,
+		"max_stack_size": 50,
+		"sprite": "plant_remnants_32.png",
+		"image": "./Mods/Dimensionfall/Items/plant_remnants_32.png"
+	},
+	"electrical_components": {
+		"id": "electrical_components",
+		"name": "Electrical Components",
+		"description": "Essential for repairing or crafting electronic devices.",
+		"weight": 0.5,
+		"volume": 20,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "electrical_components_32.png",
+		"image": "./Mods/Dimensionfall/Items/electrical_components_32.png"
+	},
+	"plastic_parts": {
+		"id": "plastic_parts",
+		"name": "Plastic Parts",
+		"description": "Versatile material used in various crafting recipes, often scavenged from modern appliances and containers.",
+		"weight": 0.3,
+		"volume": 10,
+		"stack_size": 10,
+		"max_stack_size": 50,
+		"sprite": "plastic_parts_32.png",
+		"image": "./Mods/Dimensionfall/Items/plastic_parts_32.png"
+	},
+	"ceramic_fragments": {
+		"id": "ceramic_fragments",
+		"name": "Ceramic Fragments",
+		"description": "Shards of broken ceramic items, useful for crafting new items or reinforcing existing structures.",
+		"weight": 1,
+		"volume": 15,
+		"stack_size": 5,
+		"max_stack_size": 30,
+		"sprite": "ceramic_fragments_32.png",
+		"image": "./Mods/Dimensionfall/Items/ceramic_fragments_32.png"
+	},
+	"metal_parts": {
+		"id": "metal_parts",
+		"name": "Metal Parts",
+		"description": "General metal components used in various crafting and construction recipes.",
+		"weight": 0.5,
+		"volume": 10,
+		"stack_size": 10,
+		"max_stack_size": 50,
+		"sprite": "metal_parts_32.png",
+		"image": "./Mods/Dimensionfall/Items/metal_parts_32.png"
+	},
+	"jar_parsley": {
+		"id": "jar_parsley",
+		"name": "Jar of Parsley",
+		"description": "A jar of preserved parsley, useful for adding flavor to dishes.",
+		"weight": 0.5,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "jar_parsley_32.png",
+		"image": "./Mods/Dimensionfall/Items/jar_parsley_32.png"
+	},
+	"tofu": {
+		"id": "tofu",
+		"name": "Tofu",
+		"description": "A block of tofu, a good source of protein.",
+		"weight": 0.5,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "tofu_32.png",
+		"image": "./Mods/Dimensionfall/Items/tofu_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"bottle_yogurt": {
+		"id": "bottle_yogurt",
+		"name": "Bottle of Yogurt",
+		"description": "A bottle of yogurt, useful for nutrition and digestion.",
+		"weight": 0.3,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "bottle_yogurt_32.png",
+		"image": "./Mods/Dimensionfall/Items/bottle_yogurt_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 15,
+					"id": "food"
+				},
+				{
+					"amount": 1,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"jar_pickles": {
+		"id": "jar_pickles",
+		"name": "Jar of Pickles",
+		"description": "A jar of pickles, a tasty preserved food.",
+		"weight": 1,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "jar_pickles_32.png",
+		"image": "./Mods/Dimensionfall/Items/jar_pickles_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				},
+				{
+					"amount": 3,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"condensed_milk": {
+		"id": "condensed_milk",
+		"name": "Condensed Milk",
+		"description": "A can of condensed milk, a rich source of nutrition.",
+		"weight": 0.8,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "condensed_milk_32.png",
+		"image": "./Mods/Dimensionfall/Items/condensed_milk_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 15,
+					"id": "food"
+				},
+				{
+					"amount": 5,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"insulin": {
+		"id": "insulin",
+		"name": "Insulin",
+		"description": "A vial of insulin, necessary for diabetics.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "insulin_32.png",
+		"image": "./Mods/Dimensionfall/Items/insulin_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_leg_health"
+				}
+			],
+			"amount": 10,
+			"order": "Lowest first"
+		}
+	},
+	"epipen": {
+		"id": "epipen",
+		"name": "EpiPen",
+		"description": "An epinephrine auto-injector, useful for treating severe allergic reactions.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "epipen_32.png",
+		"image": "./Mods/Dimensionfall/Items/epipen_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_leg_health"
+				}
+			],
+			"amount": 10,
+			"order": "Lowest first"
+		}
+	},
+	"bag_bacon": {
+		"id": "bag_bacon",
+		"name": "Bag of Bacon",
+		"description": "A bag of bacon, rich in fats and proteins.",
+		"weight": 0.5,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "bag_bacon_32.png",
+		"image": "./Mods/Dimensionfall/Items/bag_bacon_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"wine_bottle": {
+		"id": "wine_bottle",
+		"name": "Wine Bottle",
+		"description": "A bottle of wine, useful for bartering or a morale boost.",
+		"weight": 1.5,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "wine_bottle_32.png",
+		"image": "./Mods/Dimensionfall/Items/wine_bottle_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"bread": {
+		"id": "bread",
+		"name": "Bread",
+		"description": "A loaf of bread, a staple food item.",
+		"weight": 0.5,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "bread_32.png",
+		"image": "./Mods/Dimensionfall/Items/bread_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"syringe": {
+		"id": "syringe",
+		"name": "Syringe",
+		"description": "A syringe, useful for administering medical treatments.",
+		"weight": 0.05,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "syringe_32.png",
+		"image": "./Mods/Dimensionfall/Items/syringe_32.png"
+	},
+	"slice_of_pizza": {
+		"id": "slice_of_pizza",
+		"name": "Slice of Pizza",
+		"description": "A slice of pizza, not very fresh but still edible.",
+		"weight": 0.3,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "slice_of_pizza_32.png",
+		"image": "./Mods/Dimensionfall/Items/slice_of_pizza_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"vacuum_sealed_fish": {
+		"id": "vacuum_sealed_fish",
+		"name": "Vacuum Sealed Fish",
+		"description": "A package of vacuum-sealed fish, preserved for longer storage.",
+		"weight": 0.8,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "vacuum_sealed_fish_32.png",
+		"image": "./Mods/Dimensionfall/Items/vacuum_sealed_fish_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"tomato": {
+		"id": "tomato",
+		"name": "Tomato",
+		"description": "A ripe tomato, still fresh and edible.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "tomato_32.png",
+		"image": "./Mods/Dimensionfall/Items/tomato_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 3,
+					"id": "food"
+				},
+				{
+					"amount": 3,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"lettuce": {
+		"id": "lettuce",
+		"name": "Lettuce",
+		"description": "A head of lettuce, slightly wilted but still usable.",
+		"weight": 0.3,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "lettuce_32.png",
+		"image": "./Mods/Dimensionfall/Items/lettuce_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 3,
+					"id": "food"
+				},
+				{
+					"amount": 6,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"protein_powder": {
+		"id": "protein_powder",
+		"name": "Protein Powder",
+		"description": "A container of protein powder, useful for maintaining nutrition.",
+		"weight": 1,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "protein_powder_32.png",
+		"image": "./Mods/Dimensionfall/Items/protein_powder_32.png"
+	},
+	"chocolate": {
+		"id": "chocolate",
+		"name": "Chocolate",
+		"description": "A bar of chocolate, a morale booster and energy source.",
+		"weight": 0.2,
+		"volume": 25,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "chocolate_32.png",
+		"image": "./Mods/Dimensionfall/Items/chocolate_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"jar_olives": {
+		"id": "jar_olives",
+		"name": "Jar of Olives",
+		"description": "A jar of olives, preserved and ready to eat.",
+		"weight": 0.5,
+		"volume": 40,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "jar_olives_32.png",
+		"image": "./Mods/Dimensionfall/Items/jar_olives_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"jar_basil": {
+		"id": "jar_basil",
+		"name": "Jar of Basil",
+		"description": "A jar of preserved basil, useful for seasoning.",
+		"weight": 0.5,
+		"volume": 25,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "jar_basil_32.png",
+		"image": "./Mods/Dimensionfall/Items/jar_basil_32.png"
+	},
+	"jar_mustard": {
+		"id": "jar_mustard",
+		"name": "Jar of Mustard",
+		"description": "A jar of mustard, adds flavor to meals.",
+		"weight": 0.3,
+		"volume": 25,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "jar_mustard_32.png",
+		"image": "./Mods/Dimensionfall/Items/jar_mustard_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 5,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"bottle_ketchup": {
+		"id": "bottle_ketchup",
+		"name": "Bottle of Ketchup",
+		"description": "A bottle of ketchup, a common condiment.",
+		"weight": 0.3,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "bottle_ketchup_32.png",
+		"image": "./Mods/Dimensionfall/Items/bottle_ketchup_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 5,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"stale_bread": {
+		"id": "stale_bread",
+		"name": "Stale Bread",
+		"description": "A loaf of bread that has gone stale, but still edible in a pinch.",
+		"weight": 0.5,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "stale_bread_32.png",
+		"image": "./Mods/Dimensionfall/Items/stale_bread_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 5,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"painkiller": {
+		"id": "painkiller",
+		"name": "Painkiller",
+		"description": "Pain relief medication, useful for treating injuries.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "painkiller_32.png",
+		"image": "./Mods/Dimensionfall/Items/painkiller_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0,
+					"id": "right_leg_health"
+				}
+			],
+			"amount": 10,
+			"order": "Lowest first"
+		}
+	},
+	"orange": {
+		"id": "orange",
+		"name": "Orange",
+		"description": "A fresh orange, a good source of vitamin C.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "orange_32.png",
+		"image": "./Mods/Dimensionfall/Items/orange_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 2,
+					"id": "food"
+				},
+				{
+					"amount": 6,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"apple": {
+		"id": "apple",
+		"name": "Apple",
+		"description": "A fresh apple, a healthy snack.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "apple_32.png",
+		"image": "./Mods/Dimensionfall/Items/apple_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				},
+				{
+					"amount": 3,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"potato": {
+		"id": "potato",
+		"name": "Potato",
+		"description": "A raw potato, versatile in many recipes.",
+		"weight": 0.3,
+		"volume": 15,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "potato_32.png",
+		"image": "./Mods/Dimensionfall/Items/potato_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"carrot": {
+		"id": "carrot",
+		"name": "Carrot",
+		"description": "A fresh carrot, good for nutrition.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "carrot_32.png",
+		"image": "./Mods/Dimensionfall/Items/carrot_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 9,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"eggs": {
+		"id": "eggs",
+		"name": "Eggs",
+		"description": "A carton of eggs, a versatile food item.",
+		"weight": 0.6,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "eggs_32.png",
+		"image": "./Mods/Dimensionfall/Items/eggs_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 12,
+					"id": "food"
+				},
+				{
+					"amount": 6,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"butter": {
+		"id": "butter",
+		"name": "Butter",
+		"description": "A stick of butter, useful for cooking and baking.",
+		"weight": 0.4,
+		"volume": 20,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "butter_32.png",
+		"image": "./Mods/Dimensionfall/Items/butter_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 20,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"can_energydrink": {
+		"id": "can_energydrink",
+		"name": "Energy Drink",
+		"description": "A can of energy drink, boosts stamina temporarily.",
+		"weight": 0.3,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "can_energydrink_32.png",
+		"image": "./Mods/Dimensionfall/Items/can_energydrink_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 12,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"can_soda": {
+		"id": "can_soda",
+		"name": "Soda",
+		"description": "A can of soda, a refreshing beverage.",
+		"weight": 0.3,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "can_soda_32.png",
+		"image": "./Mods/Dimensionfall/Items/can_soda_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 15,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"cheese": {
+		"id": "cheese",
+		"name": "Cheese",
+		"description": "A block of cheese, a versatile food item.",
+		"weight": 0.5,
+		"volume": 40,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "cheese_32.png",
+		"image": "./Mods/Dimensionfall/Items/cheese_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 10,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"tshirt": {
+		"id": "tshirt",
+		"name": "T-shirt",
+		"description": "A basic cotton T-shirt, comfortable and versatile.",
+		"weight": 0.5,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "t_shirt_32.png",
+		"image": "./Mods/Dimensionfall/Items/t_shirt_32.png",
+		"Wearable": {
+			"slot": "torso",
+			"player_attributes": []
+		}
+	},
+	"jeans": {
+		"id": "jeans",
+		"name": "Jeans",
+		"description": "A pair of durable denim jeans, perfect for rough conditions.",
+		"weight": 1,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "jeans_32.png",
+		"image": "./Mods/Dimensionfall/Items/jeans_32.png",
+		"Wearable": {
+			"slot": "legs",
+			"player_attributes": [
+				{
+					"id": "inventory_space",
+					"value": 100
+				}
+			]
+		}
+	},
+	"spoon_silver": {
+		"id": "spoon_silver",
+		"name": "Silver Spoon",
+		"description": "A basic silver spoon, used for eating or stirring.",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "spoon_32.png",
+		"image": "./Mods/Dimensionfall/Items/spoon_32.png"
+	},
+	"fork_silver": {
+		"id": "fork_silver",
+		"name": "Silver Fork",
+		"description": "A standard silver fork, useful for eating or cooking.",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "fork_32.png",
+		"image": "./Mods/Dimensionfall/Items/fork_32.png"
+	},
+	"knife_butter": {
+		"id": "knife_butter",
+		"name": "Butter Knife",
+		"description": "A dull knife, designed for spreading butter.",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "butter_knife_32.png",
+		"image": "./Mods/Dimensionfall/Items/butter_knife_32.png"
+	},
+	"hand_wisk": {
+		"id": "hand_wisk",
+		"name": "Hand Whisk",
+		"description": "A manual whisk for mixing ingredients.",
+		"weight": 0.2,
+		"volume": 80,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "hand_wisk_32.png",
+		"image": "./Mods/Dimensionfall/Items/hand_wisk_32.png"
+	},
+	"soup_ladle": {
+		"id": "soup_ladle",
+		"name": "Soup Ladle",
+		"description": "A large spoon with a deep bowl, used for serving soups.",
+		"weight": 0.3,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "soup_ladle_32.png",
+		"image": "./Mods/Dimensionfall/Items/soup_ladle_32.png"
+	},
+	"tongs_kitchen": {
+		"id": "tongs_kitchen",
+		"name": "Kitchen Tongs",
+		"description": "Tongs used for gripping and lifting food.",
+		"weight": 0.3,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "kitchen_tongs_32.png",
+		"image": "./Mods/Dimensionfall/Items/kitchen_tongs_32.png"
+	},
+	"hat_baseball": {
+		"id": "hat_baseball",
+		"name": "Baseball Cap",
+		"description": "A simple baseball cap to shield your eyes from the sun.",
+		"weight": 0.2,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "baseball_cap_32.png",
+		"image": "./Mods/Dimensionfall/Items/baseball_cap_32.png",
+		"Wearable": {
+			"slot": "head",
+			"player_attributes": []
+		}
+	},
+	"sweater": {
+		"id": "sweater",
+		"name": "Sweater",
+		"description": "A cozy wool sweater, ideal for cold weather.",
+		"weight": 1,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "sweater_32.png",
+		"image": "./Mods/Dimensionfall/Items/sweater_32.png",
+		"Wearable": {
+			"slot": "torso",
+			"player_attributes": []
+		}
+	},
+	"scarf": {
+		"id": "scarf",
+		"name": "Scarf",
+		"description": "A long scarf to keep your neck warm in chilly conditions.",
+		"weight": 1,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "scarf_32.png",
+		"image": "./Mods/Dimensionfall/Items/scarf_32.png",
+		"Wearable": {
+			"slot": "head",
+			"player_attributes": []
+		}
+	},
+	"gloves_leather": {
+		"id": "gloves_leather",
+		"name": "Leather Gloves",
+		"description": "A pair of sturdy leather gloves, providing good protection for your hands.",
+		"weight": 1,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "leather_gloves_32.png",
+		"image": "./Mods/Dimensionfall/Items/leather_gloves_32.png",
+		"Wearable": {
+			"slot": "hands",
+			"player_attributes": []
+		}
+	},
+	"shorts": {
+		"id": "shorts",
+		"name": "Shorts",
+		"description": "Comfortable shorts for warm weather and easy movement.",
+		"weight": 0.4,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "shorts_32.png",
+		"image": "./Mods/Dimensionfall/Items/shorts_32.png",
+		"Wearable": {
+			"slot": "legs",
+			"player_attributes": []
+		}
+	},
+	"strainer_sieve": {
+		"id": "strainer_sieve",
+		"name": "Strainer Sieve",
+		"description": "A fine mesh sieve for straining liquids or sifting dry ingredients.",
+		"weight": 0.3,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "strainer_sieve_32.png",
+		"image": "./Mods/Dimensionfall/Items/strainer_sieve_32.png",
+		"Wearable": {
+			"slot": "legs",
+			"player_attributes": []
+		}
+	},
+	"socks": {
+		"id": "socks",
+		"name": "Socks",
+		"description": "A pair of warm wool socks to keep your feet dry and comfortable.",
+		"weight": 0.3,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "socks_32.png",
+		"image": "./Mods/Dimensionfall/Items/socks_32.png",
+		"Wearable": {
+			"slot": "feet",
+			"player_attributes": []
+		}
+	},
+	"scissors_kitchen": {
+		"id": "scissors_kitchen",
+		"name": "Kitchen Scissors",
+		"description": "Scissors designed for various kitchen tasks, including cutting herbs or packaging.",
+		"weight": 0.15,
+		"volume": 0.2,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "kitchen_scizzors_32.png",
+		"image": "./Mods/Dimensionfall/Items/kitchen_scizzors_32.png"
+	},
+	"cheese_grater": {
+		"id": "cheese_grater",
+		"name": "Cheese Grater",
+		"description": "A tool used to grate cheese or other ingredients.",
+		"weight": 0.3,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "cheese_grater_32.png",
+		"image": "./Mods/Dimensionfall/Items/cheese_grater_32.png"
+	},
+	"pizza_cutter": {
+		"id": "pizza_cutter",
+		"name": "Pizza Cutter",
+		"description": "A wheel blade used to slice pizza.",
+		"weight": 0.2,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 2,
+		"sprite": "pizza_cutter_32.png",
+		"image": "./Mods/Dimensionfall/Items/pizza_cutter_32.png"
+	},
+	"basting_brush": {
+		"id": "basting_brush",
+		"name": "Basting Brush",
+		"description": "A brush used for applying sauces or marinades to food.",
+		"weight": 0.1,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "basting_brush_32.png",
+		"image": "./Mods/Dimensionfall/Items/basting_brush_32.png"
+	},
+	"apple_corers": {
+		"id": "apple_corers",
+		"name": "Apple Corer",
+		"description": "A tool for removing the core from apples.",
+		"weight": 0.1,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "apple_corer_32.png",
+		"image": "./Mods/Dimensionfall/Items/apple_corer_32.png"
+	},
+	"garlic_press": {
+		"id": "garlic_press",
+		"name": "Garlic Press",
+		"description": "A device for crushing garlic cloves.",
+		"weight": 0.3,
+		"volume": 80,
+		"stack_size": 1,
+		"max_stack_size": 2,
+		"sprite": "garlic_press_32.png",
+		"image": "./Mods/Dimensionfall/Items/garlic_press_32.png"
+	},
+	"knife_silver": {
+		"id": "knife_silver",
+		"name": "Silver Knife",
+		"description": "A standard silver knife, used for cutting food.",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "silver_knife_32.png",
+		"image": "./Mods/Dimensionfall/Items/silver_knife_32.png"
+	},
+	"measuring_spoon_set": {
+		"id": "measuring_spoon_set",
+		"name": "Measuring Spoon Set",
+		"description": "A set of spoons in various sizes for precise measurements.",
+		"weight": 0.3,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 2,
+		"sprite": "measuring_spoon_set_32.png",
+		"image": "./Mods/Dimensionfall/Items/measuring_spoon_set_32.png"
+	},
+	"small_stick": {
+		"id": "small_stick",
+		"name": "Small Stick",
+		"description": "A small stick, useful for kindling or crafting basic tools.",
+		"weight": 0.5,
+		"volume": 40,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "stick_small_32.png",
+		"image": "./Mods/Dimensionfall/Items/stick_small_32.png"
+	},
+	"large_rock": {
+		"id": "large_rock",
+		"name": "Large Rock",
+		"description": "A sizable rock that can be used as a primitive weapon or for construction.",
+		"weight": 10,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "rock_large_32.png",
+		"image": "./Mods/Dimensionfall/Items/rock_large_32.png"
+	},
+	"herbs_wild": {
+		"id": "herbs_wild",
+		"name": "Wild Herbs",
+		"description": "A collection of wild herbs, useful for medicinal purposes or adding flavor to food.",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "wild_herbs_32.png",
+		"image": "./Mods/Dimensionfall/Items/wild_herbs_32.png"
+	},
+	"berries_wild": {
+		"id": "berries_wild",
+		"name": "Wild Berries",
+		"description": "A handful of wild berries, good for a quick snack or foraging.",
+		"weight": 0.05,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 100,
+		"sprite": "berries_wild_32.png",
+		"image": "./Mods/Dimensionfall/Items/berries_wild_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 6,
+					"id": "food"
+				},
+				{
+					"amount": 2,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"mushrooms_forest": {
+		"id": "mushrooms_forest",
+		"name": "Forest Mushrooms",
+		"description": "Edible mushrooms found in the forest, can be cooked or used in potions.",
+		"weight": 0.05,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "mushroom_forest_32.png",
+		"image": "./Mods/Dimensionfall/Items/mushroom_forest_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 4,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"pinecone": {
+		"id": "pinecone",
+		"name": "Pinecone",
+		"description": "A pinecone, can be used for kindling or as a crafting material.",
+		"weight": 0.05,
+		"volume": 40,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "pinecone_32.png",
+		"image": "./Mods/Dimensionfall/Items/pinecone_32.png"
+	},
+	"bird_egg": {
+		"id": "bird_egg",
+		"name": "Bird Egg",
+		"description": "A fresh bird egg, can be cooked for a nutritious meal.",
+		"weight": 0.1,
+		"volume": 15,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "egg_bird_32.png",
+		"image": "./Mods/Dimensionfall/Items/egg_bird_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 5,
+					"id": "food"
+				},
+				{
+					"amount": 2,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"flower_wild": {
+		"id": "flower_wild",
+		"name": "Wild Flower",
+		"description": "A beautiful wild flower, can be used for decoration or crafting.",
+		"weight": 0.1,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "flower_wild_32.png",
+		"image": "./Mods/Dimensionfall/Items/flower_wild_32.png"
+	},
+	"acorn": {
+		"id": "acorn",
+		"name": "Acorn",
+		"description": "An acorn, can be used as food or in various crafting recipes.",
+		"weight": 0.02,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 100,
+		"sprite": "acorn_32.png",
+		"image": "./Mods/Dimensionfall/Items/acorn_32.png"
+	},
+	"pebble": {
+		"id": "pebble",
+		"name": "Pebble",
+		"description": "A small pebble found on the ground, useful for crafting or as a projectile.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 100,
+		"sprite": "pebble_32.png",
+		"image": "./Mods/Dimensionfall/Items/pebble_32.png"
+	},
+	"quartz_crystal": {
+		"id": "quartz_crystal",
+		"name": "Quartz Crystal",
+		"description": "A clear quartz crystal, valuable for crafting or trade.",
+		"weight": 2,
+		"volume": 90,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "quartz_crystal_32.png",
+		"image": "./Mods/Dimensionfall/Items/quartz_crystal_32.png"
+	},
+	"gravel": {
+		"id": "gravel",
+		"name": "Gravel",
+		"description": "A small pile of gravel, useful for construction or as a crafting material.",
+		"weight": 0.2,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 100,
+		"sprite": "gravel_32.png",
+		"image": "./Mods/Dimensionfall/Items/gravel_32.png"
+	},
+	"medium_rock": {
+		"id": "medium_rock",
+		"name": "Medium Rock",
+		"description": "A medium-sized rock, versatile for various construction or crafting needs.",
+		"weight": 2,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "rock_medium_32.png",
+		"image": "./Mods/Dimensionfall/Items/rock_medium_32.png"
+	},
+	"small_rock": {
+		"id": "small_rock",
+		"name": "Small Rock",
+		"description": "A small rock, handy for crafting or as a basic tool component.",
+		"weight": 0.2,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "rock_small_32.png",
+		"image": "./Mods/Dimensionfall/Items/rock_small_32.png"
+	},
+	"stick": {
+		"id": "stick",
+		"name": "Stick",
+		"description": "A simple stick, useful for crafting, kindling, or as a basic weapon.",
+		"weight": 1,
+		"volume": 100,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "stick_32.png",
+		"image": "./Mods/Dimensionfall/Items/stick_32.png",
+		"Melee": {
+			"damage": 10,
+			"reach": 1,
+			"used_skill": {
+				"skill_id": "bashing",
+				"xp": 10
+			}
+		}
+	},
+	"long_stick": {
+		"id": "long_stick",
+		"name": "Long Stick",
+		"description": "A long stick, versatile for crafting, building structures, or as a makeshift weapon.",
+		"weight": 5,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 2,
+		"sprite": "stick_long_32.png",
+		"image": "./Mods/Dimensionfall/Items/stick_long_32.png",
+		"Melee": {
+			"damage": 15,
+			"reach": 2,
+			"used_skill": {
+				"skill_id": "bashing",
+				"xp": 10
+			}
+		}
+	},
+	"sharp_stone": {
+		"id": "sharp_stone",
+		"name": "Sharp Stone",
+		"description": "A stone with a sharp edge, useful for cutting or crafting tools.",
+		"weight": 0.8,
+		"volume": 50,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "rock_sharp_32.png",
+		"image": "./Mods/Dimensionfall/Items/rock_sharp_32.png"
+	},
+	"stone_spear": {
+		"id": "stone_spear",
+		"name": "Stone Spear",
+		"description": "A long stick with a sharpened stone tip, ideal for hunting or defense.",
+		"weight": 4,
+		"volume": 200,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "spear_stone_32.png",
+		"image": "./Mods/Dimensionfall/Items/spear_stone_32.png",
+		"Craft": [
+			{
+				"craft_amount": 1,
+				"craft_time": 10,
+				"flags": {
+					"requires_light": false
+				},
+				"required_resources": [
+					{
+						"amount": 1,
+						"id": "long_stick"
+					},
+					{
+						"amount": 1,
+						"id": "sharp_stone"
+					}
+				],
+				"skill_progression": {
+					"id": "fabrication",
+					"xp": 25
+				}
+			}
+		],
+		"Melee": {
+			"damage": 17,
+			"reach": 2,
+			"used_skill": {
+				"skill_id": "cutting",
+				"xp": 10
+			}
+		}
+	},
+	"waistbag": {
+		"id": "waistbag",
+		"name": "Waist Bag",
+		"description": "A compact waist bag, ideal for carrying small essential items.",
+		"weight": 0.3,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "waistbag_32.png",
+		"image": "./Mods/Dimensionfall/Items/waistbag_32.png",
+		"Wearable": {
+			"slot": "back",
+			"player_attributes": [
+				{
+					"id": "inventory_space",
+					"value": 200
+				}
+			]
+		}
+	},
+	"mailbag": {
+		"id": "mailbag",
+		"name": "Mail Bag",
+		"description": "A large mailbag designed for carrying letters and small packages, with ample space.",
+		"weight": 0.7,
+		"volume": 80,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "mailbag_32.png",
+		"image": "./Mods/Dimensionfall/Items/mailbag_32.png",
+		"Wearable": {
+			"slot": "back",
+			"player_attributes": [
+				{
+					"id": "inventory_space",
+					"value": 400
+				}
+			]
+		}
+	},
+	"backpack": {
+		"id": "backpack",
+		"name": "Backpack",
+		"description": "A durable backpack with plenty of room for various supplies.",
+		"weight": 1.2,
+		"volume": 120,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "backpack_32.png",
+		"image": "./Mods/Dimensionfall/Items/backpack_32.png",
+		"Wearable": {
+			"slot": "back",
+			"player_attributes": [
+				{
+					"id": "inventory_space",
+					"value": 1000
+				}
+			]
+		}
+	},
+	"brick": {
+		"id": "brick",
+		"name": "Brick",
+		"description": "A sturdy construction material, often used for building or crafting.",
+		"weight": 2,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 50,
+		"sprite": "brick_32.png",
+		"image": "./Mods/Dimensionfall/Items/brick_32.png"
+	},
+	"damaged_brick": {
+		"id": "damaged_brick",
+		"name": "Damaged Brick",
+		"description": "A brick with visible cracks and wear, still usable but not as durable.",
+		"weight": 1.8,
+		"volume": 60,
+		"stack_size": 1,
+		"max_stack_size": 50,
+		"sprite": "brick_damaged_32.png",
+		"image": "./Mods/Dimensionfall/Items/brick_damaged_32.png"
+	},
+	"damaged_concrete_slab": {
+		"id": "damaged_concrete_slab",
+		"name": "Damaged Concrete Slab",
+		"description": "A large concrete slab with visible cracks, useful for temporary construction or barricading.",
+		"weight": 20,
+		"volume": 400,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "concrete_slab_damaged_32.png",
+		"image": "./Mods/Dimensionfall/Items/concrete_slab_damaged_32.png"
+	},
+	"glass_shards": {
+		"id": "glass_shards",
+		"name": "Glass Shards",
+		"description": "Sharp pieces of broken glass, dangerous but potentially useful in crafting.",
+		"weight": 0.05,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 100,
+		"sprite": "glass_shards_32.png",
+		"image": "./Mods/Dimensionfall/Items/glass_shards_32.png"
+	},
+	"rusted_metal_sheets": {
+		"id": "rusted_metal_sheets",
+		"name": "Rusted Metal Sheets",
+		"description": "Old metal sheets covered in rust, brittle but can still be used for makeshift repairs or crafting.",
+		"weight": 5,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "rusted_metal_sheets_32.png",
+		"image": "./Mods/Dimensionfall/Items/rusted_metal_sheets_32.png"
+	},
+	"bottle_antidote": {
+		"id": "bottle_antidote",
+		"name": "Bottle of antidote",
+		"description": "A small bottle that contains antidote. It helps to recover from poison.",
+		"weight": 0.1,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "antidote_32.png",
+		"image": "./Mods/Dimensionfall/Items/antidote_32.png",
+		"Medical": {
+			"attributes": [
+				{
+					"amount": 0,
+					"id": "poison"
+				}
+			],
+			"amount": -50,
+			"order": "Lowest first"
+		}
+	},
+	"damaged_transmitter": {
+		"id": "damaged_transmitter",
+		"name": "Damaged transmitter",
+		"description": "An old, damaged transmitter that seems to emit faint radio signals. It needs repairs before it can be used",
+		"weight": 1,
+		"volume": 80,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "transmitter_broken_32.png",
+		"image": "./Mods/Dimensionfall/Items/transmitter_broken_32.png"
+	},
+	"circuit_board": {
+		"id": "circuit_board",
+		"name": "Circuit Board",
+		"description": "A functional circuit board, scavenged from a robotic enemy or scrap pile. Essential for repairing electronics.",
+		"weight": 0.5,
+		"volume": 20,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "cirquit_board_32.png",
+		"image": "./Mods/Dimensionfall/Items/cirquit_board_32.png"
+	},
+	"transmitter": {
+		"id": "transmitter",
+		"name": "Transmitter",
+		"description": "A fully functional transmitter, capable of boosting a weak signal when paired with the right equipment.",
+		"weight": 1,
+		"volume": 80,
+		"stack_size": 1,
+		"max_stack_size": 1,
+		"sprite": "transmitter_32.png",
+		"image": "./Mods/Dimensionfall/Items/transmitter_32.png",
+		"Craft": [
+			{
+				"craft_amount": 1,
+				"craft_time": 10,
+				"flags": {
+					"requires_light": false
+				},
+				"required_resources": [
+					{
+						"amount": 1,
+						"id": "damaged_transmitter"
+					},
+					{
+						"amount": 2,
+						"id": "electrical_components"
+					},
+					{
+						"amount": 2,
+						"id": "plastic_parts"
+					},
+					{
+						"amount": 1,
+						"id": "circuit_board"
+					}
+				],
+				"skill_requirement": {
+					"id": "electronics",
+					"level": 1
+				},
+				"skill_progression": {
+					"id": "electronics",
+					"xp": 25
+				}
+			}
+		]
+	},
+	"radio_tower_key": {
+		"id": "radio_tower_key",
+		"name": "Radio tower key",
+		"description": "A metallic key that grants access to the control panel of the radio tower.",
+		"weight": 0.25,
+		"volume": 15,
+		"stack_size": 2,
+		"max_stack_size": 100,
+		"sprite": "metallic_key_32.png",
+		"image": "./Mods/Dimensionfall/Items/metallic_key_32.png"
+	},
+	"wallet": {
+		"id": "wallet",
+		"name": "Wallet",
+		"description": "A worn leather wallet containing faded photographs and a few crumpled bills",
+		"weight": 0.1,
+		"volume": 15,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "wallet_32.png",
+		"image": "./Mods/Dimensionfall/Items/wallet_32.png"
+	},
+	"wrist_watch": {
+		"id": "wrist_watch",
+		"name": "Wallet",
+		"description": "A worn leather wallet containing faded photographs and a few crumpled bills",
+		"weight": 0.1,
+		"volume": 15,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "watch_32.png",
+		"image": "./Mods/Dimensionfall/Items/watch_32.png",
+		"Wearable": {
+			"slot": "hands",
+			"player_attributes": []
+		}
+	},
+	"rotten_flesh_chunk": {
+		"id": "rotten_flesh_chunk",
+		"name": "Chunk of Rotten Flesh",
+		"description": "A disgusting chunk of decaying flesh, oozing with a foul stench.",
+		"weight": 0.25,
+		"volume": 15,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "rotten_flesh_chunk_32.png",
+		"image": "./Mods/Dimensionfall/Items/rotten_flesh_chunk_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 2,
+					"id": "food"
+				},
+				{
+					"amount": 2,
+					"id": "water"
+				},
+				{
+					"amount": 10,
+					"id": "poison"
+				}
+			]
+		}
+	},
+	"zombie_bone": {
+		"id": "zombie_bone",
+		"name": "Zombie Bone",
+		"description": "A broken bone fragment, brittle but sharp.",
+		"weight": 0.1,
+		"volume": 15,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "zombie_bone_32.png",
+		"image": "./Mods/Dimensionfall/Items/zombie_bone_32.png"
+	},
+	"zombie_eye": {
+		"id": "zombie_eye",
+		"name": "Zombie Eye",
+		"description": "A cloudy, lifeless eye. It's unsettling to look at.",
+		"weight": 0.05,
+		"volume": 5,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "zombie_eye_32.png",
+		"image": "./Mods/Dimensionfall/Items/zombie_eye_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 1,
+					"id": "food"
+				},
+				{
+					"amount": 1,
+					"id": "water"
+				},
+				{
+					"amount": 10,
+					"id": "poison"
+				}
+			]
+		}
+	},
+	"zombie_organ": {
+		"id": "zombie_organ",
+		"name": "Decayed Organ",
+		"description": "A grotesque internal organ, bloated and putrid.",
+		"weight": 0.25,
+		"volume": 25,
+		"stack_size": 1,
+		"max_stack_size": 3,
+		"sprite": "zombie_organ_32.png",
+		"image": "./Mods/Dimensionfall/Items/zombie_organ_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 3,
+					"id": "food"
+				},
+				{
+					"amount": 3,
+					"id": "water"
+				},
+				{
+					"amount": 10,
+					"id": "poison"
+				}
+			]
+		}
+	},
+	"kindling_bundle": {
+		"id": "kindling_bundle",
+		"name": "Kindling Bundle",
+		"description": "A bundle of small, dry sticks and plant remnants tied together, perfect for starting a fire.",
+		"weight": 0.3,
+		"volume": 30,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "kindling_bundle_32.png",
+		"image": "./Mods/Dimensionfall/Items/kindling_bundle_32.png"
+	},
+	"charcoal_chunk": {
+		"id": "charcoal_chunk",
+		"name": "Charcoal Chunk",
+		"description": "A chunk of charcoal, created by burning wood. Useful as fuel or for crafting.",
+		"weight": 0.5,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "charcoal_chunk_32.png",
+		"image": "./Mods/Dimensionfall/Items/charcoal_chunk_32.png"
+	},
+	"wood_bundle": {
+		"id": "wood_bundle",
+		"name": "Wood Bundle",
+		"description": "A sturdy bundle of wood pieces tied together, used for creating a stable fire base.",
+		"weight": 10,
+		"volume": 150,
+		"stack_size": 1,
+		"max_stack_size": 2,
+		"sprite": "branches_32.png",
+		"image": "./Mods/Dimensionfall/Items/branches_32.png"
+	},
+	"kiwi": {
+		"id": "kiwi",
+		"name": "Kiwi",
+		"description": "A fresh, juicy kiwi, rich in vitamins and fiber.",
+		"weight": 0.2,
+		"volume": 8,
+		"stack_size": 1,
+		"max_stack_size": 20,
+		"sprite": "kiwi_32.png",
+		"image": "./Mods/Dimensionfall/Items/kiwi_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 3,
+					"id": "food"
+				},
+				{
+					"amount": 4,
+					"id": "water"
+				}
+			]
+		}
+	},
+	"uncooked_meat": {
+		"id": "uncooked_meat",
+		"name": "Uncooked Meat",
+		"description": "A piece of uncooked meat, which needs to be cooked before consumption. High in calories but potentially risky if eaten raw.",
+		"weight": 0.5,
+		"volume": 20,
+		"stack_size": 1,
+		"max_stack_size": 10,
+		"sprite": "uncooked_meat_32.png",
+		"image": "./Mods/Dimensionfall/Items/uncooked_meat_32.png",
+		"Food": {
+			"attributes": [
+				{
+					"amount": 15,
+					"id": "food"
+				}
+			]
+		}
+	},
+	"pack_cigarettes": {
+		"id": "pack_cigarettes",
+		"name": "Pack of cigarettes",
+		"description": "It's a carton pack that contains cigarettes. You need a fire source to light them and start smoking",
+		"weight": 0.1,
+		"volume": 10,
+		"stack_size": 1,
+		"max_stack_size": 5,
+		"sprite": "sigarrette_pack_32.png",
+		"image": "./Mods/Dimensionfall/Items/sigarrette_pack_32.png"
+	}
+}
