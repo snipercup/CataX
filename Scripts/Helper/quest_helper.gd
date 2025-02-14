@@ -127,13 +127,7 @@ func _on_step_complete(step: Dictionary):
 # step: the new step in the quest
 func _on_next_step(step: Dictionary):
 	check_and_emit_target_map(step)
-	update_active_quest_descriptions()  # Centralized quest description update
-
-	# The player might already have the item for the next step, so check it
-	match step.get("step_type", ""):	
-		QuestManager.INCREMENTAL_STEP, QuestManager.ITEMS_STEP:
-			update_quest_by_inventory(null)
-
+	process_active_quests()  # Centralized quest description update
 
 	# The player might already have the item for the next step, so check it
 	match step.get("step_type", ""):	
@@ -185,13 +179,13 @@ func create_quest_from_data(quest_data: RQuest):
 
 # Add a quest step to the quest. In this case, the step is just a dictionary with some data
 # Example step dictionary:
-#			{
-#				"amount": 1,
-#				"item": "long_stick",
-#				"tip": "You can find one in the forest",
-#				"description": "This stick will help figure out the truth!", # updates the quest description
-#				"type": "collect"
-#			}
+#	{
+#		"amount": 1,
+#		"item": "long_stick",
+#		"tip": "You can find one in the forest",
+#		"description": "This stick will help figure out the truth!", # updates the quest description
+#		"type": "collect"
+#	}
 func add_quest_step(quest: ScriptQuest, step: Dictionary) -> bool:
 	match step.type:
 		"collect":
@@ -218,6 +212,16 @@ func add_quest_step(quest: ScriptQuest, step: Dictionary) -> bool:
 			# Add an action step for entering a specific map
 			var map_name: String = Runtimedata.maps.by_id(step.map_id).name
 			quest.add_action_step("Travel to " + map_name, {"stepjson": step})
+			return true
+		"spawn_item":
+			# Add an action step for spawning an item on the map
+			quest.add_action_step("Spawn " + Runtimedata.items.by_id(step.item).name + " on map", {"stepjson": step})
+			return true
+		"spawn_mob":
+			# Add an action step for spawning a mob when approaching a map
+			var mob_name: String = Runtimedata.mobs.by_id(step.mob).name
+			var map_name: String = Runtimedata.maps.by_id(step.map_id).name
+			quest.add_action_step("Approach " + map_name + " to spawn " + mob_name, {"stepjson": step})
 			return true
 	return false
 
@@ -334,15 +338,33 @@ func _on_map_entered(_player: Player, _old_pos: Vector2, new_pos: Vector2):
 	# Update each of the current quests with the entered map information
 	for quest in quests_in_progress.values():
 		var step = QuestManager.get_current_step(quest.quest_name)
+		if not step:
+			continue
+
 		var stepmeta: Dictionary = step.get("meta_data", {}).get("stepjson", {})
 
 		# Handle action_step type "enter"
 		if step.step_type == "action_step" and stepmeta.get("type", "") == "enter":
 			var map_cell = Helper.overmap_manager.get_map_cell_by_local_coordinate(new_pos)
 			var map_id: String = stepmeta.get("map_id", "")
-			if map_id == map_cell.map_id:
+			if map_cell and map_id == map_cell.map_id:
 				# The player has entered the correct map for the quest step
 				QuestManager.progress_quest(quest.quest_name)
+
+		# Handle action_step type "spawn_mob"
+		elif step.step_type == "action_step" and stepmeta.get("type", "") == "spawn_mob":
+			# Make sure the coordinate is set
+			if stepmeta.has("coordinate"):
+				var target_coordinate: Vector2 = General.string_to_vector2(stepmeta["coordinate"])
+				var chunk = Helper.map_manager.get_chunk_from_overmap_coordinate(target_coordinate)
+
+				# When the map at the coordinate is instantiated, spawn the mob
+				if chunk != null:
+					var mob_id = stepmeta.get("mob", "")
+					Helper.map_manager.spawn_mob_at_nearby_map(mob_id, target_coordinate)
+
+					# Complete the step
+					QuestManager.progress_quest(quest.quest_name)
 
 		# Handle incremental_step type "kill"
 		elif step.step_type == QuestManager.INCREMENTAL_STEP and stepmeta.get("type", "") == "kill":
@@ -377,15 +399,34 @@ func check_and_emit_target_map(step: Dictionary):
 			if stepmeta.has("map_guide") and stepmeta["map_guide"] != "none":
 				_emit_target_map_for_kill_step(stepmeta)
 
-	elif step_type == "action_step" and not step.complete:  # Handle "enter" steps
+	elif step_type == "action_step" and not step.complete:
 		var stepmeta: Dictionary = step.get("meta_data", {}).get("stepjson", {})
-		if stepmeta.get("type", "") == "enter":
+		if stepmeta.get("type", "") == "enter": # We set a target for the player to enter
 			var map_id: String = stepmeta.get("map_id", "")
 			target_map_changed.emit([map_id], stepmeta)  # Emit for "enter" steps
+		elif stepmeta.get("type", "") == "spawn_mob": # We set a target for the player to approach
+			# If the coordinate is not yet set, pick a target coordinate based on the map_id
+			if not stepmeta.has("coordinate"):
+				var map_id: String = stepmeta.get("map_id", "")
+				var closest_cell = Helper.overmap_manager.find_closest_map_cell_with_ids(
+					[map_id], {"reveal_condition": "REVEALED"}
+				)
+
+				if closest_cell:
+					var coordinate = Vector2(closest_cell.coordinate_x, closest_cell.coordinate_y)
+					stepmeta["coordinate"] = coordinate
+					# Persist the updated stepmeta back into the step's meta_data
+					step["meta_data"]["stepjson"] = stepmeta
+
+			# Emit the map target for visualization purposes (arrow on overmap)
+			if stepmeta.has("coordinate"):
+				target_map_changed.emit([stepmeta["map_id"]], {"reveal_condition": "REVEALED"})
+			else:
+				target_map_changed.emit([])  # Fallback if no cell was found
 		else:
-			target_map_changed.emit([])  # No target if type is not "enter"
+			target_map_changed.emit([])  # No target if type is not "enter" or "spawn_mob"
 	else:
-		target_map_changed.emit([])  # No target for unsupported step types
+		target_map_changed.emit([])  # No target if type is not "action_step"
 
 
 # Function to handle tracking a quest when the "track quest" button is clicked
@@ -451,14 +492,32 @@ func _on_item_was_unequipped(heldItem: InventoryItem, _equipmentSlot: Control) -
 		# Reevaluate quests based on the updated inventory
 		update_quest_by_inventory(null)
 
-func update_active_quest_descriptions():
+
+# Performs actions that are independent of player actions
+# Updates the quest description if needed
+# spawns item and moves onto the next step if needed.
+func process_active_quests():
 	var quests_in_progress: Dictionary = QuestManager.get_quests_in_progress()
-	
+
 	for quest in quests_in_progress.values():
 		var step = QuestManager.get_current_step(quest.quest_name)
 		if not step:
 			continue  # Skip if there is no active step
 
 		var stepmeta: Dictionary = step.get("meta_data", {}).get("stepjson", {})
+
+		# Update quest description if needed
 		if stepmeta.has("description"):
-			quest["quest_details"] = stepmeta["description"]  # Update quest description
+			quest["quest_details"] = stepmeta["description"]
+
+		# Handle spawn_item step (ACTION_STEP)
+		if step.step_type == QuestManager.ACTION_STEP and stepmeta.get("type", "") == "spawn_item" and not step.get("complete", false):
+			var item_id: String = stepmeta.get("item", "")
+			var amount: int = stepmeta.get("amount", 1)
+
+			# Attempt to spawn the item
+			if Helper.map_manager.spawn_item_at_current_player_map(item_id, amount):
+				# Automatically complete the step upon successful item spawn
+				QuestManager.progress_quest(quest.quest_name)
+			else:
+				print_debug("Failed to spawn item on map for quest step in quest: " + quest.quest_name)

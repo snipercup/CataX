@@ -25,6 +25,13 @@ func _ready():
 
 # Called when a function creates this class using ContainerItem.new(container_json)
 # Basic setup for this container. Should be called before adding it to the scene tree
+# Example item:
+# {
+# 	"itemgroups": ["destroyed_furniture_medium"],
+# 	"global_position_x": 2,
+# 	"global_position_y": 1,
+# 	"global_position_z": 17
+# }
 func _init(item: Dictionary):
 	_initialize_container(item)
 	create_loot()
@@ -268,8 +275,21 @@ func _on_item_added(_item: InventoryItem):
 		set_random_inventory_item_texture() # Update to a new sprite
 
 
-func add_item(item_id: String):
-	inventory.create_and_add_item.call_deferred(item_id)
+# Adds an item with a specific ID and quantity to the container's inventory
+# Default quantity is 1 if not provided
+func add_item(item_id: String, quantity: int = 1):
+	# Fetch the individual item data for stack size verification
+	var ritem: RItem = Runtimedata.items.by_id(item_id)
+	if not ritem:
+		push_error("Item ID %s not found in Runtimedata.items" % item_id)
+		return
+
+	# Split into stacks based on max_stack_size
+	while quantity > 0:
+		var stack_size = min(quantity, ritem.max_stack_size)
+		var item = inventory.create_and_add_item(item_id)
+		InventoryStacked.set_item_stack_size(item, stack_size)
+		quantity -= stack_size
 
 
 func insert_item(item: InventoryItem) -> bool:
