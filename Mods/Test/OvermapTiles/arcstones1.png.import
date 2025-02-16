@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bw4bac4ghsfis"
-path="res://.godot/imported/wearableslot_legs_32.png-9461de813920ab6283427dd819add807.ctex"
+uid="uid://dvst55mvt7tvj"
+path="res://.godot/imported/arcstones1.png-9cc21bd48d36716c806c3c8359755fd4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Mods/Core/Wearableslots/wearableslot_legs_32.png"
-dest_files=["res://.godot/imported/wearableslot_legs_32.png-9461de813920ab6283427dd819add807.ctex"]
+source_file="res://Mods/Test/OvermapTiles/arcstones1.png"
+dest_files=["res://.godot/imported/arcstones1.png-9cc21bd48d36716c806c3c8359755fd4.ctex"]
 
 [params]
 

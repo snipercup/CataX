@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dd4wkwckxgy83"
-path="res://.godot/imported/wearableslot_hands_32.png-b25bb307a35c6c9d2287f1de12775ff2.ctex"
+uid="uid://dlmkdg7h71qe8"
+path="res://.godot/imported/playerattribuge_inventory_space_32.png-46bbf0f17c11747a24a7717d75a0aa46.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Mods/Core/Wearableslots/wearableslot_hands_32.png"
-dest_files=["res://.godot/imported/wearableslot_hands_32.png-b25bb307a35c6c9d2287f1de12775ff2.ctex"]
+source_file="res://Mods/Test/PlayerAttributes/playerattribuge_inventory_space_32.png"
+dest_files=["res://.godot/imported/playerattribuge_inventory_space_32.png-46bbf0f17c11747a24a7717d75a0aa46.ctex"]
 
 [params]
 
