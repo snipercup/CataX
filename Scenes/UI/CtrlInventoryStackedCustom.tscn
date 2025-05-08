@@ -5,8 +5,6 @@
 [ext_resource type="PackedScene" uid="uid://dxgl4vkc313we" path="res://Scenes/UI/CtrlInventoryStackedlistHeaderItem.tscn" id="3_svicc"]
 [ext_resource type="AudioStream" uid="uid://cfmgnsm10aj4i" path="res://Sounds/Weapons/Reloading/pistol_reload_sound.mp3" id="4_rci6u"]
 
-[ext_resource type="Texture2D" uid="uid://ui_grey_panel" path="res://Textures/UI/SciFi/PNG/Extra/Default/panel_rectangle.png" id="5_ui_panel_rectangle"]
-
 [node name="CtrlInventoryStackedCustom" type="Control" node_paths=PackedStringArray("inventoryGrid", "WeightBar", "VolumeBar", "context_menu", "reload_audio_player")]
 layout_mode = 3
 anchors_preset = 15
@@ -80,6 +78,7 @@ size_flags_horizontal = 3
 size = Vector2i(123, 116)
 item_count = 5
 item_0/text = "Equip (left)"
+item_0/id = 0
 item_1/text = "Equip (right)"
 item_1/id = 1
 item_2/text = "Reload"

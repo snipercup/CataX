@@ -1,14 +1,17 @@
-[gd_scene load_steps=9 format=3 uid="uid://e0ebcv1n8jnq"]
+[gd_scene load_steps=10 format=3 uid="uid://e0ebcv1n8jnq"]
 
 [ext_resource type="Script" uid="uid://cvbq11ov0bqw1" path="res://Scripts/InventoryWindow.gd" id="1_7kqbx"]
 [ext_resource type="PackedScene" uid="uid://crck2fhgayxhn" path="res://Scenes/InventoryContainerListItem.tscn" id="2_xfgb3"]
 [ext_resource type="PackedScene" uid="uid://khk40t8u7x5b" path="res://Scenes/UI/WearableSlot.tscn" id="3_1udct"]
+[ext_resource type="Theme" uid="uid://bu1omh8o2v02j" path="res://Scenes/UI/Themes/window_header.tres" id="4_pi8pc"]
+[ext_resource type="Theme" uid="uid://b3e04md0afyap" path="res://Scenes/UI/Themes/window_body.tres" id="5_2bjug"]
 [ext_resource type="FontFile" uid="uid://chm7lbcdeyo0h" path="res://Roboto-Bold.ttf" id="6_xpf2l"]
 [ext_resource type="PackedScene" uid="uid://y2iul2r3nysx" path="res://Scenes/UI/CtrlInventoryStackedCustom.tscn" id="8_f75fl"]
 [ext_resource type="PackedScene" uid="uid://c4g8ymi0lhkyy" path="res://Scenes/UI/EquipmentSlot.tscn" id="9_tpx1u"]
-[ext_resource type="Texture2D" uid="uid://g8nyu4xy6xr" path="res://Textures/UI/SciFi/PNG/Extra/Default/panel_rectangle.png" id="10_ui_panel_rectangle"]
-[ext_resource type="Theme" uid="uid://inventory_theme" path="res://Scenes/UI/Themes/inventory_theme.tres" id="11_inventory_theme"]
 
+[sub_resource type="Theme" id="Theme_6v4rg"]
+default_font = ExtResource("6_xpf2l")
+default_font_size = 13
 
 [node name="InventoryWindow" type="Control" node_paths=PackedStringArray("proximity_inventory_control", "inventory_control", "containerList", "EquipmentSlotList", "LeftHandEquipmentSlot", "RightHandEquipmentSlot", "tooltip", "tooltip_item_name", "tooltip_item_description", "tool_tip_description_panel")]
 layout_mode = 3
@@ -18,36 +21,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
-theme = ExtResource("11_inventory_theme")
 size_flags_vertical = 3
 script = ExtResource("1_7kqbx")
-proximity_inventory_control = NodePath("HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx")
-inventory_control = NodePath("HBoxContainer/PlayerInventoryControl/CtrlInventoryStackedCustom")
-containerList = NodePath("HBoxContainer/ContainersList")
+proximity_inventory_control = NodePath("VBoxContainer2/HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx")
+inventory_control = NodePath("VBoxContainer2/HBoxContainer/PlayerInventoryControl/CtrlInventoryStackedCustom")
+containerList = NodePath("VBoxContainer2/HBoxContainer/ContainersList")
 containerListItem = ExtResource("2_xfgb3")
-EquipmentSlotList = NodePath("HBoxContainer/EquipmentSlotList")
+EquipmentSlotList = NodePath("VBoxContainer2/HBoxContainer/EquipmentSlotList")
 WearableSlotScene = ExtResource("3_1udct")
-LeftHandEquipmentSlot = NodePath("HBoxContainer/EquipmentSlotList/LeftHandEquipment/LeftHandEquipmentSlot")
-RightHandEquipmentSlot = NodePath("HBoxContainer/EquipmentSlotList/RightHandEquipment/RightHandEquipmentSlot")
+LeftHandEquipmentSlot = NodePath("VBoxContainer2/HBoxContainer/EquipmentSlotList/LeftHandEquipment/LeftHandEquipmentSlot")
+RightHandEquipmentSlot = NodePath("VBoxContainer2/HBoxContainer/EquipmentSlotList/RightHandEquipment/RightHandEquipmentSlot")
 tooltip = NodePath("Tooltip")
 tooltip_item_name = NodePath("Tooltip/Panel/ItemName")
 tooltip_item_description = NodePath("Tooltip/ToolTipDescriptionPanel/Description")
 tool_tip_description_panel = NodePath("Tooltip/ToolTipDescriptionPanel")
 
-[node name="Background" type="NinePatchRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("10_ui_panel_rectangle")
-patch_margin_left = 1
-patch_margin_top = 2
-patch_margin_right = 1
-patch_margin_bottom = 1
-
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -55,83 +44,114 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ContainersList" type="VBoxContainer" parent="HBoxContainer"]
+[node name="HeaderPanel" type="Panel" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("4_pi8pc")
+
+[node name="BodyPanel" type="Panel" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 8.45
+theme = ExtResource("5_2bjug")
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.12
+theme_override_font_sizes/font_size = 36
+text = "Inventory"
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContainersList" type="VBoxContainer" parent="VBoxContainer2/HBoxContainer"]
 custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 
-[node name="ProximityInventoryControl" type="VBoxContainer" parent="HBoxContainer"]
+[node name="ProximityInventoryControl" type="VBoxContainer" parent="VBoxContainer2/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="HBoxContainer/ProximityInventoryControl"]
+[node name="Label" type="Label" parent="VBoxContainer2/HBoxContainer/ProximityInventoryControl"]
 layout_mode = 2
 text = "Nearby container:"
 
-[node name="CtrlInventoryStackedCustomProx" parent="HBoxContainer/ProximityInventoryControl" instance=ExtResource("8_f75fl")]
+[node name="CtrlInventoryStackedCustomProx" parent="VBoxContainer2/HBoxContainer/ProximityInventoryControl" instance=ExtResource("8_f75fl")]
 visible = false
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 
-[node name="TransferUI" type="VBoxContainer" parent="HBoxContainer"]
+[node name="TransferUI" type="VBoxContainer" parent="VBoxContainer2/HBoxContainer"]
 layout_mode = 2
 
-[node name="TransferAllRightButton" type="Button" parent="HBoxContainer/TransferUI"]
+[node name="TransferAllRightButton" type="Button" parent="VBoxContainer2/HBoxContainer/TransferUI"]
 layout_mode = 2
 text = "->>"
 
-[node name="TransferRightButton" type="Button" parent="HBoxContainer/TransferUI"]
+[node name="TransferRightButton" type="Button" parent="VBoxContainer2/HBoxContainer/TransferUI"]
 layout_mode = 2
 text = "->"
 
-[node name="TransferLeftButton" type="Button" parent="HBoxContainer/TransferUI"]
+[node name="TransferLeftButton" type="Button" parent="VBoxContainer2/HBoxContainer/TransferUI"]
 layout_mode = 2
 text = "<-"
 
-[node name="TransferAllLeftButton" type="Button" parent="HBoxContainer/TransferUI"]
+[node name="TransferAllLeftButton" type="Button" parent="VBoxContainer2/HBoxContainer/TransferUI"]
 layout_mode = 2
 text = "<<-"
 
-[node name="PlayerInventoryControl" type="VBoxContainer" parent="HBoxContainer"]
+[node name="PlayerInventoryControl" type="VBoxContainer" parent="VBoxContainer2/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label2" type="Label" parent="HBoxContainer/PlayerInventoryControl"]
+[node name="Label2" type="Label" parent="VBoxContainer2/HBoxContainer/PlayerInventoryControl"]
 layout_mode = 2
 text = "inventory:"
 
-[node name="CtrlInventoryStackedCustom" parent="HBoxContainer/PlayerInventoryControl" instance=ExtResource("8_f75fl")]
+[node name="CtrlInventoryStackedCustom" parent="VBoxContainer2/HBoxContainer/PlayerInventoryControl" instance=ExtResource("8_f75fl")]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 max_weight = 100
 
-[node name="EquipmentSlotList" type="VBoxContainer" parent="HBoxContainer"]
+[node name="EquipmentSlotList" type="VBoxContainer" parent="VBoxContainer2/HBoxContainer"]
 custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 
-[node name="LeftHandEquipment" type="HBoxContainer" parent="HBoxContainer/EquipmentSlotList"]
+[node name="LeftHandEquipment" type="HBoxContainer" parent="VBoxContainer2/HBoxContainer/EquipmentSlotList"]
 layout_mode = 2
 
-[node name="LeftHandEquipmentSlot" parent="HBoxContainer/EquipmentSlotList/LeftHandEquipment" node_paths=PackedStringArray("myInventoryCtrl", "otherHandSlot") instance=ExtResource("9_tpx1u")]
+[node name="LeftHandEquipmentSlot" parent="VBoxContainer2/HBoxContainer/EquipmentSlotList/LeftHandEquipment" node_paths=PackedStringArray("myInventoryCtrl", "otherHandSlot") instance=ExtResource("9_tpx1u")]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 myInventoryCtrl = NodePath("../../../PlayerInventoryControl/CtrlInventoryStackedCustom")
 otherHandSlot = NodePath("../../RightHandEquipment/RightHandEquipmentSlot")
 
-[node name="Label" type="Label" parent="HBoxContainer/EquipmentSlotList/LeftHandEquipment"]
+[node name="Label" type="Label" parent="VBoxContainer2/HBoxContainer/EquipmentSlotList/LeftHandEquipment"]
 layout_mode = 2
 text = "Left hand"
 
-[node name="RightHandEquipment" type="HBoxContainer" parent="HBoxContainer/EquipmentSlotList"]
+[node name="RightHandEquipment" type="HBoxContainer" parent="VBoxContainer2/HBoxContainer/EquipmentSlotList"]
 layout_mode = 2
 
-[node name="RightHandEquipmentSlot" parent="HBoxContainer/EquipmentSlotList/RightHandEquipment" node_paths=PackedStringArray("myInventoryCtrl", "otherHandSlot") instance=ExtResource("9_tpx1u")]
+[node name="RightHandEquipmentSlot" parent="VBoxContainer2/HBoxContainer/EquipmentSlotList/RightHandEquipment" node_paths=PackedStringArray("myInventoryCtrl", "otherHandSlot") instance=ExtResource("9_tpx1u")]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 myInventoryCtrl = NodePath("../../../PlayerInventoryControl/CtrlInventoryStackedCustom")
 otherHandSlot = NodePath("../../LeftHandEquipment/LeftHandEquipmentSlot")
 slot_idx = 1
 
-[node name="Label" type="Label" parent="HBoxContainer/EquipmentSlotList/RightHandEquipment"]
+[node name="Label" type="Label" parent="VBoxContainer2/HBoxContainer/EquipmentSlotList/RightHandEquipment"]
 layout_mode = 2
 text = "Right hand"
 
@@ -187,11 +207,11 @@ theme_override_font_sizes/font_size = 13
 text = "Item description"
 autowrap_mode = 3
 
-[connection signal="equip_left" from="HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx" to="." method="_on_ctrl_inventory_stacked_custom_equip_left"]
-[connection signal="equip_right" from="HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx" to="." method="_on_ctrl_inventory_stacked_custom_equip_right"]
-[connection signal="button_up" from="HBoxContainer/TransferUI/TransferAllRightButton" to="." method="_on_transfer_all_right_button_button_up"]
-[connection signal="button_up" from="HBoxContainer/TransferUI/TransferRightButton" to="." method="_on_transfer_right_button_button_up"]
-[connection signal="button_up" from="HBoxContainer/TransferUI/TransferLeftButton" to="." method="_on_transfer_left_button_button_up"]
-[connection signal="button_up" from="HBoxContainer/TransferUI/TransferAllLeftButton" to="." method="_on_transfer_all_left_button_button_up"]
-[connection signal="equip_left" from="HBoxContainer/PlayerInventoryControl/CtrlInventoryStackedCustom" to="." method="_on_ctrl_inventory_stacked_custom_equip_left"]
-[connection signal="equip_right" from="HBoxContainer/PlayerInventoryControl/CtrlInventoryStackedCustom" to="." method="_on_ctrl_inventory_stacked_custom_equip_right"]
+[connection signal="equip_left" from="VBoxContainer2/HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx" to="." method="_on_ctrl_inventory_stacked_custom_equip_left"]
+[connection signal="equip_right" from="VBoxContainer2/HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx" to="." method="_on_ctrl_inventory_stacked_custom_equip_right"]
+[connection signal="button_up" from="VBoxContainer2/HBoxContainer/TransferUI/TransferAllRightButton" to="." method="_on_transfer_all_right_button_button_up"]
+[connection signal="button_up" from="VBoxContainer2/HBoxContainer/TransferUI/TransferRightButton" to="." method="_on_transfer_right_button_button_up"]
+[connection signal="button_up" from="VBoxContainer2/HBoxContainer/TransferUI/TransferLeftButton" to="." method="_on_transfer_left_button_button_up"]
+[connection signal="button_up" from="VBoxContainer2/HBoxContainer/TransferUI/TransferAllLeftButton" to="." method="_on_transfer_all_left_button_button_up"]
+[connection signal="equip_left" from="VBoxContainer2/HBoxContainer/PlayerInventoryControl/CtrlInventoryStackedCustom" to="." method="_on_ctrl_inventory_stacked_custom_equip_left"]
+[connection signal="equip_right" from="VBoxContainer2/HBoxContainer/PlayerInventoryControl/CtrlInventoryStackedCustom" to="." method="_on_ctrl_inventory_stacked_custom_equip_right"]
