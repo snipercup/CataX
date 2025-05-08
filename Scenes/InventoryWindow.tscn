@@ -7,10 +7,8 @@
 [ext_resource type="PackedScene" uid="uid://y2iul2r3nysx" path="res://Scenes/UI/CtrlInventoryStackedCustom.tscn" id="8_f75fl"]
 [ext_resource type="PackedScene" uid="uid://c4g8ymi0lhkyy" path="res://Scenes/UI/EquipmentSlot.tscn" id="9_tpx1u"]
 [ext_resource type="Texture2D" uid="uid://g8nyu4xy6xr" path="res://Textures/UI/SciFi/PNG/Extra/Default/panel_rectangle.png" id="10_ui_panel_rectangle"]
+[ext_resource type="Theme" uid="uid://inventory_theme" path="res://Scenes/UI/Themes/inventory_theme.tres" id="11_inventory_theme"]
 
-[sub_resource type="Theme" id="Theme_6v4rg"]
-default_font = ExtResource("6_xpf2l")
-default_font_size = 13
 
 [node name="InventoryWindow" type="Control" node_paths=PackedStringArray("proximity_inventory_control", "inventory_control", "containerList", "EquipmentSlotList", "LeftHandEquipmentSlot", "RightHandEquipmentSlot", "tooltip", "tooltip_item_name", "tooltip_item_description", "tool_tip_description_panel")]
 layout_mode = 3
@@ -20,6 +18,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
+theme = ExtResource("11_inventory_theme")
 size_flags_vertical = 3
 script = ExtResource("1_7kqbx")
 proximity_inventory_control = NodePath("HBoxContainer/ProximityInventoryControl/CtrlInventoryStackedCustomProx")
