@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://dxgl4vkc313we" path="res://Scenes/UI/CtrlInventoryStackedlistHeaderItem.tscn" id="3_svicc"]
 [ext_resource type="AudioStream" uid="uid://cfmgnsm10aj4i" path="res://Sounds/Weapons/Reloading/pistol_reload_sound.mp3" id="4_rci6u"]
 
-[ext_resource type="Texture2D" uid="uid://ui_grey_panel" path="res://Textures/UI/SciFi/PNG/Grey/Extra/Default/panel_rectangle.png" id="5_ui_panel_rectangle"]
+[ext_resource type="Texture2D" uid="uid://ui_grey_panel" path="res://Textures/UI/SciFi/PNG/Extra/Default/panel_rectangle.png" id="5_ui_panel_rectangle"]
 
 [node name="CtrlInventoryStackedCustom" type="Control" node_paths=PackedStringArray("inventoryGrid", "WeightBar", "VolumeBar", "context_menu", "reload_audio_player")]
 layout_mode = 3

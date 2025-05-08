@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://y2iul2r3nysx" path="res://Scenes/UI/CtrlInventoryStackedCustom.tscn" id="8_f75fl"]
 [ext_resource type="PackedScene" uid="uid://c4g8ymi0lhkyy" path="res://Scenes/UI/EquipmentSlot.tscn" id="9_tpx1u"]
 
-[ext_resource type="Texture2D" uid="uid://pnl_grey_inv" path="res://Textures/UI/SciFi/PNG/Grey/Extra/Default/panel_rectangle.png" id="10_ui_panel_rectangle"]
+[ext_resource type="Texture2D" uid="uid://pnl_grey_inv" path="res://Textures/UI/SciFi/PNG/Extra/Default/panel_rectangle.png" id="10_ui_panel_rectangle"]
 [sub_resource type="Theme" id="Theme_6v4rg"]
 default_font = ExtResource("6_xpf2l")
 default_font_size = 13
