@@ -5,6 +5,8 @@ extends Control
 @export var skillsContainer: GridContainer
 var playerInstance: CharacterBody3D
 
+var input_action: String = "character_menu" # What action is used to show/hide this
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	Helper.signal_broker.player_stat_changed.connect(_on_player_stat_changed)
