@@ -62,10 +62,6 @@ func _input(event):
 		else:
 			is_building_menu_open = true
 			get_node(building_menu).set_visible(true)
-			
-			
-	if event.is_action_pressed("quest_menu"):
-		questWindow.visible = !questWindow.visible
 
 	if event.is_action_pressed("crafting_menu"):
 		get_node(crafting_menu).visible = !get_node(crafting_menu).visible

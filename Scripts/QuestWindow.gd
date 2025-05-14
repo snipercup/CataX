@@ -15,7 +15,7 @@ extends Control
 @export var quest_rewards: VBoxContainer
 @export var step_details_text_edit: TextEdit
 
-
+var input_action: String = "quest_menu" # What action is used to show/hide this
 var selected_quest: String # Will be the quest ID
 
 func _ready():

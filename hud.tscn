@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://cesohfflurhln" path="res://Scripts/hud.gd" id="1_s3xoj"]
 [ext_resource type="Script" uid="uid://dx6j302ja353t" path="res://Scripts/NonHUDclick.gd" id="2_kpbhl"]
 [ext_resource type="Texture2D" uid="uid://7hppy1l45loq" path="res://Textures/bar_progress.png" id="3_83uwt"]
-[ext_resource type="Resource" uid="uid://bcylpiqw1usae" path="res://ItemProtosets.tres" id="3_jmlkb"]
+[ext_resource type="Resource" uid="uid://cmete2c40assn" path="res://ItemProtosets.tres" id="3_jmlkb"]
 [ext_resource type="Texture2D" uid="uid://dcgwgmsmi7mjn" path="res://Textures/bar_border.png" id="3_y43f5"]
 [ext_resource type="PackedScene" uid="uid://b6ooia1084wfx" path="res://Scenes/UI/AttributesWindow.tscn" id="6_6e87o"]
 [ext_resource type="PackedScene" uid="uid://drjw0yaxf8x1p" path="res://Scenes/UI/QuestTrackerUI.tscn" id="7_bbed4"]
@@ -201,12 +201,14 @@ anchor_bottom = 0.85
 header_text = "Character (c)"
 body_scene = ExtResource("20_0l505")
 
-[node name="QuestWindow" parent="." instance=ExtResource("19_orjb2")]
+[node name="QuestWindow" parent="." instance=ExtResource("20_5kc73")]
 anchors_preset = -1
-anchor_left = 0.2
-anchor_top = 0.2
-anchor_right = 0.8
-anchor_bottom = 0.8
+anchor_left = 0.15
+anchor_top = 0.15
+anchor_right = 0.85
+anchor_bottom = 0.85
+header_text = "Quests (j)"
+body_scene = ExtResource("19_orjb2")
 
 [node name="EscapeMenu" parent="." node_paths=PackedStringArray("loadingscreen", "building_menu", "crafting_menu", "overmap", "furniture_window", "inventory_window", "character_window", "quest_window", "furniture_construction_window") instance=ExtResource("17_ewtgs")]
 visible = false
