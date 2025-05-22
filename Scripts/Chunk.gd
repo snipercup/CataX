@@ -1332,51 +1332,51 @@ func process_face(direction: String, pos: Vector3, block_data: Dictionary, verts
 # Function to get vertices for a specific face of a cube
 func get_face_vertices(direction: String, pos: Vector3) -> Array:
 	# pos is the minimum corner of the block (e.g., (0,0,0)), and the block extends to pos+Vector3(1,1,1)
-	var min = pos
-	var max = pos + Vector3(1, 1, 1)
+	var minp = pos
+	var maxp = pos + Vector3(1, 1, 1)
 	var face_vertices = []
 	match direction:
 		"top":
 			face_vertices = [
-				Vector3(min.x, max.y, min.z), # Top-left-front
-				Vector3(max.x, max.y, min.z), # Top-right-front
-				Vector3(max.x, max.y, max.z), # Top-right-back
-				Vector3(min.x, max.y, max.z)  # Top-left-back
+				Vector3(minp.x, maxp.y, minp.z), # Top-left-front
+				Vector3(maxp.x, maxp.y, minp.z), # Top-right-front
+				Vector3(maxp.x, maxp.y, maxp.z), # Top-right-back
+				Vector3(minp.x, maxp.y, maxp.z)  # Top-left-back
 			]
 		"bottom":
 			face_vertices = [
-				Vector3(min.x, min.y, max.z), # Bottom-left-back
-				Vector3(max.x, min.y, max.z), # Bottom-right-back
-				Vector3(max.x, min.y, min.z), # Bottom-right-front
-				Vector3(min.x, min.y, min.z)  # Bottom-left-front
+				Vector3(minp.x, minp.y, maxp.z), # Bottom-left-back
+				Vector3(maxp.x, minp.y, maxp.z), # Bottom-right-back
+				Vector3(maxp.x, minp.y, minp.z), # Bottom-right-front
+				Vector3(minp.x, minp.y, minp.z)  # Bottom-left-front
 			]
 		"left":
 			face_vertices = [
-				Vector3(min.x, max.y, max.z), # Top-left-back
-				Vector3(min.x, max.y, min.z), # Top-left-front
-				Vector3(min.x, min.y, min.z), # Bottom-left-front
-				Vector3(min.x, min.y, max.z)  # Bottom-left-back
+				Vector3(minp.x, maxp.y, maxp.z), # Top-left-back
+				Vector3(minp.x, maxp.y, minp.z), # Top-left-front
+				Vector3(minp.x, minp.y, minp.z), # Bottom-left-front
+				Vector3(minp.x, minp.y, maxp.z)  # Bottom-left-back
 			]
 		"right":
 			face_vertices = [
-				Vector3(max.x, max.y, min.z), # Top-right-front
-				Vector3(max.x, max.y, max.z), # Top-right-back
-				Vector3(max.x, min.y, max.z), # Bottom-right-back
-				Vector3(max.x, min.y, min.z)  # Bottom-right-front
+				Vector3(maxp.x, maxp.y, minp.z), # Top-right-front
+				Vector3(maxp.x, maxp.y, maxp.z), # Top-right-back
+				Vector3(maxp.x, minp.y, maxp.z), # Bottom-right-back
+				Vector3(maxp.x, minp.y, minp.z)  # Bottom-right-front
 			]
 		"front":
 			face_vertices = [
-				Vector3(min.x, max.y, min.z), # Top-left-front
-				Vector3(max.x, max.y, min.z), # Top-right-front
-				Vector3(max.x, min.y, min.z), # Bottom-right-front
-				Vector3(min.x, min.y, min.z)  # Bottom-left-front
+				Vector3(minp.x, maxp.y, minp.z), # Top-left-front
+				Vector3(maxp.x, maxp.y, minp.z), # Top-right-front
+				Vector3(maxp.x, minp.y, minp.z), # Bottom-right-front
+				Vector3(minp.x, minp.y, minp.z)  # Bottom-left-front
 			]
 		"back":
 			face_vertices = [
-				Vector3(max.x, max.y, max.z), # Top-right-back
-				Vector3(min.x, max.y, max.z), # Top-left-back
-				Vector3(min.x, min.y, max.z), # Bottom-left-back
-				Vector3(max.x, min.y, max.z)  # Bottom-right-back
+				Vector3(maxp.x, maxp.y, maxp.z), # Top-right-back
+				Vector3(minp.x, maxp.y, maxp.z), # Top-left-back
+				Vector3(minp.x, minp.y, maxp.z), # Bottom-left-back
+				Vector3(maxp.x, minp.y, maxp.z)  # Bottom-right-back
 			]
 	return face_vertices
 
