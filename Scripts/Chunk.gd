@@ -468,8 +468,7 @@ func save_chunk():
 # keep in mind that after the navigationmesh is added to the navigationregion
 # It will be shrunk by the navigation_mesh.agent_radius to prevent collisions
 func add_mesh_to_navigation_data(blockposition: Vector3, blockrotation: int, blockshape: String):
-	var block_global_position: Vector3 = blockposition# + mypos
-	var blockrange: float = 0.5
+	var block_global_position: Vector3 = blockposition
 	var extend: float = 1.0 # Amount to extend for edge blocks
 	
 	# Check if there's a block directly above the current block
@@ -479,68 +478,60 @@ func add_mesh_to_navigation_data(blockposition: Vector3, blockrotation: int, blo
 		return
 	
 	# Determine if the block is at the edge of the chunk
-	var is_edge_x = blockposition.x == 0 || blockposition.x == LEVEL_WIDTH - 1
-	var is_edge_z = blockposition.z == 0 || blockposition.z == LEVEL_HEIGHT - 1
+	var is_edge_x = blockposition.x == 0 or blockposition.x == LEVEL_WIDTH - 1
+	var is_edge_z = blockposition.z == 0 or blockposition.z == LEVEL_HEIGHT - 1
 
 	# Adjust vertices for edge blocks
-	var adjustment_x
-	var adjustment_z
-	if is_edge_x:
-		adjustment_x = extend
-	else:
-		adjustment_x = 0
-	if is_edge_z:
-		adjustment_z = extend
-	else:
-		adjustment_z = 0
+	var adjustment_x = extend if is_edge_x else 0.0
+	var adjustment_z = extend if is_edge_z else 0.0
 
 	if blockshape == "cube":
 		# Top face of a block, the block size is 1x1x1 for simplicity.
 		var top_face_vertices = PackedVector3Array([
 			# First triangle
-			Vector3(-blockrange - adjustment_x, 0.5, -blockrange - adjustment_z), # Top-left
-			Vector3(blockrange + adjustment_x, 0.5, -blockrange - adjustment_z), # Top-right
-			Vector3(blockrange + adjustment_x, 0.5, blockrange + adjustment_z), # Bottom-right
+			Vector3(0.0 - adjustment_x, 1.0, 0.0 - adjustment_z), # Top-left
+			Vector3(1.0 + adjustment_x, 1.0, 0.0 - adjustment_z), # Top-right
+			Vector3(1.0 + adjustment_x, 1.0, 1.0 + adjustment_z), # Bottom-right
 			# Second triangle
-			Vector3(-blockrange - adjustment_x, 0.5, -blockrange - adjustment_z), # Top-left (repeated for the second triangle)
-			Vector3(blockrange + adjustment_x, 0.5, blockrange + adjustment_z), # Bottom-right (repeated for the second triangle)
-			Vector3(-blockrange - adjustment_x, 0.5, blockrange + adjustment_z)  # Bottom-left
+			Vector3(0.0 - adjustment_x, 1.0, 0.0 - adjustment_z), # Top-left
+			Vector3(1.0 + adjustment_x, 1.0, 1.0 + adjustment_z), # Bottom-right
+			Vector3(0.0 - adjustment_x, 1.0, 1.0 + adjustment_z)  # Bottom-left
 		])
 		# Add the top face as two triangles.
 		mutex.lock()
 		source_geometry_data.add_faces(top_face_vertices, Transform3D(Basis(), block_global_position))
 		mutex.unlock()
+
 	elif blockshape == "slope":
 		# Define the initial slope vertices here. We define a set for each direction
 		var vertices_north = PackedVector3Array([ #Facing north
-			Vector3(-blockrange, 0.5, -blockrange), # Top front left
-			Vector3(blockrange, 0.5, -blockrange), # Top front right
-			Vector3(blockrange, -0.5, blockrange), # Bottom back right
-			Vector3(-blockrange, -0.5, blockrange) # Bottom back left
+			Vector3(0.0, 1.0, 0.0), # Top front left
+			Vector3(1.0, 1.0, 0.0), # Top front right
+			Vector3(1.0, 0.0, 1.0), # Bottom back right
+			Vector3(0.0, 0.0, 1.0)  # Bottom back left
 		])
 		var vertices_east = PackedVector3Array([
-			Vector3(blockrange, 0.5, -blockrange), # Top back right
-			Vector3(blockrange, 0.5, blockrange), # Top front right
-			Vector3(-blockrange, -0.5, blockrange), # Bottom front left
-			Vector3(-blockrange, -0.5, -blockrange) # Bottom back left
+			Vector3(1.0, 1.0, 0.0), # Top back right
+			Vector3(1.0, 1.0, 1.0), # Top front right
+			Vector3(0.0, 0.0, 1.0), # Bottom front left
+			Vector3(0.0, 0.0, 0.0)  # Bottom back left
 		])
 		var vertices_south = PackedVector3Array([
-			Vector3(blockrange, 0.5, blockrange), # Top front right
-			Vector3(-blockrange, 0.5, blockrange), # Top front left
-			Vector3(-blockrange, -0.5, -blockrange), # Bottom back left
-			Vector3(blockrange, -0.5, -blockrange) # Bottom back right
+			Vector3(1.0, 1.0, 1.0), # Top front right
+			Vector3(0.0, 1.0, 1.0), # Top front left
+			Vector3(0.0, 0.0, 0.0), # Bottom back left
+			Vector3(1.0, 0.0, 0.0)  # Bottom back right
 		])
 		var vertices_west = PackedVector3Array([
-			Vector3(-blockrange, 0.5, blockrange), # Top front left
-			Vector3(-blockrange, 0.5, -blockrange), # Top back left
-			Vector3(blockrange, -0.5, -blockrange), # Bottom back right
-			Vector3(blockrange, -0.5, blockrange) # Bottom front right
+			Vector3(0.0, 1.0, 1.0), # Top front left
+			Vector3(0.0, 1.0, 0.0), # Top back left
+			Vector3(1.0, 0.0, 0.0), # Bottom back right
+			Vector3(1.0, 0.0, 1.0)  # Bottom front right
 		])
 
 		# We pick a direction based on the block rotation
-		var blockrot: int = blockrotation
 		var vertices
-		match blockrot:
+		match blockrotation:
 			90:
 				vertices = vertices_north
 			180:
@@ -555,9 +546,11 @@ func add_mesh_to_navigation_data(blockposition: Vector3, blockrotation: int, blo
 			vertices[0], vertices[1], vertices[2],  # Triangle 1: TFL, TFR, BBR
 			vertices[0], vertices[2], vertices[3]   # Triangle 2: TFL, BBR, BBL
 		])
+
 		mutex.lock()
 		source_geometry_data.add_faces(slope_faces, Transform3D(Basis(), block_global_position))
 		mutex.unlock()
+
 
 
 # Finally, queue the chunk itself for deletion.
