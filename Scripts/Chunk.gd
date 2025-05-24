@@ -552,7 +552,6 @@ func add_mesh_to_navigation_data(blockposition: Vector3, blockrotation: int, blo
 		mutex.unlock()
 
 
-
 # Finally, queue the chunk itself for deletion.
 func _finish_unload():
 	reset_state()
@@ -1039,6 +1038,7 @@ func _create_combined_cube_collider(start_pos: Vector3, end_pos: Vector3) -> voi
 	
 	collider.shape = shape
 	var myposition = (start_pos + end_pos) / 2
+	myposition.y += 0.5
 	collider.set_transform.call_deferred(Transform3D(Basis(), myposition))
 	
 	chunk_mesh_body.add_child.call_deferred(collider)
@@ -1065,12 +1065,12 @@ func _create_slope_collider(block_sub_position: Vector3, block_rotation: int) ->
 	var collider = CollisionShape3D.new()
 	collider.shape = ConvexPolygonShape3D.new()
 	collider.shape.points = [
-		Vector3(0.5, 0.5, 0.5),
-		Vector3(0.5, 0.5, -0.5),
-		Vector3(-0.5, -0.5, 0.5),
-		Vector3(0.5, -0.5, 0.5),
-		Vector3(0.5, -0.5, -0.5),
-		Vector3(-0.5, -0.5, -0.5)
+		Vector3(1.0, 1.0, 1.0),
+		Vector3(1.0, 1.0, 0.0),
+		Vector3(0.0, 0.0, 1.0),
+		Vector3(1.0, 0.0, 1.0),
+		Vector3(1.0, 0.0, 0.0),
+		Vector3(0.0, 0.0, 0.0)
 	]
 	# Apply rotation for slopes
 	var rotation_transform = Transform3D(Basis().rotated(Vector3.UP, deg_to_rad(block_rotation)), Vector3.ZERO)
