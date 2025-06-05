@@ -365,9 +365,9 @@ func assign_road_map_to_cell(global_position: Vector2, cell) -> void:
 	if "Forest" in cell.rmap.categories:
 		map_to_use = forest_road_maps
 	
-	# Select a weighted random map
-	var selected_map: RMap = pick_random_rmap_by_weight(map_to_use)
-	update_cell(global_position, selected_map.id, 0)
+        # Select a weighted random map
+        var selected_map: RMap = pick_weighted_random(map_to_use) as RMap
+        update_cell(global_position, selected_map.id, 0)
 
 
 # Update the road connections for a cell based on its type (forest or non-forest)
@@ -380,9 +380,9 @@ func update_road_connections(global_position: Vector2, cell) -> void:
 	# If it's a forest cell, find a matching forest road map, otherwise a regular road map
 	var map_to_use = forest_road_maps if "Forest Road" in cell.rmap.categories else road_maps
 	var matching_maps = get_road_maps_with_connections(map_to_use, needed_connections)
-	if matching_maps.size() > 0:
-		var selected_map = pick_random_map_dict_by_weight(matching_maps)
-		update_cell(global_position, selected_map.id, selected_map.rotation)
+        if matching_maps.size() > 0:
+                var selected_map: Dictionary = pick_weighted_random(matching_maps)
+                update_cell(global_position, selected_map.id, selected_map.rotation)
 
 
 # Function to determine if movement from pos1 to pos2 is diagonal
@@ -933,41 +933,21 @@ func get_cell_from_global_pos(global_pos: Vector2):
 	return null
 
 
-# Function to pick a random RMap object based on weight
-func pick_random_rmap_by_weight(maps: Array[RMap]) -> RMap:
-	var total_weight = 0
+# Helper to pick a weighted random item from an array.
+static func pick_weighted_random(items: Array, weight_key := "weight"):
+        var total_weight := 0
+        for item in items:
+                total_weight += item.get(weight_key, 0)
 
-	# Calculate total weight
-	for map in maps:
-		total_weight += map.weight
+        if total_weight <= 0:
+                return null
 
-	var random_value = randi() % total_weight
-	var current_weight = 0
+        var random_value := randi() % total_weight
+        var current_weight := 0
 
-	# Select map based on weighted probability
-	for map in maps:
-		current_weight += map.weight
-		if random_value < current_weight:
-			return map  # Return the entire RMap object
+        for item in items:
+                current_weight += item.get(weight_key, 0)
+                if random_value < current_weight:
+                        return item
 
-	return maps[0] if maps.size() > 0 else null  # Fallback to first map or null if empty
-
-
-# Function to pick a random map dictionary based on weight
-func pick_random_map_dict_by_weight(maps: Array[Dictionary]) -> Dictionary:
-	var total_weight = 0
-
-	# Calculate total weight
-	for map in maps:
-		total_weight += map["weight"]
-
-	var random_value = randi() % total_weight
-	var current_weight = 0
-
-	# Select map based on weighted probability
-	for map in maps:
-		current_weight += map["weight"]
-		if random_value < current_weight:
-			return map  # Return the entire dictionary
-
-	return maps[0] if maps.size() > 0 else {"id": "field_grass_basic_00.json", "rotation": 0, "weight": 1}  # Fallback dictionary
+        return items[0] if items.size() > 0 else null
