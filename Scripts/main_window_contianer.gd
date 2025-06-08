@@ -30,8 +30,10 @@ func _ready():
 func _on_close_button_pressed():
 	visible = false
 
-func _input(event):
+	func _input(event):
 	# Check if we need to hide based on what input action the child window uses
-	var myinputaction: String = body_scene_instance.input_action
+	var myinputaction := ""
+	if body_scene_instance:
+		myinputaction = body_scene_instance.input_action
 	if myinputaction != "" and event.is_action_pressed(myinputaction):
 		visible = not visible
