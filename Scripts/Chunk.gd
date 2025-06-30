@@ -17,6 +17,7 @@ extends Node3D
 # Reference to the level manager. Some nodes that could be moved to other chunks 
 # should be parented to this (like moveable furniture and mobs)
 var level_manager : Node3D
+var entities_manager : Node3D # Node in level_generation.tscn for managing entities like mobs
 var level_generator : Node3D
 
 # === Constants ===
@@ -234,14 +235,18 @@ func add_block_mobs():
 	mutex.lock()
 	var mobdatalist = processed_level_data.mobs.duplicate()
 	mutex.unlock()
+	var batch_size := 1  # Number of mob to spawn per batch
+	var count := 0
 	for mobdata: Dictionary in mobdatalist:
-		# Pass the position and the mob json to the newmob and have it construct itself
-		var newMob: CharacterBody3D = Mob.new(mypos+mobdata.pos, mobdata.json)
-		level_manager.add_child.call_deferred(newMob)
+		entities_manager.spawn_mob(mypos + mobdata.pos, mobdata.json)
+		count += 1
+		if count >= batch_size:
+			count = 0
+			OS.delay_msec(200)  # Stagger by 200 ms (adjust as needed)
 	# If you want to test a mob, you can use this to spawn it at the Vector3 location
 	# Comment it out again when you're done testing
 	#if mypos == Vector3(0,0,0):
-		#var tempmob: CharacterBody3D = Mob.new(Vector3(15,1,15), {"id":"bone_thrower"})
+		#var tempmob: CharacterBody3D = Mob.new(Vector3(15,1.5,15), {"id":"basic_zombie_1"})
 		#level_manager.add_child.call_deferred(tempmob)
 
 # When a map is loaded for the first time we spawn the furniture on the block
@@ -309,11 +314,16 @@ func add_mobs_to_map() -> void:
 	mutex.lock()
 	var mobdata: Array = chunk_data.mobs.duplicate()
 	mutex.unlock()
+	var batch_size := 1  # Number of mob to spawn per batch
+	var count := 0
 	for mob: Dictionary in mobdata:
 		# Put the mob back where it was when the map was unloaded
 		var mobpos: Vector3 = Vector3(mob.global_position_x,mob.global_position_y,mob.global_position_z)
-		var newMob: CharacterBody3D = Mob.new(mobpos, mob)
-		level_manager.add_child.call_deferred(newMob)
+		entities_manager.spawn_mob(mobpos, mob)
+		count += 1
+		if count >= batch_size:
+			count = 0
+			OS.delay_msec(200)  # Stagger by 200 ms (adjust as needed)
 
 
 # Called by generate_items function when a save is loaded
@@ -370,13 +380,15 @@ func unload_furniture_instances():
 func free_mob_instances(mapMobs):
 	for mob in mapMobs:
 		if _is_object_in_range(mob.last_position):
-			mob.queue_free.call_deferred()
+			#mob.queue_free.call_deferred()
+			entities_manager.despawn_mob.call_deferred(mob)
 
 # Function to terminate the mob instances
 func terminate_mob_instances(mapMobs):
 	for mob in mapMobs:
 		if _is_object_in_range(mob.last_position):
-			mob.terminate()
+			#mob.terminate()
+			entities_manager.despawn_mob.call_deferred(mob)
 
 # Function to free the item instances
 func free_item_instances(mapitems):
@@ -1496,13 +1508,15 @@ func spawn_mob_at_free_position(mob_id: String, y: int) -> bool:
 		return false
 
 	# Construct the mob JSON as expected by Mob.new() (assuming it takes ID and other params)
+	#var mob_json: Dictionary = {"id": mob_id}
+#
+	## Create the mob and position it correctly
+	#var new_mob: Mob = Mob.new(free_position, mob_json)
+#
+	## Parent to level_manager because mobs can move across chunks
+	#level_manager.add_child.call_deferred(new_mob)
 	var mob_json: Dictionary = {"id": mob_id}
-
-	# Create the mob and position it correctly
-	var new_mob: Mob = Mob.new(free_position, mob_json)
-
-	# Parent to level_manager because mobs can move across chunks
-	level_manager.add_child.call_deferred(new_mob)
+	entities_manager.spawn_mob.call_deferred(free_position, mob_json)
 	return true
 
 

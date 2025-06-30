@@ -10,12 +10,16 @@ var action_timer: Timer
 var action_complete_callback: Callable  # Use Callable to store the function reference
 signal start_timer_progressbar(time_left: float)
 
+
+var shared_shape = BoxShape3D.new()
+
 func _ready():
 	# Initialize the timer
 	action_timer = Timer.new()
 	action_timer.timeout.connect(_on_action_timer_timeout)
 	add_child(action_timer)
 	start_timer_progressbar.connect(Helper.signal_broker.on_start_timer_progressbar)
+	shared_shape.size = Vector3(0.35, 0.35, 0.35)
 
 
 # Function to start an action

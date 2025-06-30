@@ -5,7 +5,6 @@ class_name MobFollow
 
 var nav_agent: NavigationAgent3D # Used for pathfinding
 var mob: CharacterBody3D # The mob that we are enabling the follow behaviour for
-var mobCol: CollisionShape3D # The collision shape of the mob
 var pathfinding_timer: Timer
 var spotted_target: CharacterBody3D # This mob's current target for combat
 # Variables for dash state and timer
@@ -19,7 +18,6 @@ var is_dashing: bool = false                  # Flag to check if currently dashi
 # (collision shape, navigation agent) and configuring the pathfinding timer.
 func _ready():
 	name = "MobFollow"
-	mobCol = mob.collision_shape_3d
 	nav_agent = mob.nav_agent
 	# Create and configure Follow Timer
 	var follow_timer = Timer.new()
@@ -97,7 +95,7 @@ func check_for_target_in_range():
 	
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(
-		mobCol.global_position,
+		mob.global_position,
 		spotted_target.global_position,
 		(1 << 0) | (1 << 1) | (1 << 2), # Layer mask for layers 1 (player), 2 (mobs), and 3 (walls)
 		[self] # Exclude self
@@ -112,7 +110,7 @@ func check_for_target_in_range():
 
 		# If the ray hits a valid target before hitting a wall, continue checking attack range
 		var is_valid_target = result.collider.is_in_group("Players") or result.collider.is_in_group("mobs")
-		var distance_to_target = mobCol.global_position.distance_to(spotted_target.global_position)
+		var distance_to_target = mob.global_position.distance_to(spotted_target.global_position)
 
 		if is_valid_target:
 			if mob.attacks.has("ranged") and mob.attacks.ranged.size() > 0:

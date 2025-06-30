@@ -7,6 +7,7 @@ var level_width : int = 32
 var level_height : int = 32
 
 @export var level_manager : Node3D
+@export var entities_manager : Node3D
 @export_file var default_level_json
 
 
@@ -141,6 +142,7 @@ func load_chunk(chunk_pos: Vector2):
 	var new_chunk = Chunk.new()
 	new_chunk.mypos = Vector3(chunk_pos.x * level_width, 0, chunk_pos.y * level_height)
 	new_chunk.level_manager = level_manager
+	new_chunk.entities_manager = entities_manager
 	new_chunk.level_generator = self
 	new_chunk.chunk_generated.connect(_on_chunk_un_loaded)
 	new_chunk.chunk_unloaded.connect(_on_chunk_un_loaded)

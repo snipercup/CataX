@@ -32,6 +32,7 @@ var hates_mobs: Dictionary = {} # A dictionary of strings containing the mob id'
 var is_blinking: bool = false # flag to prevent multiple blink actions
 var original_material: StandardMaterial3D # To return to normal after blinking
 var state_machine: StateMachine
+var detection: Detection
 var terminated: bool = false
 
 
@@ -98,7 +99,7 @@ func create_state_machine():
 
 # Create and configure Detection
 func create_detection():
-	var detection = Detection.new()
+	detection = Detection.new()
 	detection.state_machine = state_machine
 	detection.mob = self
 	add_child.call_deferred(detection)
@@ -106,10 +107,8 @@ func create_detection():
 
 # Create and configure CollisionShape3D
 func create_collision_shape():
-	var new_shape = BoxShape3D.new()
-	new_shape.size = Vector3(0.35, 0.35, 0.35)
 	collision_shape_3d = CollisionShape3D.new()
-	collision_shape_3d.shape = new_shape
+	collision_shape_3d.shape = General.shared_shape
 	add_child.call_deferred(collision_shape_3d)
 
 
@@ -140,9 +139,23 @@ func _ready():
 	target_manager = get_tree().get_first_node_in_group("target_manager")
 	current_chunk = get_chunk_from_position(global_transform.origin)
 	update_navigation_agent_map(current_chunk)
-	Helper.signal_broker.mob_spawned.emit(self)
 
-
+func apply_mob_data(newMobJSON: Dictionary) -> void:
+	mobJSON = newMobJSON
+	rmob = Runtimedata.mobs.by_id(mobJSON.id)
+	if mobJSON.has("rotation"):
+		mobRotation = mobJSON.rotation
+	hates_mobs = Runtimedata.mobfactions.by_id(rmob.faction_id).get_mobs_by_relation_type("hostile")
+	apply_stats_from_dmob()  # Reset stats/attributes from base data
+	# If the mob JSON contains current state (e.g., health), override base stats accordingly
+	if mobJSON.has("current_health"):
+		current_health = mobJSON.current_health
+	else:
+		current_health = health
+	current_move_speed = move_speed
+	current_idle_move_speed = idle_move_speed
+	is_blinking = false
+	terminated = false
 
 func _physics_process(_delta):
 	if global_transform.origin != last_position:
@@ -248,7 +261,7 @@ func show_miss_indicator():
 func _die():
 	Helper.signal_broker.mob_killed.emit(self)
 	add_corpse.call_deferred(global_position)
-	queue_free()
+	#queue_free() - instead of freeing, it returns into the entity_manager pool
 
 
 # Add a corpse to the map
@@ -398,7 +411,17 @@ func get_ranged_range() -> float:
 
 # Returns the range of the first melee attack in the attack list, if it has any
 func get_melee_range() -> float:
-	var rattack: RAttack = Runtimedata.attacks.by_id(get_attack_of_type("melee").id)
+	# First, grab the dictionary describing the melee attack
+	var attack_info: Dictionary = get_attack_of_type("melee")
+	# Bail out early if there's no "id" key
+	if not attack_info.has("id"):
+		return 0.0
+
+	# Now look up the RAttack by its id
+	var attack_id: String = attack_info["id"]
+	var rattack: RAttack = Runtimedata.attacks.by_id(attack_id)
+
+	# Finally, ensure we actually got a runtime attack and it defines a range
 	if rattack and rattack.get("myrange"):
 		return rattack.myrange
 	return 0.0

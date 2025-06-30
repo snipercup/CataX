@@ -10,11 +10,31 @@ var is_in_attack_mode = false
 
 func _ready():
 	name = "MobAttack"
+
 	# Create and configure AttackCooldown Timer
 	var attack_cooldown = Timer.new()
 	attack_timer = attack_cooldown
-	var rattack: RAttack = Runtimedata.attacks.by_id(mob.attacks["melee"][0].id)
-	attack_timer.wait_time = rattack.cooldown  # Set the wait time based on mob's melee_cooldown
+
+	# --- SAFELY LOOK UP THE FIRST MELEE ATTACK ---
+	# Use Dictionary.get() with a default empty Array so we never index a null.
+	var melee_list: Array = mob.attacks.get("melee", [])
+	if melee_list.is_empty():
+		print_debug("Mob '%s' has no 'melee' attacks defined." % mob.name)
+		return
+
+	var first_attack_data = melee_list[0]
+	# Ensure it’s actually a Dictionary with an "id" key:
+	if typeof(first_attack_data) != TYPE_DICTIONARY or not first_attack_data.has("id"):
+		print_debug("Malformed melee attack entry for mob '%s': %s" % [mob.name, first_attack_data])
+		return
+
+	var attack_id: String = first_attack_data["id"]
+	var rattack: RAttack = Runtimedata.attacks.by_id(attack_id)
+	if rattack == null:
+		print_debug("No RAttack found for id '%s'" % attack_id)
+		return
+
+	attack_timer.wait_time = rattack.cooldown
 	add_child.call_deferred(attack_cooldown)
 	attack_timer.timeout.connect(_on_attack_cooldown_timeout)
 
