@@ -234,10 +234,16 @@ func add_block_mobs():
 	mutex.lock()
 	var mobdatalist = processed_level_data.mobs.duplicate()
 	mutex.unlock()
+	var batch_size := 1  # Number of mob to spawn per batch
+	var count := 0
 	for mobdata: Dictionary in mobdatalist:
 		# Pass the position and the mob json to the newmob and have it construct itself
 		var newMob: CharacterBody3D = Mob.new(mypos+mobdata.pos, mobdata.json)
 		level_manager.add_child.call_deferred(newMob)
+		count += 1
+		if count >= batch_size:
+			count = 0
+			OS.delay_msec(200)  # Stagger by 200 ms (adjust as needed)
 	# If you want to test a mob, you can use this to spawn it at the Vector3 location
 	# Comment it out again when you're done testing
 	#if mypos == Vector3(0,0,0):
@@ -309,11 +315,17 @@ func add_mobs_to_map() -> void:
 	mutex.lock()
 	var mobdata: Array = chunk_data.mobs.duplicate()
 	mutex.unlock()
+	var batch_size := 1  # Number of mob to spawn per batch
+	var count := 0
 	for mob: Dictionary in mobdata:
 		# Put the mob back where it was when the map was unloaded
 		var mobpos: Vector3 = Vector3(mob.global_position_x,mob.global_position_y,mob.global_position_z)
 		var newMob: CharacterBody3D = Mob.new(mobpos, mob)
 		level_manager.add_child.call_deferred(newMob)
+		count += 1
+		if count >= batch_size:
+			count = 0
+			OS.delay_msec(200)  # Stagger by 200 ms (adjust as needed)
 
 
 # Called by generate_items function when a save is loaded
