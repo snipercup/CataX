@@ -206,7 +206,7 @@ func test_player_vs_melee_mob():
 	assert_true(await wait_for_signal(first_state.Transistioned, 5), "Mob doesn't transition")
 	first_state = first_mob.get_current_state()
 	var mob_has_transitioned = func():
-		return first_state is MobAttack
+		return first_mob.get_current_state() is MobAttack
 	# Replace the existing assert_true line with this one:
 	assert_true(await wait_until(mob_has_transitioned, 10, 1), 
 		"Mob should have transitioned, but current state is: %s" % [first_mob.get_current_state().get_class()])

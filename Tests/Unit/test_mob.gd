@@ -163,9 +163,10 @@ func test_mob_melee_combat():
 	assert_true(second_mob.has_state("mobattack"),"Mob should have the mobattack state")
 	
 	# Test that the mob transitions into the mob attack state
+	await wait_frames(30)
 	var first_state: State = first_mob.get_current_state()
 	assert_not_null(first_state, "Mob has no state")
-	assert_is(first_state,MobFollow,"Mob should have MobFollow state")
+	assert_is(first_state, MobFollow, "Mob should have MobFollow state")
 	assert_true(await wait_for_signal(first_state.Transistioned, 5), "Mob doesn't transition")
 	first_state = first_mob.get_current_state()
 	assert_is(first_state,MobAttack,"A different state then expected")
@@ -249,6 +250,7 @@ func test_mob_ranged_vs_melee():
 	)
 	
 	# Test that the mob transitions into the mob ranged attack state
+	await wait_frames(30)
 	var first_state: State = first_mob.get_current_state()
 	assert_not_null(first_state, "Mob has no state")
 	assert_is(first_state,MobRangedAttack,"A different state then expected")
@@ -331,6 +333,7 @@ func test_mob_ranged_vs_furniture():
 	)
 	
 	# Test that the mob transitions into the mob ranged attack state
+	await wait_frames(30)
 	var first_state: State = first_mob.get_current_state()
 	assert_not_null(first_state, "Mob has no state")
 	assert_is(first_state,MobRangedAttack,"A different state then expected")
