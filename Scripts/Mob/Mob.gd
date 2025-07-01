@@ -106,10 +106,8 @@ func create_detection():
 
 # Create and configure CollisionShape3D
 func create_collision_shape():
-	var new_shape = BoxShape3D.new()
-	new_shape.size = Vector3(0.35, 0.35, 0.35)
 	collision_shape_3d = CollisionShape3D.new()
-	collision_shape_3d.shape = new_shape
+	collision_shape_3d.shape = General.shared_shape
 	add_child.call_deferred(collision_shape_3d)
 
 
