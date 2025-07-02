@@ -22,22 +22,22 @@ extends Control
 @export var tabContainer: TabContainer = null
 @export var type_selector_menu_button: MenuButton = null
 @onready var editor_configs := {
-        DMod.ContentType.MAPS: {"property": "currentMap", "scene": mapEditor},
-        DMod.ContentType.TACTICALMAPS: {"property": "currentMap", "scene": tacticalmapEditor},
-        DMod.ContentType.FURNITURES: {"property": "dfurniture", "scene": furnitureEditor},
-        DMod.ContentType.ITEMGROUPS: {"property": "ditemgroup", "scene": itemgroupEditor},
-        DMod.ContentType.ITEMS: {"property": "ditem", "scene": itemEditor},
-        DMod.ContentType.TILES: {"property": "dtile", "scene": terrainTileEditor},
-        DMod.ContentType.MOBS: {"property": "dmob", "scene": mobEditor},
-        DMod.ContentType.PLAYERATTRIBUTES: {"property": "dplayerattribute", "scene": playerattributesEditor},
-        DMod.ContentType.WEARABLESLOTS: {"property": "dwearableslot", "scene": wearableslotEditor},
-        DMod.ContentType.STATS: {"property": "dstat", "scene": statsEditor},
-        DMod.ContentType.SKILLS: {"property": "dskill", "scene": skillsEditor},
-        DMod.ContentType.QUESTS: {"property": "dquest", "scene": questsEditor},
-        DMod.ContentType.OVERMAPAREAS: {"property": "dovermaparea", "scene": overmapareaEditor},
-        DMod.ContentType.MOBGROUPS: {"property": "dmobgroup", "scene": mobgroupsEditor},
-        DMod.ContentType.MOBFACTIONS: {"property": "dmobfaction", "scene": mobfactionsEditor},
-        DMod.ContentType.ATTACKS: {"property": "dattack", "scene": attacksEditor}
+	DMod.ContentType.MAPS: {"property": "currentMap", "scene": mapEditor},
+	DMod.ContentType.TACTICALMAPS: {"property": "currentMap", "scene": tacticalmapEditor},
+	DMod.ContentType.FURNITURES: {"property": "dfurniture", "scene": furnitureEditor},
+	DMod.ContentType.ITEMGROUPS: {"property": "ditemgroup", "scene": itemgroupEditor},
+	DMod.ContentType.ITEMS: {"property": "ditem", "scene": itemEditor},
+	DMod.ContentType.TILES: {"property": "dtile", "scene": terrainTileEditor},
+	DMod.ContentType.MOBS: {"property": "dmob", "scene": mobEditor},
+	DMod.ContentType.PLAYERATTRIBUTES: {"property": "dplayerattribute", "scene": playerattributesEditor},
+	DMod.ContentType.WEARABLESLOTS: {"property": "dwearableslot", "scene": wearableslotEditor},
+	DMod.ContentType.STATS: {"property": "dstat", "scene": statsEditor},
+	DMod.ContentType.SKILLS: {"property": "dskill", "scene": skillsEditor},
+	DMod.ContentType.QUESTS: {"property": "dquest", "scene": questsEditor},
+	DMod.ContentType.OVERMAPAREAS: {"property": "dovermaparea", "scene": overmapareaEditor},
+	DMod.ContentType.MOBGROUPS: {"property": "dmobgroup", "scene": mobgroupsEditor},
+	DMod.ContentType.MOBFACTIONS: {"property": "dmobfaction", "scene": mobfactionsEditor},
+	DMod.ContentType.ATTACKS: {"property": "dattack", "scene": attacksEditor}
 }
 var selectedMod: String = "Core"
 
@@ -139,7 +139,7 @@ func _on_content_item_activated(type: DMod.ContentType, itemID: String, list: Co
 		data (Array) or itemID ("+itemID+") is empty")
 		return
 
-       instantiate_editor(type, itemID, list)
+	instantiate_editor(type, itemID, list)
 
 
 # This will add an editor to the content editor tab view. 
@@ -156,23 +156,23 @@ func instantiate_editor(type: DMod.ContentType, itemID: String, list: Control):
 			tabContainer.current_tab = i
 			return
 
-       # If no existing tab is found, instantiate a new editor using the mapping
-       var info: Dictionary = editor_configs.get(type, null)
-       if info == null:
-               print("Unknown content type:", type)
-               return
+	# If no existing tab is found, instantiate a new editor using the mapping
+	var info: Dictionary = editor_configs.get(type, null)
+	if info == null:
+		print("Unknown content type:", type)
+		return
 
-       var newContentEditor: Control = info.scene.instantiate()
-       newContentEditor.name = itemID
-       tabContainer.add_child(newContentEditor)
-       tabContainer.current_tab = tabContainer.get_child_count() - 1
+	var newContentEditor: Control = info.scene.instantiate()
+	newContentEditor.name = itemID
+	tabContainer.add_child(newContentEditor)
+	tabContainer.current_tab = tabContainer.get_child_count() - 1
 
-       var currentmod: DMod = Gamedata.mods.by_id(selectedMod)
-       var data_instance: RefCounted = currentmod.get_data_of_type(type).by_id(itemID)
-       newContentEditor.set(info.property, data_instance)
+	var currentmod: DMod = Gamedata.mods.by_id(selectedMod)
+	var data_instance: RefCounted = currentmod.get_data_of_type(type).by_id(itemID)
+	newContentEditor.set(info.property, data_instance)
 
-       if newContentEditor.has_signal("data_changed") and not newContentEditor.data_changed.is_connected(list.load_data):
-               newContentEditor.data_changed.connect(list.load_data)
+	if newContentEditor.has_signal("data_changed") and not newContentEditor.data_changed.is_connected(list.load_data):
+		newContentEditor.data_changed.connect(list.load_data)
 
 
 # Function to populate the type_selector_menu_button with content list headers and load their state
