@@ -6,7 +6,7 @@
 	},
 	"apple": {
 		"itemgroups": [
-			"refridgerator",
+			"refrigerator",
 			"starting_items"
 		]
 	},
@@ -18,7 +18,7 @@
 	},
 	"bag_bacon": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"bandage_basic": {
@@ -111,7 +111,7 @@
 	},
 	"bottle_plastic_water": {
 		"itemgroups": [
-			"refridgerator",
+			"refrigerator",
 			"kitchen_cupboard",
 			"cabinet_general",
 			"vending_machine_drinks",
@@ -124,7 +124,7 @@
 	},
 	"bottle_yogurt": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"branch": {
@@ -159,12 +159,12 @@
 	},
 	"butter": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"can_beer": {
 		"itemgroups": [
-			"refridgerator",
+			"refrigerator",
 			"kitchen_cupboard",
 			"vending_machine_drinks",
 			"zombie_loot"
@@ -172,7 +172,7 @@
 	},
 	"can_energydrink": {
 		"itemgroups": [
-			"refridgerator",
+			"refrigerator",
 			"vending_machine_drinks",
 			"zombie_loot"
 		]
@@ -184,7 +184,7 @@
 	},
 	"can_soda": {
 		"itemgroups": [
-			"refridgerator",
+			"refrigerator",
 			"vending_machine_drinks",
 			"starting_items",
 			"zombie_loot",
@@ -201,7 +201,7 @@
 	},
 	"carrot": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"ceramic_fragments": {
@@ -211,7 +211,7 @@
 	},
 	"cheese": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"chocolate": {
@@ -277,7 +277,7 @@
 	},
 	"eggs": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"electrical_components": {
@@ -383,7 +383,7 @@
 	},
 	"kiwi": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"large_rock": {
@@ -402,7 +402,7 @@
 	},
 	"lettuce": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"log": {
@@ -630,7 +630,7 @@
 	},
 	"slice_of_pizza": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"small_rock": {
@@ -711,12 +711,12 @@
 	},
 	"tofu": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"tomato": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"transmitter": {
@@ -732,12 +732,12 @@
 	},
 	"uncooked_meat": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"vacuum_sealed_fish": {
 		"itemgroups": [
-			"refridgerator"
+			"refrigerator"
 		]
 	},
 	"vest_ballistic": {
