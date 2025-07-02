@@ -1,7 +1,6 @@
 extends GridContainer
 
 
-var is_building_menu_open = false
 @export var construction_option_button: OptionButton = null
 
 # Called when the node enters the scene tree for the first time.
