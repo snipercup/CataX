@@ -358,14 +358,17 @@ func move_item(offset: int) -> void:
 	# Disallow moving the "Core" mod or moving past bounds
 	if index == 0 or target_index <= 0 or target_index >= count:
 		return
-	# Get the properties of the next item
+
+	# Get the properties of the current item
 	var current_text := mods_item_list.get_item_text(index)
 	var current_metadata := mods_item_list.get_item_metadata(index)
 	var current_color := mods_item_list.get_item_custom_bg_color(index)
-	# Swap text, metadata, and colors
+
+	# Get the properties of the target item
 	var target_text := mods_item_list.get_item_text(target_index)
 	var target_metadata := mods_item_list.get_item_metadata(target_index)
 	var target_color := mods_item_list.get_item_custom_bg_color(target_index)
+
 	# Swap text, metadata, and colors
 	mods_item_list.set_item_text(index, target_text)
 	mods_item_list.set_item_metadata(index, target_metadata)
