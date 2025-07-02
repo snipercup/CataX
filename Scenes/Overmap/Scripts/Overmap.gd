@@ -51,6 +51,7 @@ class GridChunk:
 	var tile_dictionary: Dictionary  # Dictionary to store tiles by their global_pos
 	var overmapTile: PackedScene = null
 	var visible_tile: Control = null  # Stores the currently visible tile with text
+	var visible_tiles_cache: Dictionary = {}  # Cache of tiles within the player's reveal radius
 	var offset: Vector2 = Vector2.ZERO  # Default offset is zero
 	var overmap_node  # Reference to the overmap node
 
@@ -75,6 +76,7 @@ class GridChunk:
 		self.grid_container.set("theme_override_constants/h_separation", 0)
 		self.grid_container.set("theme_override_constants/v_separation", 0)
 		self.tile_dictionary = {}  # Initialize the dictionary
+		self.visible_tiles_cache = {}
 		# Connect to the player_coord_changed signal from Helper.overmap_manager
 		Helper.overmap_manager.player_coord_changed.connect(_on_player_coord_changed)
 		self.create_tiles()  # Create tiles when the chunk is initialized
@@ -98,10 +100,13 @@ class GridChunk:
 		self.grid_position = new_grid_position
 		self.chunk_position = new_chunk_position
 		self.set_position(new_chunk_position)
+		self.visible_tiles_cache.clear()
 		self.redraw_tiles()
 
 	# Redraw the tiles based on the new grid position
 	func redraw_tiles():
+		visible_tiles_cache.clear()
+		var player_pos: Vector2 = Helper.overmap_manager.player_current_cell
 		for y in range(chunk_size):
 			for x in range(chunk_size):
 				var global_pos = grid_position + Vector2(x, y)
@@ -114,7 +119,9 @@ class GridChunk:
 					tile.set_color(Color(1, 1, 1))  # White color for other tiles
 				tile.set_text("")
 				# Use the same function to update tile based on its position and player location
-				update_tile_texture_and_reveal(tile, global_pos, Helper.overmap_manager.player_current_cell)
+				update_tile_texture_and_reveal(tile, global_pos, player_pos)
+				if global_pos.distance_to(player_pos) <= 8:
+					visible_tiles_cache[Vector2(x, y)] = true
 
 	func on_position_coord_changed():
 		update_absolute_position()
@@ -190,22 +197,34 @@ class GridChunk:
 	func _on_player_coord_changed(_player: Player, _old_pos: Vector2, new_pos: Vector2):
 		if overmap_node and not overmap_node.is_visible():
 			return
-		# Step 1: Check if the chunk is within the player's range
+		# Only refresh tiles when this chunk is near the player
 		if is_within_player_range():
-			# Step 2: Iterate through each tile in the chunk
-			for y in range(chunk_size):
-				for x in range(chunk_size):
-					var global_pos = grid_position + Vector2(x, y)
-					var tile = tile_dictionary[Vector2(x, y)]
-					# Call the combined function to update the tile and reveal the map cell
-					update_tile_texture_and_reveal(tile, global_pos, new_pos)
+			# Collect tiles in the player's 8 tile reveal radius
+			var new_cache: Dictionary = {}
+			var start_x = max(0, int(new_pos.x - grid_position.x - 8))
+			var end_x = min(chunk_size - 1, int(new_pos.x - grid_position.x + 8))
+			var start_y = max(0, int(new_pos.y - grid_position.y - 8))
+			var end_y = min(chunk_size - 1, int(new_pos.y - grid_position.y + 8))
+			for y in range(start_y, end_y + 1):
+				for x in range(start_x, end_x + 1):
+					var local = Vector2(x, y)
+					new_cache[local] = true
+				# Only update tiles that weren't visible before
+					if not visible_tiles_cache.has(local):
+						var global_pos = grid_position + local
+						var tile = tile_dictionary[local]
+						update_tile_texture_and_reveal(tile, global_pos, new_pos)
+			# Replace the old cache with the freshly built one
+			visible_tiles_cache = new_cache
+		else:
+			# Player moved out of range; clear this chunk's cache
+			visible_tiles_cache.clear()
 
 	# This function handles both revealing the map cell and updating the tile's texture
 	# It is used by both the player position update and regular map tile updates
-	# NOTE: I've seen this function be called 576 times in a frame in the profiler, leading to 
-	# 576 set_texture calls for the affected overmap tiles. In total, this can cause up to 90ms for 
-	# the frame. This is because each tile is processed in _on_player_coord_changed. Maybe we 
-	# can find a way to reduce the amount of calls for set_texture
+	# NOTE: Previously this function triggered hundreds of set_texture calls per frame
+	# because every tile in range was updated when the player moved. Visible
+	# tiles are now cached so only newly visible tiles update their texture.
 	func update_tile_texture_and_reveal(tile: Control, global_pos: Vector2, player_position: Vector2):
 		# Get the map cell from overmap_manager
 		var map_cell = Helper.overmap_manager.get_map_cell_by_local_coordinate(global_pos)
