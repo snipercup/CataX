@@ -347,7 +347,7 @@ func _on_mods_item_list_item_activated(index: int) -> void:
 # Swaps it with the item at `index + offset` while keeping
 # text, metadata and color intact. Also saves the list state.
 func move_item(offset: int) -> void:
-	var selected_index = mods_item_list.get_selected_items()
+	var selected_index: PackedInt32Array = mods_item_list.get_selected_items()
 	if selected_index.is_empty() or selected_index[0] == 0:
 		return # No item selected or "Core" is selected
 
@@ -361,12 +361,12 @@ func move_item(offset: int) -> void:
 
 	# Get the properties of the current item
 	var current_text := mods_item_list.get_item_text(index)
-	var current_metadata := mods_item_list.get_item_metadata(index)
+	var current_metadata: Variant = mods_item_list.get_item_metadata(index)
 	var current_color := mods_item_list.get_item_custom_bg_color(index)
 
 	# Get the properties of the target item
 	var target_text := mods_item_list.get_item_text(target_index)
-	var target_metadata := mods_item_list.get_item_metadata(target_index)
+	var target_metadata: Variant = mods_item_list.get_item_metadata(target_index)
 	var target_color := mods_item_list.get_item_custom_bg_color(target_index)
 
 	# Swap text, metadata, and colors
