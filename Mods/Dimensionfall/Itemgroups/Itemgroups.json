@@ -236,8 +236,8 @@
 		"use_sprite": false
 	},
 	{
-		"description": "Items you can find in a refridgerator in an urban home",
-		"id": "refridgerator",
+		"description": "Items you can find in a refrigerator in an urban home",
+		"id": "refrigerator",
 		"items": [
 			{
 				"id": "bottle_plastic_water",
@@ -349,7 +349,7 @@
 			}
 		],
 		"mode": "Collection",
-		"name": "Refridgerator",
+		"name": "Refrigerator",
 		"sprite": "bottle_empty_32.png",
 		"use_sprite": false
 	},
