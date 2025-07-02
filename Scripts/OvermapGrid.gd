@@ -33,7 +33,7 @@ enum Region {
 class map_cell:
 	# Enum for revealed states
 	enum RevealedState {
-               HIDDEN,  # Default state. The cell has been instanced onto a grid, nothing more
+		HIDDEN,  # Default state. The cell has been instanced onto a grid, nothing more
 		REVEALED, # the map has been revealed on the overmap when the player got close enough
 		EXPLORED, # the map has been loaded as a chunk in the player's proximity at least once
 		VISITED # the player has entered the boundary of the map's coordinates
