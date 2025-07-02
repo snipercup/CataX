@@ -349,7 +349,7 @@ func _on_mods_item_list_item_activated(index: int) -> void:
 func move_item(offset: int) -> void:
 	var selected_index = mods_item_list.get_selected_items()
 	if selected_index.is_empty():
-		return
+		return # No item selected or "Core" is selected
 
 	var index := selected_index[0]
 	var target_index := index + offset
