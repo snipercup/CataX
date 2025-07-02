@@ -53,6 +53,10 @@ func set_clickable(clickable: bool):
 	if not clickable:
 		mouse_filter = MOUSE_FILTER_IGNORE
 		$TextureRect.mouse_filter = MOUSE_FILTER_IGNORE
+	else:
+		# Reset filters so tile is interactive again
+		mouse_filter = MOUSE_FILTER_STOP
+		$TextureRect.mouse_filter = MOUSE_FILTER_STOP
 
 # Show or hide the text on the tile
 func set_text_visible(isvisible: bool):
