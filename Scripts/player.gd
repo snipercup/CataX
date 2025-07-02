@@ -61,7 +61,7 @@ var last_y_level: float = 0.0
 var y_level_timer: Timer
 #var progress_bar_timer_max_time : float
 
-#var is_progress_bar_well_progressing_i_guess = false
+#var is_progress_bar_active = false
 
 func _init():
 	_connect_signals()
