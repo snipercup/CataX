@@ -54,49 +54,50 @@ func on_construction_clicked(construction_data: Dictionary):
 	if not chunk:
 		return
 
-	# Handle block construction
-	if construction_type == "block":
-		var numberofplanks: int = ItemManager.get_accessibleitem_amount("plank_2x4")
-		if numberofplanks < 2:
-			print_debug("Tried to construct, but not enough planks")
-			return
-		
-		if not ItemManager.remove_resource("plank_2x4", 2, ItemManager.allAccessibleItems):
-			return
+	match construction_type:
+		"block":
+			handle_block_construction(construction_data, chunk)
+		"furniture":
+			handle_furniture_construction(construction_data, chunk)
+		_:
+			print_debug("Unknown construction type: ", construction_type)
 
-		var local_position = calculate_local_position(construction_data.pos, chunk.position)
-		chunk.add_block("concrete_00", local_position)
-		print_debug("Block placed at local position: ", local_position, " in chunk at ", chunk.position, " with type concrete_00")
+func handle_block_construction(construction_data: Dictionary, chunk: Chunk) -> void:
+	var numberofplanks: int = ItemManager.get_accessibleitem_amount("plank_2x4")
+	if numberofplanks < 2:
+		print_debug("Tried to construct, but not enough planks")
+		return
 
-	# Handle furniture construction
-	elif construction_type == "furniture":
-		construction_data.pos.y -= 1
-		# Because Godot can be strange with rotation sometimes we have to translate the rotation
-		var myrotation = construction_data.rotation
-		if myrotation == 90:
-			myrotation = 270
-		elif myrotation == 270:
-			myrotation = 90
+	if not ItemManager.remove_resource("plank_2x4", 2, ItemManager.allAccessibleItems):
+		return
 
-		# Translate the position to negate the chunk's `mypos`
-		construction_data.pos -= chunk.mypos
+	var local_position = calculate_local_position(construction_data.pos, chunk.position)
+	chunk.add_block("concrete_00", local_position)
+	print_debug("Block placed at local position: ", local_position, " in chunk at ", chunk.position, " with type concrete_00")
 
-		# Spawn the furniture with the adjusted position
-		chunk.spawn_furniture({
-			"json": {"id": construction_choice, "rotation": myrotation, "mode": "blueprint"},
-			"pos": construction_data.pos
-		})
+func handle_furniture_construction(construction_data: Dictionary, chunk: Chunk) -> void:
+	construction_data.pos.y -= 1
+	# Because Godot can be strange with rotation sometimes we have to translate the rotation
+	var myrotation = construction_data.rotation
+	if myrotation == 90:
+		myrotation = 270
+	elif myrotation == 270:
+		myrotation = 90
 
-		print_debug(
-			"Furniture construction chosen. Type: ", construction_type,
-			", Choice: ", construction_choice,
-			", Adjusted construction_data.pos: ", str(construction_data.pos)
-		)
+	# Translate the position to negate the chunk's `mypos`
+	construction_data.pos -= chunk.mypos
 
+	# Spawn the furniture with the adjusted position
+	chunk.spawn_furniture({
+		"json": {"id": construction_choice, "rotation": myrotation, "mode": "blueprint"},
+		"pos": construction_data.pos
+	})
 
-	# Handle unknown construction types
-	else:
-		print_debug("Unknown construction type: ", construction_type)
+	print_debug(
+		"Furniture construction chosen. Type: ", construction_type,
+		", Choice: ", construction_choice,
+		", Adjusted construction_data.pos: ", str(construction_data.pos)
+	)
 
 
 func calculate_local_position(global_pos: Vector3, chunk_pos: Vector3) -> Vector3:
