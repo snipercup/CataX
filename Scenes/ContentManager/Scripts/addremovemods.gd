@@ -362,7 +362,7 @@ func move_item(offset: int) -> void:
 	var current_text := mods_item_list.get_item_text(index)
 	var current_metadata := mods_item_list.get_item_metadata(index)
 	var current_color := mods_item_list.get_item_custom_bg_color(index)
-
+	# Swap text, metadata, and colors
 	var target_text := mods_item_list.get_item_text(target_index)
 	var target_metadata := mods_item_list.get_item_metadata(target_index)
 	var target_color := mods_item_list.get_item_custom_bg_color(target_index)
