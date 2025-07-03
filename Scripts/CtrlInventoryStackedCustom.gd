@@ -92,7 +92,7 @@ func show_context_menu(myposition: Vector2):
 # Updates the enabled/disabled state of the context menu based on the selected items
 func _update_context_menu_options(items: Array[InventoryItem]) -> void:
 	for i in range(context_menu.get_item_count()):
-	        context_menu.set_item_disabled(i, false)
+		context_menu.set_item_disabled(i, false)
 
 	var can_reload: bool = true
 	var can_unload: bool = true
@@ -100,14 +100,14 @@ func _update_context_menu_options(items: Array[InventoryItem]) -> void:
 	var can_use: bool = true
 
 	for item in items:
-	        if not _is_reloadable(item):
-	                can_reload = false
-	        if not _can_unload(item):
-	                can_unload = false
-	        if not _is_equippable(item):
-	                can_equip = false
-	        if not _is_usable(item):
-	                can_use = false
+		if not _is_reloadable(item):
+			can_reload = false
+		if not _can_unload(item):
+			can_unload = false
+		if not _is_equippable(item):
+			can_equip = false
+		if not _is_usable(item):
+			can_use = false
 
 	context_menu.set_item_disabled(0, !can_equip)
 	context_menu.set_item_disabled(1, !can_equip)
