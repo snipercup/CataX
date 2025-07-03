@@ -101,7 +101,7 @@ func equip_loaded_items():
 
 # Gets the slots that are defined in json and instatiates WearableSlotScene
 # for each of the slots. It will add the instances to EquipmentSlotList
-# The first to children of EquipmentSlotList are static slots and we should ignore them
+# The first two children of EquipmentSlotList are static slots and we should ignore them
 # It will get the "name" property from the slot data and set it to the instance's "myLabel" property
 func instantiate_wearable_slots():
 	var slots: Dictionary = Runtimedata.wearableslots.get_all()
