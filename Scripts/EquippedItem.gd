@@ -133,15 +133,19 @@ func calculate_accuracy() -> float:
 	var rangedproperties = equipped_item.get_property("Ranged")
 	var skillid = Helper.json_helper.get_nested_data(rangedproperties, "used_skill.skill_id")
 	var skill_level = player.get_skill_level(skillid)
+	var dex = 0
+	if player.has_method("get_stat"):
+		dex = player.get_stat("dexterity")
 	# Minimum accuracy is 25%, maximum is 100% at level 30
 	var min_accuracy = 0.25
 	var max_accuracy = 1.0
 	var required_level = 30
 
-	if skill_level >= required_level:
+	var effective_level = skill_level + dex
+	if effective_level >= required_level:
 		return max_accuracy
 	else:
-		return min_accuracy + (max_accuracy - min_accuracy) * (skill_level / required_level)
+		return min_accuracy + (max_accuracy - min_accuracy) * (effective_level / required_level)
 
 
 # Function to calculate direction with accuracy and recoil applied
@@ -388,7 +392,13 @@ func _calculate_melee_attack_data() -> Dictionary:
 	var damage = melee_properties.get("damage", 0)
 	var skill_id = melee_properties.get("used_skill", {}).get("skill_id", "")
 	var skill_level = player.get_skill_level(skill_id)
-	var hit_chance = 0.65 + (skill_level / 100.0) * (1.0 - 0.65)  # Scales up to 100% with skill level
+	var strength = 0
+	var dex = 0
+	if player.has_method("get_stat"):
+		strength = player.get_stat("strength")
+		dex = player.get_stat("dexterity")
+	damage += strength
+	var hit_chance = 0.65 + ((skill_level + dex) / 100.0) * (1.0 - 0.65)
 
 	return {"damage": damage, "hit_chance": hit_chance}
 

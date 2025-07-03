@@ -34,13 +34,17 @@ func has_required_skill(recipe: RItem.CraftRecipe) -> bool:
 		var skill_req = recipe.skill_requirement
 		var skill_id = skill_req.get("id", "")
 		var required_level = skill_req.get("level", 0)
-		var player = get_tree().get_first_node_in_group("Players")
-		
-		# Check if the player has the required skill and level
-		if player and player.skills.has(skill_id):
-			var player_skill_level = player.skills[skill_id]
-			if player_skill_level["level"] >= required_level:
-				return true
+	       var player = get_tree().get_first_node_in_group("Players")
+
+	       # Check if the player has the required skill and level, taking
+	       # intelligence stat into account as a bonus
+	       if player and player.skills.has(skill_id):
+		       var player_skill_level = player.skills[skill_id]
+		       var intelligence_bonus = 0
+		       if player.has_method("get_stat"):
+			       intelligence_bonus = player.get_stat("intelligence")
+		       if player_skill_level["level"] + intelligence_bonus >= required_level:
+			       return true
 	else:
 		return true
 		
