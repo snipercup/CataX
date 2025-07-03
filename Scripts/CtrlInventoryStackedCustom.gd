@@ -83,10 +83,49 @@ func _ready():
 
 # Function to show context menu at specified position
 func show_context_menu(myposition: Vector2):
+	_update_context_menu_options(get_selected_inventory_items())
 	# Create a small Rect2i around the position
 	# We need this because the popup function requires it
 	var popup_rect = Rect2i(int(myposition.x), int(myposition.y), 1, 1)
 	context_menu.popup(popup_rect)
+
+# Updates the enabled/disabled state of the context menu based on the selected items
+func _update_context_menu_options(items: Array[InventoryItem]) -> void:
+	for i in range(context_menu.get_item_count()):
+	        context_menu.set_item_disabled(i, false)
+
+	var can_reload: bool = true
+	var can_unload: bool = true
+	var can_equip: bool = true
+	var can_use: bool = true
+
+	for item in items:
+	        if not _is_reloadable(item):
+	                can_reload = false
+	        if not _can_unload(item):
+	                can_unload = false
+	        if not _is_equippable(item):
+	                can_equip = false
+	        if not _is_usable(item):
+	                can_use = false
+
+	context_menu.set_item_disabled(0, !can_equip)
+	context_menu.set_item_disabled(1, !can_equip)
+	context_menu.set_item_disabled(2, !can_reload)
+	context_menu.set_item_disabled(3, !can_unload)
+	context_menu.set_item_disabled(4, !can_use)
+
+func _is_reloadable(item: InventoryItem) -> bool:
+	return item.get_property("Ranged") != null or item.get_property("Magazine") != null
+
+func _can_unload(item: InventoryItem) -> bool:
+	return item.get_property("Ranged") != null
+
+func _is_equippable(item: InventoryItem) -> bool:
+	return item.get_property("Ranged") != null or item.get_property("Melee") != null or item.get_property("Magazine") != null or item.get_property("Tool") != null
+
+func _is_usable(item: InventoryItem) -> bool:
+	return item.get_property("Food") != null or item.get_property("Medical") != null
 
 
 # Handle context menu item selection
