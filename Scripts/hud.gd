@@ -26,13 +26,13 @@ var is_building_menu_open = false
 @export var progress_bar_timer : NodePath
 var progress_bar_timer_max_time : float
 
-var is_progress_bar_well_progressing_i_guess = false
+var is_progress_bar_active = false
 
 
 @export var item_protoset : ItemProtoset
 	
 func _process(_delta):
-	if is_progress_bar_well_progressing_i_guess:
+	if is_progress_bar_active:
 		update_progress_bar()
 		
 func _init():
@@ -77,7 +77,7 @@ func _input(event):
 		else:
 			overmap.show()
 
-	if is_progress_bar_well_progressing_i_guess:
+	if is_progress_bar_active:
 		get_node(progress_bar_filling).scale.x = lerp(1, 0, get_node(progress_bar_timer).time_left / progress_bar_timer_max_time)
 
 
@@ -91,12 +91,12 @@ func start_progress_bar(time : float):
 	get_node(progress_bar_timer).start()
 	get_node(progress_bar_filling).scale.x = 0
 	progress_bar_timer_max_time = time
-	is_progress_bar_well_progressing_i_guess = true
+	is_progress_bar_active = true
 
 
 func interrupt_progress_bar():
 	get_node(progress_bar).visible = false
-	is_progress_bar_well_progressing_i_guess = false
+	is_progress_bar_active = false
 
 
 func _on_progress_bar_timer_timeout():
