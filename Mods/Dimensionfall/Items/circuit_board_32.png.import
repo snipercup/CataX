@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bs1p87v84gjue"
-path="res://.godot/imported/cirquit_board_32.png-50ed8b3a84bedde9a0a84939c784ea42.ctex"
+path="res://.godot/imported/circuit_board_32.png-d898f4109bcff7179828fee91a6a8a5e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Mods/Dimensionfall/Items/cirquit_board_32.png"
-dest_files=["res://.godot/imported/cirquit_board_32.png-50ed8b3a84bedde9a0a84939c784ea42.ctex"]
+source_file="res://Mods/Dimensionfall/Items/circuit_board_32.png"
+dest_files=["res://.godot/imported/circuit_board_32.png-d898f4109bcff7179828fee91a6a8a5e.ctex"]
 
 [params]
 
