@@ -45,6 +45,7 @@ var is_disabled: bool = false  # Tracks whether the widget is disabled
 @export var mytextedit: TextEdit
 @export var myplaceholdertext: String = "drop your data here"
 @export var button: Button = null
+@export var error_color: Color = Color(1, 0, 0)
 
 signal text_changed(new_text: String)
 
@@ -65,7 +66,19 @@ func _can_drop_data(_newpos, data) -> bool:
 # This function handles the data being dropped
 func _drop_data(newpos, data) -> void:
 	if _can_drop_data(newpos, data):
-		_handle_item_drop(data, newpos)
+	_handle_item_drop(data, newpos)
+	else:
+	_flash_error()
+	
+func _flash_error() -> void:
+	var original_color: Color = mytextedit.get_theme_color("background_color")
+	var tween: Tween = create_tween()
+	tween.tween_property(mytextedit, "theme_override_colors/background_color", error_color, 0.1)
+	.set_trans(Tween.TRANS_LINEAR)
+	.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(mytextedit, "theme_override_colors/background_color", original_color, 0.1)
+	.set_trans(Tween.TRANS_LINEAR)
+	.set_ease(Tween.EASE_IN_OUT)
 
 
 # Called when the user has successfully dropped data onto the TextEdit
