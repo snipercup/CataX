@@ -10,10 +10,17 @@ var map_cell:
 	set(cell):
 		map_cell = cell
 		if map_cell and map_cell.is_revealed():
-			set_texture(map_cell.get_sprite())  # Set the texture if revealed
-			set_texture_rotation(map_cell.rotation, Vector2(16, 16))  # Apply the rotation
+			# Grab sprite from runtime map; could be null
+			var tex: Texture = map_cell.get_sprite()
+			if tex:
+				set_texture(tex)
+				# Apply the cell's rotation
+				set_texture_rotation(map_cell.rotation, Vector2(16, 16))
+			else:
+				# Use default texture when sprite missing
+				set_texture(null)
 		else:
-			set_texture(null)  # Clear the texture if not revealed
+			set_texture(null)	# Clear the texture if not revealed
 
 
 signal tile_clicked(clicked_tile: Control)
