@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one itemgroup
 # It expects to save the data to a JSON file that contains all itemgroup data from a mod
@@ -37,6 +41,11 @@ var ditemgroup: DItemgroup = null:
 
 
 func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): ditemgroup.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	control_elements = [itemgroupImageDisplay,NameTextEdit,DescriptionTextEdit]
 	modeOptionButton.add_item("Collection")
 	modeOptionButton.add_item("Distribution")
@@ -160,8 +169,10 @@ func select_option_by_string(option_button: OptionButton, option_string: String)
 
 
 #The editor is closed, destroy the instance
-#TODO: Check for unsaved changes
 func _on_close_button_button_up():
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 

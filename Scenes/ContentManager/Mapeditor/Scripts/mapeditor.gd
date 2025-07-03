@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 @export var panWindow: Control = null
 @export var mapScrollWindow: ScrollContainer = null
 @export var gridContainer: ColorRect = null
@@ -41,6 +45,11 @@ var zoom_level: int = 20:
 
 
 func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): currentMap.get_data(),
+		func(): tileGrid.oldmap.get_data(),
+		Callable(self, "_close_editor"))
 	setPanWindowSize()
 	zoom_level = 20
 
@@ -82,8 +91,10 @@ func _on_tile_grid_zoom_level_changed(value):
 	zoom_level = value
 
 #The editor is closed, destroy the instance
-#TODO: Check for unsaved changes
 func _on_close_button_button_up():
+	_unsaved.request_close()
+
+func _close_editor():
 	# If the user has pressed the save button before closing the editor, the tileGrid.oldmap should
 	# contain the same data as currentMap, so it shouldn't make a difference
 	# If the user did not press the save button, we reset the map to what it was before the last save

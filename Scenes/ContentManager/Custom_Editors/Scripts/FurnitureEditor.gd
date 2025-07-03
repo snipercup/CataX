@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is for editing a single piece of furniture.
 # It loads and saves data to a JSON file containing furniture data for a mod.
 # Provide the name of the furniture data file and an ID to load.
@@ -89,6 +93,11 @@ var dfurniture: DFurniture:
 
 
 func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dfurniture.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	# For properly using the tab key to switch elements
 	control_elements = [furniture_image_display,name_edit,description_edit]
 	#data_changed.connect(dfurniture.parent.on_data_changed)
@@ -200,8 +209,10 @@ func select_option_by_string(option_button: OptionButton, option_string: String)
 
 
 #The editor is closed, destroy the instance
-#TODO: Check for unsaved changes
 func _on_close_button_button_up():
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free.call_deferred()
 
 

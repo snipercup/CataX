@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 #This scene is intended to be used inside the content editor
 #It is supposed to edit exactly one Equipmentslot
 #It expects to save the data to a JSON file
@@ -32,6 +36,11 @@ var dwearableslot: DWearableSlot = null:
 
 
 func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dwearableslot.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	set_drop_functions()
 
 # This function updates the form based on the DWearableSlot that has been loaded
@@ -48,8 +57,10 @@ func load_slot_data() -> void:
 	starting_item_text_edit.set_text(dwearableslot.starting_item)
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 # This function takes all data from the form elements and stores them in the DWearableSlot instance

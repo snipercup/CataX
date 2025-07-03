@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one tile
 # It expects to save the data to a JSON file that contains all tile data from a mod
@@ -33,6 +37,11 @@ var dtile: DTile = null:
 
 
 func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dtile.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	control_elements = [
 		tileImageDisplay,
 		NameTextEdit,
@@ -93,8 +102,10 @@ func select_option_by_string(option_button: OptionButton, option_string: String)
 	print_debug("No matching option found for the string: " + option_string)
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up():
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 # This function takes all data from the form elements and stores them in dtile

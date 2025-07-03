@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one Attack
 # It expects to save the data to a JSON file
@@ -43,6 +47,11 @@ var dattack: DAttack = null:
 
 # Forward drag-and-drop functionality to the attributesGridContainer
 func _ready() -> void:
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dattack.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	any_of_attributes_grid_container.set_drag_forwarding(Callable(), _can_drop_attribute_data, _drop_any_of_attribute_data)
 	all_of_attributes_grid_container.set_drag_forwarding(Callable(), _can_drop_attribute_data, _drop_all_of_attribute_data)
 
@@ -85,8 +94,10 @@ func load_attack_data() -> void:
 	_toggle_ranged_controls(dattack.type == "ranged")  # Update UI based on type
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 # This function takes all data from the form elements and stores them in the DAttack instance

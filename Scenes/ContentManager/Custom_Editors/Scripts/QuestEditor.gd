@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one quest
 # It expects to save the data to a JSON file
@@ -44,6 +48,11 @@ var dquest: DQuest = null:
 		olddata = DQuest.new(dquest.get_data().duplicate(true), null)
 
 func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dquest.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	ok_button.pressed.connect(_on_ok_button_pressed)
 	cancel_button.pressed.connect(_on_cancel_button_pressed)
 
@@ -62,8 +71,10 @@ func _ready():
 	}
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 # This function updates the form based on the DQuest that has been loaded

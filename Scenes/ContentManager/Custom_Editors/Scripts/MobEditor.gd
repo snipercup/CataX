@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one mob (friend and foe)
 # It expects to save the data to a DMob instance that contains all data from a mob
@@ -46,6 +50,11 @@ var dmob: DMob:
 
 # Forward drag-and-drop functionality to the attributesGridContainer
 func _ready() -> void:
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dmob.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	attacks_grid_container.set_drag_forwarding(Callable(), _can_drop_attack_data, _drop_attack_data)
 
 
@@ -98,8 +107,10 @@ func load_mob_data() -> void:
 
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 # This function takes all data from the form elements and stores them in the DMob instance

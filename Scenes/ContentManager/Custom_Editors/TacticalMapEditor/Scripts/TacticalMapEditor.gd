@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 
 @export var tileGrid: GridContainer = null
 @export var mapwidthTextEdit: SpinBox = null
@@ -34,6 +38,11 @@ var currentMap: DTacticalmap:
 
 # In tacticalmapeditor.gd
 func _ready() -> void:
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): currentMap.get_data(),
+		func(): oldmap.get_data(),
+		Callable(self, "_close_editor"))
 	# For properly using the tab key to switch elements
 	control_elements = [mapwidthTextEdit,mapheightTextEdit]
 	setPanWindowSize()
@@ -81,8 +90,10 @@ func setPanWindowSize():
 
 
 #The editor is closed, destroy the instance
-#TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 

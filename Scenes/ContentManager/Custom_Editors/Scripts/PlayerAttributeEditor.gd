@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one playerattribute
 # It expects to save the data to a DPlayerAttribute instance that contains all data from a attribute
@@ -46,6 +50,11 @@ var dplayerattribute: DPlayerAttribute:
 
 
 func _ready() -> void:
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dplayerattribute.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	# Set drag forwarding for the drain_attribute_grid_container
 	drain_attribute_grid_container.set_drag_forwarding(Callable(), _can_drop_attribute_data, _drop_attribute_data)
 	
@@ -117,8 +126,10 @@ func process_fixed_mode() -> void:
 
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 

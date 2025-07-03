@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one Mobfaction
 # It expects to save the data to a JSON file
@@ -51,6 +55,11 @@ var dmobfaction: DMobfaction = null:
 
 
 func _ready() -> void:
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dmobfaction.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
 	if friendly_grid_container:
 		friendly_grid_container.set_drag_forwarding(Callable(), _can_entity_drop.bind("friendly"), _entity_drop.bind("friendly"))
 	if neutral_grid_container:
@@ -60,8 +69,10 @@ func _ready() -> void:
 
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 func load_mobfaction_data() -> void:

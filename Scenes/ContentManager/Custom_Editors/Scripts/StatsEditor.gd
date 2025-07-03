@@ -1,5 +1,9 @@
 extends Control
 
+const UnsavedChangesHelper = preload("res://Scripts/Helper/unsaved_changes_helper.gd")
+
+@onready var _unsaved := UnsavedChangesHelper.new()
+
 # This scene is intended to be used inside the content editor
 # It is supposed to edit exactly one Stat
 # It expects to save the data to a JSON file
@@ -28,6 +32,13 @@ var dstat: DStat = null:
 		statSelector.sprites_collection = dstat.parent.sprites
 		olddata = DStat.new(dstat.get_data().duplicate(true), dstat.parent)
 
+func _ready():
+	add_child(_unsaved)
+	_unsaved.setup(self,
+		func(): dstat.get_data(),
+		func(): olddata.get_data(),
+		Callable(self, "_close_editor"))
+
 
 # This function updates the form based on the DStat that has been loaded
 func load_stat_data() -> void:
@@ -42,8 +53,10 @@ func load_stat_data() -> void:
 		DescriptionTextEdit.text = dstat.description
 
 # The editor is closed, destroy the instance
-# TODO: Check for unsaved changes
 func _on_close_button_button_up() -> void:
+	_unsaved.request_close()
+
+func _close_editor():
 	queue_free()
 
 # This function takes all data from the form elements and stores them in the DStat instance
