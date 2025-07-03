@@ -5,6 +5,9 @@
 			"urbanroad_corner",
 			"urbanroad_t"
 		],
+		"mobfactions": [
+			"security_robots"
+		],
 		"mobgroups": [
 			"basic_zombies"
 		]
@@ -15,6 +18,9 @@
 			"urbanroad_corner",
 			"urbanroad_t"
 		],
+		"mobfactions": [
+			"security_robots"
+		],
 		"mobgroups": [
 			"basic_zombies"
 		]
@@ -24,6 +30,9 @@
 			"urbanroad_cross",
 			"urbanroad_corner",
 			"urbanroad_t"
+		],
+		"mobfactions": [
+			"security_robots"
 		],
 		"mobgroups": [
 			"basic_zombies"
@@ -43,6 +52,9 @@
 			"urbanroad_corner",
 			"urbanroad_t"
 		],
+		"mobfactions": [
+			"security_robots"
+		],
 		"mobgroups": [
 			"basic_zombies"
 		]
@@ -54,6 +66,9 @@
 			"radio_tower",
 			"RockyHill_NE",
 			"RockyHill_SW"
+		],
+		"mobfactions": [
+			"zombie"
 		],
 		"mobgroups": [
 			"security_robots"
@@ -68,6 +83,9 @@
 			"urbanroad_corner",
 			"urbanroad_t"
 		],
+		"mobfactions": [
+			"security_robots"
+		],
 		"mobgroups": [
 			"basic_zombies"
 		]
@@ -80,6 +98,9 @@
 			"RockyHill_NE",
 			"RockyHill_SW"
 		],
+		"mobfactions": [
+			"zombie"
+		],
 		"mobgroups": [
 			"security_robots"
 		]
@@ -90,11 +111,17 @@
 			"urbanroad_corner",
 			"urbanroad_t"
 		],
+		"mobfactions": [
+			"security_robots"
+		],
 		"mobgroups": [
 			"basic_zombies"
 		]
 	},
 	"outpost_guardian": {
+		"mobfactions": [
+			"zombie"
+		],
 		"mobgroups": [
 			"security_robots"
 		]
@@ -104,6 +131,9 @@
 			"urbanroad_cross",
 			"urbanroad_corner",
 			"urbanroad_t"
+		],
+		"mobfactions": [
+			"security_robots"
 		],
 		"mobgroups": [
 			"basic_zombies"
@@ -117,6 +147,9 @@
 			"RockyHill_NE",
 			"RockyHill_SW"
 		],
+		"mobfactions": [
+			"zombie"
+		],
 		"mobgroups": [
 			"security_robots"
 		]
@@ -128,6 +161,9 @@
 			"radio_tower",
 			"RockyHill_NE",
 			"RockyHill_SW"
+		],
+		"mobfactions": [
+			"zombie"
 		],
 		"mobgroups": [
 			"security_robots"
@@ -141,6 +177,9 @@
 			"RockyHill_NE",
 			"RockyHill_SW"
 		],
+		"mobfactions": [
+			"zombie"
+		],
 		"mobgroups": [
 			"security_robots"
 		]
@@ -150,6 +189,9 @@
 			"urbanroad_cross",
 			"urbanroad_corner",
 			"urbanroad_t"
+		],
+		"mobfactions": [
+			"security_robots"
 		],
 		"mobgroups": [
 			"basic_zombies"
@@ -169,6 +211,9 @@
 			"RockyHill_NW",
 			"RockyHill_NE",
 			"RockyHill_SW"
+		],
+		"mobfactions": [
+			"zombie"
 		],
 		"mobgroups": [
 			"security_robots"
