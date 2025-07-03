@@ -74,7 +74,10 @@ class map_cell:
 		rotation = newdata.get("rotation", 0)
 
 	func get_sprite() -> Texture:
-		return rmap.sprite
+		if rmap:
+			return rmap.sprite
+		# rmap can be null if the map hasn't been instantiated
+		return null
 	
 	# Function to return formatted information about the map cell
 	func get_info_string() -> String:
