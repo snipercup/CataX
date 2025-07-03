@@ -8,8 +8,8 @@
 		"sprite": "plank.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 300,
-		"weight": 2
+		"volume": 300.0,
+		"weight": 2.0
 	},
 	{
 		"description": "Some metal bits and pieces. Useful for something, right?",
@@ -20,7 +20,7 @@
 		"sprite": "steel_scrap.png",
 		"stack_size": 2,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.25
 	},
 	{
@@ -48,21 +48,21 @@
 				},
 				"required_resources": [
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "steel_scrap"
 					},
 					{
-						"amount": 10,
+						"amount": 10.0,
 						"id": "bullet_9mm"
 					}
 				],
 				"skill_progression": {
 					"id": "fabrication",
-					"xp": 10
+					"xp": 10.0
 				},
 				"skill_requirement": {
 					"id": "fabrication",
-					"level": 1
+					"level": 1.0
 				}
 			}
 		],
@@ -79,7 +79,7 @@
 		"sprite": "pistol_magazine.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.25
 	},
 	{
@@ -94,7 +94,7 @@
 			"used_magazine": "pistol_magazine",
 			"used_skill": {
 				"skill_id": "handguns",
-				"xp": 1
+				"xp": 1.0
 			}
 		},
 		"description": "A standard issue pistol that uses 9mm ammunition",
@@ -105,8 +105,8 @@
 		"sprite": "pistol_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 2
+		"volume": 150.0,
+		"weight": 2.0
 	},
 	{
 		"Ranged": {
@@ -120,7 +120,7 @@
 			"used_magazine": "pistol_magazine",
 			"used_skill": {
 				"skill_id": "rifle",
-				"xp": 1
+				"xp": 1.0
 			}
 		},
 		"description": "A standard issue rifle that uses 9mm ammunition",
@@ -131,8 +131,8 @@
 		"sprite": "rifle_64_32.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 300,
-		"weight": 4
+		"volume": 300.0,
+		"weight": 4.0
 	},
 	{
 		"Ranged": {
@@ -146,7 +146,7 @@
 			"used_magazine": "chugunov_mpap_magazine",
 			"used_skill": {
 				"skill_id": "smg",
-				"xp": 1
+				"xp": 1.0
 			}
 		},
 		"description": "Chugun in Russian is for cast steel, MPAP is \"Multi Purpose Automatic Pistol\"",
@@ -157,8 +157,8 @@
 		"sprite": "chugunov_mpap_32_28.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 150,
-		"weight": 3
+		"volume": 150.0,
+		"weight": 3.0
 	},
 	{
 		"Magazine": {
@@ -174,7 +174,7 @@
 		"sprite": "chugunov_mpap_magazine_16_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.25
 	},
 	{
@@ -186,14 +186,14 @@
 		"sprite": "bottle_empty_32.png",
 		"stack_size": 2,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.1
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 20,
+					"amount": 20.0,
 					"id": "water"
 				}
 			]
@@ -206,14 +206,14 @@
 		"sprite": "bottle_water_32.png",
 		"stack_size": 2,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.25
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 25,
+					"amount": 25.0,
 					"id": "food"
 				}
 			]
@@ -226,7 +226,7 @@
 		"sprite": "canned_food_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.25
 	},
 	{
@@ -235,7 +235,7 @@
 			"reach": 1,
 			"used_skill": {
 				"skill_id": "cutting",
-				"xp": 10
+				"xp": 10.0
 			}
 		},
 		"description": "A sharp blade with a handle for excellent control",
@@ -246,8 +246,8 @@
 		"sprite": "machete_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 4
+		"volume": 100.0,
+		"weight": 4.0
 	},
 	{
 		"description": "Anyone is able to craft this simple arrow",
@@ -258,7 +258,7 @@
 		"sprite": "arrow_basic_32.png",
 		"stack_size": 5,
 		"two_handed": false,
-		"volume": 1,
+		"volume": 1.0,
 		"weight": 0.1
 	},
 	{
@@ -270,8 +270,8 @@
 		"sprite": "hammer_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 2
+		"volume": 50.0,
+		"weight": 2.0
 	},
 	{
 		"Craft": [
@@ -283,11 +283,11 @@
 				},
 				"required_resources": [
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "steel_scrap"
 					},
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "bottle_plastic_empty"
 					}
 				]
@@ -301,35 +301,35 @@
 		"sprite": "screwdriver_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 20,
+		"volume": 20.0,
 		"weight": 0.5
 	},
 	{
 		"Medical": {
-			"amount": 25,
+			"amount": 25.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "head_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "torso_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_leg_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_leg_health"
 				}
 			],
@@ -343,35 +343,35 @@
 		"sprite": "bandage_32.png",
 		"stack_size": 3,
 		"two_handed": false,
-		"volume": 1,
+		"volume": 1.0,
 		"weight": 0.1
 	},
 	{
 		"Medical": {
-			"amount": 10,
+			"amount": 10.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "head_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "torso_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_leg_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_leg_health"
 				}
 			],
@@ -385,7 +385,7 @@
 		"sprite": "antibiotics_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
@@ -400,8 +400,8 @@
 		"sprite": "jacket_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 1
+		"volume": 100.0,
+		"weight": 1.0
 	},
 	{
 		"Wearable": {
@@ -415,8 +415,8 @@
 		"sprite": "boots_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 1
+		"volume": 100.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A large container that holds gasoline",
@@ -427,8 +427,8 @@
 		"sprite": "jerrycan_gas_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 400,
-		"weight": 10
+		"volume": 400.0,
+		"weight": 10.0
 	},
 	{
 		"description": "It's a can that contains oil. It has a spout that allows you to pour it out.",
@@ -439,8 +439,8 @@
 		"sprite": "can_oil_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 2
+		"volume": 100.0,
+		"weight": 2.0
 	},
 	{
 		"description": "A small radio that can be powered by batteries or an electical cord.",
@@ -451,13 +451,13 @@
 		"sprite": "battery_powered_radio_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 1
+		"volume": 100.0,
+		"weight": 1.0
 	},
 	{
 		"Tool": {
 			"tool_qualities": {
-				"flashlight": 1
+				"flashlight": 1.0
 			}
 		},
 		"description": "A basic battery powered flashlight. It will shine a beam of light when it is turned on",
@@ -468,14 +468,14 @@
 		"sprite": "flashlight_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
+		"volume": 100.0,
 		"weight": 0.5
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 35,
+					"amount": 35.0,
 					"id": "water"
 				}
 			]
@@ -488,7 +488,7 @@
 		"sprite": "can_beer_32.png",
 		"stack_size": 2,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.5
 	},
 	{
@@ -503,8 +503,8 @@
 		"sprite": "gasmask_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 80,
-		"weight": 1
+		"volume": 80.0,
+		"weight": 1.0
 	},
 	{
 		"Wearable": {
@@ -518,8 +518,8 @@
 		"sprite": "vest_ballistic_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 4
+		"volume": 150.0,
+		"weight": 4.0
 	},
 	{
 		"description": "A device that shows your orientation relative to the earth's poles",
@@ -530,7 +530,7 @@
 		"sprite": "compass_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 6,
+		"volume": 6.0,
 		"weight": 0.1
 	},
 	{
@@ -554,8 +554,8 @@
 		"sprite": "solar_panel_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 500,
-		"weight": 10
+		"volume": 500.0,
+		"weight": 10.0
 	},
 	{
 		"description": "A large piece of paper that visualizes the area around you",
@@ -566,7 +566,7 @@
 		"sprite": "map_paper_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
@@ -578,8 +578,8 @@
 		"sprite": "tarp_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 3
+		"volume": 150.0,
+		"weight": 3.0
 	},
 	{
 		"description": "A piece of fabric and some strings. You can deploy it to get some shelter from the weather. It is currently folded to save space.",
@@ -590,8 +590,8 @@
 		"sprite": "tent_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 600,
-		"weight": 9
+		"volume": 600.0,
+		"weight": 9.0
 	},
 	{
 		"description": "A small book explaining the very basics of survival",
@@ -602,7 +602,7 @@
 		"sprite": "survival_guide_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
@@ -614,35 +614,35 @@
 		"sprite": "book_novel_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.4
 	},
 	{
 		"Medical": {
-			"amount": 10,
+			"amount": 10.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "head_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "torso_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_leg_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_leg_health"
 				}
 			],
@@ -656,7 +656,7 @@
 		"sprite": "bottle_disinfectant_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
@@ -668,8 +668,8 @@
 		"sprite": "radio_two_way_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 1
+		"volume": 50.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A small device that provides a spark that can be used to light a fire. No power or fuel required.",
@@ -680,7 +680,7 @@
 		"sprite": "firestarter_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
@@ -692,7 +692,7 @@
 		"sprite": "kit_fishing_small_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.4
 	},
 	{
@@ -704,7 +704,7 @@
 		"sprite": "kitchen_knife_64_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
+		"volume": 100.0,
 		"weight": 0.4
 	},
 	{
@@ -716,8 +716,8 @@
 		"sprite": "portable_stove_64_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 200,
-		"weight": 3
+		"volume": 200.0,
+		"weight": 3.0
 	},
 	{
 		"description": "A durable cooking pot, essential for boiling water and preparing meals.",
@@ -728,8 +728,8 @@
 		"sprite": "cooking_pot_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 350,
-		"weight": 3
+		"volume": 350.0,
+		"weight": 3.0
 	},
 	{
 		"description": "A small tool crucial for opening canned food, an essential for survival.",
@@ -740,7 +740,7 @@
 		"sprite": "can_opener_64_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.2
 	},
 	{
@@ -754,17 +754,17 @@
 				},
 				"required_resources": [
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "plank_2x4"
 					}
 				],
 				"skill_progression": {
 					"id": "fabrication",
-					"xp": 10
+					"xp": 10.0
 				},
 				"skill_requirement": {
 					"id": "fabrication",
-					"level": 1
+					"level": 1.0
 				}
 			}
 		],
@@ -776,8 +776,8 @@
 		"sprite": "cutting_board_64_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 200,
-		"weight": 1
+		"volume": 200.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A large bowl used for mixing ingredients, indispensable for any cooking or baking tasks.",
@@ -788,7 +788,7 @@
 		"sprite": "mixing_bowl_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 250,
+		"volume": 250.0,
 		"weight": 0.5
 	},
 	{
@@ -800,8 +800,8 @@
 		"sprite": "tea_kettle_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 200,
-		"weight": 1
+		"volume": 200.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A small rack containing various spices to enhance the flavor of food.",
@@ -812,8 +812,8 @@
 		"sprite": "spice_rack_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 1
+		"volume": 150.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A measuring cup, essential for precisely measuring ingredients for recipes.",
@@ -824,7 +824,7 @@
 		"sprite": "measuring_cup_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
+		"volume": 100.0,
 		"weight": 0.3
 	},
 	{
@@ -837,17 +837,17 @@
 				},
 				"required_resources": [
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "plank_2x4"
 					}
 				],
 				"skill_progression": {
 					"id": "fabrication",
-					"xp": 15
+					"xp": 15.0
 				},
 				"skill_requirement": {
 					"id": "fabrication",
-					"level": 2
+					"level": 2.0
 				}
 			}
 		],
@@ -859,7 +859,7 @@
 		"sprite": "rolling_pin_64_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
+		"volume": 150.0,
 		"weight": 0.5
 	},
 	{
@@ -871,8 +871,8 @@
 		"sprite": "frying_pan_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 200,
-		"weight": 2
+		"volume": 200.0,
+		"weight": 2.0
 	},
 	{
 		"description": "A metal colander, ideal for draining pasta or washing vegetables.",
@@ -883,7 +883,7 @@
 		"sprite": "steel_colander_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 200,
+		"volume": 200.0,
 		"weight": 0.7
 	},
 	{
@@ -895,7 +895,7 @@
 		"sprite": "peeler_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.1
 	},
 	{
@@ -907,7 +907,7 @@
 		"sprite": "grater_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.3
 	},
 	{
@@ -919,7 +919,7 @@
 		"sprite": "toaster_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 300,
+		"volume": 300.0,
 		"weight": 1.5
 	},
 	{
@@ -931,8 +931,8 @@
 		"sprite": "blender_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 300,
-		"weight": 2
+		"volume": 300.0,
+		"weight": 2.0
 	},
 	{
 		"description": "A coffee maker, essential for brewing the perfect cup of coffee to start your day.",
@@ -943,7 +943,7 @@
 		"sprite": "coffeemaker_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 300,
+		"volume": 300.0,
 		"weight": 2.5
 	},
 	{
@@ -955,8 +955,8 @@
 		"sprite": "microwave_oven_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 400,
-		"weight": 12
+		"volume": 400.0,
+		"weight": 12.0
 	},
 	{
 		"description": "A dish rack, useful for organizing and drying dishes after washing.",
@@ -967,8 +967,8 @@
 		"sprite": "dish_rack_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 400,
-		"weight": 1
+		"volume": 400.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A pressure cooker, ideal for fast cooking and preserving nutrients in food.",
@@ -979,8 +979,8 @@
 		"sprite": "pressure_cooker_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 400,
-		"weight": 5
+		"volume": 400.0,
+		"weight": 5.0
 	},
 	{
 		"description": "A bread maker, perfect for effortlessly baking fresh bread at home.",
@@ -991,8 +991,8 @@
 		"sprite": "bread_maker_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 300,
-		"weight": 5
+		"volume": 300.0,
+		"weight": 5.0
 	},
 	{
 		"description": "Small but crucial for holding together wooden structures and crafting. Often found in the remnants of furniture and buildings.",
@@ -1003,7 +1003,7 @@
 		"sprite": "nails_32.png",
 		"stack_size": 10,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
@@ -1015,8 +1015,8 @@
 		"sprite": "log_32.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 500,
-		"weight": 10
+		"volume": 500.0,
+		"weight": 10.0
 	},
 	{
 		"description": "Versatile fasteners used in both wooden and metal constructions. Can be scavenged from disassembled furniture and machinery.",
@@ -1027,7 +1027,7 @@
 		"sprite": "screw_32.png",
 		"stack_size": 10,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
@@ -1039,8 +1039,8 @@
 		"sprite": "branches_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 2
+		"volume": 50.0,
+		"weight": 2.0
 	},
 	{
 		"description": "Can be used for camouflage, crafting bedding, or as a basic source of compost.",
@@ -1051,7 +1051,7 @@
 		"sprite": "leaves_32.png",
 		"stack_size": 5,
 		"two_handed": false,
-		"volume": 1,
+		"volume": 1.0,
 		"weight": 0.01
 	},
 	{
@@ -1063,8 +1063,8 @@
 		"sprite": "pine_branch_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 2
+		"volume": 50.0,
+		"weight": 2.0
 	},
 	{
 		"description": "Natural material that can be molded when wet and hardens when dried, useful for creating pottery, bricks, and reinforcing structures.",
@@ -1075,8 +1075,8 @@
 		"sprite": "clay_32.png",
 		"stack_size": 5,
 		"two_handed": false,
-		"volume": 20,
-		"weight": 1
+		"volume": 20.0,
+		"weight": 1.0
 	},
 	{
 		"description": "Basic resource for growing plants and creating makeshift gardens for food production.",
@@ -1087,8 +1087,8 @@
 		"sprite": "soil_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 200,
-		"weight": 5
+		"volume": 200.0,
+		"weight": 5.0
 	},
 	{
 		"description": "Metal parts that allow doors and cabinets to open and close. Can be used in various mechanical constructions.",
@@ -1099,7 +1099,7 @@
 		"sprite": "hinge_32.png",
 		"stack_size": 5,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.2
 	},
 	{
@@ -1111,7 +1111,7 @@
 		"sprite": "plant_remnants_32.png",
 		"stack_size": 5,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
@@ -1123,7 +1123,7 @@
 		"sprite": "electrical_components_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 20,
+		"volume": 20.0,
 		"weight": 0.5
 	},
 	{
@@ -1135,7 +1135,7 @@
 		"sprite": "plastic_parts_32.png",
 		"stack_size": 10,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.3
 	},
 	{
@@ -1147,8 +1147,8 @@
 		"sprite": "ceramic_fragments_32.png",
 		"stack_size": 5,
 		"two_handed": false,
-		"volume": 15,
-		"weight": 1
+		"volume": 15.0,
+		"weight": 1.0
 	},
 	{
 		"description": "General metal components used in various crafting and construction recipes.",
@@ -1159,7 +1159,7 @@
 		"sprite": "metal_parts_32.png",
 		"stack_size": 10,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.5
 	},
 	{
@@ -1171,14 +1171,14 @@
 		"sprite": "jar_parsley_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.5
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1191,18 +1191,18 @@
 		"sprite": "tofu_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.5
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 15,
+					"amount": 15.0,
 					"id": "food"
 				},
 				{
-					"amount": 1,
+					"amount": 1.0,
 					"id": "water"
 				}
 			]
@@ -1215,18 +1215,18 @@
 		"sprite": "bottle_yogurt_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
+		"volume": 100.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				},
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "water"
 				}
 			]
@@ -1239,18 +1239,18 @@
 		"sprite": "jar_pickles_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 1
+		"volume": 50.0,
+		"weight": 1.0
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 15,
+					"amount": 15.0,
 					"id": "food"
 				},
 				{
-					"amount": 5,
+					"amount": 5.0,
 					"id": "water"
 				}
 			]
@@ -1263,35 +1263,35 @@
 		"sprite": "condensed_milk_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.8
 	},
 	{
 		"Medical": {
-			"amount": 10,
+			"amount": 10.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "head_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "torso_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_leg_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_leg_health"
 				}
 			],
@@ -1305,35 +1305,35 @@
 		"sprite": "insulin_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
 		"Medical": {
-			"amount": 10,
+			"amount": 10.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "head_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "torso_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_leg_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_leg_health"
 				}
 			],
@@ -1347,14 +1347,14 @@
 		"sprite": "epipen_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1367,14 +1367,14 @@
 		"sprite": "bag_bacon_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.5
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "water"
 				}
 			]
@@ -1387,14 +1387,14 @@
 		"sprite": "wine_bottle_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
+		"volume": 90.0,
 		"weight": 1.5
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1407,7 +1407,7 @@
 		"sprite": "bread_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
+		"volume": 90.0,
 		"weight": 0.5
 	},
 	{
@@ -1419,14 +1419,14 @@
 		"sprite": "syringe_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.05
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1439,14 +1439,14 @@
 		"sprite": "slice_of_pizza_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1459,18 +1459,18 @@
 		"sprite": "vacuum_sealed_fish_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.8
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "food"
 				},
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "water"
 				}
 			]
@@ -1483,18 +1483,18 @@
 		"sprite": "tomato_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "food"
 				},
 				{
-					"amount": 6,
+					"amount": 6.0,
 					"id": "water"
 				}
 			]
@@ -1507,7 +1507,7 @@
 		"sprite": "lettuce_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
+		"volume": 90.0,
 		"weight": 0.3
 	},
 	{
@@ -1519,14 +1519,14 @@
 		"sprite": "protein_powder_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 1
+		"volume": 50.0,
+		"weight": 1.0
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1539,14 +1539,14 @@
 		"sprite": "chocolate_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 25,
+		"volume": 25.0,
 		"weight": 0.2
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1559,7 +1559,7 @@
 		"sprite": "jar_olives_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 40,
+		"volume": 40.0,
 		"weight": 0.5
 	},
 	{
@@ -1571,14 +1571,14 @@
 		"sprite": "jar_basil_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 25,
+		"volume": 25.0,
 		"weight": 0.5
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 5,
+					"amount": 5.0,
 					"id": "food"
 				}
 			]
@@ -1591,14 +1591,14 @@
 		"sprite": "jar_mustard_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 25,
+		"volume": 25.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 5,
+					"amount": 5.0,
 					"id": "food"
 				}
 			]
@@ -1611,14 +1611,14 @@
 		"sprite": "bottle_ketchup_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 5,
+					"amount": 5.0,
 					"id": "food"
 				}
 			]
@@ -1631,35 +1631,35 @@
 		"sprite": "stale_bread_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
+		"volume": 90.0,
 		"weight": 0.5
 	},
 	{
 		"Medical": {
-			"amount": 10,
+			"amount": 10.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "head_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "torso_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_arm_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "left_leg_health"
 				},
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "right_leg_health"
 				}
 			],
@@ -1673,18 +1673,18 @@
 		"sprite": "painkiller_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 2,
+					"amount": 2.0,
 					"id": "food"
 				},
 				{
-					"amount": 6,
+					"amount": 6.0,
 					"id": "water"
 				}
 			]
@@ -1697,18 +1697,18 @@
 		"sprite": "orange_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				},
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "water"
 				}
 			]
@@ -1721,14 +1721,14 @@
 		"sprite": "apple_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1741,14 +1741,14 @@
 		"sprite": "potato_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 9,
+					"amount": 9.0,
 					"id": "food"
 				}
 			]
@@ -1761,18 +1761,18 @@
 		"sprite": "carrot_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 12,
+					"amount": 12.0,
 					"id": "food"
 				},
 				{
-					"amount": 6,
+					"amount": 6.0,
 					"id": "water"
 				}
 			]
@@ -1785,14 +1785,14 @@
 		"sprite": "eggs_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.6
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 20,
+					"amount": 20.0,
 					"id": "food"
 				}
 			]
@@ -1805,14 +1805,14 @@
 		"sprite": "butter_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 20,
+		"volume": 20.0,
 		"weight": 0.4
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 12,
+					"amount": 12.0,
 					"id": "water"
 				}
 			]
@@ -1825,14 +1825,14 @@
 		"sprite": "can_energydrink_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 15,
+					"amount": 15.0,
 					"id": "water"
 				}
 			]
@@ -1845,14 +1845,14 @@
 		"sprite": "can_soda_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.3
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "food"
 				}
 			]
@@ -1865,7 +1865,7 @@
 		"sprite": "cheese_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 40,
+		"volume": 40.0,
 		"weight": 0.5
 	},
 	{
@@ -1880,7 +1880,7 @@
 		"sprite": "t_shirt_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
+		"volume": 90.0,
 		"weight": 0.5
 	},
 	{
@@ -1888,7 +1888,7 @@
 			"player_attributes": [
 				{
 					"id": "inventory_space",
-					"value": 100
+					"value": 100.0
 				}
 			],
 			"slot": "legs"
@@ -1901,8 +1901,8 @@
 		"sprite": "jeans_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 1
+		"volume": 100.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A basic silver spoon, used for eating or stirring.",
@@ -1913,7 +1913,7 @@
 		"sprite": "spoon_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
@@ -1925,7 +1925,7 @@
 		"sprite": "fork_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
@@ -1937,7 +1937,7 @@
 		"sprite": "butter_knife_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
@@ -1949,7 +1949,7 @@
 		"sprite": "hand_wisk_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 80,
+		"volume": 80.0,
 		"weight": 0.2
 	},
 	{
@@ -1961,7 +1961,7 @@
 		"sprite": "soup_ladle_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
+		"volume": 100.0,
 		"weight": 0.3
 	},
 	{
@@ -1973,7 +1973,7 @@
 		"sprite": "kitchen_tongs_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.3
 	},
 	{
@@ -1988,7 +1988,7 @@
 		"sprite": "baseball_cap_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.2
 	},
 	{
@@ -2003,8 +2003,8 @@
 		"sprite": "sweater_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 1
+		"volume": 150.0,
+		"weight": 1.0
 	},
 	{
 		"Wearable": {
@@ -2018,8 +2018,8 @@
 		"sprite": "scarf_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
-		"weight": 1
+		"volume": 90.0,
+		"weight": 1.0
 	},
 	{
 		"Wearable": {
@@ -2033,8 +2033,8 @@
 		"sprite": "leather_gloves_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
-		"weight": 1
+		"volume": 60.0,
+		"weight": 1.0
 	},
 	{
 		"Wearable": {
@@ -2048,7 +2048,7 @@
 		"sprite": "shorts_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.4
 	},
 	{
@@ -2063,7 +2063,7 @@
 		"sprite": "strainer_sieve_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
+		"volume": 100.0,
 		"weight": 0.3
 	},
 	{
@@ -2078,7 +2078,7 @@
 		"sprite": "socks_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.3
 	},
 	{
@@ -2102,7 +2102,7 @@
 		"sprite": "cheese_grater_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
+		"volume": 150.0,
 		"weight": 0.3
 	},
 	{
@@ -2114,7 +2114,7 @@
 		"sprite": "pizza_cutter_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.2
 	},
 	{
@@ -2126,7 +2126,7 @@
 		"sprite": "basting_brush_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.1
 	},
 	{
@@ -2138,7 +2138,7 @@
 		"sprite": "apple_corer_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.1
 	},
 	{
@@ -2150,7 +2150,7 @@
 		"sprite": "garlic_press_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 80,
+		"volume": 80.0,
 		"weight": 0.3
 	},
 	{
@@ -2162,7 +2162,7 @@
 		"sprite": "silver_knife_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
@@ -2174,7 +2174,7 @@
 		"sprite": "measuring_spoon_set_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
+		"volume": 90.0,
 		"weight": 0.3
 	},
 	{
@@ -2186,7 +2186,7 @@
 		"sprite": "stick_small_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 40,
+		"volume": 40.0,
 		"weight": 0.5
 	},
 	{
@@ -2198,8 +2198,8 @@
 		"sprite": "rock_large_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 10
+		"volume": 150.0,
+		"weight": 10.0
 	},
 	{
 		"description": "A collection of wild herbs, useful for medicinal purposes or adding flavor to food.",
@@ -2210,18 +2210,18 @@
 		"sprite": "wild_herbs_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 6,
+					"amount": 6.0,
 					"id": "food"
 				},
 				{
-					"amount": 2,
+					"amount": 2.0,
 					"id": "water"
 				}
 			]
@@ -2234,14 +2234,14 @@
 		"sprite": "berries_wild_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.05
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 4,
+					"amount": 4.0,
 					"id": "food"
 				}
 			]
@@ -2254,7 +2254,7 @@
 		"sprite": "mushroom_forest_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.05
 	},
 	{
@@ -2266,18 +2266,18 @@
 		"sprite": "pinecone_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 40,
+		"volume": 40.0,
 		"weight": 0.05
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 5,
+					"amount": 5.0,
 					"id": "food"
 				},
 				{
-					"amount": 2,
+					"amount": 2.0,
 					"id": "water"
 				}
 			]
@@ -2290,7 +2290,7 @@
 		"sprite": "egg_bird_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.1
 	},
 	{
@@ -2302,7 +2302,7 @@
 		"sprite": "flower_wild_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 0.1
 	},
 	{
@@ -2314,7 +2314,7 @@
 		"sprite": "acorn_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.02
 	},
 	{
@@ -2326,7 +2326,7 @@
 		"sprite": "pebble_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
@@ -2338,8 +2338,8 @@
 		"sprite": "quartz_crystal_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 90,
-		"weight": 2
+		"volume": 90.0,
+		"weight": 2.0
 	},
 	{
 		"description": "A small pile of gravel, useful for construction or as a crafting material.",
@@ -2350,7 +2350,7 @@
 		"sprite": "gravel_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.2
 	},
 	{
@@ -2362,8 +2362,8 @@
 		"sprite": "rock_medium_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
-		"weight": 2
+		"volume": 50.0,
+		"weight": 2.0
 	},
 	{
 		"description": "A small rock, handy for crafting or as a basic tool component.",
@@ -2374,7 +2374,7 @@
 		"sprite": "rock_small_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.2
 	},
 	{
@@ -2383,7 +2383,7 @@
 			"reach": 1,
 			"used_skill": {
 				"skill_id": "bashing",
-				"xp": 10
+				"xp": 10.0
 			}
 		},
 		"description": "A simple stick, useful for crafting, kindling, or as a basic weapon.",
@@ -2394,8 +2394,8 @@
 		"sprite": "stick_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 100,
-		"weight": 1
+		"volume": 100.0,
+		"weight": 1.0
 	},
 	{
 		"Melee": {
@@ -2403,7 +2403,7 @@
 			"reach": 2,
 			"used_skill": {
 				"skill_id": "bashing",
-				"xp": 10
+				"xp": 10.0
 			}
 		},
 		"description": "A long stick, versatile for crafting, building structures, or as a makeshift weapon.",
@@ -2414,8 +2414,8 @@
 		"sprite": "stick_long_32.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 200,
-		"weight": 5
+		"volume": 200.0,
+		"weight": 5.0
 	},
 	{
 		"description": "A stone with a sharp edge, useful for cutting or crafting tools.",
@@ -2426,7 +2426,7 @@
 		"sprite": "rock_sharp_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 50,
+		"volume": 50.0,
 		"weight": 0.8
 	},
 	{
@@ -2439,17 +2439,17 @@
 				},
 				"required_resources": [
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "long_stick"
 					},
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "sharp_stone"
 					}
 				],
 				"skill_progression": {
 					"id": "fabrication",
-					"xp": 25
+					"xp": 25.0
 				}
 			}
 		],
@@ -2458,7 +2458,7 @@
 			"reach": 2,
 			"used_skill": {
 				"skill_id": "cutting",
-				"xp": 10
+				"xp": 10.0
 			}
 		},
 		"description": "A long stick with a sharpened stone tip, ideal for hunting or defense.",
@@ -2469,15 +2469,15 @@
 		"sprite": "spear_stone_32.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 200,
-		"weight": 4
+		"volume": 200.0,
+		"weight": 4.0
 	},
 	{
 		"Wearable": {
 			"player_attributes": [
 				{
 					"id": "inventory_space",
-					"value": 200
+					"value": 200.0
 				}
 			],
 			"slot": "back"
@@ -2490,7 +2490,7 @@
 		"sprite": "waistbag_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.3
 	},
 	{
@@ -2498,7 +2498,7 @@
 			"player_attributes": [
 				{
 					"id": "inventory_space",
-					"value": 400
+					"value": 400.0
 				}
 			],
 			"slot": "back"
@@ -2511,7 +2511,7 @@
 		"sprite": "mailbag_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 80,
+		"volume": 80.0,
 		"weight": 0.7
 	},
 	{
@@ -2519,7 +2519,7 @@
 			"player_attributes": [
 				{
 					"id": "inventory_space",
-					"value": 1000
+					"value": 1000.0
 				}
 			],
 			"slot": "back"
@@ -2532,7 +2532,7 @@
 		"sprite": "backpack_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 120,
+		"volume": 120.0,
 		"weight": 1.2
 	},
 	{
@@ -2544,8 +2544,8 @@
 		"sprite": "brick_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
-		"weight": 2
+		"volume": 60.0,
+		"weight": 2.0
 	},
 	{
 		"description": "A brick with visible cracks and wear, still usable but not as durable.",
@@ -2556,7 +2556,7 @@
 		"sprite": "brick_damaged_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 60,
+		"volume": 60.0,
 		"weight": 1.8
 	},
 	{
@@ -2568,8 +2568,8 @@
 		"sprite": "concrete_slab_damaged_32.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 400,
-		"weight": 20
+		"volume": 400.0,
+		"weight": 20.0
 	},
 	{
 		"description": "Sharp pieces of broken glass, dangerous but potentially useful in crafting.",
@@ -2580,7 +2580,7 @@
 		"sprite": "glass_shards_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.05
 	},
 	{
@@ -2592,15 +2592,15 @@
 		"sprite": "rusted_metal_sheets_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 150,
-		"weight": 5
+		"volume": 150.0,
+		"weight": 5.0
 	},
 	{
 		"Medical": {
-			"amount": -50,
+			"amount": -50.0,
 			"attributes": [
 				{
-					"amount": 0,
+					"amount": 0.0,
 					"id": "poison"
 				}
 			],
@@ -2614,7 +2614,7 @@
 		"sprite": "antidote_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.1
 	},
 	{
@@ -2626,19 +2626,19 @@
 		"sprite": "transmitter_broken_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 80,
-		"weight": 1
+		"volume": 80.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A functional circuit board, scavenged from a robotic enemy or scrap pile. Essential for repairing electronics.",
 		"id": "circuit_board",
-		"image": "./Mods/Dimensionfall/Items/cirquit_board_32.png",
+		"image": "./Mods/Dimensionfall/Items/circuit_board_32.png",
 		"max_stack_size": 5,
 		"name": "Circuit Board",
-		"sprite": "cirquit_board_32.png",
+		"sprite": "circuit_board_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 20,
+		"volume": 20.0,
 		"weight": 0.5
 	},
 	{
@@ -2651,29 +2651,29 @@
 				},
 				"required_resources": [
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "damaged_transmitter"
 					},
 					{
-						"amount": 2,
+						"amount": 2.0,
 						"id": "electrical_components"
 					},
 					{
-						"amount": 2,
+						"amount": 2.0,
 						"id": "plastic_parts"
 					},
 					{
-						"amount": 1,
+						"amount": 1.0,
 						"id": "circuit_board"
 					}
 				],
 				"skill_progression": {
 					"id": "electronics",
-					"xp": 25
+					"xp": 25.0
 				},
 				"skill_requirement": {
 					"id": "electronics",
-					"level": 1
+					"level": 1.0
 				}
 			}
 		],
@@ -2685,8 +2685,8 @@
 		"sprite": "transmitter_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 80,
-		"weight": 1
+		"volume": 80.0,
+		"weight": 1.0
 	},
 	{
 		"description": "A metallic key that grants access to the control panel of the radio tower.",
@@ -2697,7 +2697,7 @@
 		"sprite": "metallic_key_32.png",
 		"stack_size": 2,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.25
 	},
 	{
@@ -2709,7 +2709,7 @@
 		"sprite": "wallet_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.1
 	},
 	{
@@ -2724,22 +2724,22 @@
 		"sprite": "watch_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.1
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 2,
+					"amount": 2.0,
 					"id": "food"
 				},
 				{
-					"amount": 2,
+					"amount": 2.0,
 					"id": "water"
 				},
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "poison"
 				}
 			]
@@ -2752,7 +2752,7 @@
 		"sprite": "rotten_flesh_chunk_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.25
 	},
 	{
@@ -2764,22 +2764,22 @@
 		"sprite": "zombie_bone_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 15,
+		"volume": 15.0,
 		"weight": 0.1
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 1,
+					"amount": 1.0,
 					"id": "food"
 				},
 				{
-					"amount": 1,
+					"amount": 1.0,
 					"id": "water"
 				},
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "poison"
 				}
 			]
@@ -2792,22 +2792,22 @@
 		"sprite": "zombie_eye_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 5,
+		"volume": 5.0,
 		"weight": 0.05
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "food"
 				},
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "water"
 				},
 				{
-					"amount": 10,
+					"amount": 10.0,
 					"id": "poison"
 				}
 			]
@@ -2820,7 +2820,7 @@
 		"sprite": "zombie_organ_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 25,
+		"volume": 25.0,
 		"weight": 0.25
 	},
 	{
@@ -2832,7 +2832,7 @@
 		"sprite": "kindling_bundle_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 30,
+		"volume": 30.0,
 		"weight": 0.3
 	},
 	{
@@ -2844,7 +2844,7 @@
 		"sprite": "charcoal_chunk_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.5
 	},
 	{
@@ -2856,18 +2856,18 @@
 		"sprite": "branches_32.png",
 		"stack_size": 1,
 		"two_handed": true,
-		"volume": 150,
-		"weight": 10
+		"volume": 150.0,
+		"weight": 10.0
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 3,
+					"amount": 3.0,
 					"id": "food"
 				},
 				{
-					"amount": 4,
+					"amount": 4.0,
 					"id": "water"
 				}
 			]
@@ -2880,14 +2880,14 @@
 		"sprite": "kiwi_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 8,
+		"volume": 8.0,
 		"weight": 0.2
 	},
 	{
 		"Food": {
 			"attributes": [
 				{
-					"amount": 15,
+					"amount": 15.0,
 					"id": "food"
 				}
 			]
@@ -2900,7 +2900,7 @@
 		"sprite": "uncooked_meat_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 20,
+		"volume": 20.0,
 		"weight": 0.5
 	},
 	{
@@ -2912,7 +2912,7 @@
 		"sprite": "sigarrette_pack_32.png",
 		"stack_size": 1,
 		"two_handed": false,
-		"volume": 10,
+		"volume": 10.0,
 		"weight": 0.1
 	}
 ]
