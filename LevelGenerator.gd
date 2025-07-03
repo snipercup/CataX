@@ -288,23 +288,26 @@ func unload_all_chunks():
 # Function to handle chunk unloading. Chunk data will NOT be saved.
 # If you need to save chunk data beforehand, call Helper.save_helper.save_map_data()
 func handle_chunk_unload():
-		var all_unloaded = true
-		# Get all chunks in the group "chunks"
+	var all_unloaded := false
+
+	# Keep looping until every chunk has been unloaded
+	while not all_unloaded:
+		all_unloaded = true
+
+		# Get every chunk currently in the group
 		var chunks = get_tree().get_nodes_in_group("chunks")
 		for chunk in chunks:
-			await get_tree().create_timer(TIME_DELAY).timeout # Wait for a bit before checking again
-			if is_instance_valid(chunk): # some might be queue_freed at this point
+			await get_tree().create_timer(TIME_DELAY).timeout # short pause between checks
+			if is_instance_valid(chunk):
 				match chunk.load_state:
 					chunk.LoadStates.NEITHER:
 						unload_chunk(get_chunk_pos_from_mypos(chunk.mypos))
-						all_unloaded = false  # Wait for state to change
-					chunk.LoadStates.LOADING:
-						all_unloaded = false  # Wait for state to change
-					chunk.LoadStates.UNLOADING:
-						all_unloaded = false  # Wait for chunk to unload
-		if all_unloaded:
-			is_processing_chunk = false
-			all_chunks_unloaded.emit()
-		else:
-			await get_tree().create_timer(TIME_DELAY).timeout # Wait for a bit before checking again
-			handle_chunk_unload()
+						all_unloaded = false
+					chunk.LoadStates.LOADING, chunk.LoadStates.UNLOADING:
+						all_unloaded = false
+
+		if not all_unloaded:
+			await get_tree().create_timer(TIME_DELAY).timeout # wait before the next pass
+
+	is_processing_chunk = false
+	all_chunks_unloaded.emit()
