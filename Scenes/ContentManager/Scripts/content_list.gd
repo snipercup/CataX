@@ -12,6 +12,7 @@ extends Control
 @export var popup_textedit: TextEdit = null
 @export var to_mod_h_box_container: HBoxContainer = null
 @export var mod_option_button: OptionButton = null
+@export var search_line: LineEdit = null
 
 
 signal item_activated(type: DMod.ContentType, itemID: String, list: Control)
@@ -57,6 +58,7 @@ func _ready():
 
 	# Other existing setup for the contentItems drag forwarding
 	contentItems.set_drag_forwarding(_create_drag_data, Callable(), Callable())
+	search_line.text_changed.connect(_on_search_changed)
 
 
 # This function adds items to the content list based on the provided path
@@ -243,6 +245,13 @@ func _on_content_items_gui_input(event):
 
 func _on_content_items_mouse_entered():
 	mouse_button_is_pressed = false
+
+	func _on_search_changed(new_text: String) -> void:
+	var query := new_text.to_lower()
+		for i in range(contentItems.item_count):
+		var item_text := contentItems.get_item_text(i).to_lower()
+		var match := query == "" or item_text.find(query) != -1
+		contentItems.set_item_hidden(i, !match)
 
 
 func save_collapse_state():
