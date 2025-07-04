@@ -23,6 +23,8 @@ func clear_container(container: Control):
 
 # Handles the update of the stats display when player stats change
 func _on_player_stat_changed(player_node: CharacterBody3D):
+	if not visible:
+		return
 	clear_container(statsContainer)  # Clear existing content
 	var playerstats = player_node.stats
 	for stat_id in playerstats:
