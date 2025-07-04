@@ -559,6 +559,25 @@ func add_skill_xp(skill_id: String, xp: float) -> void:
 	else:
 		push_error("Skill ID not found: %s" % skill_id)
 
+# -----------------------
+#      STAT HELPERS
+# -----------------------
+
+# Returns the current value of a stat or 0 if it doesn't exist
+func get_stat(stat_id: String) -> int:
+	if stats.has(stat_id):
+		return stats[stat_id]
+	return 0
+
+# Sets the value for a stat and emits the change signal
+func set_stat(stat_id: String, value: int) -> void:
+	stats[stat_id] = value
+	Helper.signal_broker.player_stat_changed.emit(self)
+
+# Adds an amount to a stat value and emits the change signal
+func add_stat(stat_id: String, amount: int) -> void:
+	set_stat(stat_id, get_stat(stat_id) + amount)
+
 
 # The player has succesfully crafted an item. Get the skill id and xp from
 # the recipe and add it to the player's skill xp
