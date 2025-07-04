@@ -13,7 +13,7 @@ var pos: Vector2 = Vector2.ZERO
 var cells: Dictionary = {}
 # Dictionary to store map_id and their corresponding coordinates
 var map_id_to_coordinates: Dictionary = {}
-var tactical_map_positions: Dictionary = {}  # Tracks tactical map cell coordinates
+var tactical_map_positions: Dictionary = {}  # Tracks tactical map cell coordinates in global space
 var grid_width: int = 100 # TODO: Pass the global grid_width to this class
 var grid_height: int = 100
 # Dictionary to store lists of area positions sorted by dovermaparea.id
@@ -185,7 +185,7 @@ func set_data(mydata: Dictionary) -> void:
 		cell.set_data(mydata["cells"][cell_key])
 		cells[Vector2(cell_key.split(",")[0].to_int(), cell_key.split(",")[1].to_int())] = cell
 
-# Updates a cell's map ID and rotation using local coordinates
+# Updates a cell's map ID and rotation using global coordinates
 func update_cell(local_coord: Vector2, map_id: String, rotation: int):
 	if cells.has(local_coord):
 		cells[local_coord].map_id = map_id.replace(".json", "")
@@ -590,10 +590,11 @@ func place_tactical_maps() -> void:
 					var chunk_index = j * map_width + i
 					var dchunk: RTacticalmap.TChunk = chunks[chunk_index]
 
-					# 🚨 Track tactical map position
-					tactical_map_positions[cell_key] = true
+					# 🚨 Track tactical map position in global coordinates
+					var global_cell_key = local_to_global(cell_key)
+					tactical_map_positions[global_cell_key] = true
 
-					update_cell(local_to_global(cell_key), dchunk.id, dchunk.rotation)
+					update_cell(global_cell_key, dchunk.id, dchunk.rotation)
 					placed_positions.append(cell_key)  # Track the positions that have been occupied
 
 
