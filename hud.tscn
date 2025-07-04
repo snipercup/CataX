@@ -25,16 +25,16 @@
 default_font = ExtResource("1_pxloi")
 default_font_size = 0
 
-[node name="HUD" type="CanvasLayer" node_paths=PackedStringArray("clock_label", "ammo_HUD_container", "inventoryWindow", "characterWindow", "questWindow", "overmap")]
+[node name="HUD" type="CanvasLayer" node_paths=PackedStringArray("clock_label", "ammo_HUD_container", "inventory_window", "characterWindow", "quest_window", "overmap")]
 script = ExtResource("1_s3xoj")
-stamina_HUD = NodePath("StaminaLevel")
+stamina_hud = NodePath("StaminaLevel")
 clock_label = NodePath("ClockLabel")
 ammo_HUD_container = NodePath("AmmoVisuals")
 healthy_color = Color(0, 0.635294, 0, 1)
 damaged_color = Color(0.635294, 0, 0, 1)
-inventoryWindow = NodePath("InventoryWindow")
+inventory_window = NodePath("InventoryWindow")
 characterWindow = NodePath("CharacterWindow")
-questWindow = NodePath("QuestWindow")
+quest_window = NodePath("QuestWindow")
 building_menu = NodePath("BuildingMenu")
 crafting_menu = NodePath("CraftingMenu")
 overmap = NodePath("Overmap")

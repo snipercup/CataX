@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemProtoset" load_steps=2 format=3 uid="uid://40imt51cghsv"]
+[gd_resource type="Resource" script_class="ItemProtoset" load_steps=2 format=3 uid="uid://b1yiafqc7h2th"]
 
 [ext_resource type="Script" uid="uid://blcdlb80ku0ox" path="res://addons/gloot/core/item_protoset.gd" id="1_o35lu"]
 
@@ -2494,10 +2494,10 @@ json_data = "[
 	{
 		\"description\": \"A functional circuit board, scavenged from a robotic enemy or scrap pile. Essential for repairing electronics.\",
 		\"id\": \"circuit_board\",
-		\"image\": \"./Mods/Dimensionfall/Items/cirquit_board_32.png\",
+		\"image\": \"./Mods/Dimensionfall/Items/circuit_board_32.png\",
 		\"max_stack_size\": 5,
 		\"name\": \"Circuit Board\",
-		\"sprite\": \"cirquit_board_32.png\",
+		\"sprite\": \"circuit_board_32.png\",
 		\"stack_size\": 1,
 		\"volume\": 20.0,
 		\"weight\": 0.5

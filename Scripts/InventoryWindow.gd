@@ -37,8 +37,8 @@ var input_action: String = "toggle_inventory" # What action is used to show/hide
 func _ready():
 	setup_inventory_controls()
 	
-	LeftHandEquipmentSlot.myInventory = inventory
-	RightHandEquipmentSlot.myInventory = inventory
+	LeftHandEquipmentSlot.my_inventory = inventory
+	RightHandEquipmentSlot.my_inventory = inventory
 	instantiate_wearable_slots()
 	equip_loaded_items()
 	# We let the signal broker forward the change in visibility so other nodes can respond
@@ -76,7 +76,7 @@ func setup_inventory_controls():
 	initialize_inventory_control(proximity_inventory_control, proximity_inventory)
 
 func initialize_inventory_control(control: Control, inv: InventoryStacked):
-	control.myInventory = inv
+	control.my_inventory = inv
 	control.initialize_list()
 	control.mouse_entered_item.connect(_on_inventory_item_mouse_entered)
 	control.mouse_exited_item.connect(_on_inventory_item_mouse_exited)

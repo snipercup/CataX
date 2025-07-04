@@ -146,11 +146,11 @@ layout_mode = 2
 [node name="LeftHandEquipment" type="HBoxContainer" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList"]
 layout_mode = 2
 
-[node name="LeftHandEquipmentSlot" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList/LeftHandEquipment" node_paths=PackedStringArray("myInventoryCtrl", "otherHandSlot") instance=ExtResource("9_tpx1u")]
+[node name="LeftHandEquipmentSlot" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList/LeftHandEquipment" node_paths=PackedStringArray("my_inventory_ctrl", "other_hand_slot") instance=ExtResource("9_tpx1u")]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-myInventoryCtrl = NodePath("../../../PlayerInventoryControl/CtrlInventoryStackedCustom")
-otherHandSlot = NodePath("../../RightHandEquipment/RightHandEquipmentSlot")
+my_inventory_ctrl = NodePath("../../../PlayerInventoryControl/CtrlInventoryStackedCustom")
+other_hand_slot = NodePath("../../RightHandEquipment/RightHandEquipmentSlot")
 
 [node name="Label" type="Label" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList/LeftHandEquipment"]
 layout_mode = 2
@@ -159,11 +159,11 @@ text = "Left hand"
 [node name="RightHandEquipment" type="HBoxContainer" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList"]
 layout_mode = 2
 
-[node name="RightHandEquipmentSlot" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList/RightHandEquipment" node_paths=PackedStringArray("myInventoryCtrl", "otherHandSlot") instance=ExtResource("9_tpx1u")]
+[node name="RightHandEquipmentSlot" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList/RightHandEquipment" node_paths=PackedStringArray("my_inventory_ctrl", "other_hand_slot") instance=ExtResource("9_tpx1u")]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-myInventoryCtrl = NodePath("../../../PlayerInventoryControl/CtrlInventoryStackedCustom")
-otherHandSlot = NodePath("../../LeftHandEquipment/LeftHandEquipmentSlot")
+my_inventory_ctrl = NodePath("../../../PlayerInventoryControl/CtrlInventoryStackedCustom")
+other_hand_slot = NodePath("../../LeftHandEquipment/LeftHandEquipmentSlot")
 slot_idx = 1
 
 [node name="Label" type="Label" parent="VBoxContainer/BodyPanelContainer/HBoxContainer/EquipmentSlotList/RightHandEquipment"]
