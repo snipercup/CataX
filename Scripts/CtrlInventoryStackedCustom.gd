@@ -1,4 +1,5 @@
 extends Control
+class_name CtrlInventoryStackedCustom
 
 # This script is intended to be used with CtrlInventoryStackedCustom
 # It displays inventory items with their properties in a ItemList displayed as a grid
@@ -17,17 +18,17 @@ extends Control
 
 
 # The central grid to visualize the cells and columns
-@export var inventoryGrid: GridContainer
+@export var inventory_grid: GridContainer
 # A visual element to show weight capacity
-@export var WeightBar: ProgressBar
+@export var weight_bar: ProgressBar
 # A visual element to show volume capacity
-@export var VolumeBar: ProgressBar
+@export var volume_bar: ProgressBar
 # The currently attached InventoryStacked that holds the items
-@export var myInventory: InventoryStacked
+@export var my_inventory: InventoryStacked
 @export var max_weight: int = 1000
 @export var max_volume: int = 1000
-@export var listItemContainer: PackedScene
-@export var listHeaderContainer: PackedScene
+@export var list_item_container: PackedScene
+@export var list_header_container: PackedScene
 # Context menu that will show actions for selected items
 @export var context_menu: PopupMenu
 
@@ -103,24 +104,24 @@ func _on_context_menu_item_selected(id):
 
 
 func _disconnect_inventory_signals():
-	if not myInventory:
+	if not my_inventory:
 		return
-	if myInventory.item_added.is_connected(_on_inventory_item_added):
-		myInventory.item_added.disconnect(_on_inventory_item_added)
-	if myInventory.item_removed.is_connected(_on_inventory_item_removed):
-		myInventory.item_removed.disconnect(_on_inventory_item_removed)
-	if myInventory.item_modified.is_connected(_on_inventory_item_modified):
-		myInventory.item_modified.disconnect(_on_inventory_item_modified)
-	if myInventory.contents_changed.is_connected(_on_inventory_contents_changed):
-		myInventory.contents_changed.disconnect(_on_inventory_contents_changed)
+	if my_inventory.item_added.is_connected(_on_inventory_item_added):
+		my_inventory.item_added.disconnect(_on_inventory_item_added)
+	if my_inventory.item_removed.is_connected(_on_inventory_item_removed):
+		my_inventory.item_removed.disconnect(_on_inventory_item_removed)
+	if my_inventory.item_modified.is_connected(_on_inventory_item_modified):
+		my_inventory.item_modified.disconnect(_on_inventory_item_modified)
+	if my_inventory.contents_changed.is_connected(_on_inventory_contents_changed):
+		my_inventory.contents_changed.disconnect(_on_inventory_contents_changed)
 
 
 func _connect_inventory_signals():
 	# Connect signals from InventoryStacked to this control script
-	myInventory.item_added.connect(_on_inventory_item_added)
-	myInventory.item_removed.connect(_on_inventory_item_removed)
-	myInventory.item_modified.connect(_on_inventory_item_modified)
-	myInventory.contents_changed.connect(_on_inventory_contents_changed)
+	my_inventory.item_added.connect(_on_inventory_item_added)
+	my_inventory.item_removed.connect(_on_inventory_item_removed)
+	my_inventory.item_modified.connect(_on_inventory_item_modified)
+	my_inventory.contents_changed.connect(_on_inventory_contents_changed)
 
 
 func _on_inventory_item_added(item: InventoryItem):
@@ -150,7 +151,7 @@ func update_inventory_list(changedItem: InventoryItem, action: String):
 	# Clear and repopulate the inventory list
 	_deselect_and_clear_current_inventory()
 	_add_header_row_to_grid()
-	for item in myInventory.get_children():
+	for item in my_inventory.get_children():
 		var add_item: bool = true
 		if item and item == changedItem:
 			match action:
@@ -183,7 +184,7 @@ func _get_row_name(item: Control) -> String:
 
 # Helper function to create a header
 func _create_header(text: String) -> void:
-	var header = listHeaderContainer.instantiate() as Control
+	var header = list_header_container.instantiate() as Control
 	header.set_label_text(text)
 	
 	# If this is the "favorite" header, set a smaller size
@@ -191,7 +192,7 @@ func _create_header(text: String) -> void:
 		header.custom_minimum_size = Vector2(16, 32)  # Match the size set for favorite column elements
 	
 	header.connect("header_clicked", _on_header_clicked)
-	inventoryGrid.add_child(header)
+	inventory_grid.add_child(header)
 	# Store the header control in the dictionary
 	header_controls[text] = header
 
@@ -292,7 +293,7 @@ func _select_range(start_item: Control, end_item: Control):
 # Find the index of the first item in a row
 func _find_row_start_index(row_name: String) -> int:
 	var index = 0
-	for control in inventoryGrid.get_children():
+	for control in inventory_grid.get_children():
 		if control is Control and control in inventory_rows[row_name]["controls"]:
 			return index
 		index += 1
@@ -301,7 +302,7 @@ func _find_row_start_index(row_name: String) -> int:
 
 # Generic function to create an item in the grid
 func _create_ui_element(property: String, item: InventoryItem, row_name: String) -> Control:
-	var element = listItemContainer.instantiate() as Control
+	var element = list_item_container.instantiate() as Control
 	match property:
 		"icon":
 			element.set_icon(item.get_texture())
@@ -363,7 +364,7 @@ func _add_item_to_grid(item: InventoryItem, row_name: String):
 	# Each item has these 6 columns to fill, so we loop over each of the properties
 	for property in ["icon", "name", "stack_size", "weight", "volume", "favorite"]:
 		var element = _create_ui_element(property, item, row_name)
-		inventoryGrid.add_child(element)
+		inventory_grid.add_child(element)
 		# Add the control to the row's control list
 		inventory_rows[row_name]["controls"].append(element)
 	# Connect signals for all elements in the row to each other for highlighting
@@ -401,17 +402,17 @@ func _populate_inventory_list():
 	_deselect_and_clear_current_inventory()
 	_add_header_row_to_grid()
 	# Loop over inventory items and add them to the grid
-	for item in myInventory.get_children():
+	for item in my_inventory.get_children():
 		var row_name = "item_row_" + str(item.get_name())
 		_add_item_to_grid(item, row_name)
 
 
 func _update_bars(changedItem: InventoryItem, action: String):
-	if not myInventory:
+	if not my_inventory:
 		return
 	var total_weight = 0
 	var total_volume = 0
-	for item in myInventory.get_children():
+	for item in my_inventory.get_children():
 		if action == "removed":
 			# Something was removed. If it was the current item, do not count it
 			if changedItem != item:
@@ -421,13 +422,13 @@ func _update_bars(changedItem: InventoryItem, action: String):
 			total_weight += item.get_property("weight", 0) 
 			total_volume += item.get_property("volume", 0)
 
-	WeightBar.max_value = max_weight
-	WeightBar.value = total_weight
-	if myInventory == ItemManager.playerInventory:
-		VolumeBar.max_value = ItemManager.player_max_inventory_volume
+	weight_bar.max_value = max_weight
+	weight_bar.value = total_weight
+	if my_inventory == ItemManager.playerInventory:
+		volume_bar.max_value = ItemManager.player_max_inventory_volume
 	else:
-		VolumeBar.max_value = max_volume
-	VolumeBar.value = total_volume
+		volume_bar.max_value = max_volume
+	volume_bar.value = total_volume
 
 
 # Handles the update of the attribute when the player attribute changes
@@ -477,9 +478,9 @@ func _on_header_clicked(headerItem: Control) -> void:
 
 
 func _clear_grid_children():
-	while inventoryGrid.get_child_count() > 0:
-		var child = inventoryGrid.get_child(0)
-		inventoryGrid.remove_child(child)
+	while inventory_grid.get_child_count() > 0:
+		var child = inventory_grid.get_child(0)
+		inventory_grid.remove_child(child)
 		child.queue_free()
 
 
@@ -522,7 +523,7 @@ func _sort_inventory_by_property(property_name: String, reverse_order: bool = fa
 func _move_row_to_end(row_name: String):
 	if inventory_rows.has(row_name):
 		for control in inventory_rows[row_name]["controls"]:
-			inventoryGrid.move_child(control, inventoryGrid.get_child_count() - 1)
+			inventory_grid.move_child(control, inventory_grid.get_child_count() - 1)
 
 
 # Constructs an array of the row name and the provided property
@@ -565,8 +566,8 @@ func _is_row_selected(row_name: String) -> bool:
 # Transfer an item to another inventory associated with a Control node
 func transfer(item: InventoryItem, destinationControl: Control) -> bool:
 	var destinationInventory = _get_inventory_from_control(destinationControl)
-	if destinationInventory and myInventory.has_method("transfer_automerge"):
-		return myInventory.transfer_automerge(item, destinationInventory)
+	if destinationInventory and my_inventory.has_method("transfer_automerge"):
+		return my_inventory.transfer_automerge(item, destinationInventory)
 	return false
 
 
@@ -591,7 +592,7 @@ func get_selected_inventory_items() -> Array[InventoryItem]:
 
 # Function to get selected inventory items
 func get_inventory() -> InventoryStacked:
-	return myInventory
+	return my_inventory
 
 
 # Called when this inventory list is connected to a new inventory
@@ -600,8 +601,8 @@ func set_inventory(new_inventory: InventoryStacked):
 	# Step 1: Deselect and clear the current inventory display
 	_deselect_and_clear_current_inventory()
 	_disconnect_inventory_signals()
-	# Step 2: Set the myInventory property to the new inventory
-	myInventory = new_inventory
+	# Step 2: Set the my_inventory property to the new inventory
+	my_inventory = new_inventory
 
 	# Step 3: Rebuild the inventory list with the new inventory
 	_populate_inventory_list()
@@ -681,7 +682,7 @@ func _get_drag_data(_newpos):
 
 # This function should return true if the dragged data can be dropped here
 func _can_drop_data(_newpos, data) -> bool:
-	return data is Array[InventoryItem] and myInventory
+	return data is Array[InventoryItem] and my_inventory
 
 
 # This function handles the data being dropped
@@ -708,14 +709,14 @@ func _handle_item_drop(dropped_data, _newpos) -> void:
 		var item_inventory = first_item.get_inventory()
 
 		# If the item's inventory is different from the current inventory, transfer the items
-		if item_inventory != myInventory:
+		if item_inventory != my_inventory:
 			# Get the items that fit inside the remaining volume
 			var items_to_transfer = get_items_that_fit_by_volume(dropped_data)
 
 			Helper.signal_broker.inventory_operation_started.emit()
 			for item in items_to_transfer:
 				# Transfer the item to the current inventory
-				item_inventory.transfer_automerge(item, myInventory)
+				item_inventory.transfer_automerge(item, my_inventory)
 			Helper.signal_broker.inventory_operation_finished.emit()
 
 
@@ -749,7 +750,7 @@ func _on_inventory_operation_started():
 
 func _on_inventory_operation_finished():
 	ui_updates_enabled = true
-	if not myInventory:
+	if not my_inventory:
 		return
 	# Optionally, refresh UI components that might have pending updates
 	update_ui_post_operation()
@@ -780,24 +781,24 @@ func get_items_that_fit_by_volume(items: Array) -> Array:
 func get_used_volume() -> float:
 	var total_current_volume = 0.0
 	# Calculate the total current volume in the inventory
-	for item in myInventory.get_children():
+	for item in my_inventory.get_children():
 		total_current_volume += item.get_property("volume", 0)
 	return total_current_volume
 
 
 func get_remaining_volume() -> float:
-	if myInventory == ItemManager.playerInventory:
+	if my_inventory == ItemManager.playerInventory:
 		return ItemManager.player_max_inventory_volume - get_used_volume()
 	else:
 		return max_volume - get_used_volume()
 
 func get_items() -> Array:
-	return myInventory.get_children()
+	return my_inventory.get_children()
 
 
 # Transfers an item from this inventory to the destination inventory
 func transfer_autosplitmerge(item: InventoryItem, destination: InventoryStacked) -> bool:
-	return myInventory.transfer_autosplitmerge(item, destination)
+	return my_inventory.transfer_autosplitmerge(item, destination)
 
 
 # Function to handle item transfer on double-click
