@@ -1,3 +1,4 @@
+class_name BuildManager
 extends Node3D
 
 @export var construction_ghost: MeshInstance3D
@@ -5,7 +6,7 @@ var is_building = false
 var construction_type: String = "block"
 var construction_choice: String = ""
 
-@export var LevelGenerator: Node3D
+@export var level_generator: Node3D
 @export var hud: NodePath
 
 func _ready():
@@ -50,7 +51,7 @@ func on_construction_clicked(construction_data: Dictionary):
 		print_debug("Construction type or choice is not set. Aborting.")
 		return
 
-	var chunk: Chunk = LevelGenerator.get_chunk_from_position(construction_data.pos)
+	var chunk: Chunk = level_generator.get_chunk_from_position(construction_data.pos)
 	if not chunk:
 		return
 
