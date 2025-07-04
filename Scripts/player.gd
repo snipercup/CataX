@@ -1,6 +1,8 @@
 class_name Player
 extends CharacterBody3D
 
+signal player_died(player: Player)
+
 var is_alive: bool = true
 
 var rng = RandomNumberGenerator.new()
@@ -326,9 +328,10 @@ func die():
 		Sfx.gameplay_sfx_stop()
 		Music.gameplay_music_stop()
 		Music.GameOverMusic.play()
-		$"../../../HUD".get_node("GameOver").show()
-
-# The player has selected one or more items in the inventory and selected
+		player_died.emit(self)
+		Helper.signal_broker.player_died.emit(self)
+		
+	# The player has selected one or more items in the inventory and selected
 # 'use' from the context menu.
 func _on_food_item_used(usedItem: InventoryItem) -> void:
 	var food = RItem.Food.new(usedItem.get_property("Food"))
