@@ -70,7 +70,7 @@ func unequip() -> void:
 	if myInventoryItem:
 		Helper.signal_broker.item_was_unequipped.emit(myInventoryItem, self)
 		Helper.signal_broker.item_was_unequipped_from_slot(slot_idx).emit(slot_idx, myInventoryItem, self)
-			   my_inventory.add_item(myInventoryItem)
+		my_inventory.add_item(myInventoryItem)
 		myInventoryItem = null
 		update_icon()
 
@@ -80,7 +80,7 @@ func unequip() -> void:
 func handle_two_handed_constraint(item: InventoryItem) -> bool:
 	var can_equip: bool = true
 	var is_two_handed: bool = item.get_property("two_handed", false)
-	   var other_slot_item: InventoryItem = other_hand_slot.get_item()
+	var other_slot_item: InventoryItem = other_hand_slot.get_item()
 	# Check if the other slot has a two-handed item equipped
 	if other_slot_item and other_slot_item.get_property("two_handed", false):
 		print_debug("Cannot equip item. The other slot has a two-handed weapon equipped.")
@@ -88,16 +88,16 @@ func handle_two_handed_constraint(item: InventoryItem) -> bool:
 	else:
 		# If the item is two-handed, clear the other hand slot before equipping
 		if is_two_handed:
-					   other_hand_slot.unequip()
+			other_hand_slot.unequip()
 	return can_equip
 
 
 # Update the icon of the equipped item
 func update_icon() -> void:
 	if myInventoryItem:
-			   my_icon.texture = myInventoryItem.get_texture()
+		my_icon.texture = myInventoryItem.get_texture()
 	else:
-			   my_icon.texture = null
+		my_icon.texture = null
 
 
 # Get the currently equipped item
@@ -106,21 +106,21 @@ func get_item() -> InventoryItem:
 
 
 # This function should return true if the dragged data can be dropped here
-func _can_drop_data(_newpos: Vector2, data: Array) -> bool:
+func _can_drop_data(_newpos: Vector2, data: Variant) -> bool:
 	return data is Array[InventoryItem]
 		
 
 # This function handles the data being dropped
-func _drop_data(newpos: Vector2, data: Array) -> void:
+func _drop_data(newpos: Vector2, data: Variant) -> void:
 	if _can_drop_data(newpos, data):
-				if data is Array and data.size() > 0 and data[0] is InventoryItem:
-							var first_item = data[0]
-									# Check if the dropped item is a magazine
-									if first_item.get_property("Magazine"):
-												_handle_magazine_drop(first_item)
-									else:
-												# Equip the item if it's not a magazine
-												equip(first_item)
+		if data is Array and data.size() > 0 and data[0] is InventoryItem:
+			var first_item = data[0]
+			# Check if the dropped item is a magazine
+			if first_item.get_property("Magazine"):
+				_handle_magazine_drop(first_item)
+			else:
+				# Equip the item if it's not a magazine
+				equip(first_item)
 								
 
 # When the user has dropped a magaziene from the inventory
