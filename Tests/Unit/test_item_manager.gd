@@ -15,16 +15,16 @@ func before_each():
 
 func after_each():
 	if item_manager:
-	item_manager.queue_free()
+		item_manager.queue_free()
 
 func after_all():
 	Runtimedata.reset()
 
 func _create_weapon() -> InventoryItem:
-	return item_manager.playerInventory.create_and_add_item("pistol_9mm")
+	return item_manager.playerInventory.create_and_add_item("generic_test_pistol")
 
 func _create_magazine(ammo: int) -> InventoryItem:
-	var mag = item_manager.playerInventory.create_and_add_item("pistol_magazine")
+	var mag: InventoryItem = item_manager.playerInventory.create_and_add_item("generic_test_pistol_magazine")
 	var props = mag.get_property("Magazine")
 	props["current_ammo"] = ammo
 	mag.set_property("Magazine", props)
@@ -34,7 +34,9 @@ func test_find_compatible_magazine() -> void:
 	var gun = _create_weapon()
 	var _low = _create_magazine(5)
 	var high = _create_magazine(15)
-	assert_eq(item_manager.find_compatible_magazine(gun), high, "Should pick mag with most ammo")
+	var compatible_magazine: InventoryItem = item_manager.find_compatible_magazine(gun)
+	assert_not_null(compatible_magazine, "Expected find_compatible_magazine to return a magazine")
+	assert_eq(compatible_magazine, high, "Should pick mag with most ammo")
 
 func test_reload_weapon_no_magazine() -> void:
 	var gun = _create_weapon()
