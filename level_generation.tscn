@@ -50,10 +50,10 @@ sky_mode = 1
 [node name="LevelManager" type="Node3D" parent="TacticalMap"]
 script = ExtResource("2_gm6x7")
 
-[node name="BuildManager" type="Node3D" parent="TacticalMap" node_paths=PackedStringArray("construction_ghost", "LevelGenerator")]
+[node name="BuildManager" type="Node3D" parent="TacticalMap" node_paths=PackedStringArray("construction_ghost", "level_generator")]
 script = ExtResource("6_y7rk5")
 construction_ghost = NodePath("ConstructionGhost")
-LevelGenerator = NodePath("../LevelGenerator")
+level_generator = NodePath("../LevelGenerator")
 hud = NodePath("../../HUD")
 
 [node name="ConstructionGhost" type="MeshInstance3D" parent="TacticalMap/BuildManager" node_paths=PackedStringArray("player", "buildmanager", "construction_ghost_area_3d", "construction_ghost_collision_shape_3d")]
