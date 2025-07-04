@@ -326,8 +326,8 @@ func die():
 		Sfx.gameplay_sfx_stop()
 		Music.gameplay_music_stop()
 		Music.GameOverMusic.play()
-		$"../../../HUD".get_node("GameOver").show()
-
+		Helper.signal_broker.player_died.emit(self)
+		
 # The player has selected one or more items in the inventory and selected
 # 'use' from the context menu.
 func _on_food_item_used(usedItem: InventoryItem) -> void:
