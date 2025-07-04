@@ -12,7 +12,8 @@ func before_all():
 func before_each():
 	drop_widget = drop_scene.instantiate()
 	add_child(drop_widget)
-	drop_widget.content_types = [DMod.ContentType.WEARABLESLOTS, DMod.ContentType.PLAYERATTRIBUTES]
+	var mycontenttypes: Array[DMod.ContentType] = [DMod.ContentType.WEARABLESLOTS, DMod.ContentType.PLAYERATTRIBUTES]
+	drop_widget.set_content_types(mycontenttypes)
 	await get_tree().process_frame
 
 func after_each():
@@ -56,7 +57,7 @@ func test_drop_data_updates_state() -> void:
 		"mod_id": "Test",
 		"contentType": DMod.ContentType.WEARABLESLOTS
 	}
-	assert_null(drop_widget.dropped_data)
+	assert_true(drop_widget.dropped_data.is_empty())
 	drop_widget._drop_data(Vector2.ZERO, data)
 	assert_eq(drop_widget.dropped_data, data)
 	assert_eq(drop_widget.get_text(), "generic_test_wearable_slot")
@@ -69,5 +70,5 @@ func test_drop_data_rejects_invalid() -> void:
 		"contentType": DMod.ContentType.WEARABLESLOTS
 	}
 	drop_widget._drop_data(Vector2.ZERO, data)
-	assert_null(drop_widget.dropped_data)
+	assert_true(drop_widget.dropped_data.is_empty())
 	assert_eq(drop_widget.get_text(), "")
