@@ -9,6 +9,7 @@ Dimensionfall is a top-down real-time survival game set in a post-apocalyptic wo
 - [Community](#community)
 - [Credits](#credits)
 
+Find a way to defend yourself in the city
 ![Catax_basic](Media/Catax_basic.png)
 
 The world is infinite in every direction. Explore and survive as long as you can!
