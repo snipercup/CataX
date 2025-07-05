@@ -32,19 +32,19 @@ func _ready():
 
 	# Set the initial state if specified
 	if initial_state:
-		initial_state.Enter()
+		initial_state.enter()
 		current_state = initial_state
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if current_state:
-		current_state.Update(delta)
+		current_state.update(delta)
 
 
 func _physics_process(delta):
 	if current_state:
-		current_state.Physics_Update(delta)
+		current_state.physics_update(delta)
 
 
 # When the mob changes from one state to another, often caused by the Detection node
@@ -56,9 +56,9 @@ func on_child_transition(state, new_state_name):
 	if !new_state:
 		return
 	if current_state:
-		current_state.Exit()
+		current_state.exit()
 		
-	new_state.Enter()
+	new_state.enter()
 	current_state = new_state
 
 
