@@ -540,11 +540,11 @@ func changed(olddata: DItem):
 			Gamedata.mods.remove_reference(DMod.ContentType.ITEMS, res_id, DMod.ContentType.ITEMS, id)
 	
 	# Add references for new resources, nothing happens if they are already present
-		for res_id in new_resource_ids:
-				Gamedata.mods.add_reference(DMod.ContentType.ITEMS, res_id, DMod.ContentType.ITEMS, id)
-		update_item_skill_references(olddata)
-		update_item_stat_references(olddata)
-		update_item_attribute_references(olddata)
+	for res_id in new_resource_ids:
+		Gamedata.mods.add_reference(DMod.ContentType.ITEMS, res_id, DMod.ContentType.ITEMS, id)
+	update_item_skill_references(olddata)
+	update_item_stat_references(olddata)
+	update_item_attribute_references(olddata)
 	
 	parent.save_items_to_disk()
 

@@ -6,7 +6,8 @@ extends RefCounted
 # This script handles the list of stats. You can access it through Gamedata.mods.by_id("Core").stats
 
 # Paths for stats data and sprites
-var dataPath: String = "./Mods/Core/Stats/Stats.json"
+var dataPath: String = "./Mods/Core/Stats/"
+var file_path: String = "./Mods/Core/Stats/Stats.json"
 var spritePath: String = "./Mods/Core/Stats/"
 var statdict: Dictionary = {}
 var sprites: Dictionary = {}
@@ -18,22 +19,23 @@ func _init(new_mod_id: String) -> void:
 	mod_id = new_mod_id
 	# Update dataPath and spritePath using the provided mod_id
 	dataPath = "./Mods/" + mod_id + "/Stats/Stats.json"
+	file_path = "./Mods/" + mod_id + "/Stats/Stats.json"
 	spritePath = "./Mods/" + mod_id + "/Stats/"
 	
 	# Load stats and sprites
-		load_sprites()
-		load_stats_from_disk()
-		load_references()
+	load_sprites()
+	load_stats_from_disk()
+	load_references()
 
 
 # Load all stats data from disk into memory
 func load_stats_from_disk() -> void:
-		var statslist: Array = Helper.json_helper.load_json_array_file(dataPath)
+		var statslist: Array = Helper.json_helper.load_json_array_file(file_path)
 		for mystat in statslist:
-				var stat: DStat = DStat.new(mystat, self)
-				if stat.spriteid:
-						stat.sprite = sprites[stat.spriteid]
-				statdict[stat.id] = stat
+			var stat: DStat = DStat.new(mystat, self)
+			if stat.spriteid:
+					stat.sprite = sprites[stat.spriteid]
+			statdict[stat.id] = stat
 
 # Load references from references.json
 func load_references() -> void:
@@ -61,7 +63,7 @@ func save_stats_to_disk() -> void:
 	var save_data: Array = []
 	for stat in statdict.values():
 		save_data.append(stat.get_data())
-	Helper.json_helper.write_json_file(dataPath, JSON.stringify(save_data, "\t"))
+	Helper.json_helper.write_json_file(file_path, JSON.stringify(save_data, "\t"))
 
 # Returns the dictionary containing all stats
 func get_all() -> Dictionary:
