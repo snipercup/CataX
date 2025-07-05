@@ -132,6 +132,8 @@ signal game_ended() # When the game is completely exited and everything is unloa
 signal game_terminated() # When the user presses 'main menu' button on the escape menu
 @warning_ignore("unused_signal")
 signal player_spawned(player: Player) # When the player has spawned in-game
+@warning_ignore("unused_signal")
+signal player_died(player: Player)
 
 # When a mob was killed
 @warning_ignore("unused_signal")
