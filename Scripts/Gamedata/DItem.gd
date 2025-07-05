@@ -191,7 +191,7 @@ class Ranged:
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
-		return {
+		var data: Dictionary = {
 			"firing_speed": firing_speed,
 			"range": firing_range,
 			"recoil": recoil,
@@ -200,9 +200,11 @@ class Ranged:
 			"sway": sway,
 			"used_ammo": used_ammo,
 			"used_magazine": used_magazine,
-			"used_skill": used_skill,
-			"accuracy_stat": accuracy_stat
+			"used_skill": used_skill
 		}
+		if accuracy_stat != "":
+			data["accuracy_stat"] = accuracy_stat
+		return data
 		
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
