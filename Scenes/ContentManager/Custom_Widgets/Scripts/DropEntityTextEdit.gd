@@ -70,6 +70,7 @@ func _drop_data(newpos, data) -> void:
 
 func _on_button_button_up():
 	mytextedit.clear()
+	dropped_data = {}
 	text_changed.emit("")
 
 
