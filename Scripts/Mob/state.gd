@@ -5,16 +5,16 @@ class_name State
 @warning_ignore("unused_signal")
 signal Transistioned
 
-func Enter():
+func enter():
 	pass
-	
 
-func Exit():
-	pass
-	
 
-func Update(_delta: float):
+func exit():
 	pass
-	
-func Physics_Update(_delta: float):
+
+
+func update(_delta: float):
+	pass
+
+func physics_update(_delta: float):
 	pass

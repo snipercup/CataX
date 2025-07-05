@@ -12,14 +12,14 @@ func _ready():
 	add_child.call_deferred(attack_timer)
 	attack_timer.timeout.connect(_on_attack_cooldown_timeout)
 
-func Enter():
+func enter():
 	attack_timer.start()
 	print("ENTERING RANGED ATTACK MODE")
 
-func Exit():
+func exit():
 	attack_timer.stop()
 
-func Physics_Update(_delta: float):
+func physics_update(_delta: float):
 	if mob.terminated:
 		Transistioned.emit(self, "mobterminate")
 		return

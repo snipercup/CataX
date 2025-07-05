@@ -22,16 +22,16 @@ func _ready():
 	Helper.signal_broker.mob_killed.connect(_on_mob_killed)
 
 
-func Enter():
+func enter():
 	attack_timer.start()
 	print("ENTERING BATTLE MODE")
 
 
-func Exit():
+func exit():
 	pass
 
 
-func Physics_Update(_delta: float):
+func physics_update(_delta: float):
 	if mob.terminated:
 		Transistioned.emit(self, "mobterminate") 
 	# Rotation towards target using look_at
@@ -50,7 +50,7 @@ func Physics_Update(_delta: float):
 
 			if !is_in_attack_mode:
 				is_in_attack_mode = true
-				try_to_attack()			
+				try_to_attack()         
 		else:
 			is_in_attack_mode = false
 			stop_attacking()
@@ -67,10 +67,10 @@ func try_to_attack():
 # The mob is going to attack.
 # attack: a dictionary like this:
 # {
-# 	"attributeid": "torso_health", # The PlayerAttribute that is targeted by this attack
-# 	"damage": 20, # The amount to subtract from the target attribute
-# 	"knockback": 2, # The number of tiles to push the player away
-# 	"mobposition": Vector3(17, 1, 219) # The global position of the mob
+#   "attributeid": "torso_health", # The PlayerAttribute that is targeted by this attack
+#   "damage": 20, # The amount to subtract from the target attribute
+#   "knockback": 2, # The number of tiles to push the player away
+#   "mobposition": Vector3(17, 1, 219) # The global position of the mob
 # }
 func attack():
 	print("Attacking!")

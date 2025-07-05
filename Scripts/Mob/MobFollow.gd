@@ -40,14 +40,14 @@ func _ready():
 
 # Called when the mob enters the follow state. Starts the pathfinding timer 
 # and initiates path creation towards the target location.
-func Enter():
+func enter():
 	print("Following the target")
 	pathfinding_timer.start()
 	makepath()
 
 
 # Called when the mob exits the follow state, stopping the pathfinding timer.
-func Exit():
+func exit():
 	pathfinding_timer.stop()
 
 
@@ -55,7 +55,7 @@ func Exit():
 # and adjusting its orientation to face the targeted entity if one is detected.
 # Performs raycasting to check for direct line-of-sight and proximity to the entity,
 # transitioning to an attack state if within melee range.
-func Physics_Update(_delta: float):
+func physics_update(_delta: float):
 	if mob.terminated:
 		Transistioned.emit(self, "mobterminate")
 		return

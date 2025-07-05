@@ -26,16 +26,16 @@ func _ready():
 	moving_timer.start()
 
 
-func Enter():
+func enter():
 	print("Mob idle")
 	idle_speed = mob.idle_move_speed
 
 
-func Exit():
+func exit():
 	moving_timer.stop()
 
 
-func Physics_Update(_delta: float):
+func physics_update(_delta: float):
 	if mob.terminated:
 		Transistioned.emit(self, "mobterminate")
 	
