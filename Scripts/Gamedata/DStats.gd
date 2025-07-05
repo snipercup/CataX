@@ -10,6 +10,7 @@ var dataPath: String = "./Mods/Core/Stats/Stats.json"
 var spritePath: String = "./Mods/Core/Stats/"
 var statdict: Dictionary = {}
 var sprites: Dictionary = {}
+var references: Dictionary = {}
 var mod_id: String = "Core"
 
 # Add a mod_id parameter to dynamically initialize paths
@@ -20,18 +21,27 @@ func _init(new_mod_id: String) -> void:
 	spritePath = "./Mods/" + mod_id + "/Stats/"
 	
 	# Load stats and sprites
-	load_sprites()
-	load_stats_from_disk()
+		load_sprites()
+		load_stats_from_disk()
+		load_references()
 
 
 # Load all stats data from disk into memory
 func load_stats_from_disk() -> void:
-	var statslist: Array = Helper.json_helper.load_json_array_file(dataPath)
-	for mystat in statslist:
-		var stat: DStat = DStat.new(mystat, self)
-		if stat.spriteid:
-			stat.sprite = sprites[stat.spriteid]
-		statdict[stat.id] = stat
+		var statslist: Array = Helper.json_helper.load_json_array_file(dataPath)
+		for mystat in statslist:
+				var stat: DStat = DStat.new(mystat, self)
+				if stat.spriteid:
+						stat.sprite = sprites[stat.spriteid]
+				statdict[stat.id] = stat
+
+# Load references from references.json
+func load_references() -> void:
+		var path = dataPath.get_base_dir() + "/references.json"
+		if FileAccess.file_exists(path):
+				references = Helper.json_helper.load_json_dictionary_file(path)
+		else:
+				references = {}
 
 # Loads sprites and assigns them to the proper dictionary
 func load_sprites() -> void:
