@@ -263,8 +263,8 @@ func get_global_chunk(chunk_pos: Vector2) -> Chunk:
 # Returns which chunk the position is in right now
 # position_in_3d_space can be any position, like 12,2,6 or 139,-6,14
 func get_chunk_from_position(position_in_3d_space: Vector3) -> Chunk:
-	var chunk_x = floor(position_in_3d_space.x / 32) * 32
-	var chunk_z = floor(position_in_3d_space.z / 32) * 32
+	var chunk_x = floor(position_in_3d_space.x / level_width) * level_width
+	var chunk_z = floor(position_in_3d_space.z / level_height) * level_height
 	return get_global_chunk(Vector2(chunk_x, chunk_z))
 
 
