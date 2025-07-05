@@ -174,6 +174,7 @@ class Ranged:
 	var used_ammo: String
 	var used_magazine: String
 	var used_skill: Dictionary # example: {"skill_id": "handguns", "xp": 1}
+	var accuracy_stat: String
 
 	# Constructor to initialize ranged properties from a dictionary
 	func _init(data: Dictionary):
@@ -186,6 +187,7 @@ class Ranged:
 		used_ammo = data.get("used_ammo", "")
 		used_magazine = data.get("used_magazine", "")
 		used_skill = data.get("used_skill", {})
+		accuracy_stat = data.get("accuracy_stat", "")
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
@@ -198,7 +200,8 @@ class Ranged:
 			"sway": sway,
 			"used_ammo": used_ammo,
 			"used_magazine": used_magazine,
-			"used_skill": used_skill
+			"used_skill": used_skill,
+			"accuracy_stat": accuracy_stat
 		}
 		
 	# Function to get used skill ID
