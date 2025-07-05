@@ -1,4 +1,5 @@
 # Dimensionfall
+Dimensionfall is a top-down real-time survival game set in a post-apocalyptic world. Survive in a strange place where multiple dimensions have merged. Will you fight demons? Aliens? Zombies? Who knows what you will come across. The [lore](https://github.com/Khaligufzel/Dimensionfall/blob/main/Documentation/Game_design/Lore.md) has many interesting angles.
 
 ## Table of Contents
 - [How to play](#how-to-play)
@@ -7,8 +8,6 @@
 - [Contribute](#contribute)
 - [Community](#community)
 - [Credits](#credits)
-
-Dimensionfall is a top-down real-time survival game set in a post-apocalyptic world. Survive in a strange place where multiple dimensions have merged. Will you fight demons? Aliens? Zombies? Who knows what you will come across. The [lore](https://github.com/Khaligufzel/Dimensionfall/blob/main/Documentation/Game_design/Lore.md) has many interesting angles.
 
 ![Catax_basic](Media/Catax_basic.png)
 
@@ -93,23 +92,23 @@ Official Discord:
 - Inventory: This game uses https://github.com/peter-kish/gloot to implement the inventory
 - Text display: Some UI uses https://github.com/daenvil/MarkdownLabel for text display
 - Music:
-        Main menu music: Desolate - https://opengameart.org/users/matthew-pablo
-        Game over music: Lonelyhood - https://opengameart.org/users/yd
-        Gameplay music:
-        Dark Fallout - https://opengameart.org/users/remaxim
-        Please, answer me my friend - https://opengameart.org/users/alexandr-zhelanov
-        Ambience Pack 1 -- Sci Fi Horror - https://opengameart.org/users/joth
-        Pressure - https://opengameart.org/users/yd
-        Ambience:
-        Nature Sounds Pack - https://opengameart.org/users/antoinemax (Lisence: CC-BY 4.0)
-        Cricket sounds - https://opengameart.org/users/syncopika
-        Wind1 - https://opengameart.org/users/lukerustltd
+	Main menu music: Desolate - https://opengameart.org/users/matthew-pablo
+	Game over music: Lonelyhood - https://opengameart.org/users/yd
+	Gameplay music:
+	Dark Fallout - https://opengameart.org/users/remaxim
+	Please, answer me my friend - https://opengameart.org/users/alexandr-zhelanov
+	Ambience Pack 1 -- Sci Fi Horror - https://opengameart.org/users/joth
+	Pressure - https://opengameart.org/users/yd
+	Ambience:
+	Nature Sounds Pack - https://opengameart.org/users/antoinemax (Lisence: CC-BY 4.0)
+	Cricket sounds - https://opengameart.org/users/syncopika
+	Wind1 - https://opengameart.org/users/lukerustltd
 - SFX:
-        Old Computer Click - https://pixabay.com/users/finntastico-33933679/
-        Mechanical keyboard - https://pixabay.com/users/freesound_community-46691455/
-        Computer Humming SFX - https://pixabay.com/users/soul_serenity_sounds-6817262/
+	Old Computer Click - https://pixabay.com/users/finntastico-33933679/
+	Mechanical keyboard - https://pixabay.com/users/freesound_community-46691455/
+	Computer Humming SFX - https://pixabay.com/users/soul_serenity_sounds-6817262/
 - Settings:
-        For game settings code: https://github.com/Maaack/Godot-Options-Menus
+	For game settings code: https://github.com/Maaack/Godot-Options-Menus
 - Fonts:
 Apple: https://www.fontget.com/font/apple/
 Glitch: https://www.fontget.com/font/glitch/
