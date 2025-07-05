@@ -9,7 +9,7 @@ extends Control
 @export var contentItems: FlowContainer = null
 @export var collapseButton: Button = null
 var is_collapsed: bool = false:
-	set(collapsed: bool) -> void:
+	set(collapsed):
 		is_collapsed = collapsed
 		contentItems.visible = !is_collapsed
 		if is_collapsed:
@@ -17,7 +17,7 @@ var is_collapsed: bool = false:
 		else:
 			size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 @export var header: String = "Items":
-	set(new_name: String) -> void:
+	set(new_name):
 		header = new_name
 		if new_name == "":
 			collapseButton.hide()
