@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cibcfcysyj15" path="res://Scripts/ItemRangedEditor.gd" id="1_my1v7"]
 [ext_resource type="PackedScene" uid="uid://dsax7il2yggw8" path="res://Scenes/ContentManager/Custom_Widgets/DropEnabledTextEdit.tscn" id="2_crphu"]
 
-[node name="ItemRangedEditor" type="Control" node_paths=PackedStringArray("UsedAmmoTextEdit", "UsedMagazineContainer", "RangeNumberBox", "SpreadNumberBox", "SwayNumberBox", "RecoilNumberBox", "UsedSkillTextEdit", "skill_xp_spin_box", "ReloadSpeedNumberBox", "FiringSpeedNumberBox", "AccuracyStatTextEdit")]
+[node name="ItemRangedEditor" type="Control" node_paths=PackedStringArray("UsedAmmoTextEdit", "UsedMagazineContainer", "RangeNumberBox", "SpreadNumberBox", "SwayNumberBox", "RecoilNumberBox", "UsedSkillTextEdit", "skill_xp_spin_box", "ReloadSpeedNumberBox", "FiringSpeedNumberBox", "accuracy_stat_text_edit")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,7 +21,7 @@ UsedSkillTextEdit = NodePath("Ranged/SkillHBoxContainer/UsedSkillTextEdit")
 skill_xp_spin_box = NodePath("Ranged/SkillHBoxContainer/SkillXPSpinBox")
 ReloadSpeedNumberBox = NodePath("Ranged/ReloadSpeedNumber")
 FiringSpeedNumberBox = NodePath("Ranged/FiringSpeedNumber")
-AccuracyStatTextEdit = NodePath("Ranged/AccuracyStatTextEdit")
+accuracy_stat_text_edit = NodePath("Ranged/AccuracyStatTextEdit")
 
 [node name="Ranged" type="GridContainer" parent="."]
 layout_mode = 1
@@ -156,5 +156,6 @@ text = "Accuracy Stat"
 
 [node name="AccuracyStatTextEdit" parent="Ranged" instance=ExtResource("2_crphu")]
 layout_mode = 2
+size_flags_vertical = 1
 tooltip_text = "The stat that improves accuracy for this weapon."
 myplaceholdertext = "Drop a stat from the list to the left"
