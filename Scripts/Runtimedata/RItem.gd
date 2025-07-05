@@ -104,6 +104,7 @@ class Ranged:
 	var used_ammo: String
 	var used_magazine: String
 	var used_skill: Dictionary
+	var accuracy_stat: String
 
 	func _init(data: Dictionary):
 		firing_speed = data.get("firing_speed", 0.0)
@@ -115,6 +116,7 @@ class Ranged:
 		used_ammo = data.get("used_ammo", "")
 		used_magazine = data.get("used_magazine", "")
 		used_skill = data.get("used_skill", {})
+		accuracy_stat = data.get("accuracy_stat", "")
 
 	func get_data() -> Dictionary:
 		return {
@@ -126,7 +128,8 @@ class Ranged:
 			"sway": sway,
 			"used_ammo": used_ammo,
 			"used_magazine": used_magazine,
-			"used_skill": used_skill
+			"used_skill": used_skill,
+			"accuracy_stat": accuracy_stat
 		}
 
 class Melee:

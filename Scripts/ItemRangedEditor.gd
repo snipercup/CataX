@@ -14,6 +14,7 @@ extends Control
 @export var skill_xp_spin_box: SpinBox = null
 @export var ReloadSpeedNumberBox: SpinBox = null
 @export var FiringSpeedNumberBox: SpinBox = null
+@export var accuracy_stat_text_edit: HBoxContainer = null
 
 var ditem: DItem = null:
 	set(value):
@@ -57,6 +58,7 @@ func save_properties() -> void:
 	ditem.ranged.recoil = int(RecoilNumberBox.value)
 	ditem.ranged.reload_speed = ReloadSpeedNumberBox.value
 	ditem.ranged.firing_speed = FiringSpeedNumberBox.value
+	ditem.ranged.accuracy_stat = accuracy_stat_text_edit.get_text()
 	
 	# Only include used_skill if UsedSkillTextEdit has a value
 	if UsedSkillTextEdit.get_text() != "":
@@ -85,6 +87,7 @@ func load_properties() -> void:
 	RecoilNumberBox.value = ditem.ranged.recoil
 	ReloadSpeedNumberBox.value = ditem.ranged.reload_speed
 	FiringSpeedNumberBox.value = ditem.ranged.firing_speed
+	accuracy_stat_text_edit.set_text(ditem.ranged.accuracy_stat)
 	
 	if ditem.ranged.used_skill.has("skill_id"):
 		UsedSkillTextEdit.set_text(ditem.ranged.used_skill["skill_id"])
@@ -118,9 +121,26 @@ func can_skill_drop(dropped_data: Dictionary):
 	# If all checks pass, return true
 	return true
 
+func stat_drop(dropped_data: Dictionary, texteditcontrol: HBoxContainer) -> void:
+	if dropped_data and dropped_data.has("id"):
+		var stat_id = dropped_data["id"]
+		if not Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(stat_id):
+			print_debug("No stat data found for ID: " + stat_id)
+			return
+		texteditcontrol.set_text(stat_id)
+	else:
+		print_debug("Dropped data does not contain an 'id' key.")
+
+func can_stat_drop(dropped_data: Dictionary):
+	if not dropped_data or not dropped_data.has("id"):
+		return false
+	return Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(dropped_data["id"])
+
 
 # Set the drop functions on the required skill and skill progression controls
 # This enables them to receive drop data
 func set_drop_functions():
 	UsedSkillTextEdit.drop_function = skill_drop.bind(UsedSkillTextEdit)
 	UsedSkillTextEdit.can_drop_function = can_skill_drop
+	accuracy_stat_text_edit.drop_function = stat_drop.bind(accuracy_stat_text_edit)
+	accuracy_stat_text_edit.can_drop_function = can_stat_drop
