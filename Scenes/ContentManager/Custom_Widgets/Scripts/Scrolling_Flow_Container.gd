@@ -1,3 +1,4 @@
+class_name Scrolling_Flow_Container
 extends Control
 
 #This script belongs to the Scrolling_Flow_Container scene
@@ -8,17 +9,17 @@ extends Control
 @export var contentItems: FlowContainer = null
 @export var collapseButton: Button = null
 var is_collapsed: bool = false:
-	set(collapsed):
+	set(collapsed: bool) -> void:
 		is_collapsed = collapsed
-		contentItems.visible = is_collapsed
+		contentItems.visible = !is_collapsed
 		if is_collapsed:
 			size_flags_vertical = Control.SIZE_EXPAND_FILL
 		else:
 			size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 @export var header: String = "Items":
-	set(newName):
-		header = newName
-		if newName == "":
+	set(new_name: String) -> void:
+		header = new_name
+		if new_name == "":
 			collapseButton.hide()
 		else:
 			collapseButton.show()
@@ -27,16 +28,16 @@ var is_collapsed: bool = false:
 signal collapse_button_pressed(headerName:String)
 
 #This function will collapse and expand the $Content/ContentItems when the collapse button is pressed
-func _on_collapse_button_button_up():
+func _on_collapse_button_button_up() -> void:
 	is_collapsed = !is_collapsed
 	collapse_button_pressed.emit(header)
 
 
-func add_content_item(item: Node):
+func add_content_item(item: Node) -> void:
 	contentItems.add_child(item)
 
 
-func remove_content_item(item: Node):
+func remove_content_item(item: Node) -> void:
 	if contentItems.has_node(item.get_path()):
 		contentItems.remove_child(item)
 		item.queue_free()
