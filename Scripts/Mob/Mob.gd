@@ -2,9 +2,9 @@ class_name Mob
 extends CharacterBody3D
 
 var target_manager: Node3D = null
-var mobPosition: Vector3 # The position it will move to when it is created
-var mobRotation: int # The rotation it will rotate to when it is created
-var mobJSON: Dictionary # The json that defines this mob
+var mob_position: Vector3 # The position it will move to when it is created
+var mob_rotation: int # The rotation it will rotate to when it is created
+var mob_json: Dictionary # The json that defines this mob
 var rmob: RMob # The data that defines this mob in general
 var meshInstance: MeshInstance3D # This mob's mesh instance
 var nav_agent: NavigationAgent3D # Used for pathfinding
@@ -37,11 +37,11 @@ var terminated: bool = false
 
 # Previously the Mob node was configured in the node editor
 # This function tries to re-create that node structure and properties
-func _init(mobpos: Vector3, newMobJSON: Dictionary):
-	mobJSON = newMobJSON
+func _init(mob_pos: Vector3, new_mob_json: Dictionary):
+	mob_json = new_mob_json
 	# Retrieve mob data from Runtimedata
-	rmob = Runtimedata.mobs.by_id(mobJSON.id)
-	mobPosition = mobpos
+	rmob = Runtimedata.mobs.by_id(mob_json.id)
+	mob_position = mob_pos
 	initialize_mob()
 
 # Initializes the mob by setting up various components and properties
@@ -61,8 +61,8 @@ func setup_basic_properties():
 	wall_min_slide_angle = 0
 	floor_constant_speed = true
 	add_to_group("mobs")
-	if mobJSON.has("rotation"):
-		mobRotation = mobJSON.rotation
+	if mob_json.has("rotation"):
+		mob_rotation = mob_json.rotation
 	hates_mobs = Runtimedata.mobfactions.by_id(rmob.faction_id).get_mobs_by_relation_type("hostile")
 
 # Set collision layers and masks
@@ -132,8 +132,8 @@ func _ready():
 	current_health = health
 	current_move_speed = move_speed
 	current_idle_move_speed = idle_move_speed
-	position = mobPosition
-	last_position = mobPosition
+	position = mob_position
+	last_position = mob_position
 	meshInstance.position.y = -0.2
 	target_manager = get_tree().get_first_node_in_group("target_manager")
 	current_chunk = get_chunk_from_position(global_transform.origin)
@@ -262,7 +262,7 @@ func add_corpse(pos: Vector3):
 		# Set the itemgroup property of the new ContainerItem
 		itemdata["itemgroups"] = [rmob.loot_group]
 	else:
-		print_debug("No loot_group found for mob ID: " + str(mobJSON.id))
+		print_debug("No loot_group found for mob ID: " + str(mob_json.id))
 
 	var newItem: ContainerItem = ContainerItem.new(itemdata)
 	newItem.add_to_group("mapitems")
@@ -340,7 +340,7 @@ func _on_tween_finished():
 # Return mob data as a Dictionary
 func get_data() -> Dictionary:
 	return {
-		"id": mobJSON.id,
+		"id": mob_json.id,
 		"global_position_x": last_position.x,
 		"global_position_y": last_position.y,
 		"global_position_z": last_position.z,

@@ -4,7 +4,7 @@
 [ext_resource type="StyleBox" uid="uid://b4t06f0mrl43a" path="res://Scenes/UI/StyleBoxFlat_WindowHeader.tres" id="2_3ha4p"]
 [ext_resource type="StyleBox" uid="uid://dekwnaow0islj" path="res://Scenes/UI/StyleBoxFlat_WindowBody.tres" id="3_mhcbm"]
 
-[node name="CharacterWindow" type="Control" node_paths=PackedStringArray("statsContainer", "skillsContainer")]
+[node name="CharacterWindow" type="Control" node_paths=PackedStringArray("stats_container", "skills_container")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,8 +12,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_tqipc")
-statsContainer = NodePath("VBoxContainer/BodyPanelContainer/VBoxContainer/HBoxContainer/VBoxContainer/StatsContainer")
-skillsContainer = NodePath("VBoxContainer/BodyPanelContainer/VBoxContainer/HBoxContainer/VBoxContainer2/SkillsContainer")
+stats_container = NodePath("VBoxContainer/BodyPanelContainer/VBoxContainer/HBoxContainer/VBoxContainer/StatsContainer")
+skills_container = NodePath("VBoxContainer/BodyPanelContainer/VBoxContainer/HBoxContainer/VBoxContainer2/SkillsContainer")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1

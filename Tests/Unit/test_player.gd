@@ -188,7 +188,7 @@ func test_player_vs_melee_mob():
 	assert_eq(mobs.size(),1,"too many or not enough mobs")
 	var first_mob: Mob = mobs[0]
 	assert_eq(first_mob.rmob.id,"generic_test_mob","A different mob spawned then expected")
-	assert_eq(first_mob.mobPosition,Vector3(15.5,1.5,15.5),"Mob spawned somewhere else")
+	assert_eq(first_mob.mob_position,Vector3(15.5,1.5,15.5),"Mob spawned somewhere else")
 	
 	# Test that the mob transitions into the mob attack state
 	var first_state: State = first_mob.get_current_state()
