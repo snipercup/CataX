@@ -103,70 +103,70 @@ Allows you to create new mobs and configure them. You can then use the map edito
 ![Catax_mob_editor](Media/Catax_mob_editor.png)
 
 
-# Furniture editor
+### Furniture editor
 Create new furniture or edit existing ones with this editor. After creating them, you can place them on the map with the Map Editor. Hover over the controls to get information about each of them.
 
 ![Catax_furniture_editor](Media/Catax_furniture_editor.png)
 
 
 
-# Itemgroup editor
-Specify itemgroups, used to spawn items in various locations including containers and corpses. By specifying a spawn chance and amount, it offers a wide veriety of possibilities. To add items to the itemgroup, drag them from the left side of the screen onto the itemgroup!
+### Itemgroup editor
+Specify itemgroups, used to spawn items in various locations including containers and corpses. By specifying a spawn chance and amount, it offers a wide variety of possibilities. To add items to the itemgroup, drag them from the left side of the screen onto the itemgroup!
 
 ![Catax_furniture_editor](Media/Catax_itemgroup_editor.png)
 
 
 
-# Player attribute editor
+### Player attribute editor
 In line with complete moddability, you can set the player's attributes using the editor. This allows for more immersion and customization. Once the attribute is created, you can then drag them from the menu onto items and have them alter the attribute. For example, you can have an "apple" item increase the "food" attribute when used.
 
 ![Catax_furniture_editor](Media/Catax_playerattribute_editor.png)
 
 
 
-# Wearable slots editor
+### Wearable slots editor
 Ever wanted to create that unique piece of armor, but didn't have that slot to fit it in? Now you can add your own slots. These show up in the player's inventory and enables the player to equip armor into it.
 
 ![Catax_furniture_editor](Media/Catax_wearableslots_editor.png)
 
 
 
-# Stats editor
+### Stats editor
 Add your own stats to the game. Stats are not implemented yet, but you can define them.
 
 ![Catax_furniture_editor](Media/Catax_stats_editor.png)
 
 
-# Skills editor
+### Skills editor
 Make any and every skill you need! Some are included in the core mod, but you can easily add your own in the Skills Editor. After they are created, use them in weapon or recipe configuration for other entities.
 
 ![Catax_furniture_editor](Media/Catax_skills_editor.png)
 
 
-# Quests editor
+### Quests editor
 Create a story for the player using the quest editor. These will show up in the quest journal in-game. It allows you to guide the player to their next destination and reward them for their efforts. There are multiple step types available. You can set many details and add a tip for the player.
 
 ![Catax_furniture_editor](Media/Catax_quest_editor.png)
 
 
-# Overmap area editor
-This editor allows you to define an area that will be generated on the overmap. An area can be created from an unlimted number of regions. In this image, a city is defined by the urban, suburban and field regions:
+### Overmap area editor
+This editor allows you to define an area that will be generated on the overmap. An area can be created from an unlimited number of regions. In this image, a city is defined by the urban, suburban and field regions:
 
 ![Catax_furniture_editor](Media/Dimensionfall_overmaparea_editor.png)
 
-Each region in the area will cover a differen circle around the center, depending on the radius. Using the generator, you can quickly see the result of your settings:
+Each region in the area will cover a different circle around the center, depending on the radius. Using the generator, you can quickly see the result of your settings:
 
 ![Catax_furniture_editor](Media/Dimensionfall_overmaparea_generator.png)
 
 
 Using this tool you can add new maps to cities, or create a whole new area with maps you made! This allows for the creation of biomes, for example.
 
-# Mob group editor
-With this editor, you can create your own group of mobs by adding a sprite, name, description, monsters (which can be dragged straight from the mob editor section within the content manager). You can even configure the monsters' spawn chance invidually by altering their weight, all within the editor:
+### Mob group editor
+With this editor, you can create your own group of mobs by adding a sprite, name, description, monsters (which can be dragged straight from the mob editor section within the content manager). You can even configure the monsters' spawn chance individually by altering their weight, all within the editor:
 
 ![Catax_mobgroup_editor](Media/Dimensionfall_mobgroup_editor.png)
 
-# Mob faction editor
+### Mob faction editor
 (Work in progress), you can create a new custom faction and assign it to any mobs or mobgroups you want. You can set what this faction is friendly, neutral and hostile towards other mobs, mobgroups and factions.
 
 ![Catax_mobfaction_editor](Media/Dimensionfall_mobfaction_editor.png)
