@@ -131,7 +131,7 @@ func _on_next_step(step: Dictionary):
 	process_active_quests()  # Centralized quest description update
 
 	# The player might already have the item for the next step, so check it
-	match step.get("step_type", ""):	
+	match step.get("step_type", ""):        
 		QuestManager.INCREMENTAL_STEP, QuestManager.ITEMS_STEP:
 			update_quest_by_inventory(null)
 
@@ -180,13 +180,13 @@ func create_quest_from_data(quest_data: RQuest):
 
 # Add a quest step to the quest. In this case, the step is just a dictionary with some data
 # Example step dictionary:
-#	{
-#		"amount": 1,
-#		"item": "long_stick",
-#		"tip": "You can find one in the forest",
-#		"description": "This stick will help figure out the truth!", # updates the quest description
-#		"type": "collect"
-#	}
+#       {
+#               "amount": 1,
+#               "item": "long_stick",
+#               "tip": "You can find one in the forest",
+#               "description": "This stick will help figure out the truth!", # updates the quest description
+#               "type": "collect"
+#       }
 func add_quest_step(quest: ScriptQuest, step: Dictionary) -> bool:
 	match step.type:
 		"collect":
@@ -264,7 +264,7 @@ func update_quest_by_inventory(item: InventoryItem):
 # - item_count: The count of the item in the player's inventory
 func update_quest_step(myquestname: String, item_id: String, item_count: int, add: bool = false) -> void:
 	var step = QuestManager.get_current_step(myquestname)
-	match step.get("step_type", ""):	
+	match step.get("step_type", ""):        
 		QuestManager.INCREMENTAL_STEP:
 			if step.item_name == item_id:
 				# Update the quest step items with the collected count
@@ -284,7 +284,7 @@ func update_quest_step(myquestname: String, item_id: String, item_count: int, ad
 
 # A mob has been killed. TODO: Add who or what killed it so we know if it was the player
 func _on_mob_killed(mobinstance: Mob):
-	var mob_id: String = mobinstance.mobJSON.id
+	var mob_id: String = mobinstance.mob_json.id
 	var quests_in_progress = QuestManager.get_quests_in_progress()
 
 	# Update each of the current quests with the collected item information
