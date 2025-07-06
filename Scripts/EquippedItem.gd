@@ -133,15 +133,16 @@ func calculate_accuracy() -> float:
 	var rangedproperties = equipped_item.get_property("Ranged")
 	var skillid = Helper.json_helper.get_nested_data(rangedproperties, "used_skill.skill_id")
 	var skill_level = player.get_skill_level(skillid)
-	var dex = 0
-	if player.has_method("get_stat"):
-		dex = player.get_stat("dexterity")
+	var stat_value = 0
+	var accuracy_stat: String = rangedproperties.get("accuracy_stat", "")
+	if accuracy_stat != "" and player.has_method("get_stat"):
+		stat_value = player.get_stat(accuracy_stat)
 	# Minimum accuracy is 25%, maximum is 100% at level 30
 	var min_accuracy = 0.25
 	var max_accuracy = 1.0
 	var required_level = 30
 
-	var effective_level = skill_level + dex
+	var effective_level = skill_level + stat_value
 	if effective_level >= required_level:
 		return max_accuracy
 	else:

@@ -84,6 +84,7 @@
 	},
 	{
 		"Ranged": {
+			"accuracy_stat": "dexterity",
 			"firing_speed": 0.4,
 			"range": 1000,
 			"recoil": 10,
