@@ -18,7 +18,7 @@ var mod_id: String = "Core"
 func _init(new_mod_id: String) -> void:
 	mod_id = new_mod_id
 	# Update dataPath and spritePath using the provided mod_id
-	dataPath = "./Mods/" + mod_id + "/Stats/Stats.json"
+	dataPath = "./Mods/" + mod_id + "/Stats/"
 	file_path = "./Mods/" + mod_id + "/Stats/Stats.json"
 	spritePath = "./Mods/" + mod_id + "/Stats/"
 	

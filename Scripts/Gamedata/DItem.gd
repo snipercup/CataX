@@ -613,22 +613,22 @@ func update_item_skill_references(olddata: DItem):
 	
 	# Add new skill references
 	for new_skill_id in new_skill_ids:
-				Gamedata.mods.add_reference(DMod.ContentType.SKILLS, new_skill_id, DMod.ContentType.ITEMS, id)
+		Gamedata.mods.add_reference(DMod.ContentType.SKILLS, new_skill_id, DMod.ContentType.ITEMS, id)
 
 # Updates references between the ranged item's accuracy stat and the stat entity
 func update_item_stat_references(olddata: DItem):
-		var old_stat_id := ""
-		if olddata.ranged and olddata.ranged.accuracy_stat != "":
-				old_stat_id = olddata.ranged.accuracy_stat
-		var new_stat_id := ""
-		if ranged and ranged.accuracy_stat != "":
-				new_stat_id = ranged.accuracy_stat
+	var old_stat_id := ""
+	if olddata.ranged and olddata.ranged.accuracy_stat != "":
+		old_stat_id = olddata.ranged.accuracy_stat
+	var new_stat_id := ""
+	if ranged and ranged.accuracy_stat != "":
+		new_stat_id = ranged.accuracy_stat
 
-		if old_stat_id != new_stat_id:
-				if old_stat_id != "":
-						Gamedata.mods.remove_reference(DMod.ContentType.STATS, old_stat_id, DMod.ContentType.ITEMS, id)
-				if new_stat_id != "":
-						Gamedata.mods.add_reference(DMod.ContentType.STATS, new_stat_id, DMod.ContentType.ITEMS, id)
+	if old_stat_id != new_stat_id:
+		if old_stat_id != "":
+			Gamedata.mods.remove_reference(DMod.ContentType.STATS, old_stat_id, DMod.ContentType.ITEMS, id)
+		if new_stat_id != "":
+			Gamedata.mods.add_reference(DMod.ContentType.STATS, new_stat_id, DMod.ContentType.ITEMS, id)
 
 
 # Collects all attributes defined in an item and updates the references to that attribute
