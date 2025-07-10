@@ -44,7 +44,7 @@ The project currently stores several scenes directly under the repository root. 
 - GUT tests pass with no new failures.
 
 ## 9. Open Questions
-- Which subfolders should each scene belong to specifically? (UI vs. Lighting, etc.)
+- Which subfolders should each scene belong to specifically? (UI vs. Lighting, etc.) - Answer: Find or make the most suitable folder for the scenes.
 
 ## 10. Referenced PRD-background files
 - [`.project-management/current-prd/prd-background/feature-specification.md`](../prd-background/feature-specification.md) – lists the scenes to move and the requirement to update references.
