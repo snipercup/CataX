@@ -97,3 +97,7 @@ Icons used in the UI can be found in `/Textures` and `/Images/Icons`. Sometimes 
 The project uses the [GUT](https://github.com/bitwes/Gut) addon for unit testing. Tests are managed inside the Godot editor.
 
 Open the project in Godot and look at the bottom panel of the window. Next to `Output` and `Debugger` you will find the `GUT` tab. Click it to open the control panel where you can run all tests or filter them by directory or file.
+
+
+## Develop using OpenAI's Codex:
+See [Documentation/Game_development/Working_with_codex.md](https://github.com/Dimensionfall/Dimensionfall/blob/main/Documentation/Game_development/Working_with_codex.md)
