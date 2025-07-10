@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://khk40t8u7x5b" path="res://Scenes/UI/WearableSlot.tscn" id="3_1udct"]
 [ext_resource type="StyleBox" uid="uid://b4t06f0mrl43a" path="res://Scenes/UI/StyleBoxFlat_WindowHeader.tres" id="4_2bjug"]
 [ext_resource type="StyleBox" uid="uid://dekwnaow0islj" path="res://Scenes/UI/StyleBoxFlat_WindowBody.tres" id="5_xmi4a"]
-[ext_resource type="FontFile" uid="uid://chm7lbcdeyo0h" path="res://Roboto-Bold.ttf" id="6_xpf2l"]
+[ext_resource type="FontFile" uid="uid://chm7lbcdeyo0h" path="res://Assets/Fonts/Roboto-Bold.ttf" id="6_xpf2l"]
 [ext_resource type="PackedScene" uid="uid://y2iul2r3nysx" path="res://Scenes/UI/CtrlInventoryStackedCustom.tscn" id="8_f75fl"]
 [ext_resource type="PackedScene" uid="uid://c4g8ymi0lhkyy" path="res://Scenes/UI/EquipmentSlot.tscn" id="9_tpx1u"]
 
