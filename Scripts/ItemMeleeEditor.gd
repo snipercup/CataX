@@ -8,6 +8,7 @@ extends Control
 @export var ReachSpinBox: SpinBox = null
 @export var UsedSkillTextEdit: HBoxContainer = null
 @export var skill_xp_spin_box: SpinBox = null
+@export var damage_stat_text_edit: HBoxContainer = null
 
 var ditem: DItem = null:
 	set(value):
@@ -18,6 +19,7 @@ var ditem: DItem = null:
 
 func _ready():
 	set_drop_functions()
+	damage_stat_text_edit.content_types = [DMod.ContentType.STATS] as Array[DMod.ContentType]
 
 # Load the properties from the ditem.melee and update the UI elements
 func load_properties() -> void:
@@ -29,15 +31,18 @@ func load_properties() -> void:
 	if ditem.melee.reach:
 		ReachSpinBox.value = ditem.melee.reach
 
-	if ditem.melee.used_skill.has("skill_id"):
-		UsedSkillTextEdit.set_text(ditem.melee.used_skill["skill_id"])
-	if ditem.melee.used_skill.has("xp"):
-		skill_xp_spin_box.value = ditem.melee.used_skill["xp"]
+		if ditem.melee.used_skill.has("skill_id"):
+				UsedSkillTextEdit.set_text(ditem.melee.used_skill["skill_id"])
+		if ditem.melee.used_skill.has("xp"):
+				skill_xp_spin_box.value = ditem.melee.used_skill["xp"]
+		if ditem.melee.damage_stat != "":
+				damage_stat_text_edit.set_text(ditem.melee.damage_stat)
 
 # Save the properties from the UI elements back to ditem.melee
 func save_properties() -> void:
 	ditem.melee.damage = int(DamageSpinBox.value)
 	ditem.melee.reach = int(ReachSpinBox.value)
+	ditem.melee.damage_stat = damage_stat_text_edit.get_text()
 
 	if UsedSkillTextEdit.get_text() != "":
 		ditem.melee.used_skill = {
@@ -72,7 +77,7 @@ func can_skill_drop(dropped_data: Dictionary):
 		return false
 
 	# If all checks pass, return true
-	return true
+		return true
 
 
 # Set the drop functions on the required skill and skill progression controls

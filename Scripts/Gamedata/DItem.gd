@@ -225,20 +225,25 @@ class Melee:
 	var damage: int
 	var reach: int
 	var used_skill: Dictionary # example: {"skill_id": "bashing", "xp": 1}
+	var damage_stat: String
 
 	# Constructor to initialize melee properties from a dictionary
 	func _init(data: Dictionary):
 		damage = data.get("damage", 0)
 		reach = data.get("reach", 0)
 		used_skill = data.get("used_skill", {})
+		damage_stat = data.get("damage_stat", "")
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
-		return {
+		var data: Dictionary = {
 			"damage": damage,
 			"reach": reach,
 			"used_skill": used_skill
 		}
+		if damage_stat != "":
+			data["damage_stat"] = damage_stat
+		return data
 
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
@@ -283,7 +288,7 @@ class Food:
 	func remove_player_attribute(attribute_id: String) -> void:
 		for i in range(attributes.size()):
 			if attributes[i]["id"] == attribute_id:
-				attributes.remove_at(i)  # Remove the attribute if the ID matches
+				attributes.remove_at(i)	 # Remove the attribute if the ID matches
 				break  # Exit the loop after removing the attribute
 
 
@@ -324,7 +329,7 @@ class Medical:
 	func remove_player_attribute(attribute_id: String) -> void:
 		for i in range(attributes.size()):
 			if attributes[i]["id"] == attribute_id:
-				attributes.remove_at(i)  # Remove the attribute if the ID matches
+				attributes.remove_at(i)	 # Remove the attribute if the ID matches
 				break  # Exit the loop after removing the attribute
 
 
@@ -384,13 +389,13 @@ class Wearable:
 	func remove_player_attribute(attribute_id: String) -> void:
 		for i in range(player_attributes.size()):
 			if player_attributes[i]["id"] == attribute_id:
-				player_attributes.remove_at(i)  # Remove the attribute if the ID matches
+				player_attributes.remove_at(i)	# Remove the attribute if the ID matches
 				break  # Exit the loop after removing the attribute
 
 
 # Inner class to handle the Tool property
 class Tool:
-	var tool_qualities: Dictionary  # Example: { "flashlight": 1 }
+	var tool_qualities: Dictionary	# Example: { "flashlight": 1 }
 
 	# Constructor to initialize tool properties from a dictionary
 	func _init(data: Dictionary):
@@ -557,14 +562,14 @@ func process_wearable_player_attributes(olddata: DItem):
 			# Loop over old player attributes and remove references
 			for old_attr in olddata.wearable.player_attributes:
 				Gamedata.mods.remove_reference(DMod.ContentType.PLAYERATTRIBUTES, old_attr["id"], DMod.ContentType.ITEMS, id)
-		return  # Exit since there's no wearable in the new data
+		return	# Exit since there's no wearable in the new data
 	
 	if wearable.player_attributes.is_empty():
 		# If the new wearable has no player attributes, remove all references from olddata if they exist
 		if olddata.wearable and not olddata.wearable.player_attributes.is_empty():
 			for old_attr in olddata.wearable.player_attributes:
 				Gamedata.mods.remove_reference(DMod.ContentType.PLAYERATTRIBUTES, old_attr["id"], DMod.ContentType.ITEMS, id)
-		return  # Exit since there are no player attributes to add
+		return	# Exit since there are no player attributes to add
 
 	# Collect new and old player attributes
 	var new_player_attributes = wearable.player_attributes
@@ -620,9 +625,13 @@ func update_item_stat_references(olddata: DItem):
 	var old_stat_id := ""
 	if olddata.ranged and olddata.ranged.accuracy_stat != "":
 		old_stat_id = olddata.ranged.accuracy_stat
+	elif olddata.melee and olddata.melee.damage_stat != "":
+		old_stat_id = olddata.melee.damage_stat
 	var new_stat_id := ""
 	if ranged and ranged.accuracy_stat != "":
 		new_stat_id = ranged.accuracy_stat
+	elif melee and melee.damage_stat != "":
+		new_stat_id = melee.damage_stat
 
 	if old_stat_id != new_stat_id:
 		if old_stat_id != "":
@@ -712,6 +721,8 @@ func delete():
 
 	if ranged and ranged.accuracy_stat != "":
 		Gamedata.mods.remove_reference(DMod.ContentType.STATS, ranged.accuracy_stat, DMod.ContentType.ITEMS, id)
+	if melee and melee.damage_stat != "":
+		Gamedata.mods.remove_reference(DMod.ContentType.STATS, melee.damage_stat, DMod.ContentType.ITEMS, id)
 
 
 # Function to remove all instances of a skill from the item
