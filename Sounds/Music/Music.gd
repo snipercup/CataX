@@ -22,7 +22,7 @@ enum THEMES {
 }
 
 var TRACKS = {
-	THEMES.PEACE: [preload("res://Sounds/Music/dark fallout.ogg"), preload("res://Sounds/Music/The-Surreal-Truth.ogg"), preload("res://Sounds/Music/Please_-answer-me-my-friend.ogg")]
+       THEMES.PEACE: [preload("res://Sounds/Music/dark_fallout.ogg"), preload("res://Sounds/Music/The-Surreal-Truth.ogg"), preload("res://Sounds/Music/Please_-answer-me-my-friend.ogg")]
 	#THEMES.BATTLE: [preload("res://Sounds/Music/The-Depths-of-Hell.ogg")]
 }
 
