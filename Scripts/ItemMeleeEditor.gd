@@ -79,21 +79,6 @@ func can_skill_drop(dropped_data: Dictionary):
 	# If all checks pass, return true
 		return true
 
-func stat_drop(dropped_data: Dictionary, texteditcontrol: HBoxContainer) -> void:
-		if dropped_data and dropped_data.has("id"):
-				var stat_id = dropped_data["id"]
-				if not Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(stat_id):
-						print_debug("No stat data found for ID: " + stat_id)
-						return
-				texteditcontrol.set_text(stat_id)
-		else:
-				print_debug("Dropped data does not contain an 'id' key.")
-
-func can_stat_drop(dropped_data: Dictionary):
-		if not dropped_data or not dropped_data.has("id"):
-				return false
-		return Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(dropped_data["id"])
-
 
 # Set the drop functions on the required skill and skill progression controls
 # This enables them to receive drop data
