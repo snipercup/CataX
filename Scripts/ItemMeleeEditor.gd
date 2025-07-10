@@ -8,6 +8,7 @@ extends Control
 @export var ReachSpinBox: SpinBox = null
 @export var UsedSkillTextEdit: HBoxContainer = null
 @export var skill_xp_spin_box: SpinBox = null
+@export var damage_stat_text_edit: HBoxContainer = null
 
 var ditem: DItem = null:
 	set(value):
@@ -18,6 +19,7 @@ var ditem: DItem = null:
 
 func _ready():
 	set_drop_functions()
+	damage_stat_text_edit.content_types = [DMod.ContentType.STATS] as Array[DMod.ContentType]
 
 # Load the properties from the ditem.melee and update the UI elements
 func load_properties() -> void:
@@ -29,15 +31,18 @@ func load_properties() -> void:
 	if ditem.melee.reach:
 		ReachSpinBox.value = ditem.melee.reach
 
-	if ditem.melee.used_skill.has("skill_id"):
-		UsedSkillTextEdit.set_text(ditem.melee.used_skill["skill_id"])
-	if ditem.melee.used_skill.has("xp"):
-		skill_xp_spin_box.value = ditem.melee.used_skill["xp"]
+		if ditem.melee.used_skill.has("skill_id"):
+				UsedSkillTextEdit.set_text(ditem.melee.used_skill["skill_id"])
+		if ditem.melee.used_skill.has("xp"):
+				skill_xp_spin_box.value = ditem.melee.used_skill["xp"]
+		if ditem.melee.damage_stat != "":
+				damage_stat_text_edit.set_text(ditem.melee.damage_stat)
 
 # Save the properties from the UI elements back to ditem.melee
 func save_properties() -> void:
-	ditem.melee.damage = int(DamageSpinBox.value)
-	ditem.melee.reach = int(ReachSpinBox.value)
+		ditem.melee.damage = int(DamageSpinBox.value)
+		ditem.melee.reach = int(ReachSpinBox.value)
+		ditem.melee.damage_stat = damage_stat_text_edit.get_text()
 
 	if UsedSkillTextEdit.get_text() != "":
 		ditem.melee.used_skill = {
@@ -72,11 +77,28 @@ func can_skill_drop(dropped_data: Dictionary):
 		return false
 
 	# If all checks pass, return true
-	return true
+		return true
+
+func stat_drop(dropped_data: Dictionary, texteditcontrol: HBoxContainer) -> void:
+		if dropped_data and dropped_data.has("id"):
+				var stat_id = dropped_data["id"]
+				if not Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(stat_id):
+						print_debug("No stat data found for ID: " + stat_id)
+						return
+				texteditcontrol.set_text(stat_id)
+		else:
+				print_debug("Dropped data does not contain an 'id' key.")
+
+func can_stat_drop(dropped_data: Dictionary):
+		if not dropped_data or not dropped_data.has("id"):
+				return false
+		return Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(dropped_data["id"])
 
 
 # Set the drop functions on the required skill and skill progression controls
 # This enables them to receive drop data
 func set_drop_functions():
-	UsedSkillTextEdit.drop_function = skill_drop.bind(UsedSkillTextEdit)
-	UsedSkillTextEdit.can_drop_function = can_skill_drop
+		UsedSkillTextEdit.drop_function = skill_drop.bind(UsedSkillTextEdit)
+		UsedSkillTextEdit.can_drop_function = can_skill_drop
+		damage_stat_text_edit.drop_function = stat_drop.bind(damage_stat_text_edit)
+		damage_stat_text_edit.can_drop_function = can_stat_drop

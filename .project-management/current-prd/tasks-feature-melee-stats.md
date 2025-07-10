@@ -51,10 +51,10 @@
 ```
 
 ## Tasks
-- [ ] 1.0 Add stat entry field to `Scenes/ContentManager/Custom_Editors/ItemEditor/ItemMeleeEditor.tscn` using `DropEntityTextEdit.tscn`.
-- [ ] 2.0 Update `Scripts/ItemMeleeEditor.gd` to load, save, and validate the melee bonus stat using drop logic.
-- [ ] 3.0 Extend `Scripts/Gamedata/DItem.gd` Melee class to store the selected stat and maintain references.
-- [ ] 4.0 Apply the stat-based bonus during melee combat calculations.
-- [ ] 5.0 Write unit tests validating the new field and bonus logic.
+- [x] 1.0 Add stat entry field to `Scenes/ContentManager/Custom_Editors/ItemEditor/ItemMeleeEditor.tscn` using `DropEntityTextEdit.tscn`.
+- [x] 2.0 Update `Scripts/ItemMeleeEditor.gd` to load, save, and validate the melee bonus stat using drop logic.
+- [x] 3.0 Extend `Scripts/Gamedata/DItem.gd` Melee class to store the selected stat and maintain references.
+- [x] 4.0 Apply the stat-based bonus during melee combat calculations.
+- [x] 5.0 Write unit tests validating the new field and bonus logic.
 
 *End of document*
