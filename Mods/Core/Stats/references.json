@@ -3,5 +3,11 @@
 		"items": [
 			"pistol_9mm"
 		]
+	},
+	"strength": {
+		"items": [
+			"long_stick",
+			"stone_spear"
+		]
 	}
 }
