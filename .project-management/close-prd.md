@@ -25,7 +25,17 @@ This document provides step-by-step instructions for the coding agent to perform
    - **If no further changes are needed:**
      - Move all files from `.project-management/current-prd/` to `.project-management/closed-prd/` to indicate the PRD has been reviewed and closed.
 
+5. **Verify that files have been removed**
+   - Verify that the files have been removed from `.project-management/current-prd/`
+
 ---
+
+## Output
+Depends on the review:
+   - **If changes are needed:**
+     - The `.project-management/current-prd/tasks.*.md` file gets an update
+   - **If no further changes are needed:**
+     - All files from `.project-management/current-prd/` will move to `.project-management/closed-prd/`.
 
 ## Notes
 - Ensure all actions are logged or tracked as appropriate for project management and traceability.
