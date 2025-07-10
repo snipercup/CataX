@@ -27,6 +27,13 @@ This document provides step-by-step instructions for the coding agent to perform
 
 ---
 
+## Output
+Depends on the review:
+   - **If changes are needed:**
+     - The `.project-management/current-prd/tasks.*.md` file gets an update
+   - **If no further changes are needed:**
+     - All files from `.project-management/current-prd/` will move to `.project-management/closed-prd/`.
+
 ## Notes
 - Ensure all actions are logged or tracked as appropriate for project management and traceability.
 - If you encounter any ambiguity or missing information, escalate for clarification before proceeding.
