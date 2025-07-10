@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://duoxs7mpo6x3t"]
+[gd_scene load_steps=4 format=3 uid="uid://duoxs7mpo6x3t"]
 
 [ext_resource type="Script" uid="uid://186nrxvxnlpk" path="res://Scripts/ItemMeleeEditor.gd" id="1_pg18d"]
 [ext_resource type="PackedScene" uid="uid://dsax7il2yggw8" path="res://Scenes/ContentManager/Custom_Widgets/DropEnabledTextEdit.tscn" id="2_etmci"]

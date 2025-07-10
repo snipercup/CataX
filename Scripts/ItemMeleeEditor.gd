@@ -40,9 +40,9 @@ func load_properties() -> void:
 
 # Save the properties from the UI elements back to ditem.melee
 func save_properties() -> void:
-		ditem.melee.damage = int(DamageSpinBox.value)
-		ditem.melee.reach = int(ReachSpinBox.value)
-		ditem.melee.damage_stat = damage_stat_text_edit.get_text()
+	ditem.melee.damage = int(DamageSpinBox.value)
+	ditem.melee.reach = int(ReachSpinBox.value)
+	ditem.melee.damage_stat = damage_stat_text_edit.get_text()
 
 	if UsedSkillTextEdit.get_text() != "":
 		ditem.melee.used_skill = {
@@ -98,7 +98,5 @@ func can_stat_drop(dropped_data: Dictionary):
 # Set the drop functions on the required skill and skill progression controls
 # This enables them to receive drop data
 func set_drop_functions():
-		UsedSkillTextEdit.drop_function = skill_drop.bind(UsedSkillTextEdit)
-		UsedSkillTextEdit.can_drop_function = can_skill_drop
-		damage_stat_text_edit.drop_function = stat_drop.bind(damage_stat_text_edit)
-		damage_stat_text_edit.can_drop_function = can_stat_drop
+	UsedSkillTextEdit.drop_function = skill_drop.bind(UsedSkillTextEdit)
+	UsedSkillTextEdit.can_drop_function = can_skill_drop
