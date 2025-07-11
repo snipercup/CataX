@@ -41,7 +41,7 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
    - Pick one of the 'Refactoring & Code Quality Improvement Goals' so we limit the scope of maintenance.
 
 2. **Analyze the codebase**  
-   - The AI reads and analyzes the existing codebase and identifies scripts or scenes or folders that require maintenence as per the maintenance goals.
+   - The AI scans the codebase to identify scripts, scenes, or folders that require maintenance based on the selected refactoring or quality improvement goal.
 
 3. **Phase 1: Generate Parent Tasks**  
    - Based on the codebase analysis, create the file and generate the main, high-level tasks required to implement the feature. Use your judgment on how many high-level tasks to use. It's likely to be about 5. 
