@@ -195,6 +195,9 @@
 
 ### Existing Files Modified
 - `Scripts/general.gd` - Document functions and cleanup naming.
+- `Scripts/EquippedItem.gd` - Updated variable references and indentation.
+- `Scripts/NonHUDclick.gd` - Updated variable references.
+- `Scripts/Mob/Mob.gd` - Updated reference to shared collision shape.
 
 ### Files To Remove
 - None
@@ -202,6 +205,6 @@
 ### Notes
 - Unit tests should typically be placed in `/Tests/Unit/`.
 \n## Tasks
-- [ ] 1.0 Document and clean up `general.gd`
-  - [ ] 1.1 Add docstrings for each function
-  - [ ] 1.2 Remove unused variables and clarify names
+- [x] 1.0 Document and clean up `general.gd`
+	- [x] 1.1 Add docstrings for each function
+	- [x] 1.2 Remove unused variables and clarify names
