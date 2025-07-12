@@ -22,8 +22,17 @@ func _ready():
 	start_timer_progressbar.connect(Helper.signal_broker.on_start_timer_progressbar)
 	shared_collision_shape.size = Vector3(0.35, 0.35, 0.35)
 
-## Starts a timed action and runs `callback` when finished.
-
+# Function to start an action
+# Usage example: 
+	# This example will call the 'reload_weapon" function in self after the timer is complete
+	# var reload_callable = Callable(self, "reload_weapon").bind(item, specific_magazine)
+	# General.start_action(reload_time, reload_callable)
+# Usage example using an inline callable:
+	# This example will call the 'myfunc' callable after the start_action timer runs out
+	# var myfunc: Callable = func (itemgroup_id):
+	#	 var ditemgroup: DItemgroup = Gamedata.mods.by_id("Core").itemgroups.by_id(itemgroup_id)
+	#	 ditemgroup.remove_item_by_id(id)
+	# General.start_action(reload_time, myfunc)
 func start_action(duration: float, callback: Callable):
 	if not is_action_in_progress:
 		is_action_in_progress = true
