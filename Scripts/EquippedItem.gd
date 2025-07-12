@@ -395,10 +395,11 @@ func _calculate_melee_attack_data() -> Dictionary:
 	var skill_level = player.get_skill_level(skill_id)
 	var stat_bonus = 0
 	var dex = 0
-	if player.has_method("get_stat"):
-		var stat_id = melee_properties.get("damage_stat", "strength")
-		stat_bonus = player.get_stat(stat_id)
-		dex = player.get_stat("dexterity")
+if player.has_method("get_stat"):
+var damage_stat_id = melee_properties.get("damage_stat", "strength")
+stat_bonus = player.get_stat(damage_stat_id)
+var accuracy_stat_id = melee_properties.get("accuracy_stat", "dexterity")
+dex = player.get_stat(accuracy_stat_id)
 	damage += stat_bonus
 	var hit_chance = 0.65 + ((skill_level + dex) / 100.0) * (1.0 - 0.65)
 

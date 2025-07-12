@@ -204,7 +204,7 @@ class Ranged:
 		}
 		if accuracy_stat != "":
 			data["accuracy_stat"] = accuracy_stat
-		return data
+				return data
 		
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
@@ -226,6 +226,7 @@ class Melee:
 	var reach: int
 	var used_skill: Dictionary # example: {"skill_id": "bashing", "xp": 1}
 	var damage_stat: String
+	var accuracy_stat: String
 
 	# Constructor to initialize melee properties from a dictionary
 	func _init(data: Dictionary):
@@ -233,6 +234,7 @@ class Melee:
 		reach = data.get("reach", 0)
 		used_skill = data.get("used_skill", {})
 		damage_stat = data.get("damage_stat", "")
+		accuracy_stat = data.get("accuracy_stat", "")
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
@@ -243,7 +245,9 @@ class Melee:
 		}
 		if damage_stat != "":
 			data["damage_stat"] = damage_stat
-		return data
+		if accuracy_stat != "":
+			data["accuracy_stat"] = accuracy_stat
+				return data
 
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
@@ -492,7 +496,7 @@ func get_data() -> Dictionary:
 		if not wearabledata.is_empty():
 			data["Wearable"] = wearabledata
 
-	return data
+				return data
 
 
 # Returns the path of the sprite
