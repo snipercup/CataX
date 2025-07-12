@@ -192,18 +192,9 @@
 21 directories, 167 files
 ```
 \n## Relevant Files
-\n### Proposed New Files
-- `Scripts/Logger.gd` - Centralized helper for logging across game scripts.
-- `/Tests/Unit/test_logger.gd` - Unit tests for `Logger.gd`.
 
 ### Existing Files Modified
-- `Scripts/EquippedItem.gd` - Refactor weapon handling and add comments.
-- `Scripts/BuildManager.gd` - Simplify build state management.
-- `Scripts/PlayerShooting.gd` - Streamline reload logic and integrate with BuildManager.
-- `Scenes/ContentManager/Scripts/*.gd` - Replace direct `print()` calls with `Logger` usage.
 - `Scripts/general.gd` - Document functions and cleanup naming.
-- `LevelGenerator.gd` - Reduce complexity in chunk processing functions.
-- `LevelManager.gd` - Clarify visibility update logic.
 
 ### Files To Remove
 - None
@@ -211,23 +202,6 @@
 ### Notes
 - Unit tests should typically be placed in `/Tests/Unit/`.
 \n## Tasks
-- [ ] 1.0 Refactor `EquippedItem.gd`
-  - [ ] 1.1 Identify repeated logic and extract helper methods
-  - [ ] 1.2 Document public functions with comments
-  - [ ] 1.3 Break up large functions like `perform_ranged_attack`
-  - [ ] 1.4 Verify behavior with existing tests
-- [ ] 2.0 Simplify build and shooting interaction
-  - [ ] 2.1 Review `BuildManager.gd` and `PlayerShooting.gd` reload logic
-  - [ ] 2.2 Consolidate reload checks into a single method
-  - [ ] 2.3 Ensure cancelling building restores shooting permissions
-- [ ] 3.0 Standardize logging
-  - [ ] 3.1 Create `Logger.gd` with `info`, `debug`, and `error` methods
-  - [ ] 3.2 Replace all `print` and `print_debug` calls in ContentManager scripts
-  - [ ] 3.3 Add unit tests for `Logger` output
-- [ ] 4.0 Document and clean up `general.gd`
-  - [ ] 4.1 Add docstrings for each function
-  - [ ] 4.2 Remove unused variables and clarify names
-- [ ] 5.0 Simplify chunk loading
-  - [ ] 5.1 Refactor `LevelGenerator.gd` queue processing
-  - [ ] 5.2 Clarify chunk visibility updates in `LevelManager.gd`
-  - [ ] 5.3 Add comments and early returns to improve readability
+- [ ] 1.0 Document and clean up `general.gd`
+  - [ ] 1.1 Add docstrings for each function
+  - [ ] 1.2 Remove unused variables and clarify names
