@@ -1,9 +1,8 @@
-[gd_scene load_steps=26 format=3 uid="uid://bn5i23p2yi5uj"]
+[gd_scene load_steps=25 format=3 uid="uid://bn5i23p2yi5uj"]
 
 [ext_resource type="Script" uid="uid://bbgacjm6n4tha" path="res://Scripts/player.gd" id="1_8wv3l"]
 [ext_resource type="Script" uid="uid://ccvllvfjxi0e3" path="res://Scripts/Camera.gd" id="2_g83x8"]
-[ext_resource type="PackedScene" uid="uid://bwlxjl00td75p" path="res://spot_light_3d.tscn" id="3_1cs2j"]
-[ext_resource type="PackedScene" uid="uid://r0oar0ocyo6v" path="res://spot_light_3d_2.tscn" id="4_s4cit"]
+[ext_resource type="PackedScene" uid="uid://bwlxjl00td75p" path="res://spot_light_3d_main.tscn" id="3_1cs2j"]
 [ext_resource type="Texture2D" uid="uid://d33h00t0fl7x" path="res://Defaults/Player/VestDude01.png" id="5_uy1e8"]
 [ext_resource type="Texture2D" uid="uid://piolgplta87y" path="res://Defaults/Player/weapon_left.png" id="6_gljie"]
 [ext_resource type="Script" uid="uid://ftajm2qq4vwa" path="res://Scripts/EquippedItem.gd" id="7_u8an4"]
@@ -85,8 +84,6 @@ omni_attenuation = 0.0371628
 [node name="SpotLight3D" parent="." instance=ExtResource("3_1cs2j")]
 shadow_enabled = false
 
-[node name="SpotLight3D2" parent="." instance=ExtResource("4_s4cit")]
-shadow_enabled = false
 
 [node name="Sprite3D2" type="Sprite3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.277026, 0)

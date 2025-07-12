@@ -42,22 +42,19 @@
 ├── Scripts
 ```
 ## Relevant Files
-- `spot_light_3d.tscn` - Existing spotlight candidate.
-- `spot_light_3d_2.tscn` - Existing spotlight candidate.
-- `front_light.tscn` - Player spotlight parameters.
-- `Scenes/player.tscn` - References current spotlight scenes.
-### Proposed New Files
 - `spot_light_3d_main.tscn` - Canonical spotlight scene using player's settings.
-- `/Tests/Unit/test_spotlight_scene.gd` - Unit tests for canonical spotlight.
-### Existing Files Modified
-- `Scenes/player.tscn` - Replace old spotlight references.
+- `Scenes/player.tscn` - Updated to use canonical spotlight.
+- `Tests/Unit/test_spotlight_scene.gd` - Unit tests for canonical spotlight.
+- `spot_light_3d.tscn` - Removed redundant spotlight.
+- `spot_light_3d_2.tscn` - Removed redundant spotlight.
+- `front_light.tscn` - Source for player parameters.
 ### Notes
 - See `.project-management/current-prd/prd-background/feature-specification.md` for consolidation details.
 
 ## Tasks
-- [ ] 1.0 Evaluate `spot_light_3d.tscn` and `spot_light_3d_2.tscn` to select the best default settings.
-- [ ] 2.0 Create canonical spotlight scene `spot_light_3d_main.tscn` using player's parameters from `front_light.tscn`.
-- [ ] 3.0 Update `Scenes/player.tscn` and other scenes/scripts to use `spot_light_3d_main.tscn`.
-- [ ] 4.0 Remove the redundant spotlight scene from the repository.
-- [ ] 5.0 Verify no references to the removed scene remain and run unit tests.
+- [x] 1.0 Evaluate `spot_light_3d.tscn` and `spot_light_3d_2.tscn` to select the best default settings.
+- [x] 2.0 Create canonical spotlight scene `spot_light_3d_main.tscn` using player's parameters from `front_light.tscn`.
+- [x] 3.0 Update `Scenes/player.tscn` and other scenes/scripts to use `spot_light_3d_main.tscn`.
+- [x] 4.0 Remove the redundant spotlight scene from the repository.
+- [x] 5.0 Verify no references to the removed scene remain and run unit tests.
 *End of document*
