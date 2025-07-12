@@ -755,27 +755,27 @@ func delete():
 	for skill_id in skill_ids.keys():
 		Gamedata.mods.remove_reference(DMod.ContentType.SKILLS, skill_id, DMod.ContentType.ITEMS, id)
 
-       if ranged and ranged.accuracy_stat != "":
-               Gamedata.mods.remove_reference(
-                       DMod.ContentType.STATS,
-                       ranged.accuracy_stat,
-                       DMod.ContentType.ITEMS,
-                       id
-               )
-       if melee and melee.damage_stat != "":
-               Gamedata.mods.remove_reference(
-                       DMod.ContentType.STATS,
-                       melee.damage_stat,
-                       DMod.ContentType.ITEMS,
-                       id
-               )
-       if melee and melee.accuracy_stat != "":
-               Gamedata.mods.remove_reference(
-                       DMod.ContentType.STATS,
-                       melee.accuracy_stat,
-                       DMod.ContentType.ITEMS,
-                       id
-               )
+	if ranged and ranged.accuracy_stat != "":
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS,
+				ranged.accuracy_stat,
+				DMod.ContentType.ITEMS,
+				id
+		   )
+	if melee and melee.damage_stat != "":
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS,
+				melee.damage_stat,
+				DMod.ContentType.ITEMS,
+				id
+		   )
+	if melee and melee.accuracy_stat != "":
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS,
+				melee.accuracy_stat,
+				DMod.ContentType.ITEMS,
+				id
+		   )
 
 
 # Function to remove all instances of a skill from the item
