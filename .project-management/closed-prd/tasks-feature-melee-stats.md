@@ -56,6 +56,7 @@
 - [x] 3.0 Extend `Scripts/Gamedata/DItem.gd` Melee class to store the selected stat and maintain references.
 - [x] 4.0 Apply the stat-based bonus during melee combat calculations.
 - [x] 5.0 Write unit tests validating the new field and bonus logic.
-- [ ] 6.0 Review newly added accuracy stat support for melee weapons.
+- [x] 6.0 Review newly added accuracy stat support for melee weapons.
+- [x] 7.0 Ensure melee accuracy stat references are removed when deleting an item.
 
 *End of document*
