@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dsax7il2yggw8" path="res://Scenes/ContentManager/Custom_Widgets/DropEnabledTextEdit.tscn" id="2_etmci"]
 [ext_resource type="PackedScene" uid="uid://dmlbg7nolncnh" path="res://Scenes/ContentManager/Custom_Widgets/DropEntityTextEdit.tscn" id="3_kgnfh"]
 
-[node name="ItemMeleeEditor" type="Control" node_paths=PackedStringArray("DamageSpinBox", "ReachSpinBox", "UsedSkillTextEdit", "skill_xp_spin_box", "damage_stat_text_edit")]
+[node name="ItemMeleeEditor" type="Control" node_paths=PackedStringArray("DamageSpinBox", "ReachSpinBox", "UsedSkillTextEdit", "skill_xp_spin_box", "damage_stat_text_edit", "accuracy_stat_text_edit")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,6 +17,7 @@ ReachSpinBox = NodePath("Melee/ReachSpinbox")
 UsedSkillTextEdit = NodePath("Melee/UsedSkillHBoxContainer/UsedSkillTextEdit")
 skill_xp_spin_box = NodePath("Melee/UsedSkillHBoxContainer/SkillXPSpinBox")
 damage_stat_text_edit = NodePath("Melee/DamageStatTextEdit")
+accuracy_stat_text_edit = NodePath("Melee/AccuracyStatTextEdit")
 
 [node name="Melee" type="GridContainer" parent="."]
 layout_mode = 0
@@ -71,4 +72,12 @@ text = "Damage Stat"
 [node name="DamageStatTextEdit" parent="Melee" instance=ExtResource("3_kgnfh")]
 layout_mode = 2
 tooltip_text = "The stat that increases melee damage for this weapon."
+myplaceholdertext = "Drop a stat from the list"
+[node name="AccuracyStatLabel" type="Label" parent="Melee"]
+layout_mode = 2
+text = "Accuracy Stat"
+
+[node name="AccuracyStatTextEdit" parent="Melee" instance=ExtResource("3_kgnfh")]
+layout_mode = 2
+tooltip_text = "The stat that improves accuracy for this weapon."
 myplaceholdertext = "Drop a stat from the list"

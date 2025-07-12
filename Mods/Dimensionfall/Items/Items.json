@@ -2457,6 +2457,7 @@
 			}
 		],
 		"Melee": {
+			"accuracy_stat": "dexterity",
 			"damage": 17,
 			"damage_stat": "strength",
 			"reach": 2,

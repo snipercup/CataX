@@ -16,7 +16,8 @@ func before_each():
 			"damage": 5,
 			"reach": 1,
 			"used_skill": {"skill_id": "bashing", "xp": 1.0},
-			"damage_stat": "strength"
+			"damage_stat": "strength",
+			"accuracy_stat": "dexterity"
 		}
 	}, null)
 	editor_instance = melee_editor_scene.instantiate()
@@ -37,6 +38,7 @@ func test_editor_loads_melee_data():
 	assert_eq(editor_instance.UsedSkillTextEdit.get_text(), "bashing")
 	assert_eq(editor_instance.skill_xp_spin_box.value, 1.0)
 	assert_eq(editor_instance.damage_stat_text_edit.get_text(), "strength")
+	assert_eq(editor_instance.accuracy_stat_text_edit.get_text(), "dexterity")
 
 func test_drop_damage_stat_and_save():
 	var dropdata: Dictionary = {
@@ -49,3 +51,15 @@ func test_drop_damage_stat_and_save():
 	assert_eq(editor_instance.damage_stat_text_edit.get_text(), "dexterity")
 	editor_instance.save_properties()
 	assert_eq(my_ditem.melee.damage_stat, "dexterity")
+
+func test_drop_accuracy_stat_and_save():
+	var dropdata: Dictionary = {
+		"id": "strength",
+		"text": "strength",
+		"mod_id": "Test",
+		"contentType": DMod.ContentType.STATS
+	}
+	editor_instance.accuracy_stat_text_edit._drop_data(Vector2.ZERO, dropdata)
+	assert_eq(editor_instance.accuracy_stat_text_edit.get_text(), "strength")
+	editor_instance.save_properties()
+	assert_eq(my_ditem.melee.accuracy_stat, "strength")
