@@ -51,9 +51,9 @@
 ```
 
 ## Relevant Files
-- `project.godot` - references `pointer3.png` as the custom cursor.
-- `Textures/pointer3.png` - cursor image referenced by the project.
-- `Textures/pointer3.png.import` - import configuration for `pointer3.png`.
+- `project.godot` - references the game's custom cursor image.
+- `Textures/pointer3.png` - removed cursor image.
+- `Textures/pointer3.png.import` - removed import configuration.
 
 ### Proposed New Files
 - *(none)*
@@ -62,28 +62,29 @@
 - `project.godot` - update or remove custom cursor reference.
 - `Textures/pointer3.png` - delete if no longer used.
 - `Textures/pointer3.png.import` - delete if removing the image.
+- `Documentation/Game_development/Getting_started.md` - note about custom cursor.
 
 ### Notes
 - Non-Goals: fallback pointer logic is out of scope.
 - Success criteria: `godot --headless --import` runs without errors.
 
 ## Tasks
-- [ ] **1.0 Audit pointer3.png usage**
-  - [ ] 1.1 Search repository for references to `pointer3.png`.
-  - [ ] 1.2 List files referencing it, starting with `project.godot`.
-  - [ ] 1.3 Review `.project-management/current-prd/prd-background/feature-specification.md` for context.
-- [ ] **2.0 Decide on cursor strategy**
-  - [ ] 2.1 Determine if `pointer3.png` is required for gameplay.
-  - [ ] 2.2 Choose between restoring the asset or switching to `pointer2.png` or the default cursor.
-  - [ ] 2.3 Record the chosen approach.
-- [ ] **3.0 Implement chosen solution**
-  - [ ] 3.1 If removing: delete `Textures/pointer3.png` and its `.import` file and update `project.godot` accordingly.
-  - [ ] 3.2 If restoring: open the project in Godot to reimport the image so `.godot/imported/*pointer3*.ctex` is created.
-  - [ ] 3.3 Ensure no invalid references remain in the repository.
-- [ ] **4.0 Verify import process**
-  - [ ] 4.1 Run `godot --headless --import`.
-  - [ ] 4.2 Confirm there are no missing resource errors.
-- [ ] **5.0 Update documentation and commit**
-  - [ ] 5.1 Document the decision and steps in `Documentation` or `README.md`.
-  - [ ] 5.2 Commit all changes to Git.
+- [x] **1.0 Audit pointer3.png usage**
+  - [x] 1.1 Search repository for references to `pointer3.png`.
+  - [x] 1.2 List files referencing it, starting with `project.godot`.
+  - [x] 1.3 Review `.project-management/current-prd/prd-background/feature-specification.md` for context.
+- [x] **2.0 Decide on cursor strategy**
+  - [x] 2.1 Determine if `pointer3.png` is required for gameplay.
+  - [x] 2.2 Choose between restoring the asset or switching to `pointer2.png` or the default cursor.
+  - [x] 2.3 Record the chosen approach.
+- [x] **3.0 Implement chosen solution**
+  - [x] 3.1 If removing: delete `Textures/pointer3.png` and its `.import` file and update `project.godot` accordingly.
+  - [x] 3.2 If restoring: open the project in Godot to reimport the image so `.godot/imported/*pointer3*.ctex` is created.
+  - [x] 3.3 Ensure no invalid references remain in the repository.
+- [x] **4.0 Verify import process**
+  - [x] 4.1 Run `godot --headless --import`.
+  - [x] 4.2 Confirm there are no missing resource errors.
+- [x] **5.0 Update documentation and commit**
+  - [x] 5.1 Document the decision and steps in `Documentation` or `README.md`.
+  - [x] 5.2 Commit all changes to Git.
 *End of document*

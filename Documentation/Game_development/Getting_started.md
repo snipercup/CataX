@@ -93,6 +93,7 @@ UI is another area that is somewhat accessible to contributors starting out. Thi
 Keep in mind that the UI communicates with the game world through autoloads. For example, the Inventory menu works together with the `ItemManager` (`/Scripts/item_manager.gd`). Some game elements like the player and some windows communicate through `Helper.signal_broker`. To find out what connects to what, press `ctrl+shift+f` in Godot and search for `Helper.signal_broker` and a list will come up.
 
 Icons used in the UI can be found in `/Textures` and `/Images/Icons`. Sometimes you don't need to use an icon and a button with an `x` or arrow `->` will suffice. In the case of the character menu, the icons are loaded from the mod data in `/Mods/Core/Stats` and `/Mods/Core/Stats`
+The project sets a custom mouse cursor through `project.godot`. Run `godot --headless --import` once after cloning the repository so Godot can generate the required files in `.godot/imported`.
 ## Running tests
 The project uses the [GUT](https://github.com/bitwes/Gut) addon for unit testing. Tests are managed inside the Godot editor.
 
