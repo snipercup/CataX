@@ -204,7 +204,7 @@ class Ranged:
 		}
 		if accuracy_stat != "":
 			data["accuracy_stat"] = accuracy_stat
-				return data
+		return data
 		
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
@@ -247,7 +247,7 @@ class Melee:
 			data["damage_stat"] = damage_stat
 		if accuracy_stat != "":
 			data["accuracy_stat"] = accuracy_stat
-				return data
+		return data
 
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
@@ -496,7 +496,7 @@ func get_data() -> Dictionary:
 		if not wearabledata.is_empty():
 			data["Wearable"] = wearabledata
 
-				return data
+	return data
 
 
 # Returns the path of the sprite
