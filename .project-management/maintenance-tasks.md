@@ -74,6 +74,9 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 The generated task list must follow this structure:
 
 ```
+## Selected maintenance goal
+- Specify the selected maintenance goal so we know if the tasks align with this goal
+
 ## Pre-Feature Development Project Tree  
 - Use command line tools to get current project tree view, omitting any directory that starts with `.` or verbose nested directories like `addons`, etc...
 

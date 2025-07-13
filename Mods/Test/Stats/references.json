@@ -1,7 +1,14 @@
 {
 	"dexterity": {
 		"items": [
-			"pistol_9mm"
+			"pistol_9mm",
+			"stone_spear"
+		]
+	},
+	"strength": {
+		"items": [
+			"long_stick",
+			"stone_spear"
 		]
 	}
 }
