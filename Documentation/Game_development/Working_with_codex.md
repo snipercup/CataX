@@ -76,3 +76,14 @@ Starting with any description of a feature, this guide supplies tooling to autom
 - Review will either:
     - Result in flagged changes - review and resubmit the close out
     - Pass review and close the PRD - feature files are moved from `current-prd` to `closed-prd`
+
+## Maintenance tasks
+Aside from the primary PRD flow described above, it's also possible to have Codex find and perform maintenance work. 
+- Create a branch in your fork (you can call it `maintenance` for example)
+- Go to https://chatgpt.com/codex and in the prompt bar select your `maintenance` branch
+- Enter the phrase `MaintenanceTasks` and press `code`. This will tell Codex to follow the instructions in `.project-management/maintenance-tasks.md`
+- Once codex is done, `.project-management\current-prd\tasks.*.md` will be created. Now you can proceed as above by running `TaskMaster` in codex with your `maintenance` branch selected.
+- Once TaskMaster is done, create a pull request from Codex, test it and merge it into your `maintenance` branch.
+- Afterwards, entering `ClosePrd` into codex with your `maintenance` branch selected will clean up your files and finish the work.
+- In the same way, create the pull request for closeprd in codex and merge it into your `maintenance` branch and test it
+- Create a pull request for the dimensionfall main branch from the `maintenance` branch.
