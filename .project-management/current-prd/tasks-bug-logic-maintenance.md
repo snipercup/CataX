@@ -327,22 +327,13 @@
 ```
 
 ## Relevant Files
-- `Scripts/Client.gd`
 - `Scripts/Helper/quest_helper.gd`
-- `Scripts/Mob/MobRangedAttack.gd`
-- `Scripts/Mob/Mob.gd`
-- `Scripts/ItemEditor.gd`
 
 ### Proposed New Files
-- `/Tests/Unit/test_client.gd` - Unit test to ensure Client.gd handles missing Nakama.
 - `/Tests/Unit/test_quest_helper.gd` - Unit tests for quest mob kill tracking.
 
 ### Existing Files Modified
-- `Scripts/Client.gd` - Handle missing Nakama plugin gracefully.
 - `Scripts/Helper/quest_helper.gd` - Track killer for mob kill quests.
-- `Scripts/Mob/MobRangedAttack.gd` - Use mob data for cooldown and projectile speed.
-- `Scripts/Mob/Mob.gd` - Cache meshes to avoid duplication.
-- `Scripts/ItemEditor.gd` - Warn on unsaved changes when closing.
 
 ### Files To Remove
 - *(none)*
@@ -351,10 +342,6 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Guard Nakama dependency in `Client.gd`
 - [ ] 2.0 Include killer information in quest updates
-- [ ] 3.0 Use mob data for ranged attack timing and speed
-- [ ] 4.0 Cache mob meshes instead of duplicating
-- [ ] 5.0 Warn users about unsaved changes in ItemEditor
 
 *End of document*
