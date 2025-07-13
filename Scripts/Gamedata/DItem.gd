@@ -44,6 +44,7 @@ class CraftRecipe:
 	var required_resources: Array # A list of objects like {"amount": 1, "id": "steel_scrap"}
 	var skill_progression: Dictionary # example: { "id": "fabrication", "xp": 10 }
 	var skill_requirement: Dictionary # example: { "id": "fabrication", "level": 1 }
+	var skill_bonus_stat: String
 
 	# Constructor to initialize craft properties from a dictionary
 	func _init(data: Dictionary):
@@ -53,6 +54,7 @@ class CraftRecipe:
 		required_resources = data.get("required_resources", [])
 		skill_progression = data.get("skill_progression", {})
 		skill_requirement = data.get("skill_requirement", {})
+		skill_bonus_stat = data.get("skill_bonus_stat", "")
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
@@ -66,6 +68,8 @@ class CraftRecipe:
 			mydata["skill_requirement"] = skill_requirement
 		if not skill_progression.is_empty():
 			mydata["skill_progression"] = skill_progression
+		if skill_bonus_stat != "":
+			mydata["skill_bonus_stat"] = skill_bonus_stat
 		return mydata
 		
 	# Function to get used skill IDs
