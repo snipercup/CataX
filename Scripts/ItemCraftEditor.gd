@@ -34,6 +34,7 @@ func _ready():
 		enable_all_controls()
 	set_drop_functions()
 	recipesContainer.item_selected.connect(_on_recipe_selected)
+	skill_bonus_stat_text_edit.content_types = [DMod.ContentType.STATS] as Array[DMod.ContentType]
 
 
 func _on_recipe_selected(index: int):
@@ -113,10 +114,9 @@ func _update_current_recipe():
 				"id": skill_progression_id,
 				"xp": skill_progression_spin_box.value
 			}
-	else:
-current_recipe.skill_progression.clear()
-
-current_recipe.skill_bonus_stat = skill_bonus_stat_text_edit.get_text()
+		else:
+			current_recipe.skill_progression.clear()
+			current_recipe.skill_bonus_stat = skill_bonus_stat_text_edit.get_text()
 
 
 # Helper to get resources from UI
@@ -154,15 +154,15 @@ func load_properties():
 
 # Helper function to add a new recipe
 func add_new_recipe():
-var new_recipe_data = {
-"craft_amount": 1,
-"craft_time": 10,
-"flags": {"requires_light": false},
-"skill_requirement": {"id": "", "level": 1},
-"skill_progression": {"id": "", "xp": 1},
-"required_resources": [],
-"skill_bonus_stat": ""
-}
+	var new_recipe_data = {
+		"craft_amount": 1,
+		"craft_time": 10,
+		"flags": {"requires_light": false},
+		"skill_requirement": {"id": "", "level": 1},
+		"skill_progression": {"id": "", "xp": 1},
+		"required_resources": [],
+		"skill_bonus_stat": ""
+	}
 	var new_recipe = DItem.CraftRecipe.new(new_recipe_data)
 	craft_recipes.append(new_recipe)
 	update_recipe_dropdown()
@@ -313,7 +313,7 @@ func skill_drop(dropped_data: Dictionary, texteditcontrol: HBoxContainer) -> voi
 func can_skill_drop(dropped_data: Dictionary):
 	# Check if the data dictionary has the 'id' property
 	if not dropped_data or not dropped_data.has("id"):
-	return false
+		return false
 	
 	# Fetch skill data by ID from the Gamedata to ensure it exists and is valid
 	if not Gamedata.mods.by_id(dropped_data["mod_id"]).skills.has_id(dropped_data["id"]):
@@ -323,22 +323,6 @@ func can_skill_drop(dropped_data: Dictionary):
 	return true
 
 
-func stat_drop(dropped_data: Dictionary, texteditcontrol: HBoxContainer) -> void:
-	if dropped_data and dropped_data.has("id"):
-		var stat_id = dropped_data["id"]
-		if not Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(stat_id):
-			print_debug("No stat data found for ID: " + stat_id)
-			return
-		texteditcontrol.set_text(stat_id)
-			else:
-			print_debug("Dropped data does not contain an 'id' key.")
-
-
-		func can_stat_drop(dropped_data: Dictionary):
-	if not dropped_data or not dropped_data.has("id"):
-		return false
-	return Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(dropped_data["id"])
-
 
 # Set the drop functions on the required skill and skill progression controls
 # This enables them to receive drop data
@@ -347,8 +331,6 @@ func set_drop_functions():
 	required_skill_text_edit.can_drop_function = can_skill_drop
 	skill_progression_text_edit.drop_function = skill_drop.bind(skill_progression_text_edit)
 	skill_progression_text_edit.can_drop_function = can_skill_drop
-	skill_bonus_stat_text_edit.drop_function = stat_drop.bind(skill_bonus_stat_text_edit)
-	skill_bonus_stat_text_edit.can_drop_function = can_stat_drop
 
 
 func disable_all_controls() -> void:
