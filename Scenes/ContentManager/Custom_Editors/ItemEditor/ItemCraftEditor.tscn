@@ -194,6 +194,7 @@ text = "Skill bonus stat"
 
 [node name="SkillBonusStatTextEdit" parent="Craft" instance=ExtResource("3_mliuy")]
 layout_mode = 2
+size_flags_vertical = 1
 tooltip_text = "Drop a stat to increase the effective crafting skill."
 myplaceholdertext = "Drop a stat from the list"
 

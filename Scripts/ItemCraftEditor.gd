@@ -116,7 +116,7 @@ func _update_current_recipe():
 			}
 		else:
 			current_recipe.skill_progression.clear()
-			current_recipe.skill_bonus_stat = skill_bonus_stat_text_edit.get_text()
+		current_recipe.skill_bonus_stat = skill_bonus_stat_text_edit.get_text()
 
 
 # Helper to get resources from UI
