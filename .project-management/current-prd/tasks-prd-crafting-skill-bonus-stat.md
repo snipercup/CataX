@@ -51,10 +51,10 @@
 ```
 
 ## Tasks
-- [ ] 1.0 Add stat selection field to `Scenes/ContentManager/Custom_Editors/ItemEditor/ItemCraftEditor.tscn` using `Scenes/ContentManager/Custom_Widgets/DropEntityTextEdit.tscn`.
-- [ ] 2.0 Update `Scripts/ItemCraftEditor.gd` to load and save the chosen stat for each recipe.
-- [ ] 3.0 Extend `Scripts/Gamedata/DItem.gd` and `Scripts/Runtimedata/RItem.gd` craft structures to store the stat reference.
-- [ ] 4.0 Modify `Scripts/crafting_recipes_manager.gd` to include the selected stat in skill requirement checks.
-- [ ] 5.0 Add unit tests verifying stat bonus application and default behavior when no stat is set.
+- [x] 1.0 Add stat selection field to `Scenes/ContentManager/Custom_Editors/ItemEditor/ItemCraftEditor.tscn` using `Scenes/ContentManager/Custom_Widgets/DropEntityTextEdit.tscn`.
+- [x] 2.0 Update `Scripts/ItemCraftEditor.gd` to load and save the chosen stat for each recipe.
+- [x] 3.0 Extend `Scripts/Gamedata/DItem.gd` and `Scripts/Runtimedata/RItem.gd` craft structures to store the stat reference.
+- [x] 4.0 Modify `Scripts/crafting_recipes_manager.gd` to include the selected stat in skill requirement checks.
+- [x] 5.0 Add unit tests verifying stat bonus application and default behavior when no stat is set.
 
 *End of document*

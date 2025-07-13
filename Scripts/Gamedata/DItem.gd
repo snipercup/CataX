@@ -44,6 +44,7 @@ class CraftRecipe:
 	var required_resources: Array # A list of objects like {"amount": 1, "id": "steel_scrap"}
 	var skill_progression: Dictionary # example: { "id": "fabrication", "xp": 10 }
 	var skill_requirement: Dictionary # example: { "id": "fabrication", "level": 1 }
+	var skill_bonus_stat: String # example: "intelligence"
 
 	# Constructor to initialize craft properties from a dictionary
 	func _init(data: Dictionary):
@@ -53,6 +54,7 @@ class CraftRecipe:
 		required_resources = data.get("required_resources", [])
 		skill_progression = data.get("skill_progression", {})
 		skill_requirement = data.get("skill_requirement", {})
+		skill_bonus_stat = data.get("skill_bonus_stat", "")
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
@@ -66,6 +68,8 @@ class CraftRecipe:
 			mydata["skill_requirement"] = skill_requirement
 		if not skill_progression.is_empty():
 			mydata["skill_progression"] = skill_progression
+		if skill_bonus_stat != "":
+			mydata["skill_bonus_stat"] = skill_bonus_stat
 		return mydata
 		
 	# Function to get used skill IDs
@@ -624,7 +628,7 @@ func update_item_skill_references(olddata: DItem):
 	for new_skill_id in new_skill_ids:
 		Gamedata.mods.add_reference(DMod.ContentType.SKILLS, new_skill_id, DMod.ContentType.ITEMS, id)
 
-# Updates references between this item’s accuracy & damage stats and the stat entities
+# Updates references between this item’s accuracy, damage, and craft‐bonus stats and the stat entities
 func update_item_stat_references(olddata: DItem) -> void:
 	# 1) Collect old stats
 	var old_stats: Array[String] = []
@@ -633,6 +637,11 @@ func update_item_stat_references(olddata: DItem) -> void:
 	if olddata.melee:
 		old_stats.append(olddata.melee.damage_stat)
 		old_stats.append(olddata.melee.accuracy_stat)
+	# — now include any craft‐bonus stats from the old recipes
+	if olddata.craft:
+		for recipe in olddata.craft.recipes:
+			if recipe.skill_bonus_stat != "":
+				old_stats.append(recipe.skill_bonus_stat)
 
 	# 2) Clean out empty and dedupe
 	old_stats = old_stats.filter(func(id): return id != "")
@@ -645,6 +654,11 @@ func update_item_stat_references(olddata: DItem) -> void:
 	if melee:
 		new_stats.append(melee.damage_stat)
 		new_stats.append(melee.accuracy_stat)
+	# — now include any craft‐bonus stats from the new recipes
+	if craft:
+		for recipe in craft.recipes:
+			if recipe.skill_bonus_stat != "":
+				new_stats.append(recipe.skill_bonus_stat)
 
 	# 4) Clean out empty and dedupe
 	new_stats = new_stats.filter(func(id): return id != "")
@@ -660,10 +674,12 @@ func update_item_stat_references(olddata: DItem) -> void:
 
 	# 6) Add references for newly used stats
 	for stat_id in new_stats:
-		Gamedata.mods.add_reference(
-			DMod.ContentType.STATS, stat_id,
-			DMod.ContentType.ITEMS, id
-		)
+		if not old_stats.has(stat_id):
+			Gamedata.mods.add_reference(
+				DMod.ContentType.STATS, stat_id,
+				DMod.ContentType.ITEMS, id
+			)
+
 
 # Helper to remove duplicates while preserving order
 func _dedupe_array(arr: Array[String]) -> Array[String]:
@@ -754,6 +770,18 @@ func delete():
 # Remove the reference of this item from each skill
 	for skill_id in skill_ids.keys():
 		Gamedata.mods.remove_reference(DMod.ContentType.SKILLS, skill_id, DMod.ContentType.ITEMS, id)
+
+	# Remove craft‐recipe bonus‐stat references
+	if craft:
+		for recipe in craft.recipes:
+			var bonus_stat := recipe.skill_bonus_stat
+			if bonus_stat != "":
+				Gamedata.mods.remove_reference(
+					DMod.ContentType.STATS,
+					bonus_stat,
+					DMod.ContentType.ITEMS,
+					id
+				)
 
 	if ranged and ranged.accuracy_stat != "":
 			Gamedata.mods.remove_reference(

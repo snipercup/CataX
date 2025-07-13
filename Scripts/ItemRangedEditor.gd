@@ -49,7 +49,6 @@ func save_properties() -> void:
 		if button is CheckBox and button.button_pressed:
 			selected_magazines.append(button.text)
 	
-	
 	ditem.ranged.used_ammo = UsedAmmoTextEdit.text
 	ditem.ranged.used_magazine = ",".join(selected_magazines)  # Join the selected magazines by commas
 	ditem.ranged.firing_range = int(RangeNumberBox.value)
