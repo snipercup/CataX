@@ -90,9 +90,9 @@ func can_fire_weapon() -> bool:
 	if not equipped_item:
 		return false
 	if equipped_item.get_property("Melee") != null:
-		return General.is_mouse_outside_HUD and not General.is_action_in_progress and equipped_item and not in_cooldown
+		return General.is_mouse_outside_hud and not General.is_action_in_progress and equipped_item and not in_cooldown
 	if equipped_item.get_property("Ranged") != null:
-		return General.is_mouse_outside_HUD and not General.is_action_in_progress and General.is_allowed_to_shoot and equipped_item and not in_cooldown and (get_current_ammo() > 0 or not requires_ammo())
+		return General.is_mouse_outside_hud and not General.is_action_in_progress and General.is_allowed_to_shoot and equipped_item and not in_cooldown and (get_current_ammo() > 0 or not requires_ammo())
 	return false
 
 
