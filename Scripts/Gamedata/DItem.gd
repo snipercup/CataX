@@ -225,20 +225,29 @@ class Melee:
 	var damage: int
 	var reach: int
 	var used_skill: Dictionary # example: {"skill_id": "bashing", "xp": 1}
+	var damage_stat: String
+	var accuracy_stat: String
 
 	# Constructor to initialize melee properties from a dictionary
 	func _init(data: Dictionary):
 		damage = data.get("damage", 0)
 		reach = data.get("reach", 0)
 		used_skill = data.get("used_skill", {})
+		damage_stat = data.get("damage_stat", "")
+		accuracy_stat = data.get("accuracy_stat", "")
 
 	# Get data function to return a dictionary with all properties
 	func get_data() -> Dictionary:
-		return {
+		var data: Dictionary = {
 			"damage": damage,
 			"reach": reach,
 			"used_skill": used_skill
 		}
+		if damage_stat != "":
+			data["damage_stat"] = damage_stat
+		if accuracy_stat != "":
+			data["accuracy_stat"] = accuracy_stat
+		return data
 
 	# Function to get used skill ID
 	func get_used_skill_ids() -> Array:
@@ -283,7 +292,7 @@ class Food:
 	func remove_player_attribute(attribute_id: String) -> void:
 		for i in range(attributes.size()):
 			if attributes[i]["id"] == attribute_id:
-				attributes.remove_at(i)  # Remove the attribute if the ID matches
+				attributes.remove_at(i)	 # Remove the attribute if the ID matches
 				break  # Exit the loop after removing the attribute
 
 
@@ -324,7 +333,7 @@ class Medical:
 	func remove_player_attribute(attribute_id: String) -> void:
 		for i in range(attributes.size()):
 			if attributes[i]["id"] == attribute_id:
-				attributes.remove_at(i)  # Remove the attribute if the ID matches
+				attributes.remove_at(i)	 # Remove the attribute if the ID matches
 				break  # Exit the loop after removing the attribute
 
 
@@ -384,13 +393,13 @@ class Wearable:
 	func remove_player_attribute(attribute_id: String) -> void:
 		for i in range(player_attributes.size()):
 			if player_attributes[i]["id"] == attribute_id:
-				player_attributes.remove_at(i)  # Remove the attribute if the ID matches
+				player_attributes.remove_at(i)	# Remove the attribute if the ID matches
 				break  # Exit the loop after removing the attribute
 
 
 # Inner class to handle the Tool property
 class Tool:
-	var tool_qualities: Dictionary  # Example: { "flashlight": 1 }
+	var tool_qualities: Dictionary	# Example: { "flashlight": 1 }
 
 	# Constructor to initialize tool properties from a dictionary
 	func _init(data: Dictionary):
@@ -557,14 +566,14 @@ func process_wearable_player_attributes(olddata: DItem):
 			# Loop over old player attributes and remove references
 			for old_attr in olddata.wearable.player_attributes:
 				Gamedata.mods.remove_reference(DMod.ContentType.PLAYERATTRIBUTES, old_attr["id"], DMod.ContentType.ITEMS, id)
-		return  # Exit since there's no wearable in the new data
+		return	# Exit since there's no wearable in the new data
 	
 	if wearable.player_attributes.is_empty():
 		# If the new wearable has no player attributes, remove all references from olddata if they exist
 		if olddata.wearable and not olddata.wearable.player_attributes.is_empty():
 			for old_attr in olddata.wearable.player_attributes:
 				Gamedata.mods.remove_reference(DMod.ContentType.PLAYERATTRIBUTES, old_attr["id"], DMod.ContentType.ITEMS, id)
-		return  # Exit since there are no player attributes to add
+		return	# Exit since there are no player attributes to add
 
 	# Collect new and old player attributes
 	var new_player_attributes = wearable.player_attributes
@@ -615,20 +624,56 @@ func update_item_skill_references(olddata: DItem):
 	for new_skill_id in new_skill_ids:
 		Gamedata.mods.add_reference(DMod.ContentType.SKILLS, new_skill_id, DMod.ContentType.ITEMS, id)
 
-# Updates references between the ranged item's accuracy stat and the stat entity
-func update_item_stat_references(olddata: DItem):
-	var old_stat_id := ""
+# Updates references between this item’s accuracy & damage stats and the stat entities
+func update_item_stat_references(olddata: DItem) -> void:
+	# 1) Collect old stats
+	var old_stats: Array[String] = []
 	if olddata.ranged and olddata.ranged.accuracy_stat != "":
-		old_stat_id = olddata.ranged.accuracy_stat
-	var new_stat_id := ""
-	if ranged and ranged.accuracy_stat != "":
-		new_stat_id = ranged.accuracy_stat
+		old_stats.append(olddata.ranged.accuracy_stat)
+	if olddata.melee:
+		old_stats.append(olddata.melee.damage_stat)
+		old_stats.append(olddata.melee.accuracy_stat)
 
-	if old_stat_id != new_stat_id:
-		if old_stat_id != "":
-			Gamedata.mods.remove_reference(DMod.ContentType.STATS, old_stat_id, DMod.ContentType.ITEMS, id)
-		if new_stat_id != "":
-			Gamedata.mods.add_reference(DMod.ContentType.STATS, new_stat_id, DMod.ContentType.ITEMS, id)
+	# 2) Clean out empty and dedupe
+	old_stats = old_stats.filter(func(id): return id != "")
+	old_stats = _dedupe_array(old_stats)
+
+	# 3) Collect new stats (from this item's current data)
+	var new_stats: Array[String] = []
+	if ranged and ranged.accuracy_stat != "":
+		new_stats.append(ranged.accuracy_stat)
+	if melee:
+		new_stats.append(melee.damage_stat)
+		new_stats.append(melee.accuracy_stat)
+
+	# 4) Clean out empty and dedupe
+	new_stats = new_stats.filter(func(id): return id != "")
+	new_stats = _dedupe_array(new_stats)
+
+	# 5) Remove references for stats we no longer use
+	for stat_id in old_stats:
+		if not new_stats.has(stat_id):
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS, stat_id,
+				DMod.ContentType.ITEMS, id
+			)
+
+	# 6) Add references for newly used stats
+	for stat_id in new_stats:
+		Gamedata.mods.add_reference(
+			DMod.ContentType.STATS, stat_id,
+			DMod.ContentType.ITEMS, id
+		)
+
+# Helper to remove duplicates while preserving order
+func _dedupe_array(arr: Array[String]) -> Array[String]:
+	var seen := {}
+	var result: Array[String] = []
+	for element in arr:
+		if not seen.has(element):
+			seen[element] = true
+			result.append(element)
+	return result
 
 
 # Collects all attributes defined in an item and updates the references to that attribute
@@ -711,7 +756,26 @@ func delete():
 		Gamedata.mods.remove_reference(DMod.ContentType.SKILLS, skill_id, DMod.ContentType.ITEMS, id)
 
 	if ranged and ranged.accuracy_stat != "":
-		Gamedata.mods.remove_reference(DMod.ContentType.STATS, ranged.accuracy_stat, DMod.ContentType.ITEMS, id)
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS,
+				ranged.accuracy_stat,
+				DMod.ContentType.ITEMS,
+				id
+		   )
+	if melee and melee.damage_stat != "":
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS,
+				melee.damage_stat,
+				DMod.ContentType.ITEMS,
+				id
+		   )
+	if melee and melee.accuracy_stat != "":
+			Gamedata.mods.remove_reference(
+				DMod.ContentType.STATS,
+				melee.accuracy_stat,
+				DMod.ContentType.ITEMS,
+				id
+		   )
 
 
 # Function to remove all instances of a skill from the item
