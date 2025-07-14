@@ -328,12 +328,28 @@
 
 ## Relevant Files
 - `Scripts/Helper/quest_helper.gd`
+- `Scripts/Mob/Mob.gd`
+- `Scripts/Mob/MobAttack.gd`
+- `Scripts/Mob/MobFollow.gd`
+- `Scripts/Mob/MobRangedAttack.gd`
+- `Scripts/EquippedItem.gd`
+- `Scripts/bullet.gd`
+- `Scripts/target_manager.gd`
+- `Scripts/Helper/SignalBroker/signal_broker.gd`
 
 ### Proposed New Files
 - `/Tests/Unit/test_quest_helper.gd` - Unit tests for quest mob kill tracking.
 
 ### Existing Files Modified
 - `Scripts/Helper/quest_helper.gd` - Track killer for mob kill quests.
+- `Scripts/Mob/Mob.gd` - Provide killer information when mobs die.
+- `Scripts/Mob/MobAttack.gd` - Include source in attack data.
+- `Scripts/Mob/MobFollow.gd` - Adjust mob_killed handler signature.
+- `Scripts/Mob/MobRangedAttack.gd` - Include source in attack data.
+- `Scripts/EquippedItem.gd` - Tag attacks with player as source.
+- `Scripts/bullet.gd` - Pass shooter as attack source.
+- `Scripts/target_manager.gd` - Adjust mob_killed handler signature.
+- `Scripts/Helper/SignalBroker/signal_broker.gd` - Emit killer with mob_killed.
 
 ### Files To Remove
 - *(none)*
@@ -342,6 +358,6 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 2.0 Include killer information in quest updates
+- [c] 2.0 Include killer information in quest updates
 
 *End of document*

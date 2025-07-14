@@ -33,6 +33,7 @@ var is_blinking: bool = false # flag to prevent multiple blink actions
 var original_material: StandardMaterial3D # To return to normal after blinking
 var state_machine: StateMachine
 var terminated: bool = false
+var last_attacker: Node = null
 
 
 # Previously the Mob node was configured in the node editor
@@ -182,43 +183,44 @@ func update_navigation_agent_map(chunk_position: Vector2):
 #   "damage": 10.0  # Direct damage amount (optional)
 # }
 func get_hit(attack_data: Dictionary):
+	last_attacker = attack_data.get("source", null)
 	var attack: Dictionary = attack_data.get("attack", {})
 	var rattack: RAttack = null
 	
-	if attack.has("id"):
-		rattack = Runtimedata.attacks.by_id(attack["id"])
+		if attack.has("id"):
+				rattack = Runtimedata.attacks.by_id(attack["id"])
 
-	if not rattack and not attack_data.has("damage"):
-		print_debug("Invalid attack ID:", attack.get("id", ""))
-		return
+		if not rattack and not attack_data.has("damage"):
+				print_debug("Invalid attack ID:", attack.get("id", ""))
+				return
 	
-	# Determine damage based on priority:
-	var damage: float = 0.0
-	if rattack:
-		# 1. Use attack's calculated damage
-		var attack_effects: Dictionary = rattack.get_scaled_attribute_damage(attack.get("damage_multiplier", 1.0))
-		damage = attack_effects.get("damage", 0)
-	elif attack_data.has("damage"):
-		# 2. Use the direct "damage" value if no attack is present
-		damage = attack_data["damage"]
+		# Determine damage based on priority:
+		var damage: float = 0.0
+		if rattack:
+				# 1. Use attack's calculated damage
+				var attack_effects: Dictionary = rattack.get_scaled_attribute_damage(attack.get("damage_multiplier", 1.0))
+				damage = attack_effects.get("damage", 0)
+		elif attack_data.has("damage"):
+				# 2. Use the direct "damage" value if no attack is present
+				damage = attack_data["damage"]
 
-	# Extract hit_chance
-	var hit_chance: float = attack_data.get("hit_chance", 100.0)
+		# Extract hit_chance
+		var hit_chance: float = attack_data.get("hit_chance", 100.0)
 
-	# Calculate actual hit chance (adjust for mob stats if needed)
-	var actual_hit_chance = hit_chance + 0.0  # Adjust hit chance modifier if needed
+		# Calculate actual hit chance (adjust for mob stats if needed)
+		var actual_hit_chance = hit_chance + 0.0  # Adjust hit chance modifier if needed
 
-	# Determine if the attack hits
-	if randf() <= actual_hit_chance: # / 100.0:
+		# Determine if the attack hits
+		if randf() <= actual_hit_chance: # / 100.0:
 		# Attack hits
 		current_health -= damage
-		if current_health <= 0:
-			_die()
+			if current_health <= 0:
+				_die(last_attacker)
 		else:
 			if not is_blinking:
 				start_blinking()
-	else:
-		# Attack misses, show indicator
+		else:
+			# Attack misses, show indicator
 		show_miss_indicator()
 
 
@@ -243,8 +245,8 @@ func show_miss_indicator():
 
 
 # Handle the mob's death and trigger a corpse creation
-func _die():
-	Helper.signal_broker.mob_killed.emit(self)
+func _die(killer = null):
+        Helper.signal_broker.mob_killed.emit(self, killer)
 	add_corpse.call_deferred(global_position)
 	queue_free()
 
