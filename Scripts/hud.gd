@@ -36,18 +36,22 @@ func _process(_delta):
 	if is_progress_bar_active:
 		update_progress_bar()
 
-func _init():
-	# If some node wants to start a progressbar, they will emit a signal trough the broker
+func _ready():
+	# Connect gameplay signals when ready
 	Helper.signal_broker.hud_start_progressbar.connect(start_progress_bar)
-	# We let the signal broker forward the change in visibility so other nodes can respond
 	Helper.time_helper.minute_passed.connect(_on_minute_passed)
 	Helper.signal_broker.player_stamina_changed.connect(_on_player_update_stamina_hud)
 	Helper.signal_broker.player_ammo_changed.connect(_on_shooting_ammo_changed)
-
-func _ready():
 	var buildmenu = get_node(building_menu)
-	buildmenu.visibility_changed.connect(\
+	buildmenu.visibility_changed.connect(
 	Helper.signal_broker.on_build_menu_visibility_changed.bind(buildmenu))
+
+func _exit_tree() -> void:
+	Helper.signal_broker.hud_start_progressbar.disconnect(start_progress_bar)
+	Helper.time_helper.minute_passed.disconnect(_on_minute_passed)
+	Helper.signal_broker.player_stamina_changed.disconnect(_on_player_update_stamina_hud)
+	Helper.signal_broker.player_ammo_changed.disconnect(_on_shooting_ammo_changed)
+
 
 func update_progress_bar():
 	var progressBarNode = get_node(progress_bar_filling)

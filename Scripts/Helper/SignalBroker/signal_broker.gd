@@ -5,6 +5,10 @@ extends Node
 # It is indended to aid in communication between nodes during gameplay
 # The most significant use case is communication between game entities and the hud
 # This script is loaded by Helper.gd and is accessible as Helper.signal_broker
+# Gameplay scripts should connect to these signals in `_ready` using typed
+# connections and disconnect in `_exit_tree`.  Signals that must be scoped to a
+# specific key are provided as helper functions returning a `Signal` from
+# `SignalFactory`.
 
 # Signalled to the hud to start a progressbar
 signal hud_start_progressbar(time_left: float)

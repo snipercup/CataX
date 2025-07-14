@@ -5,11 +5,17 @@ extends Control
 @export var sub_label: Label
 
 
-func _init():
+func _ready():
 	Helper.signal_broker.initial_chunks_generated.connect(_on_initial_chunks_generated)
 	Helper.signal_broker.game_started.connect(update_sub_text.bind("Creating new save"))
 	Helper.signal_broker.game_loaded.connect(update_sub_text.bind("Loading saved game"))
 	Helper.signal_broker.player_spawned.connect(_on_player_spawned)
+
+func _exit_tree() -> void:
+	Helper.signal_broker.initial_chunks_generated.disconnect(_on_initial_chunks_generated)
+	Helper.signal_broker.game_started.disconnect(update_sub_text.bind("Creating new save"))
+	Helper.signal_broker.game_loaded.disconnect(update_sub_text.bind("Loading saved game"))
+	Helper.signal_broker.player_spawned.disconnect(_on_player_spawned)
 	
 func _on_initial_chunks_generated():
 	visible = false

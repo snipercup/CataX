@@ -6,9 +6,14 @@ extends Node
 # game state, merely mapping input to signal
 
 var is_inventory_open: bool
+var _inv_visibility_callable: Callable = func(inventory: Control):
+		is_inventory_open = inventory.visible
 
-func _init():
-	Helper.signal_broker.inventory_window_visibility_changed.connect(func(inventory: Control): is_inventory_open = inventory.visible)
+func _ready():
+	Helper.signal_broker.inventory_window_visibility_changed.connect(_inv_visibility_callable)
+
+func _exit_tree() -> void:
+	Helper.signal_broker.inventory_window_visibility_changed.disconnect(_inv_visibility_callable)
 
 func _process(_delta: float) -> void:
 	process_mouse_press()
