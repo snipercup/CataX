@@ -26,6 +26,7 @@ signal construction_clicked(data: Dictionary)
 func _ready():
 	# Connect the signal for construction clicks to the build manager
 	construction_clicked.connect(buildmanager.on_construction_clicked)
+	visibility_changed.connect(_on_visibility_changed)
 
 
 func _process(_delta):
@@ -172,6 +173,8 @@ func set_mesh_rotation(new_rotation: int) -> void:
 	# Update the current rotation
 	current_rotation = new_rotation % 360
 
+	print_debug("ConstructionGhost rotation: ", current_rotation)
+
 	# Update the ghost's rotation
 	rotation_degrees.y = current_rotation
 
@@ -194,7 +197,11 @@ func _on_construction_ghost_area_3d_body_entered(body: Node3D) -> void:
 func _on_construction_ghost_area_3d_body_exited(body: Node3D) -> void:
 	# Check if no other obstacles remain in the area
 	if construction_ghost_area_3d.get_overlapping_bodies().size() == 0:
-		has_obstacle = false
+	has_obstacle = false
+
+# Logs visibility changes
+func _on_visibility_changed() -> void:
+	print_debug("ConstructionGhost visibility: ", visible)
 
 func reset_to_default():
 	reset_rotation_to_default()

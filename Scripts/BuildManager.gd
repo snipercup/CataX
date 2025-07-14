@@ -41,6 +41,9 @@ func _on_hud_construction_chosen(type: String, choice: String):
 func start_building():
 	is_building = true
 	General.is_allowed_to_shoot = false
+	construction_ghost.visible = true
+	construction_ghost.reset_to_default()
+	print_debug("Start building: type = ", construction_type, ", choice = ", construction_choice)
 
 
 # Connects from the ConstructionGhost.gd script. 
@@ -108,16 +111,25 @@ func calculate_local_position(global_pos: Vector3, chunk_pos: Vector3) -> Vector
 	return Vector3(local_x, global_pos.y, local_z)
 
 func _on_build_menu_visibility_change(buildmenu):
-	if !is_building:
-		return
-	# Update construction ghost visibility based on build menu visibility
-	set_building_state(buildmenu.is_visible())
+	print_debug("Build menu visibility changed: ", buildmenu.is_visible())
+	if buildmenu.is_visible():
+		if !is_building:
+			var selection: Dictionary = buildmenu.get_selected_type_and_choice()
+			construction_type = selection.type
+			construction_choice = selection.choice
+			update_construction_ghost()
+			start_building()
+		else:
+			set_building_state(true)
+	else:
+		set_building_state(false)
 
 func set_building_state(isvisible: bool):
 	construction_ghost.visible = isvisible
 	is_building = isvisible
 	if not isvisible:
-		General.is_allowed_to_shoot = true
+	General.is_allowed_to_shoot = true
+	print_debug("Set building state: ", isvisible)
 
 
 # Updates the material of the construction ghost based on the construction type and choice
