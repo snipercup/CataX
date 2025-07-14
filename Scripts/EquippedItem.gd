@@ -405,13 +405,12 @@ func _calculate_melee_attack_data() -> Dictionary:
 		# Add accuracy bonus based on selected stat OR dexterity if nothing is configured for the item
 		var accuracy_stat_id = melee_properties.get("accuracy_stat", "dexterity")
 		accuracy_stat_bonus = player.get_stat(accuracy_stat_id)
-		var hit_chance = 0.65 + ((skill_level + accuracy_stat_bonus) / 100.0) * (1.0 - 0.65)
-
+	var hit_chance = 0.65 + ((skill_level + accuracy_stat_bonus) / 100.0) * (1.0 - 0.65)
 	return {"damage": damage, "hit_chance": hit_chance, "source": player}
 
 # Calculate ranged attack damage and hit chance
 # TODO: Have variation in damage, maybe by gunn or projectile
-	func _calculate_ranged_attack_data() -> Dictionary:
+func _calculate_ranged_attack_data() -> Dictionary:
 	return {"damage": 10, "hit_chance": 100, "source": player}
 
 
