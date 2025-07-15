@@ -22,11 +22,9 @@ func _input(event):
 		if(fov < 75):
 			fov += 5
 
-# When the inventory is opened, stop zooming
 # Stop zooming when the inventory becomes visible
 func _on_inventory_visibility_change(inventory_window):
 	can_zoom = not inventory_window.visible
-
 
 func _process(_delta):
 	# Correct for the camera offset (since the camera is a child of the player)
