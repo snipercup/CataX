@@ -84,10 +84,10 @@ func attack():
 func _apply_attack_to_entity(chosen_attack: Dictionary) -> void:
 	if spotted_target and spotted_target.has_method("get_hit"):
 		var attack_data: Dictionary = {
-		"attack": chosen_attack,
-		"mobposition": mob.global_position,
-		"hit_chance": 100, # Only used when attacking another mob, not the player
-		"source": mob
+			"attack": chosen_attack,
+			"mobposition": mob.global_position,
+			"hit_chance": 100, # Only used when attacking another mob, not the player
+			"source": mob
 		}
 		spotted_target.get_hit(attack_data)
 

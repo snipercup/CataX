@@ -54,7 +54,6 @@ func _on_Projectile_body_entered(body: Node):
 		attack["source"] = owner_entity
 		body.get_hit(attack)
 	queue_free()  # Destroy the projectile upon collision
-	
 
 func _on_body_shape_entered(_body_rid: RID, body: Node, _body_shape_index: int, _local_shape_index: int):
 	if body and body == owner_entity:
