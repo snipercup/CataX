@@ -29,13 +29,13 @@ func _create_recipe(level: int, bonus_stat: String = "") -> RItem.CraftRecipe:
 	return RItem.CraftRecipe.new(data)
 
 func test_has_required_skill_without_bonus_stat():
-	player.skills["fabrication"]["level"] = 2
+	player.skills["fabrication"] = {"level": 2, "xp": 0}
 	player.set_stat("strength", 5)
 	var recipe := _create_recipe(5)
 	assert_false(CraftingRecipesManager.has_required_skill(recipe), "Crafting should fail without bonus stat")
 
 func test_has_required_skill_with_bonus_stat():
-	player.skills["fabrication"]["level"] = 2
+	player.skills["fabrication"] = {"level": 2, "xp": 0}
 	player.set_stat("strength", 5)
 	var recipe := _create_recipe(5, "strength")
 	assert_true(CraftingRecipesManager.has_required_skill(recipe), "Crafting should succeed with bonus stat")
