@@ -56,5 +56,6 @@
 - [x] 3.0 Extend `Scripts/Gamedata/DItem.gd` and `Scripts/Runtimedata/RItem.gd` craft structures to store the stat reference.
 - [x] 4.0 Modify `Scripts/crafting_recipes_manager.gd` to include the selected stat in skill requirement checks.
 - [x] 5.0 Add unit tests verifying stat bonus application and default behavior when no stat is set.
+- [x] 6.0 Add missing unit tests verifying skill bonus stat functionality.
 
 *End of document*
