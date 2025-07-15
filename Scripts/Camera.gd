@@ -22,10 +22,9 @@ func _input(event):
 		if(fov < 75):
 			fov += 5
 
-# When the inventory is opened, stop zooming
-func _on_inventory_visibility_change(inventoryWindow):
-	can_zoom = not inventoryWindow.visible
-
+# Stop zooming when the inventory becomes visible
+func _on_inventory_visibility_change(inventory_window):
+	can_zoom = not inventory_window.visible
 
 func _process(_delta):
 	# Correct for the camera offset (since the camera is a child of the player)
@@ -50,19 +49,3 @@ func _process(_delta):
 		# Adjust near value smoothly based on y_offset from snapped level
 		near = BUFF + DEFAULT_NEAR + y_offset#(y_offset / Y_THRESHOLD)
 	
-	# INFO: Below is commented out for future debugging purposes
-	# Result calculation to compensate for y_offset and near adjustment
-	#var result = (global_position.y - player.global_position.y - near) + y_offset + 0.6
-
-	# Debug info to verify values
-	#print(
-		#"Player Y: %.3f, Camera Y: %.3f, Near: %.3f, Y Offset: %.3f, Snapped Y Level: %.3f, Corrected Position: %.3f, Result: %.3f" % [
-			#player.global_position.y, 
-			#global_position.y, 
-			#near, 
-			#y_offset,
-			#snapped_y_level,
-			#corrected_position,
-			#result
-		#]
-	#)

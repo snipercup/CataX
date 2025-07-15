@@ -61,9 +61,16 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 4.0 Standardize comments and naming across selected scripts
-    - [ ] 4.1 Review variable and method names for consistency
-    - [ ] 4.2 Update comments to follow Godot guidelines
-    - [ ] 4.3 Remove outdated or unused code
+- [x] 4.0 Standardize comments and naming across selected scripts
+    - [x] 4.1 Review variable and method names for consistency
+    - [x] 4.2 Update comments to follow Godot guidelines
+    - [x] 4.3 Remove outdated or unused code
+
+## Relevant Files
+### Existing Files Modified
+- `Scripts/Camera.gd` - Removed debug code and updated parameter naming.
+- `front_light.gd` - Clarified `_process` signature.
+- `test_environment.gd` - Implemented basic pause menu handling.
+- `entity_manager.gd` - Improved signal callback naming.
 
 *End of document*
