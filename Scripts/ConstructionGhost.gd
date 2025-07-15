@@ -197,7 +197,7 @@ func _on_construction_ghost_area_3d_body_entered(body: Node3D) -> void:
 func _on_construction_ghost_area_3d_body_exited(body: Node3D) -> void:
 	# Check if no other obstacles remain in the area
 	if construction_ghost_area_3d.get_overlapping_bodies().size() == 0:
-	has_obstacle = false
+		has_obstacle = false
 
 # Logs visibility changes
 func _on_visibility_changed() -> void:

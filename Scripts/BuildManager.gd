@@ -128,7 +128,7 @@ func set_building_state(isvisible: bool):
 	construction_ghost.visible = isvisible
 	is_building = isvisible
 	if not isvisible:
-	General.is_allowed_to_shoot = true
+		General.is_allowed_to_shoot = true
 	print_debug("Set building state: ", isvisible)
 
 
