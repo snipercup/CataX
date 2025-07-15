@@ -84,9 +84,10 @@ func attack():
 func _apply_attack_to_entity(chosen_attack: Dictionary) -> void:
 	if spotted_target and spotted_target.has_method("get_hit"):
 		var attack_data: Dictionary = {
-			"attack": chosen_attack,
-			"mobposition": mob.global_position,
-			"hit_chance": 100 # Only used when attacking another mob, not the player
+		"attack": chosen_attack,
+		"mobposition": mob.global_position,
+		"hit_chance": 100, # Only used when attacking another mob, not the player
+		"source": mob
 		}
 		spotted_target.get_hit(attack_data)
 
@@ -107,7 +108,7 @@ func _on_attack_cooldown_timeout():
 
 # Handle the mob_killed signal
 # If the killed mob is the current `spotted_target`, reset the target
-func _on_mob_killed(mob_instance: Mob) -> void:
+func _on_mob_killed(mob_instance: Mob, _killer) -> void:
 	if spotted_target and spotted_target == mob_instance:
 		# Undo any actions related to the spotted target
 		stop_attacking()

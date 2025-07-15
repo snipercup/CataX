@@ -92,7 +92,8 @@ func create_attack_data(spawn_position: Vector3) -> Dictionary:
 	if not chosen_attack:
 		return {}
 	return {
-		"attack": chosen_attack,
-		"mobposition": spawn_position,
-		"hit_chance": 100
-	}
+			"attack": chosen_attack,
+			"mobposition": spawn_position,
+			"hit_chance": 100,
+			"source": mob
+		}
