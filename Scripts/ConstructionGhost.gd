@@ -21,11 +21,13 @@ var position_offset: Vector3 = Vector3.ZERO
 var has_obstacle: bool = false # Tracks whether there is an obstacle
 var current_rotation: int = 0
 
+# Emitted when the player clicks and there are no obstacles for the construction
 signal construction_clicked(data: Dictionary)
 
 func _ready():
 	# Connect the signal for construction clicks to the build manager
 	construction_clicked.connect(buildmanager.on_construction_clicked)
+	visibility_changed.connect(_on_visibility_changed)
 
 
 func _process(_delta):
@@ -195,6 +197,10 @@ func _on_construction_ghost_area_3d_body_exited(body: Node3D) -> void:
 	# Check if no other obstacles remain in the area
 	if construction_ghost_area_3d.get_overlapping_bodies().size() == 0:
 		has_obstacle = false
+
+# Logs visibility changes
+func _on_visibility_changed() -> void:
+	print_debug("ConstructionGhost visibility: ", visible)
 
 func reset_to_default():
 	reset_rotation_to_default()
