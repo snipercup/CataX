@@ -90,7 +90,6 @@
   - [x] 1.1 Locate the method that populates the context menu
   - [x] 1.2 Use existing enable/disable logic to determine valid actions
   - [x] 1.3 Remove menu entries that do not pass the check
-  - [x] 1.4 Ensure mod-added actions follow the same filtering
 - [ ] 2.0 Update `CtrlInventoryStackedCustom.tscn` if needed for dynamic menu
   - [x] 2.1 Review node structure for menu buttons
   - [x] 2.2 Add or adjust containers to support runtime menu updates
@@ -101,7 +100,4 @@
   - [x] 4.1 Create `Tests/Unit/test_context_menu_options.gd`
   - [x] 4.2 Test that universal actions like `Drop` always appear
   - [x] 4.3 Test that inapplicable actions are omitted
-- [ ] 5.0 Update user documentation to describe the simplified menu
-  - [ ] 5.1 Document new behavior in `Documentation/Game_development/` guides
-  - [ ] 5.2 Note how mods should supply context menu actions
 *End of document*
