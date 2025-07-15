@@ -42,7 +42,6 @@ func start_building():
 	is_building = true
 	General.is_allowed_to_shoot = false
 	construction_ghost.visible = true
-	construction_ghost.reset_to_default()
 	print_debug("Start building: type = ", construction_type, ", choice = ", construction_choice)
 
 

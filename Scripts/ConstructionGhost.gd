@@ -21,6 +21,7 @@ var position_offset: Vector3 = Vector3.ZERO
 var has_obstacle: bool = false # Tracks whether there is an obstacle
 var current_rotation: int = 0
 
+# Emitted when the player clicks and there are no obstacles for the construction
 signal construction_clicked(data: Dictionary)
 
 func _ready():
@@ -172,8 +173,6 @@ func reset_position_offset_to_default() -> void:
 func set_mesh_rotation(new_rotation: int) -> void:
 	# Update the current rotation
 	current_rotation = new_rotation % 360
-
-	print_debug("ConstructionGhost rotation: ", current_rotation)
 
 	# Update the ghost's rotation
 	rotation_degrees.y = current_rotation
