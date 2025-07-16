@@ -76,7 +76,7 @@ func setup_inventory_controls():
 	initialize_inventory_control(proximity_inventory_control, proximity_inventory)
 
 func initialize_inventory_control(control: Control, inv: InventoryStacked):
-	control.my_inventory = inv
+	control.set_inventory(inv)
 	control.initialize_list()
 	control.mouse_entered_item.connect(_on_inventory_item_mouse_entered)
 	control.mouse_exited_item.connect(_on_inventory_item_mouse_exited)
