@@ -33,6 +33,7 @@ var is_blinking: bool = false # flag to prevent multiple blink actions
 var original_material: StandardMaterial3D # To return to normal after blinking
 var state_machine: StateMachine
 var terminated: bool = false
+var last_attacker: Node = null
 
 
 # Previously the Mob node was configured in the node editor
@@ -140,8 +141,6 @@ func _ready():
 	update_navigation_agent_map(current_chunk)
 	Helper.signal_broker.mob_spawned.emit(self)
 
-
-
 func _physics_process(_delta):
 	if global_transform.origin != last_position:
 		last_position = global_transform.origin
@@ -182,6 +181,7 @@ func update_navigation_agent_map(chunk_position: Vector2):
 #   "damage": 10.0  # Direct damage amount (optional)
 # }
 func get_hit(attack_data: Dictionary):
+	last_attacker = attack_data.get("source", null)
 	var attack: Dictionary = attack_data.get("attack", {})
 	var rattack: RAttack = null
 	
@@ -191,7 +191,7 @@ func get_hit(attack_data: Dictionary):
 	if not rattack and not attack_data.has("damage"):
 		print_debug("Invalid attack ID:", attack.get("id", ""))
 		return
-	
+
 	# Determine damage based on priority:
 	var damage: float = 0.0
 	if rattack:
@@ -213,7 +213,7 @@ func get_hit(attack_data: Dictionary):
 		# Attack hits
 		current_health -= damage
 		if current_health <= 0:
-			_die()
+			_die(last_attacker)
 		else:
 			if not is_blinking:
 				start_blinking()
@@ -243,8 +243,8 @@ func show_miss_indicator():
 
 
 # Handle the mob's death and trigger a corpse creation
-func _die():
-	Helper.signal_broker.mob_killed.emit(self)
+func _die(killer = null):
+	Helper.signal_broker.mob_killed.emit(self, killer)
 	add_corpse.call_deferred(global_position)
 	queue_free()
 
