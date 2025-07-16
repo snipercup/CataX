@@ -42,7 +42,4 @@
   - [ ] 4.1 Write tests rejecting non-magazine items using the new editor.
   - [ ] 4.2 Write tests for saving and loading magazines as a string.
   - [ ] 4.3 Test removing magazines from the list updates the stored data.
-- [ ] 5.0 Update documentation to cover the new magazine selection workflow.
-  - [ ] 5.1 Document drag-and-drop process in `Documentation/Game_development`.
-  - [ ] 5.2 Include screenshots of the updated editor UI.
 *End of document*
