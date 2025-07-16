@@ -346,6 +346,7 @@ Main Gameplay Logic Refactoring
   - [x] 4.1 Extend `player_input_signal_broker.gd` with signals for run toggle and interact.
   - [x] 4.2 Move `_input` handling from `player.gd` into `input_manager.gd`.
   - [x] 4.3 Connect the new signals in `player.gd` and other relevant scripts.
-  - [ ] 4.4 Remove direct `Input` checks from gameplay scripts.
+  - [x] 4.4 Remove direct `Input` checks from gameplay scripts.
+  - [ ] Follow-up: verify remaining scripts use `PlayerInputSignalBroker` for input handling.
 
 *End of document*

@@ -6,6 +6,7 @@ extends Node
 # game state, merely mapping input to signal
 
 var is_inventory_open: bool
+var last_move_vector: Vector2 = Vector2.ZERO
 
 
 func _init():
@@ -16,6 +17,10 @@ func _init():
 
 func _process(_delta: float) -> void:
 	process_mouse_press()
+	var new_vec: Vector2 = Input.get_vector("left", "right", "up", "down")
+	if new_vec != last_move_vector:
+		last_move_vector = new_vec
+		PlayerInputSignalBroker.movement_vector().emit(new_vec)
 
 
 func _input(event: InputEvent) -> void:
