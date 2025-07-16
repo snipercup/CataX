@@ -38,7 +38,7 @@ AppConfig="*res://addons/maaacks_options_menus/base/scenes/autoloads/app_config.
 
 [display]
 
-mouse_cursor/custom_image="uid://bomcubohj8q5k"
+mouse_cursor/custom_image="uid://b4d5nmc2jtjmw"
 mouse_cursor/custom_image_hotspot=Vector2(64, 64)
 
 [editor]
