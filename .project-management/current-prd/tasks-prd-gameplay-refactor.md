@@ -331,8 +331,8 @@ Main Gameplay Logic Refactoring
 
 
 ### Existing Files Modified
-- `Scripts/player.gd` - Delegate movement to helper classes.
-- `Scripts/input_manager.gd` - Emit signals for run/interact and remove direct input checks.
+- `Scripts/player.gd` - Connect to `InputManager` signals and remove direct input handling.
+- `Scripts/input_manager.gd` - Emit signals for run toggle and interact.
 
 ### Files To Remove
 - None
@@ -341,10 +341,10 @@ Main Gameplay Logic Refactoring
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 4.0 Decouple input processing
-  - [ ] 4.1 Extend `input_manager.gd` with signals for run toggle and interact.
-  - [ ] 4.2 Move `_input` handling from `player.gd` into `input_manager.gd`.
-  - [ ] 4.3 Connect the new signals in `player.gd` and other relevant scripts.
+- [c] 4.0 Decouple input processing
+  - [x] 4.1 Extend `input_manager.gd` with signals for run toggle and interact.
+  - [x] 4.2 Move `_input` handling from `player.gd` into `input_manager.gd`.
+  - [x] 4.3 Connect the new signals in `player.gd` and other relevant scripts.
   - [ ] 4.4 Remove direct `Input` checks from gameplay scripts.
 
 *End of document*
