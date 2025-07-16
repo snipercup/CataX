@@ -58,16 +58,7 @@ signal unload_item(items: Array[InventoryItem])
 signal drop_items(items: Array[InventoryItem])
 
 # Mod hooks for extending the context menu
-var extra_context_actions: Array[Dictionary] = []
 var _current_context_actions: Array[Dictionary] = []
-
-# Allows mods to register additional context menu actions
-func register_context_menu_action(text: String, check: Callable, callback: Callable) -> void:
-	extra_context_actions.append({
-		"text": text,
-		"check": check,
-		"callback": callback
-	})
 
 # Reload sound for pistol
 @export var reload_audio_player : AudioStreamPlayer3D
@@ -134,13 +125,6 @@ func _build_context_menu(items: Array[InventoryItem]) -> void:
 
 	_add_context_action("Drop", Callable(self, "_emit_drop").bind(items))
 
-	for action in extra_context_actions:
-		var valid := true
-		if action.has("check") and action["check"] != null:
-			valid = action["check"].call(items)
-		if valid:
-			_add_context_action(action["text"], action["callback"].bind(items))
-
 
 func _is_reloadable(item: InventoryItem) -> bool:
 	return item.get_property("Ranged") != null or item.get_property("Magazine") != null
@@ -149,7 +133,8 @@ func _can_unload(item: InventoryItem) -> bool:
 	return item.get_property("Ranged") != null
 
 func _is_equippable(item: InventoryItem) -> bool:
-	return item.get_property("Ranged") != null or item.get_property("Melee") != null or item.get_property("Magazine") != null or item.get_property("Tool") != null
+	#return item.get_property("Ranged") != null or item.get_property("Melee") != null or item.get_property("Magazine") != null or item.get_property("Tool") != null
+	return true # Any item is equipable. TODO: Exclude heavy and large items
 
 func _is_usable(item: InventoryItem) -> bool:
 	return item.get_property("Food") != null or item.get_property("Medical") != null
