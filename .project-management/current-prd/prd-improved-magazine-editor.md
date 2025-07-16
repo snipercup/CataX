@@ -23,11 +23,10 @@ The current Item Ranged Editor lists every magazine from all mods in a single sc
 - Changing the JSON schema for ranged items beyond the existing comma-separated list of magazine IDs.
 
 ## 6. Design Considerations (Optional)
-- Use a layout similar to the itemgroup editor's drag-and-drop list field for consistency.
-- The field should be collapsible if space becomes constrained, matching other editors.
+- Use a layout similar to the faction editor's drag-and-drop list field for consistency.
 
 ## 7. Technical Considerations (Optional)
-- Reuse the drag-and-drop logic from existing widgets (`DropEntityTextEdit` or `Editable_Item_List`) to enforce magazine validation.
+- Replicate the drag-and-drop logic from the factions editor (`hostile_grid_container` for example) to enforce magazine validation.
 - No new dependencies are required.
 
 ## 8. Success Metrics
