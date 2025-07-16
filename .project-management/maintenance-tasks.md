@@ -5,23 +5,52 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 
 
 ---
-
 ### Refactoring & Code Quality Improvement Goals
 
 - **Refactor for Readability & Maintainability**:  
-  Identify functions or modules (excluding the addons/ folder) that could benefit from refactoring, and propose tasks to improve readability, maintainability, or reduce code duplication.
+  Identify functions or modules (excluding the addons/ folder) that could benefit from refactoring and simplifying complex code. Find opportunities to improve readability, maintainability, or reduce code duplication.
 
 - **Error Handling Review**:  
   Review error handling patterns across the codebase and propose improvements to make error messages clearer, logging more consistent, or edge cases better covered.
-
-- **Main Gameplay Logic Refactoring**:  
-  Review the main gameplay logic in the `/scripts` directory and identify opportunities for refactoring or simplifying complex code.
 
 - **Bug & Logic Error Identification**:  
   Analyze the codebase (excluding addons/) for bugs, logic errors, or overlooked edge cases, and create detailed tasks to fix them.
 
 - **Decouple Tightly Coupled Scripts & Scenes**:  
   Identify tightly coupled scripts and scenes and propose strategies to decouple them using best practices such as signals, event buses, or service locators.
+
+- **Content & Data Structure Review**:  
+  Review mod definitions (items, mobs, tiles, furniture) and data structures in `/mods` for consistency, completeness, and usability improvements.
+
+- **Test Coverage & QA Enhancement**:  
+  Examine test coverage and propose test cases for weak or untested systems, including mod validation. Use GUT (Godot Unit Test).
+
+- **Performance Optimization**:  
+  Identify performance-critical paths (rendering, AI, loops) and propose tasks to improve framerate or resource usage.
+
+- **UI/UX Improvement Proposals**:  
+  Suggest improvements to the game’s UI layout, editor usability, and control responsiveness based on current implementations.
+
+- **Gameplay Balance Assessment**:  
+  Evaluate balance of mechanics such as progression, loot, and combat, and suggest improvements or rebalancing tasks.
+
+- **Dead Code & Folder Structure Cleanup**:  
+  Detect unused signals, variables, files, and poorly organized folders, and find opportunities to clean or reorganize them.
+
+- **Modding Tools & Editor Enhancements**:  
+  Review the content editor and modding systems, proposing quality-of-life improvements, validations, or features.
+
+- **Procedural Generation Improvements**:  
+  Evaluate procedural systems and suggest ways to increase variety, coherence, or modularity.
+
+- **AI Behavior Improvements**:  
+  Review AI behaviors and identify ways to improve logic, pathfinding, or adaptability.
+
+- **Lore & Design Implementation Review**:  
+  Cross-check current implementation against design docs and lore, and suggest content additions or fixes.
+
+- **Typo & Comment Discrepancy Detection**:  
+  Propose fixes for typos in variable names, labels, comments, or documentation entries. Identify missing or unclear documentation in code and project files, and propose consistent naming conventions.
 
 ---
 
