@@ -5,7 +5,7 @@ extends Control
 
 # Ranged form elements
 @export var UsedAmmoTextEdit: TextEdit = null
-@export var UsedMagazineContainer: VBoxContainer = null  # This will hold the magazine selection CheckButtons
+@export var UsedMagazineGridContainer: GridContainer = null  # Holds magazine entries in a grid
 @export var RangeNumberBox: SpinBox = null
 @export var SpreadNumberBox: SpinBox = null
 @export var SwayNumberBox: SpinBox = null
@@ -25,29 +25,38 @@ var ditem: DItem = null:
 
 
 func _ready():
-	set_drop_functions()
-	# Assume Gamedata.get_items_by_type() is implemented as discussed previously
-	var all_mods: Dictionary = Gamedata.mods.get_all()
-	var magazines: Array = []
-	for mod: DMod in all_mods.values(): # Add up all magazines from all mods
-		magazines = Helper.json_helper.merge_unique(mod.items.get_items_by_type("magazine"), magazines)
-	initialize_magazine_selection(magazines)
+       set_drop_functions()
+       if UsedMagazineGridContainer:
+               UsedMagazineGridContainer.set_drag_forwarding(Callable(), _can_magazine_drop, _magazine_drop)
 
 
-func initialize_magazine_selection(magazines: Array):
-	for magazine in magazines:
-		var magazine_button = CheckBox.new()
-		magazine_button.text = magazine["id"]
-		magazine_button.toggle_mode = true
-		UsedMagazineContainer.add_child(magazine_button)
+func _add_magazine_entry(magazine_id: String) -> void:
+       var item_sprite: Texture = Gamedata.mods.get_content_by_id(DMod.ContentType.ITEMS, magazine_id).sprite
+       var icon = TextureRect.new()
+       icon.texture = item_sprite
+       icon.custom_minimum_size = Vector2(32, 32)
+
+       var label = Label.new()
+       label.text = magazine_id
+
+       var delete_button = Button.new()
+       delete_button.text = "X"
+       delete_button.button_up.connect(_on_delete_magazine_button_pressed.bind([icon, label, delete_button]))
+
+       UsedMagazineGridContainer.add_child(icon)
+       UsedMagazineGridContainer.add_child(label)
+       UsedMagazineGridContainer.add_child(delete_button)
 
 
 # Returns the properties of the ranged tab in the item editor
 func save_properties() -> void:
-	var selected_magazines = []
-	for button in UsedMagazineContainer.get_children():
-		if button is CheckBox and button.button_pressed:
-			selected_magazines.append(button.text)
+       var selected_magazines: Array[String] = []
+       var num_columns: int = UsedMagazineGridContainer.columns
+       var children := UsedMagazineGridContainer.get_children()
+       for i in range(0, children.size(), num_columns):
+               var label := children[i + 1] as Label
+               if label:
+                       selected_magazines.append(label.text)
 	
 	ditem.ranged.used_ammo = UsedAmmoTextEdit.text
 	ditem.ranged.used_magazine = ",".join(selected_magazines)  # Join the selected magazines by commas
@@ -75,11 +84,12 @@ func load_properties() -> void:
 		return
 	if ditem.ranged.used_ammo != "":
 		UsedAmmoTextEdit.text = ditem.ranged.used_ammo
-	if ditem.ranged.used_magazine != "":
-		var used_magazines = ditem.ranged.used_magazine.split(",")
-		for button in UsedMagazineContainer.get_children():
-			if button is CheckBox:
-				button.button_pressed = button.text in used_magazines
+       if UsedMagazineGridContainer:
+               Helper.free_all_children(UsedMagazineGridContainer)
+       if ditem.ranged.used_magazine != "":
+               var used_magazines = ditem.ranged.used_magazine.split(",")
+               for mag_id in used_magazines:
+                       _add_magazine_entry(mag_id)
 	RangeNumberBox.value = ditem.ranged.firing_range
 	SpreadNumberBox.value = ditem.ranged.spread
 	SwayNumberBox.value = ditem.ranged.sway
@@ -131,9 +141,38 @@ func stat_drop(dropped_data: Dictionary, texteditcontrol: HBoxContainer) -> void
 		print_debug("Dropped data does not contain an 'id' key.")
 
 func can_stat_drop(dropped_data: Dictionary):
-	if not dropped_data or not dropped_data.has("id"):
-		return false
-	return Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(dropped_data["id"])
+       if not dropped_data or not dropped_data.has("id"):
+               return false
+       return Gamedata.mods.by_id(dropped_data["mod_id"]).stats.has_id(dropped_data["id"])
+
+
+# -------------------- Magazine Drag and Drop --------------------
+func _can_magazine_drop(_newpos: Vector2, data: Dictionary) -> bool:
+       if not data or not data.has("id") or not data.has("mod_id"):
+               return false
+
+       if not Gamedata.mods.by_id(data["mod_id"]).items.has_id(data["id"]):
+               return false
+       var ditem: DItem = Gamedata.mods.by_id(data["mod_id"]).items.by_id(data["id"])
+       if ditem.magazine == null:
+               return false
+
+       for child in UsedMagazineGridContainer.get_children():
+               if child is Label and child.text == data["id"]:
+                       return false
+
+       return true
+
+
+func _magazine_drop(_newpos: Vector2, data: Dictionary) -> void:
+       if not _can_magazine_drop(_newpos, data):
+               return
+       _add_magazine_entry(data["id"])
+
+
+func _on_delete_magazine_button_pressed(controls: Array) -> void:
+       for c in controls:
+               c.queue_free()
 
 
 # Set the drop functions on the required skill and skill progression controls
