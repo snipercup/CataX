@@ -329,23 +329,10 @@ Main Gameplay Logic Refactoring
 ## Relevant Files
 - Reference *existing* project files here
 
-### Proposed New Files
-- `Scripts/player_movement.gd` - Encapsulates movement and stamina logic.
-- `/Tests/Unit/test_player_movement.gd` - Unit tests for `player_movement.gd`.
-- `Scripts/player_attributes.gd` - Handles player attribute management.
-- `/Tests/Unit/test_player_attributes.gd` - Unit tests for `player_attributes.gd`.
-- `Scripts/inventory_utils.gd` - Common inventory operations.
-- `/Tests/Unit/test_inventory_utils.gd` - Tests for `inventory_utils.gd`.
-- `Scripts/log_helper.gd` - Standardized logging functions.
-- `/Tests/Unit/test_log_helper.gd` - Unit tests for `log_helper.gd`.
 
 ### Existing Files Modified
-- `Scripts/player.gd` - Delegate movement and attributes to helper classes.
-- `Scripts/item_manager.gd` - Use inventory utilities for repeated logic.
-- `Scripts/general.gd` - Centralize logging and error messages.
+- `Scripts/player.gd` - Delegate movement to helper classes.
 - `Scripts/input_manager.gd` - Emit signals for run/interact and remove direct input checks.
-- `/Tests/Unit/test_player.gd` - Updated for refactored Player logic.
-- `/Tests/Unit/test_item_manager.gd` - Updated for inventory utilities.
 
 ### Files To Remove
 - None
@@ -354,30 +341,10 @@ Main Gameplay Logic Refactoring
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Refactor `Scripts/player.gd`
-  - [ ] 1.1 Identify movement, stamina, attribute, and combat sections in `player.gd`.
-  - [ ] 1.2 Create `player_movement.gd` with methods for movement and stamina handling.
-  - [ ] 1.3 Create `player_attributes.gd` managing attribute initialization and updates.
-  - [ ] 1.4 Update `player.gd` to use these helper classes and remove duplicated code.
-  - [ ] 1.5 Add comments and format with `gdformat`.
-- [ ] 2.0 Simplify inventory logic in `Scripts/item_manager.gd`
-  - [ ] 2.1 Audit repeated inventory operations and document common patterns.
-  - [ ] 2.2 Implement `inventory_utils.gd` with functions like `count_items` and `remove_resource`.
-  - [ ] 2.3 Replace existing logic in `item_manager.gd` with calls to `inventory_utils.gd`.
-  - [ ] 2.4 Add unit tests for `inventory_utils.gd`.
-- [ ] 3.0 Improve error handling and logging
-  - [ ] 3.1 Review debug messages across gameplay scripts and replace with `log_helper.gd` calls.
-  - [ ] 3.2 Ensure failure cases in item management and player actions emit consistent warnings/errors.
-  - [ ] 3.3 Add tests or manual checks validating error logging.
 - [ ] 4.0 Decouple input processing
   - [ ] 4.1 Extend `input_manager.gd` with signals for run toggle and interact.
   - [ ] 4.2 Move `_input` handling from `player.gd` into `input_manager.gd`.
   - [ ] 4.3 Connect the new signals in `player.gd` and other relevant scripts.
   - [ ] 4.4 Remove direct `Input` checks from gameplay scripts.
-- [ ] 5.0 Update and expand unit tests
-  - [ ] 5.1 Review existing tests and adjust for refactored code paths.
-  - [ ] 5.2 Add tests for `player_movement.gd`, `player_attributes.gd`, and `inventory_utils.gd`.
-  - [ ] 5.3 Cover error handling logic with new unit tests.
-  - [ ] 5.4 Run the test suite to ensure all tests pass.
 
 *End of document*
