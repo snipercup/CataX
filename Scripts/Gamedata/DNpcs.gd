@@ -22,10 +22,10 @@ func load_npcs_from_disk() -> void:
 	for json_file in json_files:
 		var npc_list: Array = Helper.json_helper.load_json_array_file(npc_path + json_file)
 		for npc_data in npc_list:
-		var npc: DNpc = DNpc.new(npc_data, self)
-		if npc.spriteid:
-		npc.sprite = sprites.get(npc.spriteid, null)
-		npcdict[npc.id] = npc
+			var npc: DNpc = DNpc.new(npc_data, self)
+			if npc.spriteid:
+				npc.sprite = sprites.get(npc.spriteid, null)
+			npcdict[npc.id] = npc
 
 func get_all() -> Dictionary:
 	return npcdict

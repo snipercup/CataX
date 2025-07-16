@@ -7,13 +7,13 @@ func _init(mod_list: Array[DMod]) -> void:
 	for mod in mod_list:
 		var dnpcs: DNpcs = mod.npcs
 		for dnpc_id: String in dnpcs.get_all().keys():
-		var dnpc: DNpc = dnpcs.by_id(dnpc_id)
-		var rnpc: RNpc
-		if not npcdict.has(dnpc_id):
-		rnpc = add_new(dnpc_id)
-		else:
-		rnpc = npcdict[dnpc_id]
-		rnpc.overwrite_from_dnpc(dnpc)
+			var dnpc: DNpc = dnpcs.by_id(dnpc_id)
+			var rnpc: RNpc
+			if not npcdict.has(dnpc_id):
+				rnpc = add_new(dnpc_id)
+			else:
+				rnpc = npcdict[dnpc_id]
+			rnpc.overwrite_from_dnpc(dnpc)
 
 func get_all() -> Dictionary:
 	return npcdict
