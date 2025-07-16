@@ -1,6 +1,6 @@
+This feature will introduce NPC's to the game. Below are the requirements:
 
-As of #807, intelligence counts a as a bonus for required skill on crafting items. I want to make this moddable.
-
-1. modify item crafting editor and create a field that will allow the user to enter a stat. This stat will give a bonus to the required skill of the craftable item. For example, if `fabrication` skill is 5 and `intelligence` is 5, the calculations will count it as though the `fabrication` skill is 10.
-2. Modify DItem and RItem to support this property. This includes making sure that the references are updated between stats and items
-3. Modify crafting recipes manager to read the stat bonus property instead of using the hardcoded `intelligence`
+1. The NPC is defined by json, just like a mob. We will need a Dnpc and Rnpc class to load the json
+8. Exclude any editors for the NPC's data for now, assume we edit the json manually
+9. Create a generic NPC called hank in the dimensionfall mod.
+10. The properties of the NPC are: name, description, sprite, id and possibly a few more to meet the requirements
