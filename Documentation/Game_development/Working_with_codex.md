@@ -36,6 +36,8 @@ else
   echo "❌ project.godot NOT found in current directory."
 fi
 
+# 6. Install gdtoolkit we need to do formatting later
+pip3 install "gdtoolkit==4.*"
 ```
 
 ## Preparation for your next feature
