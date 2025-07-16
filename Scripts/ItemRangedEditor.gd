@@ -25,14 +25,14 @@ var ditem: DItem = null:
 
 
 func _ready():
-        set_drop_functions()
+		set_drop_functions()
 
 
 
 
 # Returns the properties of the ranged tab in the item editor
 func save_properties() -> void:
-        var selected_magazines: Array = MagazinesEditable_Item_List.get_items()
+	var selected_magazines: Array = MagazinesEditable_Item_List.get_items()
 	
 	ditem.ranged.used_ammo = UsedAmmoTextEdit.text
 	ditem.ranged.used_magazine = ",".join(selected_magazines)  # Join the selected magazines by commas
@@ -60,11 +60,11 @@ func load_properties() -> void:
 		return
 	if ditem.ranged.used_ammo != "":
 		UsedAmmoTextEdit.text = ditem.ranged.used_ammo
-        if ditem.ranged.used_magazine != "":
-                var used_magazines = ditem.ranged.used_magazine.split(",")
-                MagazinesEditable_Item_List.set_items(used_magazines)
-        else:
-                MagazinesEditable_Item_List.clear_list()
+		if ditem.ranged.used_magazine != "":
+				var used_magazines = ditem.ranged.used_magazine.split(",")
+				MagazinesEditable_Item_List.set_items(used_magazines)
+		else:
+				MagazinesEditable_Item_List.clear_list()
 	RangeNumberBox.value = ditem.ranged.firing_range
 	SpreadNumberBox.value = ditem.ranged.spread
 	SwayNumberBox.value = ditem.ranged.sway
