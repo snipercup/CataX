@@ -41,6 +41,8 @@ var knockback_active: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 var knockback_distance_remaining: float = 0.0
 
+var move_input: Vector2 = Vector2.ZERO
+
 @export var sprite: Sprite3D
 @export var collision_detector: Area3D  # Used for detecting collision with furniture
 @export var testing: bool = false  # Used to test in the test_environment
@@ -97,6 +99,7 @@ func _connect_signals():
 	Helper.signal_broker.wearable_was_unequipped.connect(_on_wearable_was_unequipped)
 	PlayerInputSignalBroker.run_toggled().connect(_on_run_toggled)
 	PlayerInputSignalBroker.interact().connect(_on_interact)
+	PlayerInputSignalBroker.movement_vector().connect(_on_movement_vector)
 
 
 func connect_held_item_slots():
@@ -197,8 +200,7 @@ func _physics_process(delta: float) -> void:
 		# Player control movement
 		if not knockback_active:
 			var initial_stamina = current_stamina
-			var input_dir = Input.get_vector("left", "right", "up", "down")
-			var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+			var direction = (transform.basis * Vector3(move_input.x, 0, move_input.y)).normalized()
 			# Athletics skill level
 			var athletics_level = get_skill_level("athletics")
 
@@ -273,6 +275,10 @@ func _on_run_toggled(running: bool) -> void:
 func _on_interact() -> void:
 	print_block_id_under_player()
 	_check_for_interaction()
+
+
+func _on_movement_vector(vec: Vector2) -> void:
+	move_input = vec
 
 
 # Check if player can interact with an object
