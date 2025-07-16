@@ -57,6 +57,9 @@ signal reload_item(items: Array[InventoryItem])
 signal unload_item(items: Array[InventoryItem])
 signal drop_items(items: Array[InventoryItem])
 
+# Mod hooks for extending the context menu
+var _current_context_actions: Array[Dictionary] = []
+
 # Reload sound for pistol
 @export var reload_audio_player : AudioStreamPlayer3D
 
@@ -84,16 +87,16 @@ func _ready():
 
 # Function to show context menu at specified position
 func show_context_menu(myposition: Vector2):
-	_update_context_menu_options(get_selected_inventory_items())
+	_build_context_menu(get_selected_inventory_items())
 	# Create a small Rect2i around the position
 	# We need this because the popup function requires it
 	var popup_rect = Rect2i(int(myposition.x), int(myposition.y), 1, 1)
 	context_menu.popup(popup_rect)
 
-# Updates the enabled/disabled state of the context menu based on the selected items
-func _update_context_menu_options(items: Array[InventoryItem]) -> void:
-	for i in range(context_menu.get_item_count()):
-		context_menu.set_item_disabled(i, false)
+# Builds the context menu dynamically, removing invalid options
+func _build_context_menu(items: Array[InventoryItem]) -> void:
+	context_menu.clear()
+	_current_context_actions.clear()
 
 	var can_reload: bool = true
 	var can_unload: bool = true
@@ -110,11 +113,18 @@ func _update_context_menu_options(items: Array[InventoryItem]) -> void:
 		if not _is_usable(item):
 			can_use = false
 
-	context_menu.set_item_disabled(0, !can_equip)
-	context_menu.set_item_disabled(1, !can_equip)
-	context_menu.set_item_disabled(2, !can_reload)
-	context_menu.set_item_disabled(3, !can_unload)
-	context_menu.set_item_disabled(4, !can_use)
+	if can_equip:
+		_add_context_action("Equip (left)", Callable(self, "_emit_equip_left").bind(items))
+		_add_context_action("Equip (right)", Callable(self, "_emit_equip_right").bind(items))
+	if can_reload:
+		_add_context_action("Reload", Callable(self, "_emit_reload").bind(items))
+	if can_unload:
+		_add_context_action("Unload", Callable(self, "_emit_unload").bind(items))
+	if can_use:
+		_add_context_action("Use", Callable(self, "_emit_use").bind(items))
+
+	_add_context_action("Drop", Callable(self, "_emit_drop").bind(items))
+
 
 func _is_reloadable(item: InventoryItem) -> bool:
 	return item.get_property("Ranged") != null or item.get_property("Magazine") != null
@@ -123,7 +133,8 @@ func _can_unload(item: InventoryItem) -> bool:
 	return item.get_property("Ranged") != null
 
 func _is_equippable(item: InventoryItem) -> bool:
-	return item.get_property("Ranged") != null or item.get_property("Melee") != null or item.get_property("Magazine") != null or item.get_property("Tool") != null
+	#return item.get_property("Ranged") != null or item.get_property("Melee") != null or item.get_property("Magazine") != null or item.get_property("Tool") != null
+	return true # Any item is equipable. TODO: Exclude heavy and large items
 
 func _is_usable(item: InventoryItem) -> bool:
 	return item.get_property("Food") != null or item.get_property("Medical") != null
@@ -132,14 +143,34 @@ func _is_usable(item: InventoryItem) -> bool:
 # Handle context menu item selection
 # The actual items are defined in CtrlInventoryStackedCustom.tscn
 func _on_context_menu_item_selected(id):
-	var selected_inventory_items = get_selected_inventory_items()
-	match id:
-		0: equip_left.emit(selected_inventory_items)
-		1: equip_right.emit(selected_inventory_items)
-		2: reload_item.emit(selected_inventory_items)
-		3: unload_item.emit(selected_inventory_items)
-		4: Helper.signal_broker.items_were_used.emit(selected_inventory_items)
-		5: drop_items.emit(selected_inventory_items)
+	if id < 0 or id >= _current_context_actions.size():
+		return
+	var action = _current_context_actions[id]
+	if action.has("callback"):
+		action["callback"].call()
+
+func _add_context_action(text: String, callback: Callable) -> void:
+	var id := context_menu.get_item_count()
+	context_menu.add_item(text, id)
+	_current_context_actions.append({"callback": callback})
+
+func _emit_equip_left(items):
+	equip_left.emit(items)
+
+func _emit_equip_right(items):
+	equip_right.emit(items)
+
+func _emit_reload(items):
+	reload_item.emit(items)
+
+func _emit_unload(items):
+	unload_item.emit(items)
+
+func _emit_use(items):
+	Helper.signal_broker.items_were_used.emit(items)
+
+func _emit_drop(items):
+	drop_items.emit(items)
 
 
 func _disconnect_inventory_signals():
