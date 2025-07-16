@@ -44,6 +44,7 @@
 				"craft_amount": 1,
 				"craft_time": 10,
 				"flags": {
+					"hand_craftable": true,
 					"requires_light": true
 				},
 				"required_resources": [
@@ -56,6 +57,7 @@
 						"id": "bullet_9mm"
 					}
 				],
+				"skill_bonus_stat": "intelligence",
 				"skill_progression": {
 					"id": "fabrication",
 					"xp": 10.0

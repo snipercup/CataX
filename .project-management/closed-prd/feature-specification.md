@@ -1,15 +1,6 @@
-There is a bug described as Block build ghost doesn't show when the buildmanager is opened
 
-Steps to reproduce:
+As of #807, intelligence counts a as a bonus for required skill on crafting items. I want to make this moddable.
 
-- Load a game
-- Open build manager
-- Observe that concrete_block is observed, but no ghost is shown
-- change the selection in the build manager to countertop wood
-- observe the ghost is now visible
-- change back to concrete block
-- observe that the ghost is now visible
-
-The ghost should be visible at the moment that the build manager opens.
-
-This feature will find the cause of the bug and resolve it. In order to do this, we have to diagnose the issue. Find out where the construction ghost visibility is toggled. Check if the construction ghost has a visible texture when it is created. Come up with ways to solve the issue.
+1. modify item crafting editor and create a field that will allow the user to enter a stat. This stat will give a bonus to the required skill of the craftable item. For example, if `fabrication` skill is 5 and `intelligence` is 5, the calculations will count it as though the `fabrication` skill is 10.
+2. Modify DItem and RItem to support this property. This includes making sure that the references are updated between stats and items
+3. Modify crafting recipes manager to read the stat bonus property instead of using the hardcoded `intelligence`

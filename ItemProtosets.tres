@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemProtoset" load_steps=2 format=3 uid="uid://b1yiafqc7h2th"]
+[gd_resource type="Resource" script_class="ItemProtoset" load_steps=2 format=3 uid="uid://bavssyqwq564o"]
 
 [ext_resource type="Script" uid="uid://blcdlb80ku0ox" path="res://addons/gloot/core/item_protoset.gd" id="1_o35lu"]
 
@@ -47,6 +47,7 @@ json_data = "[
 				\"craft_amount\": 1,
 				\"craft_time\": 10,
 				\"flags\": {
+					\"hand_craftable\": true,
 					\"requires_light\": true
 				},
 				\"required_resources\": [
@@ -59,6 +60,7 @@ json_data = "[
 						\"id\": \"bullet_9mm\"
 					}
 				],
+				\"skill_bonus_stat\": \"intelligence\",
 				\"skill_progression\": {
 					\"id\": \"fabrication\",
 					\"xp\": 10.0
@@ -86,6 +88,7 @@ json_data = "[
 	},
 	{
 		\"Ranged\": {
+			\"accuracy_stat\": \"dexterity\",
 			\"firing_speed\": 0.4,
 			\"range\": 1000,
 			\"recoil\": 10,
@@ -2308,6 +2311,7 @@ json_data = "[
 				\"craft_amount\": 1,
 				\"craft_time\": 10,
 				\"flags\": {
+					\"hand_craftable\": true,
 					\"requires_light\": false
 				},
 				\"required_resources\": [
