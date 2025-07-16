@@ -170,12 +170,12 @@
 - `/Tests/Unit` - Contains unit tests for editor scripts.
 
 ### Proposed New Files
-*(none yet)*
+- `Tests/Unit/test_item_ranged_editor.gd` - Unit tests for magazine editor drag and drop and serialization.
 
 ### Existing Files Modified
 - `Scripts/ItemRangedEditor.gd`
 - `Scenes/ContentManager/Custom_Editors/ItemEditor/ItemRangedEditor.tscn`
-- Possibly new test file under `/Tests/Unit`.
+- `Tests/Unit/test_item_ranged_editor.gd`
 
 ### Notes
 - Follow Godot 4.4 best practices and use GDScript 4 syntax.
@@ -184,22 +184,22 @@
 
 
 ## Tasks
-- [ ] 1.0 Replace magazine list UI with a grid container similar to mobfactions_editor.
-  - [ ] 1.1 Replace existing list with a `GridContainer` inspired by `hostile_grid_container` in `mobfactions_editor.gd`.
-  - [ ] 1.2 Connect the container to `ItemRangedEditor.gd` using drag forwarding.
-  - [ ] 1.3 Remove the old scroll container node.
-- [ ] 2.0 Validate dropped items to ensure they are magazines.
-  - [ ] 2.1 Implement drop callback to check item type.
-  - [ ] 2.2 Show warning or ignore drops that are not magazines.
-- [ ] 3.0 Update save/load logic for comma-separated magazine IDs.
-  - [ ] 3.1 Convert list entries to comma-separated string on save.
-  - [ ] 3.2 Parse stored string into list when loading existing items.
-- [ ] 4.0 Provide ability to remove magazines from list via UI.
-  - [ ] 4.1 Provide delete buttons for each magazine entry similar to mobfactions_editor.
-  - [ ] 4.2 Update underlying data when entries are removed.
-- [ ] 5.0 Add unit tests for magazine drag-and-drop and serialization.
-  - [ ] 5.1 Test valid magazine drop adds ID to list.
-  - [ ] 5.2 Test invalid drop is ignored.
-  - [ ] 5.3 Test save and load preserve magazine IDs.
+- [c] 1.0 Replace magazine list UI with a grid container similar to mobfactions_editor.
+  - [c] 1.1 Replace existing list with a `GridContainer` inspired by `hostile_grid_container` in `mobfactions_editor.gd`.
+  - [c] 1.2 Connect the container to `ItemRangedEditor.gd` using drag forwarding.
+  - [c] 1.3 Remove the old scroll container node.
+- [c] 2.0 Validate dropped items to ensure they are magazines.
+  - [c] 2.1 Implement drop callback to check item type.
+  - [c] 2.2 Show warning or ignore drops that are not magazines.
+- [c] 3.0 Update save/load logic for comma-separated magazine IDs.
+  - [c] 3.1 Convert list entries to comma-separated string on save.
+  - [c] 3.2 Parse stored string into list when loading existing items.
+- [c] 4.0 Provide ability to remove magazines from list via UI.
+  - [c] 4.1 Provide delete buttons for each magazine entry similar to mobfactions_editor.
+  - [c] 4.2 Update underlying data when entries are removed.
+- [c] 5.0 Add unit tests for magazine drag-and-drop and serialization.
+  - [c] 5.1 Test valid magazine drop adds ID to list.
+  - [c] 5.2 Test invalid drop is ignored.
+  - [c] 5.3 Test save and load preserve magazine IDs.
 
 *End of document*
