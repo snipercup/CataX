@@ -5,7 +5,7 @@ extends Control
 
 # Ranged form elements
 @export var UsedAmmoTextEdit: TextEdit = null
-@export var UsedMagazineContainer: VBoxContainer = null  # This will hold the magazine selection CheckButtons
+@export var MagazinesEditable_Item_List: Control = null  # Drag-and-drop magazine list widget
 @export var RangeNumberBox: SpinBox = null
 @export var SpreadNumberBox: SpinBox = null
 @export var SwayNumberBox: SpinBox = null
@@ -25,29 +25,14 @@ var ditem: DItem = null:
 
 
 func _ready():
-	set_drop_functions()
-	# Assume Gamedata.get_items_by_type() is implemented as discussed previously
-	var all_mods: Dictionary = Gamedata.mods.get_all()
-	var magazines: Array = []
-	for mod: DMod in all_mods.values(): # Add up all magazines from all mods
-		magazines = Helper.json_helper.merge_unique(mod.items.get_items_by_type("magazine"), magazines)
-	initialize_magazine_selection(magazines)
+        set_drop_functions()
 
 
-func initialize_magazine_selection(magazines: Array):
-	for magazine in magazines:
-		var magazine_button = CheckBox.new()
-		magazine_button.text = magazine["id"]
-		magazine_button.toggle_mode = true
-		UsedMagazineContainer.add_child(magazine_button)
 
 
 # Returns the properties of the ranged tab in the item editor
 func save_properties() -> void:
-	var selected_magazines = []
-	for button in UsedMagazineContainer.get_children():
-		if button is CheckBox and button.button_pressed:
-			selected_magazines.append(button.text)
+        var selected_magazines: Array = MagazinesEditable_Item_List.get_items()
 	
 	ditem.ranged.used_ammo = UsedAmmoTextEdit.text
 	ditem.ranged.used_magazine = ",".join(selected_magazines)  # Join the selected magazines by commas
@@ -75,11 +60,11 @@ func load_properties() -> void:
 		return
 	if ditem.ranged.used_ammo != "":
 		UsedAmmoTextEdit.text = ditem.ranged.used_ammo
-	if ditem.ranged.used_magazine != "":
-		var used_magazines = ditem.ranged.used_magazine.split(",")
-		for button in UsedMagazineContainer.get_children():
-			if button is CheckBox:
-				button.button_pressed = button.text in used_magazines
+        if ditem.ranged.used_magazine != "":
+                var used_magazines = ditem.ranged.used_magazine.split(",")
+                MagazinesEditable_Item_List.set_items(used_magazines)
+        else:
+                MagazinesEditable_Item_List.clear_list()
 	RangeNumberBox.value = ditem.ranged.firing_range
 	SpreadNumberBox.value = ditem.ranged.spread
 	SwayNumberBox.value = ditem.ranged.sway

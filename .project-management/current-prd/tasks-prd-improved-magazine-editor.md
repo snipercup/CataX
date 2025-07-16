@@ -26,10 +26,10 @@
 - Field should be collapsible if space is limited.
 
 ## Tasks
-- [ ] 1.0 Replace magazine selection UI in `ItemRangedEditor.tscn` with `Editable_Item_List` to allow drag-and-drop magazines.
-  - [ ] 1.1 Locate current magazine list node and remove it.
-  - [ ] 1.2 Instance `Editable_Item_List` and position it in the editor UI.
-  - [ ] 1.3 Expose the new widget as a script variable for later access.
+- [c] 1.0 Replace magazine selection UI in `ItemRangedEditor.tscn` with `Editable_Item_List` to allow drag-and-drop magazines.
+  - [c] 1.1 Locate current magazine list node and remove it.
+  - [c] 1.2 Instance `Editable_Item_List` and position it in the editor UI.
+  - [c] 1.3 Expose the new widget as a script variable for later access.
 - [ ] 2.0 Implement drop validation in `ItemRangedEditor.gd` to only accept items of type `magazine` using logic from `Editable_Item_List`.
   - [ ] 2.1 Connect the drop signal from the `Editable_Item_List` widget.
   - [ ] 2.2 Verify the dropped item type using `DropEntityTextEdit` logic.
