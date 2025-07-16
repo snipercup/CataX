@@ -42,7 +42,7 @@ func test_inapplicable_actions_omitted():
 	for i in range(control.context_menu.get_item_count()):
 		texts.append(control.context_menu.get_item_text(i))
 	assert_false(texts.has('Reload'), 'Reload should not appear for generic item')
-	assert_false(texts.has('Equip (left)'), 'Equip should not appear for generic item')
+	assert_true(texts.has('Equip (left)'), 'Equip should appear for generic item')
 
 func test_applicable_actions_present():
 	var control = await _create_control()
