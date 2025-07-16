@@ -33,6 +33,7 @@ class CraftRecipe:
 	var required_resources: Array
 	var skill_requirement: Dictionary
 	var skill_progression: Dictionary
+	var skill_bonus_stat: String
 
 	func _init(data: Dictionary):
 		craft_amount = data.get("craft_amount", 1)
@@ -41,6 +42,7 @@ class CraftRecipe:
 		required_resources = data.get("required_resources", [])
 		skill_requirement = data.get("skill_requirement", {})
 		skill_progression = data.get("skill_progression", {})
+		skill_bonus_stat = data.get("skill_bonus_stat", "")
 
 	func get_data() -> Dictionary:
 		var data: Dictionary = {
@@ -53,6 +55,8 @@ class CraftRecipe:
 			data["skill_requirement"] = skill_requirement
 		if not skill_progression.is_empty():
 			data["skill_progression"] = skill_progression
+		if skill_bonus_stat != "":
+			data["skill_bonus_stat"] = skill_bonus_stat
 		return data
 
 # Subclass to represent the Craft functionality

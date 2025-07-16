@@ -5,6 +5,11 @@
 			"stone_spear"
 		]
 	},
+	"intelligence": {
+		"items": [
+			"pistol_magazine"
+		]
+	},
 	"strength": {
 		"items": [
 			"long_stick",

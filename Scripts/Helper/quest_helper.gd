@@ -283,7 +283,9 @@ func update_quest_step(myquestname: String, item_id: String, item_count: int, ad
 
 
 # A mob has been killed. TODO: Add who or what killed it so we know if it was the player
-func _on_mob_killed(mobinstance: Mob):
+func _on_mob_killed(mobinstance: Mob, killer):
+	if not (killer is Player):
+		return
 	var mob_id: String = mobinstance.mob_json.id
 	var quests_in_progress = QuestManager.get_quests_in_progress()
 

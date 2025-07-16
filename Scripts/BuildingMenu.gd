@@ -30,3 +30,10 @@ func _on_construction_option_button_item_selected(index: int) -> void:
 		Helper.signal_broker.construction_chosen.emit("block", "concrete_wall")
 	else:
 		Helper.signal_broker.construction_chosen.emit("furniture", selected_text)
+
+# Returns the currently selected construction type and choice
+func get_selected_type_and_choice() -> Dictionary:
+	var selected_text: String = construction_option_button.get_item_text(construction_option_button.selected)
+	if selected_text == "concrete_wall":
+		return {"type": "block", "choice": "concrete_wall"}
+	return {"type": "furniture", "choice": selected_text}

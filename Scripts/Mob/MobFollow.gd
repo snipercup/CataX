@@ -167,7 +167,7 @@ func _on_dash_cooldown_timeout():
 
 # Handle the mob_killed signal
 # If the killed mob is the current `spotted_target`, reset the target
-func _on_mob_killed(mob_instance: Mob) -> void:
+func _on_mob_killed(mob_instance: Mob, _killer) -> void:
 	if spotted_target and spotted_target == mob_instance:
 		# Undo any actions related to the spotted target
 		spotted_target = null  # Reset the spotted target
