@@ -137,7 +137,7 @@ signal player_died(player: Player)
 
 # When a mob was killed
 @warning_ignore("unused_signal")
-signal mob_killed(mobinstance: Mob)
+signal mob_killed(mobinstance: Mob, killer)
 # When a mob was spawned
 @warning_ignore("unused_signal")
 signal mob_spawned(mobinstance: Mob)
