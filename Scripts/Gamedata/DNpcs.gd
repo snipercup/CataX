@@ -49,7 +49,7 @@ func save_npcs_to_disk() -> void:
 	var save_data: Array = []
 	for npc in npcdict.values():
 		save_data.append(npc.get_data())
-		Helper.json_helper.write_json_file(file_path, JSON.stringify(save_data, "\t"))
+	Helper.json_helper.write_json_file(file_path, JSON.stringify(save_data, "\t"))
 
 # Add a new NPC with the given ID
 func add_new(newid: String) -> void:
