@@ -8,6 +8,7 @@ extends Control
 @export var furnitureEditor: PackedScene = null
 @export var itemEditor: PackedScene = null
 @export var mobEditor: PackedScene = null
+@export var npcEditor: PackedScene = null
 @export var itemgroupEditor: PackedScene = null
 @export var wearableslotEditor: PackedScene = null
 @export var statsEditor: PackedScene = null
@@ -37,7 +38,8 @@ extends Control
 	DMod.ContentType.OVERMAPAREAS: {"property": "dovermaparea", "scene": overmapareaEditor},
 	DMod.ContentType.MOBGROUPS: {"property": "dmobgroup", "scene": mobgroupsEditor},
 	DMod.ContentType.MOBFACTIONS: {"property": "dmobfaction", "scene": mobfactionsEditor},
-	DMod.ContentType.ATTACKS: {"property": "dattack", "scene": attacksEditor}
+	DMod.ContentType.ATTACKS: {"property": "dattack", "scene": attacksEditor},
+	DMod.ContentType.NPCS: {"property": "dnpc", "scene": npcEditor}
 }
 var selectedMod: String = "Core"
 
@@ -97,6 +99,7 @@ func refresh_lists() -> void:
 	load_content_list(DMod.ContentType.MOBGROUPS, "Mob groups")
 	load_content_list(DMod.ContentType.MOBFACTIONS, "Mob factions")
 	load_content_list(DMod.ContentType.ATTACKS, "Attacks")
+	load_content_list(DMod.ContentType.NPCS, "NPCs")
 	
 	# Repopulate the type selector menu
 	populate_type_selector_menu_button()
@@ -188,7 +191,7 @@ func populate_type_selector_menu_button():
 	var headers = [
 		"Maps", "Tactical Maps", "Items", "Terrain Tiles", "Mobs", 
 		"Furniture", "Item Groups", "Player Attributes", "Wearable Slots", 
-		"Stats", "Skills", "Quests", "Overmap areas", "Mob groups", "Mob factions", "Attacks"
+		"Stats", "Skills", "Quests", "Overmap areas", "Mob groups", "Mob factions", "Attacks", "NPCs"
 	]
 	
 	for i in headers.size():
