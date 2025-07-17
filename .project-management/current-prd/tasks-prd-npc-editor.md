@@ -353,8 +353,8 @@
   - [ ] **2.2** Implement `NpcEditor.gd` to load DNpc fields and emit `data_changed` on save.
   - [ ] **2.3** Connect Load and Save buttons to DNpc properties.
 - [ ] **3.0** Implement persistence in DNpc classes
-  - [ ] **3.1** Add `save_to_disk`, `changed`, and `delete` methods in `DNpc.gd`.
-  - [ ] **3.2** Extend `DNpcs.gd` with `save_npcs_to_disk`, `add_new`, `append_new`, and `delete_by_id`.
+  - [c] **3.1** Add `save_to_disk`, `changed`, and `delete` methods in `DNpc.gd`.
+  - [c] **3.2** Extend `DNpcs.gd` with `save_npcs_to_disk`, `add_new`, `append_new`, and `delete_by_id`.
 - [ ] **4.0** Update content editor workflow for NPCs
   - [ ] **4.1** Add packed scene reference to `contenteditor.tscn` for `NpcEditor`.
   - [ ] **4.2** Ensure activating an NPC list item opens the NPC editor tab.
