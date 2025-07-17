@@ -328,37 +328,36 @@
 
 ```
 ## Relevant Files
-- Reference existing content editor and data scripts
-### Proposed New Files
 - `Scenes/ContentManager/Custom_Editors/NpcEditor.tscn` - UI for editing NPC data, modeled after StatsEditor with a health field.
 - `Scenes/ContentManager/Custom_Editors/Scripts/NpcEditor.gd` - Logic for loading and saving DNpc entries.
-- `Tests/Unit/test_npc_editor.gd` - Unit tests for NPC editor behavior.
-### Existing Files Modified
+- `Scenes/ContentManager/Custom_Editors/Scripts/NpcEditor.gd.uid` - UID file for the editor script.
 - `Scenes/ContentManager/Scripts/contenteditor.gd` - Register NPC content type and open the NPC editor.
 - `Scenes/ContentManager/contenteditor.tscn` - Add packed scene export and UI hooks for NPC editor.
 - `Scripts/Gamedata/DNpc.gd` - Provide save/delete methods for persistence.
 - `Scripts/Gamedata/DNpcs.gd` - Manage saving to disk and CRUD operations.
+### Proposed New Files
+- `Tests/Unit/test_npc_editor.gd` - Unit tests for NPC editor behavior.
 ### Notes
 - Follow GDScript 4 syntax and Godot 4.4 best practices with tab indentation.
 - Layout of the NPC editor should mirror StatsEditor for consistency.
 - Saving uses DNpc.save_to_disk which delegates to DNpcs.save_npcs_to_disk.
 
 ## Tasks
-- [ ] **1.0** Integrate `DNpc` content type with `contenteditor.gd`
-  - [ ] **1.1** Add `npcEditor` export variable and map `DMod.ContentType.NPCS` to a new editor scene.
-  - [ ] **1.2** Update `refresh_lists()` to call `load_content_list` for NPCs.
-  - [ ] **1.3** Include `NPCs` in type selector menu and editor configuration.
-- [ ] **2.0** Create NPC editor scene and script
-  - [ ] **2.1** Duplicate `StatsEditor.tscn` as `NpcEditor.tscn` and insert a SpinBox for health.
-  - [ ] **2.2** Implement `NpcEditor.gd` to load DNpc fields and emit `data_changed` on save.
-  - [ ] **2.3** Connect Load and Save buttons to DNpc properties.
+- [c] **1.0** Integrate `DNpc` content type with `contenteditor.gd`
+  - [c] **1.1** Add `npcEditor` export variable and map `DMod.ContentType.NPCS` to a new editor scene.
+  - [c] **1.2** Update `refresh_lists()` to call `load_content_list` for NPCs.
+  - [c] **1.3** Include `NPCs` in type selector menu and editor configuration.
+- [c] **2.0** Create NPC editor scene and script
+  - [c] **2.1** Duplicate `StatsEditor.tscn` as `NpcEditor.tscn` and insert a SpinBox for health.
+  - [c] **2.2** Implement `NpcEditor.gd` to load DNpc fields and emit `data_changed` on save.
+  - [c] **2.3** Connect Load and Save buttons to DNpc properties.
 - [ ] **3.0** Implement persistence in DNpc classes
   - [c] **3.1** Add `save_to_disk`, `changed`, and `delete` methods in `DNpc.gd`.
   - [c] **3.2** Extend `DNpcs.gd` with `save_npcs_to_disk`, `add_new`, `append_new`, and `delete_by_id`.
-- [ ] **4.0** Update content editor workflow for NPCs
-  - [ ] **4.1** Add packed scene reference to `contenteditor.tscn` for `NpcEditor`.
-  - [ ] **4.2** Ensure activating an NPC list item opens the NPC editor tab.
-  - [ ] **4.3** Allow creation and deletion of NPC entries through `content_list.gd`.
+- [c] **4.0** Update content editor workflow for NPCs
+  - [c] **4.1** Add packed scene reference to `contenteditor.tscn` for `NpcEditor`.
+  - [c] **4.2** Ensure activating an NPC list item opens the NPC editor tab.
+  - [c] **4.3** Allow creation and deletion of NPC entries through `content_list.gd`.
 - [ ] **5.0** Write unit tests for NPC editor
   - [ ] **5.1** Instantiate `NpcEditor.tscn` with a sample `DNpc` in tests.
   - [ ] **5.2** Verify fields load correctly and saving updates the DNpc instance.

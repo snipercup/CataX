@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://767oi7u7wkm5" path="res://Scenes/ContentManager/Custom_Editors/WearableslotEditor.tscn" id="10_nfqj6"]
 [ext_resource type="PackedScene" uid="uid://bcdt60dcs3sn1" path="res://Scenes/ContentManager/Custom_Editors/StatsEditor.tscn" id="11_lg6mj"]
 [ext_resource type="PackedScene" uid="uid://qn17yxy8fy0d" path="res://Scenes/ContentManager/Custom_Editors/SkillsEditor.tscn" id="12_orpls"]
+[ext_resource type="PackedScene" uid="uid://npceditor" path="res://Scenes/ContentManager/Custom_Editors/NpcEditor.tscn" id="20_npctscn"]
 [ext_resource type="PackedScene" uid="uid://b7k2j4d6wx4yy" path="res://Scenes/ContentManager/Custom_Editors/QuestEditor.tscn" id="13_gv2y0"]
 [ext_resource type="PackedScene" uid="uid://b07i30w3ey3aa" path="res://Scenes/ContentManager/Custom_Editors/PlayerAttributeEditor.tscn" id="14_uu117"]
 [ext_resource type="PackedScene" uid="uid://b3ggaal1e2obk" path="res://Scenes/ContentManager/Custom_Editors/OvermapAreaEditor.tscn" id="15_qbq5b"]
@@ -36,6 +37,7 @@ terrainTileEditor = ExtResource("4_5nnw0")
 furnitureEditor = ExtResource("5_r1dle")
 itemEditor = ExtResource("7_i5608")
 mobEditor = ExtResource("5_86se2")
+npcEditor = ExtResource("20_npctscn")
 itemgroupEditor = ExtResource("9_mc021")
 wearableslotEditor = ExtResource("10_nfqj6")
 statsEditor = ExtResource("11_lg6mj")
