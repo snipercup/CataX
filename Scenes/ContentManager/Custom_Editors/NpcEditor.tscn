@@ -1,21 +1,24 @@
 [gd_scene load_steps=4 format=3 uid="uid://cmamm5gky5rq5"]
 
-[ext_resource type="Script" uid="uid://bn14k2f7s0nrx" path="res://Scenes/ContentManager/Custom_Editors/Scripts/StatsEditor.gd" id="1_aj5x8"]
+[ext_resource type="Script" path="res://Scenes/ContentManager/Custom_Editors/Scripts/NpcEditor.gd" id="1_l754b"]
 [ext_resource type="Texture2D" uid="uid://c8ragmxitca47" path="res://Scenes/ContentManager/Mapeditor/Images/emptyTile.png" id="2_vurmc"]
 [ext_resource type="PackedScene" uid="uid://d1h1rpwt8f807" path="res://Scenes/ContentManager/Custom_Widgets/Sprite_Selector_Popup.tscn" id="3_r56a4"]
 
-[node name="NpcEditor" type="Control" node_paths=PackedStringArray("IDTextLabel", "PathTextLabel", "NameTextEdit", "DescriptionTextEdit")]
+[node name="NpcEditor" type="Control" node_paths=PackedStringArray("npcImageDisplay", "IDTextLabel", "PathTextLabel", "NameTextEdit", "DescriptionTextEdit", "healthSpinBox", "npcSelector")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_aj5x8")
-IDTextLabel = NodePath("VBoxContainer/FormGrid/IDTextLabel")
+script = ExtResource("1_l754b")
+npcImageDisplay = NodePath("VBoxContainer/FormGrid/NpcImageDisplay")
+IDTextLabel = NodePath("VBoxContainer/FormGrid/IDLabel")
 PathTextLabel = NodePath("VBoxContainer/FormGrid/PathTextLabel")
 NameTextEdit = NodePath("VBoxContainer/FormGrid/NameTextEdit")
 DescriptionTextEdit = NodePath("VBoxContainer/FormGrid/DescriptionTextEdit")
+healthSpinBox = NodePath("VBoxContainer/FormGrid/HealthSpinBox")
+npcSelector = NodePath("Sprite_selector")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
