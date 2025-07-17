@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://bcdt60dcs3sn1"]
+[gd_scene load_steps=4 format=3 uid="uid://cmamm5gky5rq5"]
 
-[ext_resource type="Script" uid="uid://bn14k2f7s0nrx" path="res://Scenes/ContentManager/Custom_Editors/Scripts/NpcEditor.gd" id="1_aj5x8"]
+[ext_resource type="Script" uid="uid://bn14k2f7s0nrx" path="res://Scenes/ContentManager/Custom_Editors/Scripts/StatsEditor.gd" id="1_aj5x8"]
 [ext_resource type="Texture2D" uid="uid://c8ragmxitca47" path="res://Scenes/ContentManager/Mapeditor/Images/emptyTile.png" id="2_vurmc"]
 [ext_resource type="PackedScene" uid="uid://d1h1rpwt8f807" path="res://Scenes/ContentManager/Custom_Widgets/Sprite_Selector_Popup.tscn" id="3_r56a4"]
 
-[node name="NpcEditor" type="Control" node_paths=PackedStringArray("npcImageDisplay", "IDTextLabel", "PathTextLabel", "NameTextEdit", "DescriptionTextEdit", "HealthSpinBox", "npcSelector")]
+[node name="NpcEditor" type="Control" node_paths=PackedStringArray("IDTextLabel", "PathTextLabel", "NameTextEdit", "DescriptionTextEdit")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,13 +12,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_aj5x8")
-npcImageDisplay = NodePath("VBoxContainer/FormGrid/NpcImageDisplay")
 IDTextLabel = NodePath("VBoxContainer/FormGrid/IDTextLabel")
 PathTextLabel = NodePath("VBoxContainer/FormGrid/PathTextLabel")
 NameTextEdit = NodePath("VBoxContainer/FormGrid/NameTextEdit")
 DescriptionTextEdit = NodePath("VBoxContainer/FormGrid/DescriptionTextEdit")
-npcSelector = NodePath("Sprite_selector")
-HealthSpinBox = NodePath("VBoxContainer/FormGrid/HealthSpinBox")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -87,7 +84,7 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 0.1
 focus_next = NodePath("../DescriptionTextEdit")
 focus_previous = NodePath("../NpcImageDisplay")
-placeholder_text = "Perception"
+placeholder_text = "Hank"
 
 [node name="DescriptionLabel" type="Label" parent="VBoxContainer/FormGrid"]
 layout_mode = 2
@@ -99,8 +96,9 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 size_flags_stretch_ratio = 0.9
 focus_previous = NodePath("../NameTextEdit")
-placeholder_text = "Your ability to observe the environment"
+placeholder_text = "Friendly wanderer who was separated from the group"
 wrap_mode = 1
+
 [node name="HealthLabel" type="Label" parent="VBoxContainer/FormGrid"]
 layout_mode = 2
 text = "Health"
@@ -109,7 +107,6 @@ text = "Health"
 layout_mode = 2
 max_value = 1000.0
 value = 100.0
-
 
 [node name="Sprite_selector" parent="." instance=ExtResource("3_r56a4")]
 visible = false

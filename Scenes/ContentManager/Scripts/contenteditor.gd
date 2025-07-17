@@ -38,8 +38,8 @@ extends Control
 	DMod.ContentType.OVERMAPAREAS: {"property": "dovermaparea", "scene": overmapareaEditor},
 	DMod.ContentType.MOBGROUPS: {"property": "dmobgroup", "scene": mobgroupsEditor},
 	DMod.ContentType.MOBFACTIONS: {"property": "dmobfaction", "scene": mobfactionsEditor},
-	DMod.ContentType.ATTACKS: {"property": "dattack", "scene": attacksEditor}
-        DMod.ContentType.NPCS: {"property": "dnpc", "scene": npcEditor},
+	DMod.ContentType.ATTACKS: {"property": "dattack", "scene": attacksEditor},
+	DMod.ContentType.NPCS: {"property": "dnpc", "scene": npcEditor}
 }
 var selectedMod: String = "Core"
 
@@ -99,8 +99,7 @@ func refresh_lists() -> void:
 	load_content_list(DMod.ContentType.MOBGROUPS, "Mob groups")
 	load_content_list(DMod.ContentType.MOBFACTIONS, "Mob factions")
 	load_content_list(DMod.ContentType.ATTACKS, "Attacks")
-        DMod.ContentType.NPCS: {"property": "dnpc", "scene": npcEditor},
-        load_content_list(DMod.ContentType.NPCS, "NPCs")
+	load_content_list(DMod.ContentType.NPCS, "NPCs")
 	
 	# Repopulate the type selector menu
 	populate_type_selector_menu_button()
