@@ -49,47 +49,47 @@ func _ready():
 func connect_signals() -> void:
 	# Connect to the Helper.signal_broker.game_started signal
 	if not Helper.signal_broker.game_started.is_connected(_on_game_started):
-	       Helper.signal_broker.game_started.connect(_on_game_started)
+		Helper.signal_broker.game_started.connect(_on_game_started)
 	if not Helper.signal_broker.game_ended.is_connected(_on_game_ended):
-	       Helper.signal_broker.game_ended.connect(_on_game_ended)
+		Helper.signal_broker.game_ended.connect(_on_game_ended)
 
 	# Connect to the Helper.signal_broker.game_loaded signal
 	if not Helper.signal_broker.game_loaded.is_connected(_on_game_loaded):
-	       Helper.signal_broker.game_loaded.connect(_on_game_loaded)
+		Helper.signal_broker.game_loaded.connect(_on_game_loaded)
 
 	# Connect to misc game event signals
 	if not Helper.signal_broker.mob_killed.is_connected(_on_mob_killed):
-	       Helper.signal_broker.mob_killed.connect(_on_mob_killed)
+		Helper.signal_broker.mob_killed.connect(_on_mob_killed)
 	if not Helper.overmap_manager.player_coord_changed.is_connected(_on_map_entered):
-	       Helper.overmap_manager.player_coord_changed.connect(_on_map_entered)
+		Helper.overmap_manager.player_coord_changed.connect(_on_map_entered)
 	if not ItemManager.craft_successful.is_connected(_on_craft_successful):
-	       ItemManager.craft_successful.connect(_on_craft_successful)
+		ItemManager.craft_successful.connect(_on_craft_successful)
 
 
 	# Connect to the QuestManager signals
 	if not QuestManager.quest_completed.is_connected(_on_quest_complete):
-	       QuestManager.quest_completed.connect(_on_quest_complete)
+		QuestManager.quest_completed.connect(_on_quest_complete)
 	if not QuestManager.quest_failed.is_connected(_on_quest_failed):
-	       QuestManager.quest_failed.connect(_on_quest_failed)
+		QuestManager.quest_failed.connect(_on_quest_failed)
 	if not QuestManager.step_complete.is_connected(_on_step_complete):
-	       QuestManager.step_complete.connect(_on_step_complete)
+		QuestManager.step_complete.connect(_on_step_complete)
 	if not QuestManager.next_step.is_connected(_on_next_step):
-	       QuestManager.next_step.connect(_on_next_step)
+		QuestManager.next_step.connect(_on_next_step)
 	if not QuestManager.step_updated.is_connected(_on_step_updated):
-	       QuestManager.step_updated.connect(_on_step_updated)
+		QuestManager.step_updated.connect(_on_step_updated)
 	if not QuestManager.new_quest_added.is_connected(_on_new_quest_added):
-	       QuestManager.new_quest_added.connect(_on_new_quest_added)
+		QuestManager.new_quest_added.connect(_on_new_quest_added)
 	if not QuestManager.quest_reset.is_connected(_on_quest_reset):
-	       QuestManager.quest_reset.connect(_on_quest_reset)
+		QuestManager.quest_reset.connect(_on_quest_reset)
 
 	# When the user has pressed the "track" button in the quest window
 	if not Helper.signal_broker.track_quest_clicked.is_connected(_on_quest_window_track_quest_clicked):
-	       Helper.signal_broker.track_quest_clicked.connect(_on_quest_window_track_quest_clicked)
+		Helper.signal_broker.track_quest_clicked.connect(_on_quest_window_track_quest_clicked)
 	# Connect equipment signals
 	if not Helper.signal_broker.item_was_equipped.is_connected(_on_item_was_equipped):
-	       Helper.signal_broker.item_was_equipped.connect(_on_item_was_equipped)
+		Helper.signal_broker.item_was_equipped.connect(_on_item_was_equipped)
 	if not Helper.signal_broker.item_was_unequipped.is_connected(_on_item_was_unequipped):
-	       Helper.signal_broker.item_was_unequipped.connect(_on_item_was_unequipped)
+		Helper.signal_broker.item_was_unequipped.connect(_on_item_was_unequipped)
 
 
 func connect_inventory_signals() -> void:
