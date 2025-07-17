@@ -17,8 +17,8 @@ var loaded_chunks = {} # Dictionary to store loaded chunks with their positions 
 var player_position = Vector2.ZERO # Player's position, updated regularly
 # Chunks are loaded and unloaded one at a time. The load_queue will be processed before the unload_queue
 # Chunks that should be loaded and unloaded are stored inside these variables
-var load_queue = []
-var unload_queue = []
+var load_queue: Array[Vector2] = []
+var unload_queue: Array[Vector2] = []
 # Enforces loading or unloading one chunk at a time
 var is_processing_chunk = false
 const TIME_DELAY: float = 0.4
