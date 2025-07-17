@@ -46,3 +46,4 @@ func test_editor_saves_npc_data() -> void:
 	assert_eq(my_dnpc.name, "NewName")
 	assert_eq(my_dnpc.description, "New Description")
 	assert_eq(my_dnpc.health, 50)
+	my_dnpcs.delete_by_id("test_npc")
