@@ -45,6 +45,14 @@
 │   ├── Catax_itemgroup_editor.png
 ```
 
+## Relevant Files
+
+### Existing Files Modified
+- `Scripts/Helper/quest_helper.gd` - Standardize signal connection checks.
+- `Scripts/BuildManager.gd` - Prevent duplicate signal connections.
+- `Scripts/Mob/MobAttack.gd` - Remove unused variable.
+- `.project-management/current-prd/tasks-prd.refactor-readability.md` - Update task statuses.
+
 ### Files To Remove
 - *(none)*
 
@@ -52,8 +60,8 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 4.0 Standardize signal connections and remove unused code
-  - [ ] 4.1 Audit scripts for duplicate signal connections
-  - [ ] 4.2 Remove stale variables and unreachable code paths
+- [c] 4.0 Standardize signal connections and remove unused code
+  - [c] 4.1 Audit scripts for duplicate signal connections
+  - [c] 4.2 Remove stale variables and unreachable code paths
 
 *End of document*
