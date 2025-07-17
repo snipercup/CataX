@@ -351,7 +351,7 @@
   - [c] **2.1** Duplicate `StatsEditor.tscn` as `NpcEditor.tscn` and insert a SpinBox for health.
   - [c] **2.2** Implement `NpcEditor.gd` to load DNpc fields and emit `data_changed` on save.
   - [c] **2.3** Connect Load and Save buttons to DNpc properties.
-- [ ] **3.0** Implement persistence in DNpc classes
+- [c] **3.0** Implement persistence in DNpc classes
   - [c] **3.1** Add `save_to_disk`, `changed`, and `delete` methods in `DNpc.gd`.
   - [c] **3.2** Extend `DNpcs.gd` with `save_npcs_to_disk`, `add_new`, `append_new`, and `delete_by_id`.
 - [c] **4.0** Update content editor workflow for NPCs
@@ -359,7 +359,8 @@
   - [c] **4.2** Ensure activating an NPC list item opens the NPC editor tab.
   - [c] **4.3** Allow creation and deletion of NPC entries through `content_list.gd`.
 - [ ] **5.0** Write unit tests for NPC editor
-  - [ ] **5.1** Instantiate `NpcEditor.tscn` with a sample `DNpc` in tests.
-  - [ ] **5.2** Verify fields load correctly and saving updates the DNpc instance.
+- [c] **5.1** Instantiate `NpcEditor.tscn` with a sample `DNpc` in tests.
+- [c] **5.2** Verify fields load correctly and saving updates the DNpc instance.
   - [ ] **5.3** Test adding and deleting NPCs through the content list.
+- [ ] **6.0** Add tests for NPC list add/delete functionality.
 *End of document*
