@@ -52,6 +52,10 @@ Documentation & Style Consistency
 - `Documentation/Game_development/Getting_started.md` - Contains introductory instructions
 - `Documentation/Game_development/Working_with_codex.md` - Details Codex workflow
 - `Scripts/Helper.gd` - Contains constants that need naming cleanup
+- `Scripts/Helper/save_helper.gd` - Adjust save/load for renamed map_seed variable
+- `Scripts/Helper/overmap_manager.gd` - Use map_seed for noise generation
+- `Scripts/scene_selector.gd` - Initialize map_seed when starting demo
+- `Documentation/Game_design/Game_architecture.md` - Updated terminology for map_seed
 ### Files To Remove
 - _None_
 
@@ -59,9 +63,9 @@ Documentation & Style Consistency
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 3.0 Normalize variable naming conventions
-  - [ ] 3.1 Identify variables with inconsistent casing
-  - [ ] 3.2 Rename variables using preferred style
-  - [ ] 3.3 Update references in other scripts
+- [x] 3.0 Normalize variable naming conventions
+  - [x] 3.1 Identify variables with inconsistent casing
+  - [x] 3.2 Rename variables using preferred style
+  - [x] 3.3 Update references in other scripts
 
 *End of document*
