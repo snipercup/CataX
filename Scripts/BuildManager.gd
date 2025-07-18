@@ -26,8 +26,10 @@ func log_unknown_construction_type() -> void:
 # Called when the node enters the scene
 func _ready():
 	# Connect the build menu visibility_changed signal to a local method
-	Helper.signal_broker.build_window_visibility_changed.connect(_on_build_menu_visibility_change)
-	Helper.signal_broker.construction_chosen.connect(_on_hud_construction_chosen)
+	if not Helper.signal_broker.build_window_visibility_changed.is_connected(_on_build_menu_visibility_change):
+		Helper.signal_broker.build_window_visibility_changed.connect(_on_build_menu_visibility_change)
+	if not Helper.signal_broker.construction_chosen.is_connected(_on_hud_construction_chosen):
+		Helper.signal_broker.construction_chosen.connect(_on_hud_construction_chosen)
 
 # Keep the ghost visible while building
 func _process(_delta):
