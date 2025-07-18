@@ -150,8 +150,7 @@ func set_building_state(isvisible: bool):
 	log_debug("Set building state: %s" % str(isvisible))
 
 
-# Updates the material of the construction ghost based on the construction type and choice
-# Update ghost material and sizing
+# Updates the material and size of the construction ghost based on the construction type and choice
 func update_construction_ghost():
 	construction_ghost.reset_to_default() # Resets size, rotation, material, offset
 	if construction_type == "furniture":
@@ -180,4 +179,3 @@ func calculate_furniture_size(rfurniture: RFurniture) -> Vector2:
 		var sprite_depth = sprite_texture.get_height() / TEXTURE_SCALE # Convert pixels to meters
 		return Vector2(sprite_width, sprite_depth)  # Use height from support shape
 	return DEFAULT_FURNITURE_SIZE  # Default size if texture is not set
-
