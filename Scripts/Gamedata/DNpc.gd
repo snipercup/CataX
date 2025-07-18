@@ -45,9 +45,8 @@ func get_data() -> Dictionary:
 func save_to_disk():
 	parent.save_npcs_to_disk()
 
-	# Data has changed; propagate save to parent container
-
-
+# Data has changed; update the references
+# This will make sure that when a map is deleted, it is also removed from the NPC spawn list
 func changed(olddata: DNpc):
 	var old_ids: Array = []
 	for map_data in olddata.spawn_maps:
@@ -57,6 +56,7 @@ func changed(olddata: DNpc):
 	for map_data in spawn_maps:
 		new_ids.append(map_data.get("id", map_data.id))
 
+	# We let the previously added maps know that this NPC no longer references them
 	for map_id in old_ids:
 		if not new_ids.has(map_id):
 			(
@@ -70,6 +70,7 @@ func changed(olddata: DNpc):
 				)
 			)
 
+	# We let the newly added maps know that this NPC references them
 	for map_id in new_ids:
 		(
 			Gamedata
@@ -85,7 +86,7 @@ func changed(olddata: DNpc):
 	parent.save_npcs_to_disk()
 
 
-# Delete handler - currently no references to clean up
+# Delete handler - references to clean up
 func delete():
 	var all_results: Array = (
 		Gamedata
