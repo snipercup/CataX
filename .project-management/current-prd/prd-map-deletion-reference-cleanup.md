@@ -30,6 +30,7 @@ When a modder deletes a map from the content editor, other mod entities may stil
 ## 7. Technical Considerations
 - Reference lookups come entirely from `/maps/references.json`. Entities not listed here are not affected.
 - Updates should rely on existing classes such as `DNpcs`, `DOvermapareas`, and quest editors where applicable.
+- The `DMap` class already has the `delete` and `remove_my_reference_from_all_entities` functions, so it's good to verify that they work as expacted and change them to meet the requirements.
 
 ## 8. Success Metrics
 - After deleting a map through the content editor, no entity listed in `/maps/references.json` should still reference that map.
