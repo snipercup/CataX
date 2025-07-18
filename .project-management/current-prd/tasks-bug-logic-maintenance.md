@@ -156,19 +156,12 @@
 ```
 
 ## Relevant Files
-- `LevelGenerator.gd`
 - `Scripts/item_manager.gd`
 - `Scripts/general.gd`
-- `Tests/Unit/test_levelgenerator_unload_loop.gd`
 - `Tests/Unit/test_item_manager.gd`
 
-### Proposed New Files
-- `Tests/Unit/test_general_string_to_vector2.gd` - Tests for invalid coordinate parsing.
-
 ### Existing Files Modified
-- `LevelGenerator.gd` - Refine chunk queue handling during unload operations.
 - `Scripts/item_manager.gd` - Fix resource removal and magazine reload logic.
-- `Scripts/general.gd` - Make `string_to_vector2` tolerant to malformed input.
 
 ### Files To Remove
 - *(none)*
@@ -177,25 +170,9 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Ensure chunk unload logic is race-condition free
-  - [ ] 1.1 Review `LevelGenerator.gd` unload logic for asynchronous issues
-  - [ ] 1.2 Implement queue lock to prevent concurrent unloads
-  - [ ] 1.3 Add unit test `test_levelgenerator_unload_loop.gd`
 - [ ] 2.0 Correct inventory resource removal and magazine reload behavior
   - [ ] 2.1 Inspect `remove_resource` and reload functions for off-by-one errors
   - [ ] 2.2 Fix decrement logic for ammo and resources
   - [ ] 2.3 Expand `test_item_manager.gd` coverage
-- [ ] 3.0 Improve coordinate parsing robustness
-  - [ ] 3.1 Update `string_to_vector2` to handle malformed input
-  - [ ] 3.2 Return `Vector2.ZERO` on failure
-  - [ ] 3.3 Add `test_general_string_to_vector2.gd`
-- [ ] 4.0 Audit equipment signal connections
-  - [ ] 4.1 Catalog current equipment connect/disconnect calls
-  - [ ] 4.2 Ensure disconnects occur on unequip
-  - [ ] 4.3 Add comments describing expected signal flow
-- [ ] 5.0 Add regression tests for loading/unloading and inventory operations
-  - [ ] 5.1 Validate repeated load/unload cycles in `LevelGenerator`
-  - [ ] 5.2 Confirm ammo counts after magazine reload sequences
-  - [ ] 5.3 Ensure new tests fail before fixes and pass after
 
 *End of document*
