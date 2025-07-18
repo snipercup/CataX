@@ -59,7 +59,7 @@
 - `Tests/Unit/test_unload_option_visibility.gd` - Tests for hiding the `Unload` option when no magazine is inserted.
 
 ### Existing Files Modified
-- `Scripts/CtrlInventoryStackedCustom.gd` - Add magazine check when building the context menu.
+- `Scripts/CtrlInventoryStackedCustom.gd` - Add magazine check when building the context menu and hide the `Unload` option when empty.
 - `Scripts/item_manager.gd` - Ensure magazine insertion/removal updates `current_magazine` property.
 
 ### Notes
@@ -67,19 +67,19 @@
 - Reuse existing reload and unload logic to determine when a magazine is present.
 
 ## Tasks
-- [ ] **1.0 Update inventory context menu logic**
-  - [ ] 1.1 Modify `_can_unload()` in `CtrlInventoryStackedCustom.gd` to return `false` if `current_magazine` is null.
-  - [ ] 1.2 Ensure `_build_context_menu()` only adds the `Unload` action when `_can_unload()` returns `true`.
-- [ ] **2.0 Track inserted magazines on weapons**
-  - [ ] 2.1 Verify `insert_magazine()` and `unload_magazine_from_item()` in `item_manager.gd` correctly set and clear `current_magazine`.
+- [x] **1.0 Update inventory context menu logic**
+  - [x] 1.1 Modify `_can_unload()` in `CtrlInventoryStackedCustom.gd` to return `false` if `current_magazine` is null.
+  - [x] 1.2 Ensure `_build_context_menu()` only adds the `Unload` action when `_can_unload()` returns `true`.
+ - [x] **2.0 Track inserted magazines on weapons**
+  - [x] 2.1 Verify `insert_magazine()` and `unload_magazine_from_item()` in `item_manager.gd` correctly set and clear `current_magazine`.
   - [ ] 2.2 Update any related code paths to maintain this property after reload or drop actions.
-- [ ] **3.0 Maintain context menu order**
-  - [ ] 3.1 Review action insertion order in `_build_context_menu()`.
-  - [ ] 3.2 Adjust code or tests if the order changes after implementing the magazine check.
-- [ ] **4.0 Add unit tests for unload option visibility**
-  - [ ] 4.1 Create `test_unload_option_visibility.gd`.
-  - [ ] 4.2 Test that guns without a magazine do not show the `Unload` option.
-  - [ ] 4.3 Test that guns with a magazine show the option in the expected order.
+- [x] **3.0 Maintain context menu order**
+  - [x] 3.1 Review action insertion order in `_build_context_menu()`.
+  - [x] 3.2 Adjust code or tests if the order changes after implementing the magazine check.
+- [x] **4.0 Add unit tests for unload option visibility**
+  - [x] 4.1 Create `test_unload_option_visibility.gd`.
+  - [x] 4.2 Test that guns without a magazine do not show the `Unload` option.
+  - [x] 4.3 Test that guns with a magazine show the option in the expected order.
 - [ ] **5.0 Manual regression testing**
   - [ ] 5.1 Launch the game and open the inventory UI.
   - [ ] 5.2 Right-click guns with and without magazines to verify the menu behaves correctly.
