@@ -65,9 +65,9 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] **2.0 Improve `BuildManager.gd` readability**
-  - [ ] 2.1 Document all public functions with brief comments.
-  - [ ] 2.2 Replace magic numbers with named constants.
-  - [ ] 2.3 Consolidate duplicate debug logging.
+- [x] **2.0 Improve `BuildManager.gd` readability**
+  - [x] 2.1 Document all public functions with brief comments.
+  - [x] 2.2 Replace magic numbers with named constants.
+  - [x] 2.3 Consolidate duplicate debug logging.
 
 *End of document*
