@@ -36,6 +36,8 @@ else
   echo "❌ project.godot NOT found in current directory."
 fi
 
+# 6. Install gdtoolkit we need to do formatting later
+pip3 install "gdtoolkit==4.*"
 ```
 
 ## Preparation for your next feature
@@ -48,6 +50,8 @@ Starting with any description of a feature, this guide supplies tooling to autom
 - Task list file creation
 - Completing the tasks
 - Feature Close
+
+Note: when scripts are **edited** by codex, it will also **format** it using `gdformat path/to/modified_script.gd`. This is needed to make sure only tabs are used for indentation instead of spaces. This may result in more changes then the feature/task intended. Formatting does not change behavior so it should be safe.
 
 ## PRD file creation
 - Add feature specs and background to `.project-management/current-prd/prd-background/`:
