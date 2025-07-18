@@ -124,10 +124,10 @@
 - Unit tests should be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 3.0 Expand `Player` tests to cover `PlayerShooting` behavior and ammo consumption.
-  - [ ] 3.1 Build a player test fixture including `PlayerShooting`.
-  - [ ] 3.2 Check bullet spawn count and ammo reduction each shot.
-  - [ ] 3.3 Validate behavior when firing with no ammo.
-  - [ ] 3.4 Run `gdformat` on modified scripts.
-  - [ ] 3.5 Execute GUT tests for player shooting.
+- [c] 3.0 Expand `Player` tests to cover `PlayerShooting` behavior and ammo consumption.
+  - [c] 3.1 Build a player test fixture including `PlayerShooting`.
+  - [c] 3.2 Check bullet spawn count and ammo reduction each shot.
+  - [c] 3.3 Validate behavior when firing with no ammo.
+  - [c] 3.4 Run `gdformat` on modified scripts.
+  - [c] 3.5 Execute GUT tests for player shooting.
 *End of document*
