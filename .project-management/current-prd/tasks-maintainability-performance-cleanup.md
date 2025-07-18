@@ -340,6 +340,7 @@
 - `Scripts/ItemEditor.gd`
 - `Scripts/OvermapGrid.gd`
 - `.gitignore`
+- `.project-management/current-prd/tasks-maintainability-performance-cleanup.md`
 
 
 ### Existing Files Modified
@@ -354,7 +355,7 @@
 
 ## Tasks
 - [ ] 1.0 Improve crafting queue performance in `FurnitureStaticSrv.gd`
-  - [ ] 1.1 Profile existing loops and identify bottlenecks
+  - [x] 1.1 Profile existing loops and identify bottlenecks
   - [ ] 1.2 Implement cached lookups or data structures to minimize iterations
   - [ ] 1.3 Remove extraneous debug print statements
   - [ ] 1.4 Document updated logic with comments
