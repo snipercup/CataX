@@ -129,5 +129,6 @@
   - [c] 3.2 Check bullet spawn count and ammo reduction each shot.
   - [c] 3.3 Validate behavior when firing with no ammo.
   - [c] 3.4 Run `gdformat` on modified scripts.
+  - [c] 4.0 Review added `test_player_shooting.gd`.
   - [c] 3.5 Execute GUT tests for player shooting.
 *End of document*
