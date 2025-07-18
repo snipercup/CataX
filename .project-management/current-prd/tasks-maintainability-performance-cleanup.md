@@ -341,15 +341,9 @@
 - `Scripts/OvermapGrid.gd`
 - `.gitignore`
 
-### Proposed New Files
-- `Scripts/ItemEditorBase.gd` - Shared logic for item editor scripts.
-- `Tests/Unit/test_item_editor_base.gd` - Unit tests for ItemEditorBase.
 
 ### Existing Files Modified
 - `Scripts/FurnitureStaticSrv.gd` - Optimize crafting queue loops.
-- `Scripts/Item*Editor.gd` - Refactor to use base class.
-- `Scripts/OvermapGrid.gd` - Improve road generation performance.
-- `.gitignore` - Ignore Godot-generated `.uid` and `.import` files.
 
 ### Files To Remove
 - None
@@ -366,27 +360,6 @@
   - [ ] 1.4 Document updated logic with comments
   - [ ] 1.5 Format the script with `gdformat`
   - [ ] 1.6 Run GUT tests to ensure no regressions
-- [ ] 2.0 Consolidate duplicate item editor code
-  - [ ] 2.1 Identify shared functionality across all item editor scripts
-  - [ ] 2.2 Create `ItemEditorBase.gd` containing common methods
-  - [ ] 2.3 Refactor each item editor to extend or use the base class
-  - [ ] 2.4 Add comments explaining base class usage
-  - [ ] 2.5 Add or update unit tests for editors
-  - [ ] 2.6 Format all affected scripts with `gdformat`
-- [ ] 3.0 Optimize road and pathfinding logic in `OvermapGrid.gd`
-  - [ ] 3.1 Analyze road generation loops for inefficiencies
-  - [ ] 3.2 Refactor code to eliminate redundant calculations
-  - [ ] 3.3 Comment the revised algorithm for clarity
-  - [ ] 3.4 Format the script and run tests
-- [ ] 4.0 Standardize debug logging across scripts
-  - [ ] 4.1 Search for and remove excessive `print` statements
-  - [ ] 4.2 Implement a consistent logging approach guarded by a debug flag
-  - [ ] 4.3 Verify no stray debug prints remain
-  - [ ] 4.4 Format updated files and run tests
-- [ ] 5.0 Update repository ignore rules
-  - [ ] 5.1 Add `*.uid` and `*.import` patterns to `.gitignore`
-  - [ ] 5.2 Comment why these files are ignored
-  - [ ] 5.3 Confirm new patterns work by checking `git status`
 
 *End of document*
 
