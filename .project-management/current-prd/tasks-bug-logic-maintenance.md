@@ -170,9 +170,9 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 2.0 Correct inventory resource removal and magazine reload behavior
-  - [ ] 2.1 Inspect `remove_resource` and reload functions for off-by-one errors
-  - [ ] 2.2 Fix decrement logic for ammo and resources
-  - [ ] 2.3 Expand `test_item_manager.gd` coverage
+- [x] 2.0 Correct inventory resource removal and magazine reload behavior
+  - [x] 2.1 Inspect `remove_resource` and reload functions for off-by-one errors
+  - [x] 2.2 Fix decrement logic for ammo and resources
+  - [x] 2.3 Expand `test_item_manager.gd` coverage
 
 *End of document*
