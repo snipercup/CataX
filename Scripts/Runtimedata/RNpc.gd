@@ -8,10 +8,13 @@ var spriteid: String
 var sprite: Texture
 var health: int
 var parent: RNpcs
+var spawn_maps: Array = []
+
 
 func _init(myparent: RNpcs, newid: String):
 	parent = myparent
 	id = newid
+
 
 func overwrite_from_dnpc(dnpc: DNpc) -> void:
 	if id != dnpc.id:
@@ -21,6 +24,8 @@ func overwrite_from_dnpc(dnpc: DNpc) -> void:
 	spriteid = dnpc.spriteid
 	sprite = dnpc.sprite
 	health = dnpc.health
+	spawn_maps = dnpc.spawn_maps.duplicate(true)
+
 
 func get_data() -> Dictionary:
 	return {
@@ -28,5 +33,6 @@ func get_data() -> Dictionary:
 		"name": name,
 		"description": description,
 		"sprite": spriteid,
-		"health": health
+		"health": health,
+		"spawn_maps": spawn_maps
 	}

@@ -105,11 +105,11 @@
 - Use GDScript 4.4 syntax with tabs and follow patterns from `overmap_area_region_editor.gd`
 
 ## Tasks
-- [ ] **1.0 Add `spawn_maps` array to NPC data structures**
-  - [ ] 1.1 Extend `DNpc.gd` with a `spawn_maps` Array property and default empty array
-  - [ ] 1.2 Load `spawn_maps` from JSON in `DNpc._init`
-  - [ ] 1.3 Include `spawn_maps` in `DNpc.get_data`
-  - [ ] 1.4 Mirror property in `RNpc.gd` and copy values in `overwrite_from_dnpc`
+- [x] **1.0 Add `spawn_maps` array to NPC data structures**
+  - [x] 1.1 Extend `DNpc.gd` with a `spawn_maps` Array property and default empty array
+  - [x] 1.2 Load `spawn_maps` from JSON in `DNpc._init`
+  - [x] 1.3 Include `spawn_maps` in `DNpc.get_data`
+  - [x] 1.4 Mirror property in `RNpc.gd` and copy values in `overwrite_from_dnpc`
 - [ ] **2.0 Implement spawn map UI in NpcEditor**
   - [ ] 2.1 Add a GridContainer named `SpawnMapsGrid` to `NpcEditor.tscn`
   - [ ] 2.2 Populate entries with sprite preview, map id label, weight SpinBox and delete button
