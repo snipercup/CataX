@@ -22,15 +22,13 @@ func load_sprites() -> void:
 		sprites[png_file] = load(npc_path + png_file)
 
 
+# Load all npc data from disk into memory
 func load_npcs_from_disk() -> void:
-	var json_files: Array = Helper.json_helper.file_names_in_dir(npc_path, ["json"])
-	for json_file in json_files:
-		var npc_list: Array = Helper.json_helper.load_json_array_file(npc_path + json_file)
-		for npc_data in npc_list:
+		var npclist: Array = Helper.json_helper.load_json_array_file(file_path)
+		for npc_data in npclist:
 			var npc: DNpc = DNpc.new(npc_data, self)
-			npc.spawn_maps = npc_data.get("spawn_maps", [])
 			if npc.spriteid:
-				npc.sprite = sprites.get(npc.spriteid, null)
+					npc.sprite = sprites[npc.spriteid]
 			npcdict[npc.id] = npc
 
 
