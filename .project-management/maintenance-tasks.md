@@ -7,50 +7,45 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 ---
 ### Refactoring & Code Quality Improvement Goals
 
-- **Refactor for Readability & Maintainability**:  
-  Identify functions or modules (excluding the addons/ folder) that could benefit from refactoring and simplifying complex code. Find opportunities to improve readability, maintainability, or reduce code duplication.
+1. **Code Refactoring & Simplification**  
+   Identify functions, modules, or gameplay systems (excluding the `addons/` folder) that could benefit from refactoring and simplifying complex code. Find opportunities to improve readability, maintainability, or reduce code duplication.
 
-- **Error Handling Review**:  
-  Review error handling patterns across the codebase and propose improvements to make error messages clearer, logging more consistent, or edge cases better covered.
+2. **Error Handling Review**  
+   Review error handling patterns across the codebase and propose improvements to make error messages clearer, logging more consistent, or edge cases better covered.
 
-- **Bug & Logic Error Identification**:  
-  Analyze the codebase (excluding addons/) for bugs, logic errors, or overlooked edge cases, and create detailed tasks to fix them.
+3. **Bug & Logic Error Identification**  
+   Analyze the codebase (excluding `addons/`) for bugs, logic errors, or overlooked edge cases, and create detailed tasks to fix them.
 
-- **Decouple Tightly Coupled Scripts & Scenes**:  
-  Identify tightly coupled scripts and scenes and propose strategies to decouple them using best practices such as signals, event buses, or service locators.
+4. **Decouple Tightly Coupled Scripts & Scenes**  
+   Identify tightly coupled scripts and scenes and propose strategies to decouple them using best practices such as signals, event buses, or service locators.
 
-- **Content & Data Structure Review**:  
-  Review mod definitions (items, mobs, tiles, furniture) and data structures in `/mods` for consistency, completeness, and usability improvements.
+5. **Modding System & Content Review**  
+   Review mod definitions (items, mobs, tiles, furniture) and data structures in `/mods` for consistency, completeness, and usability improvements. Propose enhancements to the modding tools and in-game editors.
 
-- **Test Coverage & QA Enhancement**:  
-  Examine test coverage and propose test cases for weak or untested systems, including mod validation. Use GUT (Godot Unit Test).
+6. **Test Coverage & QA Enhancement**  
+   Examine test coverage and propose test cases for weak or untested systems, including mod validation. Use GUT (Godot Unit Test).
 
-- **Performance Optimization**:  
-  Identify performance-critical paths (rendering, AI, loops) and propose tasks to improve framerate or resource usage.
+7. **Maintainability & Performance Cleanup**  
+   Identify performance-critical paths (rendering, AI, loops), as well as unused signals, redundant logic, or poorly organized folders. Propose tasks to improve both runtime efficiency and code structure.
 
-- **UI/UX Improvement Proposals**:  
-  Suggest improvements to the game’s UI layout, editor usability, and control responsiveness based on current implementations.
+8. **UI/UX Improvement Proposals**  
+   Suggest improvements to the game’s UI layout, in-game editor usability, and control responsiveness based on current implementations.
 
-- **Gameplay Balance Assessment**:  
-  Evaluate balance of mechanics such as progression, loot, and combat, and suggest improvements or rebalancing tasks.
+9. **Gameplay Balance Assessment**  
+   Evaluate the balance of mechanics such as progression pace, loot distribution, and combat difficulty. Suggest tweaks or new systems to enhance fairness and pacing.
 
-- **Dead Code & Folder Structure Cleanup**:  
-  Detect unused signals, variables, files, and poorly organized folders, and find opportunities to clean or reorganize them.
+10. **Documentation & Style Consistency**  
+    Propose fixes for typos in variable names, labels, comments, or documentation entries. Identify missing or unclear documentation and recommend consistent naming conventions and formatting.
 
-- **Modding Tools & Editor Enhancements**:  
-  Review the content editor and modding systems, proposing quality-of-life improvements, validations, or features.
+11. **Procedural Generation Improvements**  
+    Evaluate procedural systems and suggest ways to increase variety, coherence, modularity, or performance in map or encounter generation.
 
-- **Procedural Generation Improvements**:  
-  Evaluate procedural systems and suggest ways to increase variety, coherence, or modularity.
+12. **AI Behavior Improvements**  
+    Review AI behaviors and identify opportunities to improve movement, targeting, pathfinding, or adaptive logic.
 
-- **AI Behavior Improvements**:  
-  Review AI behaviors and identify ways to improve logic, pathfinding, or adaptability.
+13. **Lore & Design Implementation Review**  
+    Cross-check the implemented content with design documents, roadmap, and lore. Suggest additions or corrections to bring the game closer to its intended narrative and feature set.
 
-- **Lore & Design Implementation Review**:  
-  Cross-check current implementation against design docs and lore, and suggest content additions or fixes.
-
-- **Typo & Comment Discrepancy Detection**:  
-  Propose fixes for typos in variable names, labels, comments, or documentation entries. Identify missing or unclear documentation in code and project files, and propose consistent naming conventions.
 
 ---
 
@@ -67,7 +62,7 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 ### Process for Generating Maintenance Tasks  
 
 1. **Pick a goal**  
-   - Pick one of the 'Refactoring & Code Quality Improvement Goals' so we limit the scope of maintenance.
+   - Generate a number between 1 and 13. Commit to the goal from the 'Refactoring & Code Quality Improvement Goals' that corresponds to the resulting number.
 
 2. **Analyze the codebase**  
    - The AI scans the codebase to identify scripts, scenes, or folders that require maintenance based on the selected refactoring or quality improvement goal.
