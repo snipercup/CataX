@@ -4,7 +4,6 @@ class_name MobAttack
 var attack_timer: Timer
 var mob: CharacterBody3D # The mob that we execute the attack for
 
-var tween: Tween
 var spotted_target: CharacterBody3D # This mob's current target for combat
 var is_in_attack_mode = false
 
