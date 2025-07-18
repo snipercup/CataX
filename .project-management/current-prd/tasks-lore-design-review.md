@@ -52,14 +52,10 @@
 - `Mods/Dimensionfall/Quests/Quests.json` - Quest definitions and narrative content
 - `README.md` - Contains roadmap and general project information
 
-### Proposed New Files
-- `Documentation/Game_design/lore_consistency_checklist.md` - Guidelines to keep content consistent with lore
 
 ### Existing Files Modified
-- `Documentation/Game_design/Lore.md` - Add references to quests and factions
 - `Mods/Dimensionfall/Items/Items.json` - Adjust item descriptions for lore consistency
 - `Mods/Dimensionfall/Quests/Quests.json` - Update quest text for narrative alignment
-- `README.md` - Expand roadmap with narrative milestones
 
 ### Files To Remove
 - None
@@ -75,12 +71,3 @@
 - [ ] 2.0 Review quests for consistency with lore
   - [ ] 2.1 Compare quest narratives with major lore events and factions
   - [ ] 2.2 Update quest text in `Mods/Dimensionfall/Quests/Quests.json`
-- [ ] 3.0 Update lore documentation with implemented features
-  - [ ] 3.1 Add descriptions for new quests and factions
-  - [ ] 3.2 Ensure the timeline reflects recent content additions
-- [ ] 4.0 Expand roadmap with narrative components
-  - [ ] 4.1 Outline upcoming storyline arcs in `README.md`
-  - [ ] 4.2 Highlight planned modding support for lore content
-- [ ] 5.0 Create lore consistency checklist for contributors
-  - [ ] 5.1 Draft guidelines for referencing established lore elements
-  - [ ] 5.2 Include steps to verify additions against the checklist
