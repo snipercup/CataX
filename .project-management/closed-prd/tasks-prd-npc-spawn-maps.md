@@ -120,11 +120,12 @@
   - [x] 3.1 Update `DNpcs.save_npcs_to_disk` to write `spawn_maps`
   - [x] 3.2 Parse `spawn_maps` in `DNpcs.load_npcs_from_disk`
   - [x] 3.3 Add spawn map example to `Mods/Dimensionfall/Npcs/hank.json`
-- [ ] **4.0 Update mod dependency tracking**
-  - [c] 4.1 Call `Gamedata.mods.add_reference` when a map is added to an NPC
-  - [c] 4.2 Call `Gamedata.mods.remove_reference` when removed or NPC deleted
-- [ ] **5.0 Add automated tests**
+- [x] **4.0 Update mod dependency tracking**
+  - [x] 4.1 Call `Gamedata.mods.add_reference` when a map is added to an NPC
+  - [x] 4.2 Call `Gamedata.mods.remove_reference` when removed or NPC deleted
+- [x] **5.0 Add automated tests**
   - [x] 5.1 Write `test_npc_spawn_maps.gd` verifying save and load behavior
-  - [ ] 5.2 Extend `test_npc_editor.gd` to check grid population and weight editing
-  - [ ] 5.3 Ensure dependency functions are invoked when entries change
+  - [x] 5.2 Extend `test_npc_editor.gd` to check grid population and weight editing
+  - [x] 5.3 Ensure dependency functions are invoked when entries change
+  - [x] Follow-up: Added test `test_spawn_map_ui_loads_and_saves` for PRD review
 *End of document*
