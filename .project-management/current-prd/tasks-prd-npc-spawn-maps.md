@@ -91,8 +91,8 @@
 - `Mods/Dimensionfall/Npcs/hank.json` - Sample NPC JSON file
 - `Tests/Unit/test_npc_editor.gd` - Existing editor unit tests
 ### Proposed New Files
-- `/Tests/Unit/test_npc_spawn_maps.gd` - Unit tests covering spawn map persistence and UI
 ### Existing Files Modified
+- `/Tests/Unit/test_npc_spawn_maps.gd` - Unit tests covering spawn map persistence and UI
 - `Scripts/Gamedata/DNpc.gd` - Add spawn_maps and related methods
 - `Scripts/Gamedata/DNpcs.gd` - Load and save spawn_maps
 - `Scripts/Runtimedata/RNpc.gd` - Mirror spawn_maps from DNpc
@@ -111,20 +111,20 @@
   - [x] 1.3 Include `spawn_maps` in `DNpc.get_data`
   - [x] 1.4 Mirror property in `RNpc.gd` and copy values in `overwrite_from_dnpc`
 - [ ] **2.0 Implement spawn map UI in NpcEditor**
-  - [ ] 2.1 Add a GridContainer named `SpawnMapsGrid` to `NpcEditor.tscn`
-  - [ ] 2.2 Populate entries with sprite preview, map id label, weight SpinBox and delete button
-  - [ ] 2.3 Enable dragging map entries from content lists using drop callbacks
-  - [ ] 2.4 Provide delete functionality and update `DNpc.spawn_maps`
-  - [ ] 2.5 Load existing spawn maps when an NPC is assigned and gather grid values on save
+  - [x] 2.1 Add a GridContainer named `SpawnMapsGrid` to `NpcEditor.tscn`
+  - [x] 2.2 Populate entries with sprite preview, map id label, weight SpinBox and delete button
+  - [x] 2.3 Enable dragging map entries from content lists using drop callbacks
+  - [x] 2.4 Provide delete functionality and update `DNpc.spawn_maps`
+  - [x] 2.5 Load existing spawn maps when an NPC is assigned and gather grid values on save
 - [ ] **3.0 Persist spawn maps in NPC JSON files**
-  - [ ] 3.1 Update `DNpcs.save_npcs_to_disk` to write `spawn_maps`
-  - [ ] 3.2 Parse `spawn_maps` in `DNpcs.load_npcs_from_disk`
-  - [ ] 3.3 Add spawn map example to `Mods/Dimensionfall/Npcs/hank.json`
+  - [x] 3.1 Update `DNpcs.save_npcs_to_disk` to write `spawn_maps`
+  - [x] 3.2 Parse `spawn_maps` in `DNpcs.load_npcs_from_disk`
+  - [x] 3.3 Add spawn map example to `Mods/Dimensionfall/Npcs/hank.json`
 - [ ] **4.0 Update mod dependency tracking**
   - [ ] 4.1 Call `Gamedata.mods.add_reference` when a map is added to an NPC
   - [ ] 4.2 Call `Gamedata.mods.remove_reference` when removed or NPC deleted
 - [ ] **5.0 Add automated tests**
-  - [ ] 5.1 Write `test_npc_spawn_maps.gd` verifying save and load behavior
+  - [x] 5.1 Write `test_npc_spawn_maps.gd` verifying save and load behavior
   - [ ] 5.2 Extend `test_npc_editor.gd` to check grid population and weight editing
   - [ ] 5.3 Ensure dependency functions are invoked when entries change
 *End of document*

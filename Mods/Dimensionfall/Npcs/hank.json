@@ -4,6 +4,9 @@
         "name": "Hank",
         "description": "Friendly wanderer",
         "sprite": "hank.png",
-        "health": 100
+        "health": 100,
+        "spawn_maps": [
+            {"id": "Generichouse", "weight": 100}
+        ]
     }
 ]
