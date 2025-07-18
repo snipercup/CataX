@@ -16,7 +16,6 @@ class_name CtrlInventoryStackedCustom
 # Items can be dragged from the list to other controls in the interface
 # The user will be able to favorite an item in the list by selecting it and pressing F.
 
-
 # The central grid to visualize the cells and columns
 @export var inventory_grid: GridContainer
 # A visual element to show weight capacity
@@ -36,7 +35,6 @@ var last_selected_item: Control = null
 var row_controls: Dictionary = {}
 var inventory_rows: Dictionary = {}
 
-
 # Dictionary to store header controls
 var header_controls: Dictionary = {}
 var selected_header: String = ""
@@ -49,7 +47,6 @@ var ui_updates_enabled = true
 var last_sorted_column: String = ""  # Stores the last sorted column
 var last_sort_order: bool = false  # Stores whether sorting was reversed
 
-
 # Signals for context menu actions
 signal equip_left(items: Array[InventoryItem])
 signal equip_right(items: Array[InventoryItem])
@@ -61,7 +58,7 @@ signal drop_items(items: Array[InventoryItem])
 var _current_context_actions: Array[Dictionary] = []
 
 # Reload sound for pistol
-@export var reload_audio_player : AudioStreamPlayer3D
+@export var reload_audio_player: AudioStreamPlayer3D
 
 # UI signals emitted when the cursor hovers over a row in the list
 signal mouse_entered_item(item: InventoryItem)
@@ -71,7 +68,7 @@ signal grid_cell_doubleclicked(item: InventoryItem)
 
 func initialize_list():
 	_populate_inventory_list()
-	_update_bars(null, "") # Update weight and volume bars
+	_update_bars(null, "")  # Update weight and volume bars
 	_connect_inventory_signals()
 	set_process_input(true)  # Make sure input processing is enabled for drag drop
 	reload_item.connect(_on_context_menu_reload)
@@ -92,6 +89,7 @@ func show_context_menu(myposition: Vector2):
 	# We need this because the popup function requires it
 	var popup_rect = Rect2i(int(myposition.x), int(myposition.y), 1, 1)
 	context_menu.popup(popup_rect)
+
 
 # Builds the context menu dynamically, removing invalid options
 func _build_context_menu(items: Array[InventoryItem]) -> void:
@@ -129,12 +127,17 @@ func _build_context_menu(items: Array[InventoryItem]) -> void:
 func _is_reloadable(item: InventoryItem) -> bool:
 	return item.get_property("Ranged") != null or item.get_property("Magazine") != null
 
+
 func _can_unload(item: InventoryItem) -> bool:
-	return item.get_property("Ranged") != null
+	if item.get_property("Ranged") == null:
+		return false
+	return item.get_property("current_magazine") != null
+
 
 func _is_equippable(item: InventoryItem) -> bool:
 	#return item.get_property("Ranged") != null or item.get_property("Melee") != null or item.get_property("Magazine") != null or item.get_property("Tool") != null
-	return true # Any item is equipable. TODO: Exclude heavy and large items
+	return true  # Any item is equipable. TODO: Exclude heavy and large items
+
 
 func _is_usable(item: InventoryItem) -> bool:
 	return item.get_property("Food") != null or item.get_property("Medical") != null
@@ -149,25 +152,32 @@ func _on_context_menu_item_selected(id):
 	if action.has("callback"):
 		action["callback"].call()
 
+
 func _add_context_action(text: String, callback: Callable) -> void:
 	var id := context_menu.get_item_count()
 	context_menu.add_item(text, id)
 	_current_context_actions.append({"callback": callback})
 
+
 func _emit_equip_left(items):
 	equip_left.emit(items)
+
 
 func _emit_equip_right(items):
 	equip_right.emit(items)
 
+
 func _emit_reload(items):
 	reload_item.emit(items)
+
 
 func _emit_unload(items):
 	unload_item.emit(items)
 
+
 func _emit_use(items):
 	Helper.signal_broker.items_were_used.emit(items)
+
 
 func _emit_drop(items):
 	drop_items.emit(items)
@@ -211,7 +221,7 @@ func _on_inventory_item_modified(item: InventoryItem):
 
 func _on_inventory_contents_changed():
 	# Handle inventory contents changed
-	update_inventory_list(null,"contentschanged")
+	update_inventory_list(null, "contentschanged")
 
 
 func update_inventory_list(changedItem: InventoryItem, action: String):
@@ -252,15 +262,16 @@ func _get_row_name(item: Control) -> String:
 			return row
 	return ""
 
+
 # Helper function to create a header
 func _create_header(text: String) -> void:
 	var header = list_header_container.instantiate() as Control
 	header.set_label_text(text)
-	
+
 	# If this is the "favorite" header, set a smaller size
 	if text == "F":  # Assuming "F" is the text for the favorite column header
 		header.custom_minimum_size = Vector2(16, 32)  # Match the size set for favorite column elements
-	
+
 	header.connect("header_clicked", _on_header_clicked)
 	inventory_grid.add_child(header)
 	# Store the header control in the dictionary
@@ -269,18 +280,18 @@ func _create_header(text: String) -> void:
 
 # Simplified function for adding headers
 func _add_header_row_to_grid():
-	_create_header("I")	# Icon
-	_create_header("Name") # Name
-	_create_header("S") # Stack size
-	_create_header("W") # Weight
-	_create_header("V") # Volume
-	_create_header("F") # Favorite
+	_create_header("I")  # Icon
+	_create_header("Name")  # Name
+	_create_header("S")  # Stack size
+	_create_header("W")  # Weight
+	_create_header("V")  # Volume
+	_create_header("F")  # Favorite
 
 
 # When the user right-clicks on one of the inventory items
 func _on_item_right_clicked(clickedItem: Control):
 	var row_name = _get_row_name(clickedItem)
-	
+
 	# Check if any item is selected
 	if get_selected_inventory_items().size() == 0:
 		# If no item is selected, select the clicked item
@@ -394,7 +405,7 @@ func _create_ui_element(property: String, item: InventoryItem, row_name: String)
 	element.name = property + "_" + str(item.get_name())
 	# Connect the gui_input signal to the _on_grid_cell_gui_input function
 	element.gui_input.connect(_on_grid_cell_gui_input.bind(element))
-	
+
 	# We use rows to keep track of the items
 	element.add_to_group(row_name)
 	return element
@@ -403,16 +414,16 @@ func _create_ui_element(property: String, item: InventoryItem, row_name: String)
 # In a separate InventoryItemHandler class or module:
 func get_display_name(item: InventoryItem) -> String:
 	var item_name = item.get_title()
-	
+
 	# A gun might have the current_magazine property
 	if not item.get_property("current_magazine") == null:
 		var magazine = item.get_property("current_magazine")
 		item_name += get_magazine_current_max_ammo(magazine)
-	
+
 	# Check if the item is a magazine and append ammo info
 	if not item.get_property("Magazine") == null:
 		item_name += get_magazine_current_max_ammo(item)
-		
+
 	return item_name
 
 
@@ -421,7 +432,7 @@ func get_magazine_current_max_ammo(magazineItem: InventoryItem) -> String:
 	if magazine_info and magazine_info is Dictionary:
 		var current_ammo = int(magazine_info.get("current_ammo", 0))
 		var max_ammo = int(magazine_info.get("max_ammo", 0))
-		return " ["+str(current_ammo)+"/"+str(max_ammo)+"]"
+		return " [" + str(current_ammo) + "/" + str(max_ammo) + "]"
 	return ""
 
 
@@ -486,10 +497,10 @@ func _update_bars(changedItem: InventoryItem, action: String):
 		if action == "removed":
 			# Something was removed. If it was the current item, do not count it
 			if changedItem != item:
-				total_weight += item.get_property("weight", 0) 
+				total_weight += item.get_property("weight", 0)
 				total_volume += item.get_property("volume", 0)
 		else:
-			total_weight += item.get_property("weight", 0) 
+			total_weight += item.get_property("weight", 0)
 			total_volume += item.get_property("volume", 0)
 
 	weight_bar.max_value = max_weight
@@ -505,7 +516,7 @@ func _update_bars(changedItem: InventoryItem, action: String):
 func _on_player_attribute_changed(_player_node: CharacterBody3D, attr: PlayerAttribute = null):
 	if attr and attr.fixed_mode:  # If a specific attribute has changed
 		if attr.id == "inventory_space":
-			_update_bars(null,"")
+			_update_bars(null, "")
 
 
 func _sort_items(a, b):
@@ -520,8 +531,12 @@ func _sort_items(a, b):
 # When a header is clicked, we will apply sorting to that column
 func _on_header_clicked(headerItem: Control) -> void:
 	var header_mapping = {
-		"I": "icon", "Name": "name", "S": "stack_size",
-		"W": "weight", "V": "volume", "F": "favorite"
+		"I": "icon",
+		"Name": "name",
+		"S": "stack_size",
+		"W": "weight",
+		"V": "volume",
+		"F": "favorite"
 	}
 	var header_label = headerItem.get_label_text()
 
@@ -605,13 +620,13 @@ func _get_sorted_rows(property_name: String) -> Array:
 	for row_name in inventory_rows.keys():
 		var representative_value = _get_representative_value_for_row(row_name, property_name)
 		row_data.append({"row_name": row_name, "sort_value": representative_value})
-	
+
 	row_data.sort_custom(_sort_rows)
-	
+
 	var sorted_row_names = []
 	for gd in row_data:
 		sorted_row_names.append(gd["row_name"])
-	
+
 	return sorted_row_names
 
 
@@ -744,7 +759,7 @@ func _get_drag_data(_newpos):
 	var selected_items: Array[InventoryItem] = get_selected_inventory_items()
 	if selected_items.size() == 0:
 		return null
-	
+
 	var preview = _create_drag_preview(selected_items[0])
 	set_drag_preview(preview)
 	return selected_items
@@ -795,7 +810,9 @@ func _on_context_menu_reload(items: Array[InventoryItem]) -> void:
 	for item in items:
 		if item.get_property("Ranged") != null:
 			if ItemManager.find_compatible_magazine(item):
-				var reload_speed: float = float(ItemManager.get_nested_property(item, "Ranged.reload_speed"))
+				var reload_speed: float = float(
+					ItemManager.get_nested_property(item, "Ranged.reload_speed")
+				)
 				# Retrieve reload speed from the "Ranged" property dictionary or use the default
 				ItemManager.start_reload(item, reload_speed)
 				reload_audio_player.play()
@@ -818,12 +835,14 @@ func _on_context_menu_unload(items: Array[InventoryItem]) -> void:
 func _on_inventory_operation_started():
 	ui_updates_enabled = false
 
+
 func _on_inventory_operation_finished():
 	ui_updates_enabled = true
 	if not my_inventory:
 		return
 	# Optionally, refresh UI components that might have pending updates
 	update_ui_post_operation()
+
 
 func update_ui_post_operation():
 	if not ui_updates_enabled:
@@ -862,6 +881,7 @@ func get_remaining_volume() -> float:
 	else:
 		return max_volume - get_used_volume()
 
+
 func get_items() -> Array:
 	return my_inventory.get_children()
 
@@ -875,7 +895,7 @@ func transfer_autosplitmerge(item: InventoryItem, destination: InventoryStacked)
 func _on_grid_cell_double_clicked(gridCell: Control) -> void:
 	# Get the row name of the double-clicked grid cell
 	var row_name = _get_row_name(gridCell)
-	
+
 	# Ensure the row corresponds to an inventory item
 	if inventory_rows.has(row_name):
 		var item = inventory_rows[row_name]["item"] as InventoryItem
