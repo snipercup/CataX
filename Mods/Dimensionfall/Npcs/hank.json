@@ -1,9 +1,0 @@
-[
-    {
-        "id": "hank",
-        "name": "Hank",
-        "description": "Friendly wanderer",
-        "sprite": "hank.png",
-        "health": 100
-    }
-]
