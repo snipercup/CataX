@@ -26,10 +26,11 @@ This is the only AGENTS.md file, do not look for others.
 
 ## Development Flow
 1. Start tasks from the workspace.
-2. After modifications, run the GUT tests:
+2. After modifications, run `gdformat path/to/modified_script.gd` on any script that was modified to properly format it.
+3. Run the GUT tests:
    ```bash
    godot --headless --import
    godot --headless -s --path "$PWD" addons/gut/gut_cmdln.gd -gexit -gdir=res://Tests/Unit
    ```
-3. Report back any tests that fail.
-4. Make sure that the requirements are satisfied.
+4. Report back any tests that fail.
+5. Make sure that the requirements are satisfied.
