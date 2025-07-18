@@ -42,6 +42,7 @@ func _on_save_button_button_up() -> void:
 	dnpc.sprite = npcImageDisplay.texture
 	dnpc.health = int(healthSpinBox.value)
 	dnpc.spawn_maps = _get_spawn_maps_from_ui()
+	dnpc.changed(olddata)
 	dnpc.save_to_disk()
 	data_changed.emit()
 	olddata = DNpc.new(dnpc.get_data().duplicate(true), dnpc.parent)

@@ -48,10 +48,64 @@ func save_to_disk():
 	# Data has changed; propagate save to parent container
 
 
-func changed(_olddata: DNpc):
+func changed(olddata: DNpc):
+	var old_ids: Array = []
+	for map_data in olddata.spawn_maps:
+		old_ids.append(map_data.get("id", map_data.id))
+
+	var new_ids: Array = []
+	for map_data in spawn_maps:
+		new_ids.append(map_data.get("id", map_data.id))
+
+	for map_id in old_ids:
+		if not new_ids.has(map_id):
+			(
+				Gamedata
+				. mods
+				. remove_reference(
+					DMod.ContentType.MAPS,
+					map_id,
+					DMod.ContentType.NPCS,
+					id,
+				)
+			)
+
+	for map_id in new_ids:
+		(
+			Gamedata
+			. mods
+			. add_reference(
+				DMod.ContentType.MAPS,
+				map_id,
+				DMod.ContentType.NPCS,
+				id,
+			)
+		)
+
 	parent.save_npcs_to_disk()
 
 
 # Delete handler - currently no references to clean up
 func delete():
+	var all_results: Array = (
+		Gamedata
+		. mods
+		. get_all_content_by_id(
+			DMod.ContentType.NPCS,
+			id,
+		)
+	)
+	if all_results.size() <= 1:
+		for map_data in spawn_maps:
+			var map_id = map_data.get("id", map_data.id)
+			(
+				Gamedata
+				. mods
+				. remove_reference(
+					DMod.ContentType.MAPS,
+					map_id,
+					DMod.ContentType.NPCS,
+					id,
+				)
+			)
 	parent.save_npcs_to_disk()
