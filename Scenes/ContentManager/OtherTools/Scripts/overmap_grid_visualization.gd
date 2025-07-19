@@ -32,10 +32,10 @@ func generate_grid():
 
 			# Check if there is a tile at the current position in mygrid
 			if mygrid.cells.has(current_position):
-				var map_cell = mygrid.cells[current_position]
-				var dmap: DMap = map_cell.dmap
+				var map_cell: OvermapGrid.map_cell = mygrid.cells[current_position]
+				var rmap: RMap = map_cell.rmap
 				var myrotation: int = map_cell.rotation
-				tile_instance.set_texture(dmap.sprite)
+				tile_instance.set_texture(rmap.sprite)
 				# HACK: Second argument is the pivot offset. The automatic calculations for this are
 				# failing for some reason, so we put in half the minumum size of 32 in manually
 				tile_instance.set_texture_rotation(myrotation, Vector2(16, 16))
