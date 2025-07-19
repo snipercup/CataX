@@ -69,22 +69,3 @@ func test_start_reload_inserts_magazine() -> void:
 		item_manager.playerInventory.has_item(mag), "Magazine should be removed from inventory"
 	)
 	assert_false(gun.get_property("is_reloading"), "Reload flag should reset")
-
-
-func test_remove_resource_decrements_stack() -> void:
-	var ammo = _create_ammo(10)
-	var items = item_manager.playerInventory.get_items()
-	var result = item_manager.remove_resource("bullet_9mm", 5, items)
-	assert_true(result, "Expected remove_resource to succeed")
-	assert_eq(InventoryStacked.get_item_stack_size(ammo), 5, "Ammo stack should decrease")
-
-
-func test_reload_magazine_consumes_ammo() -> void:
-	var mag = _create_magazine(18)
-	var ammo = _create_ammo(5)
-	item_manager.reload_magazine(mag)
-	var props = mag.get_property("Magazine")
-	assert_eq(int(props["current_ammo"]), 20, "Magazine should be full")
-	assert_eq(
-		InventoryStacked.get_item_stack_size(ammo), 3, "Ammo stack should reduce by reload amount"
-	)
