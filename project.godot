@@ -57,6 +57,7 @@ folder_colors={
 "res://Images/": "pink",
 "res://Mods/": "purple",
 "res://Scenes/": "red",
+"res://Scenes/UI/": "blue",
 "res://Scenes/ContentManager/": "yellow",
 "res://Scenes/ContentManager/Custom_Editors/": "red",
 "res://Scenes/ContentManager/Custom_Editors/Scripts/": "green",

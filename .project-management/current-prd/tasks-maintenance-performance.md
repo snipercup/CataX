@@ -54,6 +54,17 @@
 
 ## Tasks
 - [ ] 4.0 Reorganize Scenes and Scripts Structure
-  - [ ] 4.1 Move scenes into categorized folders under `Scenes/`
+  - [x] 4.1 Move scenes into categorized folders under `Scenes/`
   - [ ] 4.2 Align script names with scene names and update references
-  - [ ] 4.3 Update `override.cfg` and `project.godot` paths
+  - [x] 4.3 Update `override.cfg` and `project.godot` paths
+
+## Relevant Files
+### Existing Files Modified
+- `hud.tscn` - Updated paths to moved scenes.
+- `Scenes/UI/InventoryWindow.tscn` - Adjusted path to list item scene.
+- `project.godot` - Added folder color for `Scenes/UI`.
+### Files Moved
+- `Scenes/InventoryWindow.tscn` → `Scenes/UI/InventoryWindow.tscn`
+- `Scenes/InventoryContainerListItem.tscn` → `Scenes/UI/InventoryContainerListItem.tscn`
+- `Scenes/GameOver.tscn` → `Scenes/UI/GameOver.tscn`
+- `Scenes/LoadingScreen.tscn` → `Scenes/UI/LoadingScreen.tscn`
