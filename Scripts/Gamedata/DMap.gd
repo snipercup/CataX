@@ -190,7 +190,7 @@ func get_sprite_path() -> String:
 # This will remove this map from the tacticalmap in every mod that has it.
 func remove_self_from_tacticalmap(tacticalmap_id: String) -> void:
 	var all_results: Array = Gamedata.mods.get_all_content_by_id(
-		DMod.ContentType.MAPS, tacticalmap_id
+		DMod.ContentType.TACTICALMAPS, tacticalmap_id
 	)
 	if all_results.size() > 0:
 		for result: DTacticalmap in all_results:
