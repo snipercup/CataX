@@ -356,8 +356,8 @@ func data_changed(oldmap: DMap):
 
 # Function to collect unique entities from each level in newdata and olddata
 func collect_unique_entities(oldmap: DMap) -> Dictionary:
-	var new_entities = {"mobs": [], "mobgroups": [], "furniture": [], "itemgroups": [], "tiles": []}  # Add mobgroup
-	var old_entities = {"mobs": [], "mobgroups": [], "furniture": [], "itemgroups": [], "tiles": []}  # Add mobgroup
+	var new_entities = {"mobs": [], "mobgroups": [], "furniture": [], "itemgroups": [], "tiles": []}
+	var old_entities = {"mobs": [], "mobgroups": [], "furniture": [], "itemgroups": [], "tiles": []}
 
 	# Collect entities from newdata
 	for level in levels:
