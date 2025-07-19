@@ -46,8 +46,8 @@ func save_to_disk():
 	parent.save_npcs_to_disk()
 
 # Remove a map from this NPC's spawn list
-	func remove_map_from_spawn_maps(map_id: String) -> void:
-		spawn_maps = spawn_maps.filter(func(entry): return entry.get("id", entry) != map_id)
+func remove_map_from_spawn_maps(map_id: String) -> void:
+	spawn_maps = spawn_maps.filter(func(entry): return entry.get("id", entry) != map_id)
 	save_to_disk()
 
 

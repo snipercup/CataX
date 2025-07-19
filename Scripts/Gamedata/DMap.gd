@@ -229,28 +229,28 @@ func delete():
 		remove_self_from_tacticalmap(ref)
 
 	# Remove this map from the overmapareas in this map's references
-		for ref in myreferences.get("overmapareas", []):
-			var myareas: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.OVERMAPAREAS, ref)
-			if myareas.is_empty():
+	for ref in myreferences.get("overmapareas", []):
+		var myareas: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.OVERMAPAREAS, ref)
+		if myareas.is_empty():
 			print_debug("Missing overmap area '" + ref + "' while deleting map '" + id + "'")
-			for area: DOvermaparea in myareas:
-	area.remove_map_from_all_regions(id)
+		for area: DOvermaparea in myareas:
+			area.remove_map_from_all_regions(id)
 
 		# Remove this map from NPC spawn lists
-			for npc_id in myreferences.get("npcs", []):
-			var npcs: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.NPCS, npc_id)
-			if npcs.is_empty():
+	for npc_id in myreferences.get("npcs", []):
+		var npcs: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.NPCS, npc_id)
+		if npcs.is_empty():
 			print_debug("Missing NPC '" + npc_id + "' while deleting map '" + id + "'")
-	for npc: DNpc in npcs:
-	npc.remove_map_from_spawn_maps(id)
+		for npc: DNpc in npcs:
+			npc.remove_map_from_spawn_maps(id)
 	
-			# Remove this map from quests
-			for quest_id in myreferences.get("quests", []):
+		# Remove this map from quests
+		for quest_id in myreferences.get("quests", []):
 			var quests: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.QUESTS, quest_id)
 			if quests.is_empty():
-	print_debug("Missing quest '" + quest_id + "' while deleting map '" + id + "'")
-	for quest: DQuest in quests:
-	quest.remove_steps_by_map(id)
+				print_debug("Missing quest '" + quest_id + "' while deleting map '" + id + "'")
+			for quest: DQuest in quests:
+				quest.remove_steps_by_map(id)
 
 	remove_my_reference_from_all_entities()
 
