@@ -5,7 +5,6 @@ extends RefCounted
 # This script is intended to be used inside the GameData autoload singleton
 # This script handles data for one map. You can access it trough Gamedata.mods.by_id("Core").maps
 
-
 # Example map data:
 #{
 #	"areas": [
@@ -83,18 +82,22 @@ extends RefCounted
 
 var id: String = "":
 	set(newid):
-		id = newid.replace(".json", "") # In case the filename is passed, we remove json
+		id = newid.replace(".json", "")  # In case the filename is passed, we remove json
 var name: String = ""
 var description: String = ""
-var categories: Array = [] # example: "categories": ["Buildings","Urban","City"]
+var categories: Array = []  # example: "categories": ["Buildings","Urban","City"]
 var weight: int = 1000
 var mapwidth: int = 32
 var mapheight: int = 32
-var levels: Array = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+var levels: Array = [
+	[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
+]
 var areas: Array = []
 var sprite: Texture = null
- # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
-var connections: Dictionary = {"north": "ground","east": "ground","south": "ground","west": "ground"}
+# Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
+var connections: Dictionary = {
+	"north": "ground", "east": "ground", "south": "ground", "west": "ground"
+}
 var dataPath: String
 var parent: DMaps
 
@@ -113,8 +116,8 @@ class area:
 # TODO: Implement this into the script
 class maptile:
 	# Only a reference to an area, not an instance of an area. Can have "id" and "rotation"
-	var areas: Array = [] 
-	var id: String = "" # The id of the tile
+	var areas: Array = []
+	var id: String = ""  # The id of the tile
 	var rotation: int = 0
 	# Furniture, Mob and Itemgroups are mutually exclusive. Only one can exist at a time
 	var furniture: String = ""
@@ -136,7 +139,10 @@ func set_data(newdata: Dictionary) -> void:
 	weight = newdata.get("weight", 1000)
 	mapwidth = newdata.get("mapwidth", 32)
 	mapheight = newdata.get("mapheight", 32)
-	levels = newdata.get("levels", [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]])
+	levels = newdata.get(
+		"levels",
+		[[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+	)
 	areas = newdata.get("areas", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
@@ -161,7 +167,7 @@ func get_data() -> Dictionary:
 
 func load_data_from_disk():
 	set_data(Helper.json_helper.load_json_dictionary_file(get_file_path()))
-	sprite = load(get_sprite_path()) 
+	sprite = load(get_sprite_path())
 
 
 func save_data_to_disk() -> void:
@@ -171,17 +177,21 @@ func save_data_to_disk() -> void:
 
 func get_filename() -> String:
 	return id + ".json"
-	
+
+
 func get_file_path() -> String:
 	return dataPath + get_filename()
-	
+
+
 func get_sprite_path() -> String:
 	return get_file_path().replace(".json", ".png")
 
 
 # This will remove this map from the tacticalmap in every mod that has it.
 func remove_self_from_tacticalmap(tacticalmap_id: String) -> void:
-	var all_results: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.MAPS, tacticalmap_id)
+	var all_results: Array = Gamedata.mods.get_all_content_by_id(
+		DMod.ContentType.MAPS, tacticalmap_id
+	)
 	if all_results.size() > 0:
 		for result: DTacticalmap in all_results:
 			result.remove_chunk_by_mapid(id)
@@ -199,7 +209,7 @@ func delete_files():
 	if dir.file_exists(png_file_path):
 		dir.remove(id + ".png")
 		dir.remove(id + ".png.import")
-	
+
 
 # We remove ourselves from the filesystem and the parent maplist
 # After this, the map is deleted from the current mod that the parent maplist is a part of
@@ -212,19 +222,41 @@ func delete():
 	var all_results: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.MAPS, id)
 	if all_results.size() > 0:
 		return
-	
+
 	var myreferences: Dictionary = parent.references.get(id, {})
 	# Remove this map from the tacticalmaps in this map's references
 	for ref in myreferences.get("tacticalmaps", []):
 		remove_self_from_tacticalmap(ref)
 
 	# Remove this map from the overmapareas in this map's references
-	for ref in myreferences.get("overmapareas", []):
-		var myareas: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.OVERMAPAREAS, ref)
-		for area: DOvermaparea in myareas:
-			area.remove_map_from_all_regions(id)
+		for ref in myreferences.get("overmapareas", []):
+			var myareas: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.OVERMAPAREAS, ref)
+			if myareas.is_empty():
+			print_debug("Missing overmap area '" + ref + "' while deleting map '" + id + "'")
+			for area: DOvermaparea in myareas:
+	area.remove_map_from_all_regions(id)
+
+		# Remove this map from NPC spawn lists
+			for npc_id in myreferences.get("npcs", []):
+			var npcs: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.NPCS, npc_id)
+			if npcs.is_empty():
+			print_debug("Missing NPC '" + npc_id + "' while deleting map '" + id + "'")
+	for npc: DNpc in npcs:
+	npc.remove_map_from_spawn_maps(id)
 	
+			# Remove this map from quests
+			for quest_id in myreferences.get("quests", []):
+			var quests: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.QUESTS, quest_id)
+			if quests.is_empty():
+	print_debug("Missing quest '" + quest_id + "' while deleting map '" + id + "'")
+	for quest: DQuest in quests:
+	quest.remove_steps_by_map(id)
+
 	remove_my_reference_from_all_entities()
+
+	# Remove entry from references.json and save
+	parent.references.erase(id)
+	Gamedata.mods.save_references(parent)
 
 
 func remove_my_reference_from_all_entities() -> void:
@@ -236,13 +268,21 @@ func remove_my_reference_from_all_entities() -> void:
 	for entity_type in unique_entities.keys():
 		for entity_id in unique_entities[entity_type]:
 			if entity_type == "furniture":
-				Gamedata.mods.remove_reference(DMod.ContentType.FURNITURES,entity_id,DMod.ContentType.MAPS,id)
+				Gamedata.mods.remove_reference(
+					DMod.ContentType.FURNITURES, entity_id, DMod.ContentType.MAPS, id
+				)
 			elif entity_type == "tiles":
-				Gamedata.mods.remove_reference(DMod.ContentType.TILES,entity_id,DMod.ContentType.MAPS,id)
+				Gamedata.mods.remove_reference(
+					DMod.ContentType.TILES, entity_id, DMod.ContentType.MAPS, id
+				)
 			elif entity_type == "mobs":
-				Gamedata.mods.remove_reference(DMod.ContentType.MOBS, entity_id, DMod.ContentType.MAPS, id)
+				Gamedata.mods.remove_reference(
+					DMod.ContentType.MOBS, entity_id, DMod.ContentType.MAPS, id
+				)
 			elif entity_type == "itemgroups":
-				Gamedata.mods.remove_reference(DMod.ContentType.ITEMGROUPS, entity_id, DMod.ContentType.MAPS, id)
+				Gamedata.mods.remove_reference(
+					DMod.ContentType.ITEMGROUPS, entity_id, DMod.ContentType.MAPS, id
+				)
 
 
 # Function to update map entity references when a map's data changes
@@ -256,60 +296,68 @@ func data_changed(oldmap: DMap):
 	for entity_type in new_entities.keys():
 		if entity_type == "furniture":
 			for entity_id in new_entities[entity_type]:
-				Gamedata.mods.add_reference(DMod.ContentType.FURNITURES,entity_id,DMod.ContentType.MAPS,id)
+				Gamedata.mods.add_reference(
+					DMod.ContentType.FURNITURES, entity_id, DMod.ContentType.MAPS, id
+				)
 		elif entity_type == "tiles":
 			for entity_id in new_entities[entity_type]:
-				Gamedata.mods.add_reference(DMod.ContentType.TILES,entity_id,DMod.ContentType.MAPS,id)
+				Gamedata.mods.add_reference(
+					DMod.ContentType.TILES, entity_id, DMod.ContentType.MAPS, id
+				)
 		elif entity_type == "mobs":
 			for entity_id in new_entities[entity_type]:
-				Gamedata.mods.add_reference(DMod.ContentType.MOBS, entity_id, DMod.ContentType.MAPS, id)
+				Gamedata.mods.add_reference(
+					DMod.ContentType.MOBS, entity_id, DMod.ContentType.MAPS, id
+				)
 		elif entity_type == "mobgroups":  # Handle mobgroup references
 			for entity_id in new_entities[entity_type]:
-				Gamedata.mods.add_reference(DMod.ContentType.MOBGROUPS, entity_id, DMod.ContentType.MAPS, id)
+				Gamedata.mods.add_reference(
+					DMod.ContentType.MOBGROUPS, entity_id, DMod.ContentType.MAPS, id
+				)
 		elif entity_type == "itemgroups":
 			for entity_id in new_entities[entity_type]:
-				Gamedata.mods.add_reference(DMod.ContentType.ITEMGROUPS, entity_id, DMod.ContentType.MAPS, id)
+				Gamedata.mods.add_reference(
+					DMod.ContentType.ITEMGROUPS, entity_id, DMod.ContentType.MAPS, id
+				)
 
 	# Remove references for entities not present in new data
 	for entity_type in old_entities.keys():
 		if entity_type == "furniture":
 			for entity_id in old_entities[entity_type]:
 				if not new_entities[entity_type].has(entity_id):
-					Gamedata.mods.remove_reference(DMod.ContentType.FURNITURES,entity_id,DMod.ContentType.MAPS,id)
+					Gamedata.mods.remove_reference(
+						DMod.ContentType.FURNITURES, entity_id, DMod.ContentType.MAPS, id
+					)
 		elif entity_type == "tiles":
 			for entity_id in old_entities[entity_type]:
 				if not new_entities[entity_type].has(entity_id):
-					Gamedata.mods.remove_reference(DMod.ContentType.TILES,entity_id,DMod.ContentType.MAPS,id)
+					Gamedata.mods.remove_reference(
+						DMod.ContentType.TILES, entity_id, DMod.ContentType.MAPS, id
+					)
 		elif entity_type == "itemgroups":
 			for entity_id in old_entities[entity_type]:
 				if not new_entities[entity_type].has(entity_id):
-					Gamedata.mods.remove_reference(DMod.ContentType.ITEMGROUPS, entity_id,DMod.ContentType.MAPS,id)
+					Gamedata.mods.remove_reference(
+						DMod.ContentType.ITEMGROUPS, entity_id, DMod.ContentType.MAPS, id
+					)
 		elif entity_type == "mobs":
 			for entity_id in old_entities[entity_type]:
 				if not new_entities[entity_type].has(entity_id):
-					Gamedata.mods.remove_reference(DMod.ContentType.MOBS, entity_id, DMod.ContentType.MAPS, id)
+					Gamedata.mods.remove_reference(
+						DMod.ContentType.MOBS, entity_id, DMod.ContentType.MAPS, id
+					)
 		elif entity_type == "mobgroups":  # Remove mobgroup references
 			for entity_id in old_entities[entity_type]:
 				if not new_entities[entity_type].has(entity_id):
-					Gamedata.mods.remove_reference(DMod.ContentType.MOBGROUPS, entity_id, DMod.ContentType.MAPS, id)
+					Gamedata.mods.remove_reference(
+						DMod.ContentType.MOBGROUPS, entity_id, DMod.ContentType.MAPS, id
+					)
 
 
 # Function to collect unique entities from each level in newdata and olddata
 func collect_unique_entities(oldmap: DMap) -> Dictionary:
-	var new_entities = {
-		"mobs": [],
-		"mobgroups": [],  # Add mobgroup
-		"furniture": [],
-		"itemgroups": [],
-		"tiles": []
-	}
-	var old_entities = {
-		"mobs": [],
-		"mobgroups": [],  # Add mobgroup
-		"furniture": [],
-		"itemgroups": [],
-		"tiles": []
-	}
+	var new_entities = {"mobs": [], "mobgroups": [], "furniture": [], "itemgroups": [], "tiles": []}  # Add mobgroup
+	var old_entities = {"mobs": [], "mobgroups": [], "furniture": [], "itemgroups": [], "tiles": []}  # Add mobgroup
 
 	# Collect entities from newdata
 	for level in levels:
@@ -326,7 +374,7 @@ func collect_unique_entities(oldmap: DMap) -> Dictionary:
 	# Collect entities from olddata
 	for myarea in oldmap.areas:
 		add_entities_in_area_to_set(myarea, old_entities)
-	
+
 	return {"new_entities": new_entities, "old_entities": old_entities}
 
 
@@ -370,7 +418,11 @@ func add_entities_to_set(level: Array, entity_set: Dictionary):
 				for itemgroup in entity["furniture"]["itemgroups"]:
 					if not entity_set["itemgroups"].has(itemgroup):
 						entity_set["itemgroups"].append(itemgroup)
-		if entity.has("id") and not entity_set["tiles"].has(entity["id"]) and not entity["id"] == "":
+		if (
+			entity.has("id")
+			and not entity_set["tiles"].has(entity["id"])
+			and not entity["id"] == ""
+		):
 			entity_set["tiles"].append(entity["id"])
 		# Add unique itemgroups directly from the entity
 		if entity.has("itemgroups"):
@@ -441,18 +493,19 @@ func erase_entity_from_areas(entity_type: String, entity_id: String) -> void:
 		match entity_type:
 			"tile":
 				if myarea.has("tiles"):
-					myarea["tiles"] = myarea["tiles"].filter(func(tile):
-						return tile["id"] != entity_id
+					myarea["tiles"] = myarea["tiles"].filter(
+						func(tile): return tile["id"] != entity_id
 					)
 			"furniture", "mob", "mobgroup", "itemgroup":
 				if myarea.has("entities"):
-					myarea["entities"] = myarea["entities"].filter(func(entity):
-						return not (entity["type"] == entity_type and entity["id"] == entity_id)
+					myarea["entities"] = myarea["entities"].filter(
+						func(entity):
+							return not (entity["type"] == entity_type and entity["id"] == entity_id)
 					)
 
 
 # Function to remove a area from mapData.areas by its id
-func remove_area(area_id: String) -> void:	
+func remove_area(area_id: String) -> void:
 	# Iterate through the areas array to find and remove the area by id
 	for i in range(areas.size()):
 		if areas[i]["id"] == area_id:
@@ -465,7 +518,7 @@ func set_connection(direction: String, value: String) -> void:
 	# Ensure the connections dictionary has an entry for the specified direction (e.g., "north", "south").
 	if not connections.has(direction):
 		connections[direction] = "ground"  # Default to "ground" if not already set.
-	
+
 	# Assign the provided connection type (e.g., "road", "ground") to the specified direction.
 	connections[direction] = value
 
@@ -475,6 +528,6 @@ func get_connection(direction: String) -> String:
 	# Return "ground" if connections dictionary is empty or the direction is not found.
 	if connections.is_empty() or not connections.has(direction):
 		return "ground"
-	
+
 	# Return the connection type for the specified direction (e.g., "road" or "ground").
 	return connections[direction]

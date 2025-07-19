@@ -65,20 +65,20 @@
 - Follow GDScript 4 syntax with tabs for indentation.
 
 ## Tasks
-- [ ] **1.0 Review existing map deletion logic (`Scripts/Gamedata/DMap.gd`) against the specification.**
-  - [ ] 1.1 Open `feature-specification.md` and compare current `delete()` and `remove_my_reference_from_all_entities()` with requirements.
-  - [ ] 1.2 Identify gaps in reference cleanup and note required changes.
-- [ ] **2.0 Update deletion process to remove references from NPCs, overmap areas and quests.**
-  - [ ] 2.1 Load `/maps/references.json` to get lists of related NPCs, overmap areas and quests.
-  - [ ] 2.2 For each NPC ID, remove the deleted map from its `spawn_maps` array and save using `DNpc`.
-  - [ ] 2.3 For each overmap area ID, call `remove_map_from_all_regions(map_id)` and save.
-  - [ ] 2.4 For each quest ID, remove or update steps referencing the map and save.
-- [ ] **3.0 Ensure `/maps/references.json` is updated by removing the map entry.**
-  - [ ] 3.1 After cleaning entities, delete the map key from the references dictionary.
-  - [ ] 3.2 Save the updated JSON to disk.
-- [ ] **4.0 Implement debug logging when reference removal fails.**
-  - [ ] 4.1 When an entity is missing or locked, log a debug message describing the failure.
-  - [ ] 4.2 Continue processing other entities after logging.
+- [x] **1.0 Review existing map deletion logic (`Scripts/Gamedata/DMap.gd`) against the specification.**
+  - [x] 1.1 Open `feature-specification.md` and compare current `delete()` and `remove_my_reference_from_all_entities()` with requirements.
+  - [x] 1.2 Identify gaps in reference cleanup and note required changes.
+- [x] **2.0 Update deletion process to remove references from NPCs, overmap areas and quests.**
+  - [x] 2.1 Load `/maps/references.json` to get lists of related NPCs, overmap areas and quests.
+  - [x] 2.2 For each NPC ID, remove the deleted map from its `spawn_maps` array and save using `DNpc`.
+  - [x] 2.3 For each overmap area ID, call `remove_map_from_all_regions(map_id)` and save.
+  - [x] 2.4 For each quest ID, remove or update steps referencing the map and save.
+- [x] **3.0 Ensure `/maps/references.json` is updated by removing the map entry.**
+  - [x] 3.1 After cleaning entities, delete the map key from the references dictionary.
+  - [x] 3.2 Save the updated JSON to disk.
+- [x] **4.0 Implement debug logging when reference removal fails.**
+  - [x] 4.1 When an entity is missing or locked, log a debug message describing the failure.
+  - [x] 4.2 Continue processing other entities after logging.
 - [ ] **5.0 Add unit tests validating cleanup.**
   - [ ] 5.1 Create `test_map_deletion_reference_cleanup.gd` under `Tests/Unit`.
   - [ ] 5.2 Set up mock data for NPCs, overmap areas, quests and a map with references.
