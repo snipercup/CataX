@@ -5,6 +5,10 @@ extends Control
 
 
 func _on_generate_button_button_up() -> void:
+	# Rebuild all runtime data before generating the grid
+	# This ensures the visualization uses the latest mod information
+	# If reconstruction fails, the error will be printed in debug output
+	Runtimedata.reconstruct()
 	Helper.free_all_children(visual_grid)
 	generate_grid()
 
