@@ -1,13 +1,33 @@
 extends Node3D
 
-
 # Define properties for left-hand and right-hand weapons.
 @export var left_hand_item: Sprite3D
 @export var right_hand_item: Sprite3D
 
-
 @export var player: NodePath
 @export var hud: NodePath
+
+# Count bullets spawned for testing.
+var _bullet_count: int = 0
+
+
+func _ready() -> void:
+	Helper.signal_broker.projectile_spawned.connect(_on_projectile_spawned)
+
+
+func _on_projectile_spawned(projectile: Node, instigator: RID) -> void:
+	var p: Node3D = get_node(player)
+	if p and instigator == p.get_rid():
+		_bullet_count += 1
+
+
+func get_bullet_count() -> int:
+	return _bullet_count
+
+
+func reset_bullet_count() -> void:
+	_bullet_count = 0
+
 
 func _input(event):
 	# Return early if no weapons are equipped
