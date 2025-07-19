@@ -138,14 +138,10 @@
 ## Relevant Files
 - Reference *existing* project files here
 
-### Proposed New Files
-- `/Tests/Unit/test_overmap_performance.gd` - Unit tests verifying overmap update frequency.
-- `/Scripts/Helper/overmap_manager_refactor.gd` - Potentially a refactored manager for event-driven updates.
 
 ### Existing Files Modified
 - `Scenes/Overmap/Scripts/Overmap.gd` - Optimize tile update logic.
 - `Scripts/Helper/overmap_manager.gd` - Reduce per-frame load/unload and segment updates.
-- `Scripts/Chunk.gd` - Refactor navigation data update and resource cleanup.
 
 ### Files To Remove
 - None
@@ -163,15 +159,5 @@
   - [ ] 2.1 Create signals for chunk loading and unloading
   - [ ] 2.2 Replace _process loops with signal-driven updates
   - [ ] 2.3 Update Overmap.gd to connect new signals
-- [ ] 3.0 Optimize chunk navigation updates and resource cleanup
-  - [ ] 3.1 Queue navigation mesh baking asynchronously
-  - [ ] 3.2 Free geometry data when chunk is unloaded
-- [ ] 4.0 Cache node group lookups to improve performance
-  - [ ] 4.1 Cache results of get_nodes_in_group
-  - [ ] 4.2 Refresh caches on group membership changes
-- [ ] 5.0 Add performance-focused unit tests
-  - [ ] 5.1 Create test_overmap_performance.gd
-  - [ ] 5.2 Verify event-driven updates reduce processing cost
-  - [ ] 5.3 Run GUT tests and analyze results
 
 *End of document*
