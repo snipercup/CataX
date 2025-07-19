@@ -3,18 +3,17 @@ extends Node3D
 var map_save_folder: String
 
 # The amount of blocks that make up a level
-var level_width : int = 32
-var level_height : int = 32
+var level_width: int = 32
+var level_height: int = 32
 
-@export var level_manager : Node3D
+@export var level_manager: Node3D
 @export_file var default_level_json
-
 
 # Parameters for dynamic chunk loading
 var creation_radius = 2
 var survival_radius = 3
-var loaded_chunks = {} # Dictionary to store loaded chunks with their positions as keys
-var player_position = Vector2.ZERO # Player's position, updated regularly
+var loaded_chunks = {}  # Dictionary to store loaded chunks with their positions as keys
+var player_position = Vector2.ZERO  # Player's position, updated regularly
 # Chunks are loaded and unloaded one at a time. The load_queue will be processed before the unload_queue
 # Chunks that should be loaded and unloaded are stored inside these variables
 var load_queue: Array[Vector2] = []
@@ -30,7 +29,7 @@ var initial_chunks_status = {}  # Dictionary to track initial chunks loading sta
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	Helper.map_manager.level_generator = self # Register with the map manager
+	Helper.map_manager.level_generator = self  # Register with the map manager
 	# Connect to the Helper.signal_broker.game_started signal
 	Helper.signal_broker.game_started.connect(_on_game_started)
 	Helper.signal_broker.game_ended.connect(_on_game_ended)
@@ -39,19 +38,22 @@ func _ready():
 
 # Function to create and start a timer that will generate chunks every 1 second if applicable
 func start_timer():
-	var my_timer = Timer.new() # Create a new Timer instance
-	my_timer.wait_time = TIME_DELAY # Timer will tick every TIME_DELAY second
-	my_timer.one_shot = false # False means the timer will repeat
-	add_child(my_timer) # Add the Timer to the scene as a child of this node
-	my_timer.timeout.connect(_on_Timer_timeout) # Connect the timeout signal
-	my_timer.start() # Start the timer
+	var my_timer = Timer.new()  # Create a new Timer instance
+	my_timer.wait_time = TIME_DELAY  # Timer will tick every TIME_DELAY second
+	my_timer.one_shot = false  # False means the timer will repeat
+	add_child(my_timer)  # Add the Timer to the scene as a child of this node
+	my_timer.timeout.connect(_on_Timer_timeout)  # Connect the timeout signal
+	my_timer.start()  # Start the timer
 
 
 # This will start the chunk loading and unloading if the player has moved and no chunk
 # is currently being loaded or unloaded
 func _on_Timer_timeout():
 	var player = get_tree().get_first_node_in_group("Players")
-	var new_position = Vector2(player.global_transform.origin.x, player.global_transform.origin.z) / Vector2(level_width, level_height)
+	var new_position = (
+		Vector2(player.global_transform.origin.x, player.global_transform.origin.z)
+		/ Vector2(level_width, level_height)
+	)
 	# The initial chunks always generate, even when the player stands still
 	if new_position != player_position or initial_chunks_status.size() > 0:
 		player_position = new_position
@@ -64,15 +66,20 @@ func _on_game_started():
 	# To be developed later
 	pass
 
+
 # Function for handling player spawned signal
 func _on_player_spawned(playernode):
 	initialize_map_data()
-	
-	var new_position = Vector2(playernode.global_transform.origin.x, playernode.global_transform.origin.z) / Vector2(level_width, level_height)
+
+	var new_position = (
+		Vector2(playernode.global_transform.origin.x, playernode.global_transform.origin.z)
+		/ Vector2(level_width, level_height)
+	)
 	load_queue.append(new_position.floor())
 	# Start a loop to update chunks based on player position
 	load_initial_chunks_around_player(new_position.floor())
 	start_timer()
+
 
 # Function to load initial chunks around the player's position
 func load_initial_chunks_around_player(player_pos: Vector2):
@@ -86,7 +93,7 @@ func load_initial_chunks_around_player(player_pos: Vector2):
 		player_pos + Vector2(1, -1),  # North-east
 		player_pos + Vector2(-1, 1)  # South-west
 	]
-	
+
 	for chunk_pos in initial_chunks:
 		if not loaded_chunks.has(chunk_pos) and not load_queue.has(chunk_pos):  # Ensure chunk isn't already loaded or queued
 			load_queue.append(chunk_pos)
@@ -100,11 +107,13 @@ func _on_game_ended():
 
 # Updated function to get chunk data at a given position
 func get_chunk_data_at_position(mypos: Vector2) -> Dictionary:
-	var map_cell: OvermapGrid.map_cell = Helper.overmap_manager.get_map_cell_by_local_coordinate(mypos)
+	var map_cell: OvermapGrid.map_cell = Helper.overmap_manager.get_map_cell_by_local_coordinate(
+		mypos
+	)
 	var json_file_path: String = map_cell.map_id
 	var myrotation: int = map_cell.rotation
-	map_cell.explore() # Upgrade the map_cell's reveal status to explore since the player is in proximity
-	return {"id":json_file_path, "rotation":myrotation}
+	map_cell.explore()  # Upgrade the map_cell's reveal status to explore since the player is in proximity
+	return {"id": json_file_path, "rotation": myrotation}
 
 
 # We store the level map width and height
@@ -118,7 +127,9 @@ func initialize_map_data():
 func calculate_chunks_to_load(player_chunk_pos: Vector2) -> Array:
 	var chunks_to_load = []
 	for x in range(player_chunk_pos.x - creation_radius, player_chunk_pos.x + creation_radius + 1):
-		for y in range(player_chunk_pos.y - creation_radius, player_chunk_pos.y + creation_radius + 1):
+		for y in range(
+			player_chunk_pos.y - creation_radius, player_chunk_pos.y + creation_radius + 1
+		):
 			var chunk_pos = Vector2(x, y)
 			# Check if chunk_pos is within the map dimensions
 			if not loaded_chunks.has(chunk_pos):
@@ -152,18 +163,19 @@ func load_chunk(chunk_pos: Vector2):
 		new_chunk.chunk_data = get_chunk_data_at_position(chunk_pos)
 	level_manager.add_child.call_deferred(new_chunk)
 	loaded_chunks[chunk_pos] = new_chunk
-	
+
 	# Mark the initial chunk as loaded
 	mark_initial_chunk_as_loaded(chunk_pos)
+
 
 # New function to mark initial chunks as loaded
 func mark_initial_chunk_as_loaded(chunk_pos: Vector2):
 	if initial_chunks_status.size() == 0:
 		return  # Already empty, signal already emitted
-	
+
 	if initial_chunks_status.has(chunk_pos):
 		initial_chunks_status.erase(chunk_pos)
-	
+
 	# Emit the signal if all initial chunks are loaded and the dictionary is empty
 	if initial_chunks_status.size() == 0:
 		Helper.signal_broker.initial_chunks_generated.emit()
@@ -195,11 +207,11 @@ func _on_chunk_un_loaded():
 # Calculates which chunks should be loaded and unloaded
 func _chunk_management_logic():
 	var current_player_chunk = player_position.floor()
-	
+
 	# Calculate potential chunks for load and unload
 	var potential_loads = calculate_chunks_to_load(current_player_chunk)
 	var potential_unloads = calculate_chunks_to_unload(current_player_chunk)
-	
+
 	# Update queues with new chunks ensuring no duplicates across both queues
 	update_queues(potential_loads, potential_unloads)
 
@@ -218,6 +230,7 @@ func update_queues(potential_loads, potential_unloads):
 	for chunk_pos in unload_queue.duplicate():
 		if chunk_pos.distance_to(player_position.floor()) <= creation_radius:
 			unload_queue.erase(chunk_pos)
+
 
 # This function will either load or unload a chunk if there are any to load or unload
 func process_next_chunk():
@@ -279,7 +292,7 @@ func get_chunk_pos_from_mypos(mypos: Vector3) -> Vector2:
 func unload_all_chunks():
 	# Clear load queue to stop generating new chunks
 	load_queue.clear()
-	is_processing_chunk = true # make sure no new chunks get added to the load queue
+	is_processing_chunk = true  # make sure no new chunks get added to the load queue
 
 	# Start unloading chunks
 	handle_chunk_unload()
@@ -297,7 +310,7 @@ func handle_chunk_unload():
 		# Get every chunk currently in the group
 		var chunks = get_tree().get_nodes_in_group("chunks")
 		for chunk in chunks:
-			await get_tree().create_timer(TIME_DELAY).timeout # short pause between checks
+			await get_tree().create_timer(TIME_DELAY).timeout  # short pause between checks
 			if is_instance_valid(chunk):
 				match chunk.load_state:
 					chunk.LoadStates.NEITHER:
@@ -307,7 +320,7 @@ func handle_chunk_unload():
 						all_unloaded = false
 
 		if not all_unloaded:
-			await get_tree().create_timer(TIME_DELAY).timeout # wait before the next pass
+			await get_tree().create_timer(TIME_DELAY).timeout  # wait before the next pass
 
 	is_processing_chunk = false
 	all_chunks_unloaded.emit()

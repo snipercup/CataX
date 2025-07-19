@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://bisxe8aexlshr"]
 
-[ext_resource type="Script" uid="uid://dbn88kjwdedtb" path="res://day_night.gd" id="1_iw4nk"]
+[ext_resource type="Script" uid="uid://dbn88kjwdedtb" path="res://Scripts/day_night.gd" id="1_iw4nk"]
 
 [sub_resource type="Animation" id="Animation_g822v"]
 length = 0.001

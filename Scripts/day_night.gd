@@ -10,11 +10,12 @@ extends CanvasModulate
 func _ready():
 	Helper.time_helper.minute_passed.connect(_on_minute_passed)
 
+
 func _on_minute_passed(current_time: String):
 	# Map the current in-game minutes (0 to 1440) to animation frames (0 to 24)
 	var animation_frame = Helper.time_helper.get_time_in_hr()
-	
-	# Seek the animation to the calculated frame. 
+
+	# Seek the animation to the calculated frame.
 	# The animation has a speed of 0 so it doesn't actually play.
 	# This is because when we set the animation frame it might skip to another point and
 	# you can see the light flicker because of it.

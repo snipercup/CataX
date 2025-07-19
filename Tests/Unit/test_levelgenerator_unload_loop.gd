@@ -3,7 +3,8 @@ extends GutTest
 # This test will test the LevelGenerator.gd script
 
 # Preload the LevelGenerator script so we can instantiate it in tests
-const LevelGenerator = preload("res://LevelGenerator.gd")
+const LevelGenerator = preload("res://Scripts/LevelGenerator.gd")
+
 
 # A lightweight stub to stand in for real Chunk nodes during tests
 class StubChunk:
@@ -29,6 +30,7 @@ class StubChunk:
 # The LevelGenerator under test
 var generator: LevelGenerator
 
+
 # Called before each test runs
 func before_each():
 	# Create a fresh LevelGenerator instance
@@ -36,11 +38,13 @@ func before_each():
 	# Add it to the scene tree so it can emit signals, process, etc.
 	add_child(generator)
 
+
 # Called after each test completes
 func after_each():
 	# Clean up the generator instance if it still exists
 	if generator:
 		generator.queue_free()
+
 
 # Test that handle_chunk_unload iterates over loaded_chunks, calls unload_chunk(),
 # waits for all to free themselves, then emits all_chunks_unloaded and clears the map.

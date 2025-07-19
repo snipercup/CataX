@@ -54,6 +54,6 @@
 
 ## Tasks
 - [ ] 4.0 Reorganize Scenes and Scripts Structure
-  - [ ] 4.1 Move scenes into categorized folders under `Scenes/`
-  - [ ] 4.2 Align script names with scene names and update references
-  - [ ] 4.3 Update `override.cfg` and `project.godot` paths
+  - [c] 4.1 Move scenes into categorized folders under `Scenes/`
+  - [c] 4.2 Align script names with scene names and update references
+  - [c] 4.3 Update `override.cfg` and `project.godot` paths

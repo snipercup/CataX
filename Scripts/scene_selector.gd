@@ -42,7 +42,7 @@ func _on_options_pressed():
 
 
 func _on_help_button_pressed():
-	get_tree().change_scene_to_file("res://documentation.tscn")
+	get_tree().change_scene_to_file("res://Scenes/System/documentation.tscn")
 
 
 func _on_content_manager_button_button_up():

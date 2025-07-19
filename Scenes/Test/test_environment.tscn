@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://by4k08jqt2qal"]
 
 [ext_resource type="Script" uid="uid://djfx5kt38vuvf" path="res://Scripts/Chunk.gd" id="1_hp7uo"]
-[ext_resource type="Script" uid="uid://gqicvgvnb73e" path="res://test_environment.gd" id="1_vhsh0"]
-[ext_resource type="PackedScene" uid="uid://bn5i23p2yi5uj" path="res://Scenes/player.tscn" id="3_uc33h"]
-[ext_resource type="Script" uid="uid://bvjofw3g5oyxg" path="res://LevelManager.gd" id="17_akyhy"]
+[ext_resource type="Script" uid="uid://gqicvgvnb73e" path="res://Scripts/test_environment.gd" id="1_vhsh0"]
+[ext_resource type="PackedScene" uid="uid://bn5i23p2yi5uj" path="res://Scenes/Player/player.tscn" id="3_uc33h"]
+[ext_resource type="Script" uid="uid://bvjofw3g5oyxg" path="res://Scripts/LevelManager.gd" id="17_akyhy"]
 
 [node name="TestEnvironment" type="Node3D" node_paths=PackedStringArray("canvas_layer", "chunk")]
 script = ExtResource("1_vhsh0")
