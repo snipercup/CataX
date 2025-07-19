@@ -140,8 +140,8 @@
 
 
 ### Existing Files Modified
-- `Scenes/Overmap/Scripts/Overmap.gd` - Optimize tile update logic.
-- `Scripts/Helper/overmap_manager.gd` - Reduce per-frame load/unload and segment updates.
+- `Scenes/Overmap/Scripts/Overmap.gd` - Connect to new overmap manager signals.
+- `Scripts/Helper/overmap_manager.gd` - Added chunk load/unload signals and timer-based updates.
 
 ### Files To Remove
 - None
@@ -156,8 +156,8 @@
   - [ ] 1.2 Cache tile textures to minimize set_texture calls
   - [ ] 1.3 Batch update tiles when position changes
 - [ ] 2.0 Convert overmap manager updates to event-driven model
-  - [ ] 2.1 Create signals for chunk loading and unloading
-  - [ ] 2.2 Replace _process loops with signal-driven updates
-  - [ ] 2.3 Update Overmap.gd to connect new signals
+  - [c] 2.1 Create signals for chunk loading and unloading
+  - [c] 2.2 Replace _process loops with signal-driven updates
+  - [c] 2.3 Update Overmap.gd to connect new signals
 
 *End of document*
