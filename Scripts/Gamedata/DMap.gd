@@ -244,13 +244,13 @@ func delete():
 		for npc: DNpc in npcs:
 			npc.remove_map_from_spawn_maps(id)
 	
-		# Remove this map from quests
-		for quest_id in myreferences.get("quests", []):
-			var quests: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.QUESTS, quest_id)
-			if quests.is_empty():
-				print_debug("Missing quest '" + quest_id + "' while deleting map '" + id + "'")
-			for quest: DQuest in quests:
-				quest.remove_steps_by_map(id)
+	# Remove this map from quests
+	for quest_id in myreferences.get("quests", []):
+		var quests: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.QUESTS, quest_id)
+		if quests.is_empty():
+			print_debug("Missing quest '" + quest_id + "' while deleting map '" + id + "'")
+		for quest: DQuest in quests:
+			quest.remove_steps_by_map(id)
 
 	remove_my_reference_from_all_entities()
 
