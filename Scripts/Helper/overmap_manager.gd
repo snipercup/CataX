@@ -60,6 +60,11 @@ var player_current_cell: Vector2 = Vector2.ZERO  # Player's position per cell, u
 
 var noise: FastNoiseLite
 
+signal chunk_loaded(chunk_pos: Vector2)
+signal chunk_unloaded(chunk_pos: Vector2)
+
+@onready var update_timer: Timer = Timer.new()
+
 # When the player coordinate changed. player: The player node.
 # old_pos: The old coordinate in the grid. new_pos: The new coordinate in the grid
 signal player_coord_changed(player: Player, old_pos: Vector2, new_pos: Vector2)
@@ -67,17 +72,22 @@ signal player_coord_changed(player: Player, old_pos: Vector2, new_pos: Vector2)
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	# Connect to the Helper.signal_broker.game_started signal
+	# Connect to core game signals
 	Helper.signal_broker.game_started.connect(_on_game_started)
 	Helper.signal_broker.game_loaded.connect(_on_game_loaded)
 	Helper.signal_broker.game_ended.connect(_on_game_ended)
 	Helper.signal_broker.player_spawned.connect(_on_player_spawned)
 
+	# Set up a timer for periodic updates instead of using _process
+	update_timer.wait_time = 0.25
+	update_timer.one_shot = false
+	update_timer.autostart = true
+	update_timer.timeout.connect(_on_update_timer_timeout)
+	add_child(update_timer)
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
-	########## TEMPORARY! We don't want to load chunks so often, we should call load_chunks_around only when
-	########## there is a need to (for example moving from one chunk to another)
+
+# Periodic update handler replacing _process
+func _on_update_timer_timeout() -> void:
 	if player:
 		var player_position = player.position
 		load_cells_around(player_position)
@@ -347,6 +357,7 @@ func _merge_loaded_segment_data(segment_data: Dictionary) -> void:
 	for chunk_pos in segment_data.keys():
 		if not loaded_chunk_data.chunks.has(chunk_pos):
 			loaded_chunk_data.chunks[chunk_pos] = segment_data[chunk_pos]
+			chunk_loaded.emit(chunk_pos)
 
 
 # Load segments around the player and merge their data
@@ -419,6 +430,7 @@ func process_and_clear_segment(segment_pos: Vector2) -> Dictionary:
 			):
 				non_empty_data[chunk_key] = loaded_chunk_data.chunks[chunk_key]
 				loaded_chunk_data.chunks.erase(chunk_key)
+				chunk_unloaded.emit(chunk_key)
 	return non_empty_data
 
 
