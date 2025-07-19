@@ -1,9 +1,7 @@
 extends Node
 
-
 # This script manages the player inventory
 # It has functions to add and remove items, reload items and do other manipulations
-
 
 # The inventory of the player
 var playerInventory: InventoryStacked = null
@@ -17,9 +15,8 @@ var allAccessibleItems: Array[InventoryItem] = []  # List to hold all accessible
 # volume, while an item's "weight" property counts towards the inventory's "capacity" property
 var player_max_inventory_volume: int = 1000
 var item_protosets: Resource = preload("res://ItemProtosets.tres")
- # Keeps track of player equipment, used for saving
+# Keeps track of player equipment, used for saving
 var player_equipment: PlayerEquipment = null
-
 
 signal allAccessibleItems_changed(items_added: Array, items_removed: Array)
 signal craft_successful(item: Dictionary, recipe: Dictionary)
@@ -47,7 +44,7 @@ class PlayerEquipment:
 			player_equipment["LeftHandItem"] = LeftHandItem.serialize()
 		if RightHandItem:
 			player_equipment["RightHandItem"] = RightHandItem.serialize()
-		
+
 		if not EquipmentItemList.is_empty():
 			player_equipment["wearables"] = {}
 			for slot in EquipmentItemList.keys():
@@ -71,7 +68,7 @@ class PlayerEquipment:
 				var item = InventoryItem.new()
 				item.deserialize(equipment_dict["wearables"][slot])
 				EquipmentItemList[slot] = item
-				
+
 	# We keep track of what slots have equipment
 	func _on_item_was_equipped(heldItem: InventoryItem, equipmentSlot: Control):
 		# TODO : Remove this check and keep a list of slots
@@ -165,11 +162,13 @@ func create_starting_items():
 		return
 	for item: RItemgroup.Item in starting_items_group.items:
 		playerInventory.create_and_add_item(item.id)
-	
-	# Create starting equipment. The items are not added to the playerInventory, 
+
+	# Create starting equipment. The items are not added to the playerInventory,
 	# only to the equipment slots.
 	for wearableslot: RWearableSlot in Runtimedata.wearableslots.get_all().values():
-		player_equipment.EquipmentItemList[wearableslot.id] = playerInventory.create_item(wearableslot.starting_item)
+		player_equipment.EquipmentItemList[wearableslot.id] = playerInventory.create_item(
+			wearableslot.starting_item
+		)
 
 
 # The actual reloading is executed on the item
@@ -222,17 +221,23 @@ func reload_weapon(item: InventoryItem, specific_magazine: InventoryItem = null)
 	# Ensure the item is a ranged weapon before proceeding.
 	if item == null or item.get_property("Ranged") == null:
 		print_debug("Item is not a ranged weapon.")
+		item.set_property("is_reloading", false)
 		return false
 
 	# Select the appropriate magazine for reloading.
-	var magazine_to_load = specific_magazine if specific_magazine else find_compatible_magazine(item)
+	var magazine_to_load = (
+		specific_magazine if specific_magazine else find_compatible_magazine(item)
+	)
 	if not magazine_to_load:
 		print_debug("No compatible magazine found.")
+		item.set_property("is_reloading", false)
 		return false
 
 	# Execute the reloading process.
 	execute_reloading(item, magazine_to_load)
 	return true
+
+
 # This function will loop over the items in the inventory
 # It will select items that are compatible with the gun based on the "used_magazine" property
 # It will return the first result if a compatible magazine is found
@@ -279,13 +284,15 @@ func get_nested_property(item: InventoryItem, property_path: String) -> Variant:
 
 	# Remove the first key as we have already processed it.
 	keys.remove_at(0)
-	
+
 	# Continue with the nested properties.
 	return _get_nested_property_recursive(first_property_value, keys, 0)
 
 
 # Recursive helper function to navigate through the nested properties.
-func _get_nested_property_recursive(current_value: Variant, keys: PackedStringArray, index: int) -> Variant:
+func _get_nested_property_recursive(
+	current_value: Variant, keys: PackedStringArray, index: int
+) -> Variant:
 	if index >= keys.size() or not current_value:
 		return current_value
 	var key = keys[index]
@@ -301,35 +308,36 @@ func reload_magazine(magazine: InventoryItem) -> void:
 		var magazineProperties = magazine.get_property("Magazine")
 		# Get the ammo type required by the magazine
 		var ammo_type: String = magazineProperties["used_ammo"]
-		
+
 		var current_ammo: int = int(magazineProperties["current_ammo"])
 		# Total amount of ammo required to fully load the magazine
 		var needed_ammo: int = int(magazineProperties["max_ammo"]) - current_ammo
-		
+
 		if needed_ammo <= 0:
 			return  # Magazine is already full or has invalid properties
-		
+
 		# Initialize a variable to track the total amount of ammo loaded
 		var total_ammo_loaded: int = 0
-		
+
 		# Find and consume ammo from the inventory
 		while needed_ammo > 0:
 			var ammo_item: InventoryItem = playerInventory.get_item_by_id(ammo_type)
 			if not ammo_item:
 				break  # No more ammo of the required type is available
-			
+
 			# Calculate how much ammo can be loaded from this stack
 			var stack_size: int = InventoryStacked.get_item_stack_size(ammo_item)
 			var ammo_to_load: int = min(needed_ammo, stack_size)
-			
+
 			# Update totals based on the ammo loaded
 			total_ammo_loaded += ammo_to_load
 			needed_ammo -= ammo_to_load
-			
+
 			# Decrease the stack size of the ammo item in the inventory
 			var new_stack_size: int = stack_size - ammo_to_load
 			InventoryStacked.set_item_stack_size(ammo_item, new_stack_size)
-		
+			update_accessible_items_list()
+
 		# Update the current_ammo property of the magazine
 		if total_ammo_loaded > 0:
 			magazineProperties["current_ammo"] = current_ammo + total_ammo_loaded
@@ -373,7 +381,7 @@ func on_crafting_menu_start_craft(item: RItem, recipe: RItem.CraftRecipe):
 		var item_volume = item.get("volume")
 		if item_volume > remaining_volume:
 			craft_failed.emit(item, recipe, "Not enough space in inventory!")
-			return # The item is too big to fit in the player inventory
+			return  # The item is too big to fit in the player inventory
 		if not remove_required_resources_for_recipe(recipe, allAccessibleItems):
 			craft_failed.emit(item, recipe, "Failed to remove resources!")
 			return
@@ -410,7 +418,9 @@ func has_sufficient_item_amount(item_id: String, required_amount: int) -> bool:
 
 
 # Function to remove the required resources for a given recipe from the inventory.
-func remove_required_resources_for_recipe(recipe: RItem.CraftRecipe, items_source: Array[InventoryItem]) -> bool:
+func remove_required_resources_for_recipe(
+	recipe: RItem.CraftRecipe, items_source: Array[InventoryItem]
+) -> bool:
 	if "required_resources" not in recipe:
 		print("Recipe does not contain required resources.")
 		return false
@@ -419,8 +429,12 @@ func remove_required_resources_for_recipe(recipe: RItem.CraftRecipe, items_sourc
 	for resource in recipe.required_resources:
 		# Check if the source has a sufficient amount of each required resource.
 		if not remove_resource(resource.get("id"), resource.get("amount"), items_source):
-			print_debug("Failed to remove required resource:", resource.get("id"), \
-			"needed amount:", resource.get("amount"))
+			print_debug(
+				"Failed to remove required resource:",
+				resource.get("id"),
+				"needed amount:",
+				resource.get("amount")
+			)
 			return false  # Return false if we fail to remove the required amount for any resource.
 
 	return true  # If all resources are successfully removed, return true
@@ -451,6 +465,7 @@ func remove_resource(item_id: String, amount: int, items_source: Array[Inventory
 			var new_stack_size = current_stack_size - amount_to_remove
 			if not InventoryStacked.set_item_stack_size(item, new_stack_size):
 				return false  # Return false if we fail to set the new stack size.
+			update_accessible_items_list()
 			amount_to_remove = 0  # Set to 0 as we have removed enough.
 
 	# Check if we have removed the required amount.
@@ -571,6 +586,7 @@ func get_item_amount(item_id: String) -> int:
 
 	return total_amount
 
+
 # Gets the total item amount of the provided id using allAccessibleItems
 func get_accessibleitem_amount(item_id: String) -> int:
 	var total_amount = 0
@@ -587,10 +603,12 @@ func add_to_max_inventory_volume(amount: int) -> void:
 	player_max_inventory_volume += amount
 	player_max_inventory_volume_changed.emit()
 
+
 # Function to subtract from the player's maximum inventory volume
 func subtract_from_max_inventory_volume(amount: int) -> void:
 	player_max_inventory_volume = max(0, player_max_inventory_volume - amount)  # Ensure it doesn't go below 0
 	player_max_inventory_volume_changed.emit()
+
 
 # Function to directly set the player's maximum inventory volume
 func set_max_inventory_volume(new_volume: int) -> void:
@@ -615,8 +633,11 @@ func get_items_not_in_inventory(inventory: InventoryStacked) -> Array:
 
 	return items_not_in_inventory
 
+
 # Function to check if the total stack size of a specific item ID in items not present in the provided inventory exceeds a given amount.
-func has_sufficient_amount_not_in_inventory(inventory: InventoryStacked, item_id: String, required_amount: int) -> bool:
+func has_sufficient_amount_not_in_inventory(
+	inventory: InventoryStacked, item_id: String, required_amount: int
+) -> bool:
 	# Get items not in the provided inventory
 	var items_not_in_inventory = get_items_not_in_inventory(inventory)
 
@@ -633,6 +654,7 @@ func has_sufficient_amount_not_in_inventory(inventory: InventoryStacked, item_id
 	# Return false if the total amount is less than the required amount
 	return false
 
+
 # --- Item Helpers ---
 func _gather_all_accessible_items() -> Array[InventoryItem]:
 	var items: Array[InventoryItem] = []
@@ -644,10 +666,14 @@ func _gather_all_accessible_items() -> Array[InventoryItem]:
 
 # Function to transfer items from the list returned by get_items_not_in_inventory to a target inventory.
 # It will attempt to transfer as close as possible to the required amount.
-func transfer_items_to_inventory(target_inventory: InventoryStacked, item_id: String, required_amount: int) -> void:
+func transfer_items_to_inventory(
+	target_inventory: InventoryStacked, item_id: String, required_amount: int
+) -> void:
 	# Use the filter method to get items matching the item_id
-	var items_to_modify = get_items_not_in_inventory(target_inventory).filter(func(item): return item.prototype_id == item_id)
-	
+	var items_to_modify = get_items_not_in_inventory(target_inventory).filter(
+		func(item): return item.prototype_id == item_id
+	)
+
 	var amount_to_transfer = required_amount
 
 	# Iterate through the items and transfer the required amount
