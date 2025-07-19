@@ -91,10 +91,22 @@ func _input(event):
 		set_mesh_rotation(new_rotation)
 
 
-# Sets the material of the ConstructionGhost
+# Sets the material of the ConstructionGhost, but first clones it
+# and forces it into unshaded mode before applying.
 func set_material(new_material: Material) -> void:
-	if mesh:
-		mesh.surface_set_material(0, new_material)  # Assuming the ghost mesh has a single surface
+	if not mesh:
+		return
+
+	# 1. Clone the incoming material so we don't mutate the shared resource
+	var cloned_mat: Material = new_material.duplicate()
+
+	# 2. If it's a StandardMaterial3D, switch it to unshaded
+	if cloned_mat is StandardMaterial3D:
+		(cloned_mat as StandardMaterial3D).shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
+
+	# 3. Apply the cloned/unshaded material to the first surface
+	mesh.surface_set_material(0, cloned_mat)
+
 
 # Resets the material to the default CONSTRUCTION_GHOST_MATERIAL
 func reset_material_to_default() -> void:
