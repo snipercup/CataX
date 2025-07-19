@@ -221,6 +221,7 @@ func reload_weapon(item: InventoryItem, specific_magazine: InventoryItem = null)
 	# Ensure the item is a ranged weapon before proceeding.
 	if item == null or item.get_property("Ranged") == null:
 		print_debug("Item is not a ranged weapon.")
+		item.set_property("is_reloading", false)
 		return false
 
 	# Select the appropriate magazine for reloading.
@@ -229,6 +230,7 @@ func reload_weapon(item: InventoryItem, specific_magazine: InventoryItem = null)
 	)
 	if not magazine_to_load:
 		print_debug("No compatible magazine found.")
+		item.set_property("is_reloading", false)
 		return false
 
 	# Execute the reloading process.
@@ -463,8 +465,8 @@ func remove_resource(item_id: String, amount: int, items_source: Array[Inventory
 			var new_stack_size = current_stack_size - amount_to_remove
 			if not InventoryStacked.set_item_stack_size(item, new_stack_size):
 				return false  # Return false if we fail to set the new stack size.
-				update_accessible_items_list()
-				amount_to_remove = 0  # Set to 0 as we have removed enough.
+			update_accessible_items_list()
+			amount_to_remove = 0  # Set to 0 as we have removed enough.
 
 	# Check if we have removed the required amount.
 	return amount_to_remove == 0

@@ -174,5 +174,6 @@
   - [x] 2.1 Inspect `remove_resource` and reload functions for off-by-one errors
   - [x] 2.2 Fix decrement logic for ammo and resources
   - [x] 2.3 Expand `test_item_manager.gd` coverage
+  - [ ] 2.4 Review fixes for `remove_resource` logic and reload state handling
 
 *End of document*
