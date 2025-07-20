@@ -326,11 +326,7 @@ Documentation & Style Consistency (Goal #10)
 - `Scripts/ItemAmmoEditor.gd`
 - `Scripts/ItemMagazineEditor.gd`
 - `Scripts/ItemRangedEditor.gd`
-- `README.md`
 
-### Proposed New Files
-- `Documentation/Game_development/Style_Guide.md` - Guidelines for variable naming and general code style.
-- `/Tests/Unit/test_style_guide.gd` - Unit tests for style guide presence.
 
 ### Existing Files Modified
 - `Documentation/Game_development/Working_with_codex.md` - Fix typo "Dimenionfall".
@@ -338,7 +334,6 @@ Documentation & Style Consistency (Goal #10)
 - `Scripts/ItemAmmoEditor.gd` - Rename form variables to snake_case.
 - `Scripts/ItemMagazineEditor.gd` - Rename form variables to snake_case.
 - `Scripts/ItemRangedEditor.gd` - Rename form variables to snake_case.
-- `README.md` - Reference new style guide.
 
 ### Files To Remove
 - None
@@ -348,9 +343,7 @@ Documentation & Style Consistency (Goal #10)
 
 ## Tasks
 - [ ] 1.0 Correct Documentation Typos
-- [ ] 2.0 Create Developer Style Guide
 - [ ] 3.0 Standardize Editor Script Variable Names
-- [ ] 4.0 Reference Style Guide in README
 - [ ] 5.0 Review and Normalize Script Comments
 
 *End of document*
