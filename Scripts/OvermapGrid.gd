@@ -28,7 +28,11 @@ enum Region { FOREST, PLAINS }
 # of something bigger like the tacticalmap
 class map_cell:
 	# Enum for revealed states
-	enum RevealedState { HIDDEN, REVEALED, EXPLORED, VISITED }  # Default state. The cell has been instanced onto a grid, nothing more  # the map has been revealed on the overmap when the player got close enough  # the map has been loaded as a chunk in the player's proximity at least once  # the player has entered the boundary of the map's coordinates
+  	# HIDDEN: Default state. The cell has been instanced onto a grid, nothing more  
+	# REVEALED: The map has been revealed on the overmap when the player got close enough  
+	# EXPLORED: The map has been loaded as a chunk in the player's proximity at least once  
+	# VISITED: the player has entered the boundary of the map's coordinates
+	enum RevealedState { HIDDEN, REVEALED, EXPLORED, VISITED }
 
 	var region = Region.PLAINS
 	var coordinate_x: int = 0
@@ -282,7 +286,7 @@ func update_path_on_grid(path: Array) -> void:
 # Function to update all road connections, including edge cells across neighboring grids
 func update_all_road_connections(road_positions: Array) -> void:
 	if road_positions.is_empty():
-	return  # Nothing to update
+		return  # Nothing to update
 	var edge_data = get_edge_positions(road_positions)
 	var edge_positions: Dictionary = edge_data["edge_positions"]
 	var edgeglobals: Array = edge_data["edgeglobals"]
@@ -383,7 +387,7 @@ func update_road_connections(global_position: Vector2, cell) -> void:
 	var map_to_use = forest_road_maps if "Forest Road" in cell.rmap.categories else road_maps
 	var matching_maps = get_road_maps_with_connections(map_to_use, needed_connections)
 	if matching_maps.is_empty():
-	return  # Early exit if no maps match the required connections
+		return  # Early exit if no maps match the required connections
 	var selected_map = pick_random_map_dict_by_weight(matching_maps)
 	update_cell(global_position, selected_map.id, selected_map.rotation)
 
@@ -538,7 +542,7 @@ func place_overmap_areas() -> void:
 # Helper to iterate placement of multiple areas
 func _place_multiple_overmap_areas(count: int, placed_positions: Array) -> void:
 	for _i in range(count):
-	_place_single_overmap_area(placed_positions)
+		_place_single_overmap_area(placed_positions)
 
 
 # Store placed area data for lookups elsewhere
@@ -568,7 +572,7 @@ func _place_single_overmap_area(placed_positions: Array) -> void:
 	if valid_position == Vector2(-1, -1):
 		return  # No valid position found
 
-# Register the new area placement
+	# Register the new area placement
 	_register_area_position(random_area.id, valid_position)
 
 
