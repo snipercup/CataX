@@ -10,7 +10,7 @@ You can use this guide if you have access to https://chatgpt.com/codex
 
 ## First time setup
 1. In codex, go to https://chatgpt.com/codex/settings/general and remove any custom instructions you may have previously used.
-2. Go to https://chatgpt.com/codex/settings/environments, select or create your github-connected fork of the Dimenionfall game.
+2. Go to https://chatgpt.com/codex/settings/environments, select or create your github-connected fork of the Dimensionfall game.
 3. Press Edit -> copy-paste this into the startup script textbox and Save:
 ```
 # 1. Download the latest Godot 4.x Linux 64-bit binary

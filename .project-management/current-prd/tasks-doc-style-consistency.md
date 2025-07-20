@@ -330,10 +330,10 @@ Documentation & Style Consistency (Goal #10)
 
 ### Existing Files Modified
 - `Documentation/Game_development/Working_with_codex.md` - Fix typo "Dimenionfall".
-- `Scripts/ItemMeleeEditor.gd` - Rename form variables to snake_case.
-- `Scripts/ItemAmmoEditor.gd` - Rename form variables to snake_case.
-- `Scripts/ItemMagazineEditor.gd` - Rename form variables to snake_case.
-- `Scripts/ItemRangedEditor.gd` - Rename form variables to snake_case.
+- `Scripts/ItemMeleeEditor.gd` - Rename form variables to snake_case and normalize comments.
+- `Scripts/ItemAmmoEditor.gd` - Rename form variables to snake_case and normalize comments.
+- `Scripts/ItemMagazineEditor.gd` - Rename form variables to snake_case and normalize comments.
+- `Scripts/ItemRangedEditor.gd` - Rename form variables to snake_case and normalize comments.
 
 ### Files To Remove
 - None
@@ -342,8 +342,8 @@ Documentation & Style Consistency (Goal #10)
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Correct Documentation Typos
-- [ ] 3.0 Standardize Editor Script Variable Names
-- [ ] 5.0 Review and Normalize Script Comments
+- [x] 1.0 Correct Documentation Typos
+- [x] 3.0 Standardize Editor Script Variable Names
+- [x] 5.0 Review and Normalize Script Comments
 
 *End of document*
