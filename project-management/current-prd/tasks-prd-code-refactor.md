@@ -325,21 +325,10 @@
 ```
 
 ## Relevant Files
-- `Scripts/Chunk.gd` - Contains chunk generation and navigation logic.
-- `Scripts/player.gd` - Handles player movement, stamina, and physics.
-- `Scripts/CtrlInventoryStackedCustom.gd` - Manages inventory UI and context menus.
-- `Scripts/ItemMedicalEditor.gd` - Builds UI entries for medical item attributes.
 - `Scripts/QuestTrackerUI.gd` - Updates quest tracking UI.
 
-### Proposed New Files
-- `/Scripts/Chunk/mesh_utils.gd` - Utilities extracted from Chunk.gd for mesh and navigation generation.
-- `/Scripts/Player/movement_utils.gd` - Helper methods for player movement calculations.
 
 ### Existing Files Modified
-- `Scripts/Chunk.gd` - Break up large methods into smaller ones and delegate to helper scripts.
-- `Scripts/player.gd` - Simplify `_physics_process` and move repeated calculations to helper functions.
-- `Scripts/CtrlInventoryStackedCustom.gd` - Split context menu building and selection logic into dedicated functions.
-- `Scripts/ItemMedicalEditor.gd` - Refactor `_add_attribute_entry` to smaller functions for UI setup.
 - `Scripts/QuestTrackerUI.gd` - Decompose `update_quest_ui` for clarity and reuse.
 
 ### Files To Remove
@@ -349,19 +338,7 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Refactor `Chunk.gd`
-  - [ ] 1.1 Extract mesh generation helpers into `mesh_utils.gd`
-  - [ ] 1.2 Break `add_mesh_to_navigation_data` into smaller methods for cube and slope handling
-  - [ ] 1.3 Simplify atlas creation logic and document parameters
-- [ ] 2.0 Simplify player movement logic
-  - [ ] 2.1 Move stamina and run calculations to `movement_utils.gd`
-  - [ ] 2.2 Reduce `_physics_process` length by delegating knockback and regeneration logic
-- [ ] 3.0 Modularize inventory UI script
-  - [ ] 3.1 Separate context menu construction into helper function
-  - [ ] 3.2 Encapsulate selection-drag code into smaller methods
 - [ ] 4.0 Improve quest tracker readability
   - [ ] 4.1 Split `update_quest_ui` into sub-functions for requirement building and label updates
-- [ ] 5.0 Clean up medical item editor
-  - [ ] 5.1 Decompose `_add_attribute_entry` into functions that create widgets and connect signals
 
 *End of document*
