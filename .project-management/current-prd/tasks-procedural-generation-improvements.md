@@ -41,6 +41,6 @@ Textures/
 
 ## Tasks
 - [ ] **2.0 Modularize OvermapGrid generation**
-  - [ ] 2.1 Break `place_overmap_areas` and related loops into smaller helper functions.
-  - [ ] 2.2 Refactor road connection code to early‑exit when no valid roads are available.
-  - [ ] 2.3 Update comments explaining new structure.
+  - [c] 2.1 Break `place_overmap_areas` and related loops into smaller helper functions.
+  - [c] 2.2 Refactor road connection code to early‑exit when no valid roads are available.
+  - [c] 2.3 Update comments explaining new structure.
