@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cibcfcysyj15" path="res://Scripts/ItemRangedEditor.gd" id="1_my1v7"]
 [ext_resource type="PackedScene" uid="uid://dsax7il2yggw8" path="res://Scenes/ContentManager/Custom_Widgets/DropEnabledTextEdit.tscn" id="2_crphu"]
 
-[node name="ItemRangedEditor" type="Control" node_paths=PackedStringArray("UsedAmmoTextEdit", "UsedMagazineGridContainer", "RangeNumberBox", "SpreadNumberBox", "SwayNumberBox", "RecoilNumberBox", "UsedSkillTextEdit", "skill_xp_spin_box", "ReloadSpeedNumberBox", "FiringSpeedNumberBox", "accuracy_stat_text_edit")]
+[node name="ItemRangedEditor" type="Control" node_paths=PackedStringArray("used_ammo_text_edit", "used_magazine_grid_container", "range_number_box", "spread_number_box", "sway_number_box", "recoil_number_box", "used_skill_text_edit", "skill_xp_spin_box", "reload_speed_number_box", "firing_speed_number_box", "accuracy_stat_text_edit")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,16 +11,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_my1v7")
-UsedAmmoTextEdit = NodePath("Ranged/UsedAmmoTextEdit")
-UsedMagazineGridContainer = NodePath("Ranged/UsedMagazineGridContainer")
-RangeNumberBox = NodePath("Ranged/RangeNumber")
-SpreadNumberBox = NodePath("Ranged/SpreadNumber")
-SwayNumberBox = NodePath("Ranged/SwayNumber")
-RecoilNumberBox = NodePath("Ranged/RecoilNumber")
-UsedSkillTextEdit = NodePath("Ranged/SkillHBoxContainer/UsedSkillTextEdit")
+used_ammo_text_edit = NodePath("Ranged/UsedAmmoTextEdit")
+used_magazine_grid_container = NodePath("Ranged/UsedMagazineGridContainer")
+range_number_box = NodePath("Ranged/RangeNumber")
+spread_number_box = NodePath("Ranged/SpreadNumber")
+sway_number_box = NodePath("Ranged/SwayNumber")
+recoil_number_box = NodePath("Ranged/RecoilNumber")
+used_skill_text_edit = NodePath("Ranged/SkillHBoxContainer/UsedSkillTextEdit")
 skill_xp_spin_box = NodePath("Ranged/SkillHBoxContainer/SkillXPSpinBox")
-ReloadSpeedNumberBox = NodePath("Ranged/ReloadSpeedNumber")
-FiringSpeedNumberBox = NodePath("Ranged/FiringSpeedNumber")
+reload_speed_number_box = NodePath("Ranged/ReloadSpeedNumber")
+firing_speed_number_box = NodePath("Ranged/FiringSpeedNumber")
 accuracy_stat_text_edit = NodePath("Ranged/AccuracyStatTextEdit")
 
 [node name="Ranged" type="GridContainer" parent="."]
