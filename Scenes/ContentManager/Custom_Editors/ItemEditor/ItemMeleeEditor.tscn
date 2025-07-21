@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dsax7il2yggw8" path="res://Scenes/ContentManager/Custom_Widgets/DropEnabledTextEdit.tscn" id="2_etmci"]
 [ext_resource type="PackedScene" uid="uid://dmlbg7nolncnh" path="res://Scenes/ContentManager/Custom_Widgets/DropEntityTextEdit.tscn" id="3_kgnfh"]
 
-[node name="ItemMeleeEditor" type="Control" node_paths=PackedStringArray("DamageSpinBox", "ReachSpinBox", "UsedSkillTextEdit", "skill_xp_spin_box", "damage_stat_text_edit", "accuracy_stat_text_edit")]
+[node name="ItemMeleeEditor" type="Control" node_paths=PackedStringArray("damage_spin_box", "reach_spin_box", "used_skill_text_edit", "skill_xp_spin_box", "damage_stat_text_edit", "accuracy_stat_text_edit")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,9 +12,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pg18d")
-DamageSpinBox = NodePath("Melee/DamageSpinbox")
-ReachSpinBox = NodePath("Melee/ReachSpinbox")
-UsedSkillTextEdit = NodePath("Melee/UsedSkillHBoxContainer/UsedSkillTextEdit")
+damage_spin_box = NodePath("Melee/DamageSpinbox")
+reach_spin_box = NodePath("Melee/ReachSpinbox")
+used_skill_text_edit = NodePath("Melee/UsedSkillHBoxContainer/UsedSkillTextEdit")
 skill_xp_spin_box = NodePath("Melee/UsedSkillHBoxContainer/SkillXPSpinBox")
 damage_stat_text_edit = NodePath("Melee/DamageStatTextEdit")
 accuracy_stat_text_edit = NodePath("Melee/AccuracyStatTextEdit")
