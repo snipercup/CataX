@@ -2,7 +2,8 @@
 	"dexterity": {
 		"items": [
 			"pistol_9mm",
-			"stone_spear"
+			"stone_spear",
+			"machete"
 		]
 	},
 	"intelligence": {
@@ -13,7 +14,8 @@
 	"strength": {
 		"items": [
 			"long_stick",
-			"stone_spear"
+			"stone_spear",
+			"machete"
 		]
 	}
 }
