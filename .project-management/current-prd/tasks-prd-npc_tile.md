@@ -80,9 +80,8 @@
 - [ ] 6.0 Process npc_tile in map_manager.gd, printing debug and removing entry on load.
   - [ ] 6.1 Detect npc_tile entries after loading a map.
   - [ ] 6.2 Print a debug statement for each npc_tile processed.
-  - [ ] 6.3 Remove npc_tile entries from map data once handled.
 - [ ] 7.0 Add GUT tests covering npc_tile save/load and processing behavior.
   - [ ] 7.1 Verify npc_tile is saved and loaded through DMap.
-  - [ ] 7.2 Confirm map_manager prints and clears npc_tile entries on load.
+  - [ ] 7.2 Confirm map_manager prints npc_tile entries on load.
   - [ ] 7.3 Test painting rules to ensure conflicting entities overwrite npc_tile and vice versa.
 *End of document*
