@@ -306,39 +306,30 @@ func _get_nested_property_recursive(
 func reload_magazine(magazine: InventoryItem) -> void:
 	if magazine and magazine.get_property("Magazine"):
 		var magazineProperties = magazine.get_property("Magazine")
-		# Get the ammo type required by the magazine
 		var ammo_type: String = magazineProperties["used_ammo"]
 
 		var current_ammo: int = int(magazineProperties["current_ammo"])
-		# Total amount of ammo required to fully load the magazine
 		var needed_ammo: int = int(magazineProperties["max_ammo"]) - current_ammo
-
 		if needed_ammo <= 0:
-			return  # Magazine is already full or has invalid properties
-
-		# Initialize a variable to track the total amount of ammo loaded
+			return
 		var total_ammo_loaded: int = 0
 
-		# Find and consume ammo from the inventory
 		while needed_ammo > 0:
 			var ammo_item: InventoryItem = playerInventory.get_item_by_id(ammo_type)
 			if not ammo_item:
-				break  # No more ammo of the required type is available
-
-			# Calculate how much ammo can be loaded from this stack
+				transfer_items_to_inventory(playerInventory, ammo_type, needed_ammo)
+				ammo_item = playerInventory.get_item_by_id(ammo_type)
+				if not ammo_item:
+					break
 			var stack_size: int = InventoryStacked.get_item_stack_size(ammo_item)
 			var ammo_to_load: int = min(needed_ammo, stack_size)
 
-			# Update totals based on the ammo loaded
 			total_ammo_loaded += ammo_to_load
 			needed_ammo -= ammo_to_load
 
-			# Decrease the stack size of the ammo item in the inventory
 			var new_stack_size: int = stack_size - ammo_to_load
 			InventoryStacked.set_item_stack_size(ammo_item, new_stack_size)
 			update_accessible_items_list()
-
-		# Update the current_ammo property of the magazine
 		if total_ammo_loaded > 0:
 			magazineProperties["current_ammo"] = current_ammo + total_ammo_loaded
 			magazine.set_property("Magazine", magazineProperties)

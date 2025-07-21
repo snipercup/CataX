@@ -818,7 +818,11 @@ func _on_context_menu_reload(items: Array[InventoryItem]) -> void:
 				reload_audio_player.play()
 				break  # Only reload the first ranged item found
 		if item.get_property("Magazine"):
-			# Retrieve reload speed from the "Ranged" property dictionary or use the default
+			var mag_inventory: InventoryStacked = item.get_inventory()
+			if mag_inventory != ItemManager.playerInventory:
+				var volume_needed: float = item.get_property("volume", 0)
+				if ItemManager.get_remaining_volume() >= volume_needed:
+					mag_inventory.transfer_automerge(item, ItemManager.playerInventory)
 			ItemManager.reload_magazine(item)
 			update_inventory_list(item, "")
 			break  # Only reload the first ranged item found

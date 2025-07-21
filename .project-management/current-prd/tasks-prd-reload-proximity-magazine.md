@@ -207,19 +207,19 @@
 - Follow Godot 4.4 best practices and use GDScript 4 syntax.
 
 ## Tasks
-- [ ] 1.0 Support reloading magazines from proximity inventory
-  - [ ] 1.1 In `CtrlInventoryStackedCustom.gd`, check if selected magazine is in proximity inventory
-  - [ ] 1.2 If player inventory has space, transfer magazine before calling reload
-  - [ ] 1.3 If inventory is full, reload magazine in place
-- [ ] 2.0 Prioritize player ammo when reloading
-  - [ ] 2.1 Update `ItemManager.reload_magazine` to search player inventory first
-  - [ ] 2.2 Use `transfer_items_to_inventory` to pull bullets from proximity if needed
-  - [ ] 2.3 Reload magazine using any available ammo
-- [ ] 3.0 Update inventories after reload action
-  - [ ] 3.1 Refresh UI lists so bullet counts display correctly
-  - [ ] 3.2 Ensure magazine ends in player inventory when moved
-- [ ] 4.0 Add unit tests for proximity magazine reload
-  - [ ] 4.1 Test reload succeeds when ammo only in proximity
-  - [ ] 4.2 Test reload uses player ammo first
-  - [ ] 4.3 Test no action when inventory full and no ammo
+- [c] 1.0 Support reloading magazines from proximity inventory
+  - [c] 1.1 In `CtrlInventoryStackedCustom.gd`, check if selected magazine is in proximity inventory
+  - [c] 1.2 If player inventory has space, transfer magazine before calling reload
+  - [c] 1.3 If inventory is full, reload magazine in place
+- [c] 2.0 Prioritize player ammo when reloading
+  - [c] 2.1 Update `ItemManager.reload_magazine` to search player inventory first
+  - [c] 2.2 Use `transfer_items_to_inventory` to pull bullets from proximity if needed
+  - [c] 2.3 Reload magazine using any available ammo
+- [c] 3.0 Update inventories after reload action
+  - [c] 3.1 Refresh UI lists so bullet counts display correctly
+  - [c] 3.2 Ensure magazine ends in player inventory when moved
+- [c] 4.0 Add unit tests for proximity magazine reload
+  - [c] 4.1 Test reload succeeds when ammo only in proximity
+  - [c] 4.2 Test reload uses player ammo first
+  - [c] 4.3 Test no action when inventory full and no ammo
 *End of document*
