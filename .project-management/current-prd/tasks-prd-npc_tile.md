@@ -59,10 +59,10 @@
 - Data stored per tile like other entities; not tracked in references.
 
 ## Tasks
-- [ ] 1.0 Add npc_tile button to brush composer scene and connect signal.
-  - [ ] 1.1 Create a new button node next to the existing null_tile button.
-  - [ ] 1.2 Assign `res://Scenes/ContentManager/Mapeditor/Images/nulltile_32.png` as its icon.
-  - [ ] 1.3 Connect the button's `button_up` signal to mapeditor_brushcomposer.gd.
+- [x] 1.0 Add npc_tile button to brush composer scene and connect signal.
+  - [x] 1.1 Create a new button node next to the existing null_tile button.
+  - [x] 1.2 Assign `res://Scenes/ContentManager/Mapeditor/Images/nulltile_32.png` as its icon.
+  - [x] 1.3 Connect the button's `button_up` signal to mapeditor_brushcomposer.gd.
 - [ ] 2.0 Extend mapeditor_brushcomposer.gd with `_on_npc_tile_button_up` and property handling.
   - [ ] 2.1 Add a boolean property tracking npc_tile brush selection.
   - [ ] 2.2 Implement `_on_npc_tile_button_up()` to toggle this property and update UI state.
