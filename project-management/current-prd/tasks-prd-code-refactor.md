@@ -330,6 +330,7 @@
 
 ### Existing Files Modified
 - `Scripts/QuestTrackerUI.gd` - Decompose `update_quest_ui` for clarity and reuse.
+- `project-management/current-prd/tasks-prd-code-refactor.md` - Track task progress.
 
 ### Files To Remove
 - _None_
@@ -338,7 +339,7 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 4.0 Improve quest tracker readability
-  - [ ] 4.1 Split `update_quest_ui` into sub-functions for requirement building and label updates
+- [x] 4.0 Improve quest tracker readability
+  - [x] 4.1 Split `update_quest_ui` into sub-functions for requirement building and label updates
 
 *End of document*
