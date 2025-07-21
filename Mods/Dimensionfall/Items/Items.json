@@ -234,7 +234,9 @@
 	},
 	{
 		"Melee": {
+			"accuracy_stat": "dexterity",
 			"damage": 25,
+			"damage_stat": "strength",
 			"reach": 1,
 			"used_skill": {
 				"skill_id": "cutting",
