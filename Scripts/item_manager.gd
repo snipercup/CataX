@@ -310,7 +310,7 @@ func reload_magazine(magazine: InventoryItem) -> void:
 		return
 	
 	# Retrieve current magazine data
-	var magazine_properties := magazine.get_property("Magazine")
+	var magazine_properties: Dictionary = magazine.get_property("Magazine")
 	var ammo_type: String = magazine_properties.get("used_ammo", "")
 	
 	# Read current and maximum ammo counts
