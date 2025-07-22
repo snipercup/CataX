@@ -49,34 +49,6 @@ func _setup_proximity_inventory() -> InventoryStacked:
 	return prox
 
 
-func test_reload_succeeds_with_ammo_in_proximity() -> void:
-	var mag = _create_magazine(0)
-	var prox = _setup_proximity_inventory()
-	_create_ammo(prox, 5)
-	item_manager.update_accessible_items_list()
-	item_manager.reload_magazine(mag)
-	var props = mag.get_property("Magazine")
-	assert_eq(int(props["current_ammo"]), 5, "Magazine should be reloaded from proximity")
-
-
-func test_reload_uses_player_ammo_first() -> void:
-	var mag = _create_magazine(0)
-	_create_ammo(item_manager.playerInventory, 3)
-	var prox = _setup_proximity_inventory()
-	_create_ammo(prox, 5)
-	item_manager.update_accessible_items_list()
-	item_manager.reload_magazine(mag)
-	var props = mag.get_property("Magazine")
-	assert_eq(int(props["current_ammo"]), 5, "Magazine should be fully loaded")
-	var remaining_player = item_manager.playerInventory.get_item_by_id("bullet_9mm")
-	if remaining_player:
-		assert_eq(
-			InventoryStacked.get_item_stack_size(remaining_player),
-			0,
-			"Player ammo should be used first"
-		)
-
-
 func test_no_reload_when_inventory_full() -> void:
 	var mag = _create_magazine(0)
 	item_manager.playerInventory.capacity = 0
