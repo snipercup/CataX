@@ -36,8 +36,8 @@ Select an area to edit. To add a new area, put the option to \"None\" and press 
 toolbar. A new area will be created. You only need this for randomization during map generation. To remove an area, 
 press the area settings button and delete the area from there. To remove tiles from an area, enable the area paint 
 button from the toolbar and enable the erase button in the toolbar and erase the area from the tiles on the map."
-item_count = 1
 selected = 0
+item_count = 1
 popup/item_0/text = "None"
 popup/item_0/id = 0
 
@@ -48,6 +48,13 @@ texture_normal = ExtResource("5_c3xg5")
 stretch_mode = 3
 
 [node name="NullTileTextureButton" type="TextureButton" parent="CustomBrushToolsHBoxContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("6_m76ty")
+stretch_mode = 3
+
+[node name="NpcTileTextureButton" type="TextureButton" parent="CustomBrushToolsHBoxContainer"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -72,4 +79,5 @@ visible = false
 [connection signal="item_selected" from="CustomBrushToolsHBoxContainer/AreasOptionButton" to="." method="_on_areas_option_button_item_selected"]
 [connection signal="button_up" from="CustomBrushToolsHBoxContainer/MapAreaSettingsButton" to="." method="_on_map_area_settings_button_button_up"]
 [connection signal="button_up" from="CustomBrushToolsHBoxContainer/NullTileTextureButton" to="." method="_on_null_tile_button_up"]
+[connection signal="button_up" from="CustomBrushToolsHBoxContainer/NpcTileTextureButton" to="." method="_on_npc_tile_button_up"]
 [connection signal="area_selected_ok" from="Area_editor" to="." method="_on_area_editor_area_selected_ok"]

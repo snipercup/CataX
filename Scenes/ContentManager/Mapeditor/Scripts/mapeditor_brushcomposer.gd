@@ -469,3 +469,8 @@ func _on_null_tile_button_up():
 		"entityType": "tile"
 	}
 	add_tilebrush_to_container_with_properties(null_tile_properties)
+
+
+# Function to be called when the npc tile button is pressed
+func _on_npc_tile_button_up():
+	print_debug("This function needs further implementation")
