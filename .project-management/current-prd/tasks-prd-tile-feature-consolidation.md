@@ -83,7 +83,6 @@
   - [ ] 4.3 Remove checks for obsolete fields.
 - [ ] 5.0 Add migration utilities and unit tests for legacy map conversion and editor behavior.
   - [ ] 5.1 Create `tile_feature_migration.gd` to convert stored maps.
-  - [ ] 5.2 Write unit tests for migration of legacy data.
   - [ ] 5.3 Extend map manager tests to cover the new feature structure.
 
 *End of document*
