@@ -59,7 +59,15 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Implement centralized Logger utility
-  - [ ] 1.1 Create `Scripts/Helper/logger.gd` with info, warning and error methods
-  - [ ] 1.2 Replace `print` statements in core scripts with Logger calls
-  - [ ] 1.3 Add unit tests verifying log output
+
+
+- [ ] 2.0 Refactor `BuildManager.gd`
+
+
+  - [ ] 2.1 Move ghost update logic into `update_ghost()` method
+
+
+  - [ ] 2.2 Invoke `update_ghost()` from build functions
+
+
+  - [ ] 2.3 Add tests for ghost placement
