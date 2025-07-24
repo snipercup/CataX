@@ -47,7 +47,7 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
     Cross-check the implemented content with design documents, roadmap, and lore. Suggest additions or corrections to bring the game closer to its intended narrative and feature set.
 
 14. **Map Categorization and Template Generation**  
-    Review the categorized maps in `/mods/dimensionfall/maps` and pick one category. Add a new map to that category. The new map must include the following fields: `mapheight`, `mapwidth`, `name`, `weight`, `description`, `id`, `categories`, and `connections`. Include an empty `levels` array to allow manual map painting later. Use a name and description that aligns with the chosen category.
+    Review the categorized maps in `/mods/dimensionfall/maps` and pick one category. Add a new map to that category. The new map must include the following fields: `mapheight`, `mapwidth`, `name`, `weight`, `description`, `id`, `categories`, and `connections`. Include a `levels` array with a value of `[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]` representing 21 empty levels to allow manual map painting later. Use a name and description that aligns with the chosen category.
 
 15. **Item Combination and Crafting Expansion**  
     Analyze the items in `/mods/dimensionfall/items` and propose three new items. These should either combine existing items or introduce new item categories. Each item must include basic properties and appropriate type-specific fields (e.g., melee stats, crafting inputs/outputs). Ensure the new items include at leat one craftable item and are logically connected to existing content.
