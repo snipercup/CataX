@@ -57,7 +57,7 @@ func _process(_delta):
 	var snapped_y = round(mouse_position.y / grid_size) * grid_size
 	
 	# Update the position of the construction ghost with the offset applied
-	global_transform.origin = Vector3(snapped_x, snapped_y, snapped_z) + position_offset
+	global_transform.origin = Vector3(snapped_x, snapped_y, snapped_z) + position_offset + Vector3(0.5,-1.0,0.5) # Shift to center of the block
 	construction_ghost_area_3d.global_transform.origin = Vector3(snapped_x, snapped_y+0.5, snapped_z)
 
 

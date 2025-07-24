@@ -119,7 +119,6 @@ func handle_block_construction(construction_data: Dictionary, chunk: Chunk) -> v
 			% [local_position, chunk.position]
 		)
 	)
-	update_ghost()
 
 
 # Spawn furniture in the chunk based on selection
@@ -139,7 +138,7 @@ func handle_furniture_construction(construction_data: Dictionary, chunk: Chunk) 
 	chunk.spawn_furniture(
 		{
 			"json": {"id": construction_choice, "rotation": myrotation, "mode": "blueprint"},
-			"pos": construction_data.pos
+			"pos": construction_data.pos + Vector3(0.0,1.0,0.0) # Shift so it spawns above ground
 		}
 	)
 	log_debug(
@@ -148,7 +147,6 @@ func handle_furniture_construction(construction_data: Dictionary, chunk: Chunk) 
 			% [construction_type, construction_choice, str(construction_data.pos)]
 		)
 	)
-	update_ghost()
 
 
 # Convert a world position to chunk-local coordinates
