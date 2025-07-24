@@ -1,0 +1,18 @@
+{
+    "categories": [
+        "Forest"
+    ],
+    "connections": {
+        "east": "ground",
+        "north": "ground",
+        "south": "ground",
+        "west": "ground"
+    },
+    "description": "A quiet clearing in the midst of the forest. Fresh air and open space make it a good place for a camp.",
+    "id": "forest_clearing",
+    "levels": [],
+    "mapheight": 32,
+    "mapwidth": 32,
+    "name": "Forest Clearing",
+    "weight": 1000
+}
