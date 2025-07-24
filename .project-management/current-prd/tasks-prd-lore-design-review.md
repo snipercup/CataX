@@ -58,12 +58,6 @@
 - `Documentation/Game_design/Game_architecture.md`
 - `README.md`
 - `FeatureList.md`
-- `Mods/Core/modinfo.json`
-- `Mods/Dimensionfall/modinfo.json`
-
-### Proposed New Files
-- `Documentation/Game_design/Lore_Implementation_Checklist.md` - Checklist mapping lore elements to implemented features.
-- `/Tests/Unit/test_lore_consistency.gd` - Unit tests validating that mod items reference valid lore elements.
 
 ### Existing Files Modified
 - `README.md` - Update feature list and roadmap to match implemented content.
@@ -77,19 +71,12 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Review lore documentation and game content
-  - [ ] 1.1 Audit `Mods` items and scenes for consistency with `Lore.md`
-  - [ ] 1.2 Document discrepancies in `Lore_Implementation_Checklist.md`
 - [ ] 2.0 Update player-facing documentation
   - [ ] 2.1 Revise `README.md` and `FeatureList.md` to reflect current features
   - [ ] 2.2 Clarify technology references in `Lore.md`
-- [ ] 3.0 Implement lore consistency tests
-  - [ ] 3.1 Create `test_lore_consistency.gd` to validate mod info fields
-  - [ ] 3.2 Integrate test into existing GUT suite
 - [ ] 4.0 Verify design alignment
   - [ ] 4.1 Cross-check scenes with `Game_architecture.md`
   - [ ] 4.2 List any missing or outdated gameplay elements in the checklist
 - [ ] 5.0 Final review
-  - [ ] 5.1 Ensure updated docs pass linting and tests
   - [ ] 5.2 Confirm tasks are tracked in `/project-management/current-prd/`
 
