@@ -67,7 +67,7 @@
 
 
 ## Tasks
-- [ ] 4.0 Refactor CraftingMenu.gd for clearer UI update flow
-  - [ ] 4.1 Break up long UI update functions into smaller helpers
-  - [ ] 4.3 Simplify signal connections and callbacks
-  - [ ] 4.4 Add tests or manual checks to ensure the menu updates correctly
+- [x] 4.0 Refactor CraftingMenu.gd for clearer UI update flow
+  - [x] 4.1 Break up long UI update functions into smaller helpers
+  - [x] 4.3 Simplify signal connections and callbacks
+  - [x] 4.4 Add tests or manual checks to ensure the menu updates correctly
