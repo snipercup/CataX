@@ -63,13 +63,16 @@
 ## Tasks
 
 
-- [ ] 2.0 Refactor `BuildManager.gd`
+- [x] 2.0 Refactor `BuildManager.gd`
 
 
-  - [c] 2.1 Move ghost update logic into `update_ghost()` method
+   - [x] 2.1 Move ghost update logic into `update_ghost()` method
 
 
-  - [c] 2.2 Invoke `update_ghost()` from build functions
+   - [x] 2.2 Invoke `update_ghost()` from build functions
 
 
-  - [c] 2.3 Add tests for ghost placement
+   - [x] 2.3 Add tests for ghost placement
+
+
+   - [x] 2.4 Added `test_build_manager.gd` to verify ghost visibility on selection
