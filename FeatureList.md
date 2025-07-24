@@ -132,7 +132,7 @@ Ever wanted to create that unique piece of armor, but didn't have that slot to f
 
 
 ### Stats editor
-Add your own stats to the game. Stats are not implemented yet, but you can define them.
+Add your own stats to the game. Stats are used to boost the use of skills when crafting or using a weapon
 
 ![Catax_furniture_editor](Media/Catax_stats_editor.png)
 
