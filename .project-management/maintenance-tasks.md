@@ -46,6 +46,12 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 13. **Lore & Design Implementation Review**  
     Cross-check the implemented content with design documents, roadmap, and lore. Suggest additions or corrections to bring the game closer to its intended narrative and feature set.
 
+14. **Map Categorization and Template Generation**  
+    Review the categorized maps in `/mods/dimensionfall/maps` and pick one category. Add a new map to that category. The new map must include the following fields: `mapheight`, `mapwidth`, `name`, `weight`, `description`, `id`, `categories`, and `connections`. Include an empty `levels` array to allow manual map painting later. Use a name and description that aligns with the chosen category.
+
+15. **Item Combination and Crafting Expansion**  
+    Analyze the items in `/mods/dimensionfall/items` and propose three new items. These should either combine existing items or introduce new item categories. Each item must include basic properties and appropriate type-specific fields (e.g., melee stats, crafting inputs/outputs). Ensure the new items include at leat one craftable item and are logically connected to existing content.
+
 
 ---
 
@@ -62,7 +68,7 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 ### Process for Generating Maintenance Tasks  
 
 1. **Pick a goal**  
-   - Generate a number between 1 and 13. Commit to the goal from the 'Refactoring & Code Quality Improvement Goals' that corresponds to the resulting number.
+   - Generate a number between 1 and 15 and write it down. Commit to the goal from the 'Refactoring & Code Quality Improvement Goals' that corresponds to the resulting number.
 
 2. **Analyze the codebase**  
    - The AI scans the codebase to identify scripts, scenes, or folders that require maintenance based on the selected refactoring or quality improvement goal.
@@ -99,7 +105,7 @@ The generated task list must follow this structure:
 
 ```
 ## Selected maintenance goal
-- Specify the selected maintenance goal so we know if the tasks align with this goal
+- The randomly generated number + the corresponding maintenance goal so we know if the tasks align with this goal
 
 ## Pre-Feature Development Project Tree  
 - Use command line tools to get current project tree view, omitting any directory that starts with `.` or verbose nested directories like `addons`, etc...
