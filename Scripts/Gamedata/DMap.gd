@@ -119,6 +119,8 @@ class maptile:
 	var areas: Array = []
 	var id: String = ""  # The id of the tile
 	var rotation: int = 0
+	# Unified feature structure for this tile
+	var feature: Dictionary = {}
 	# Furniture, Mob and Itemgroups are mutually exclusive. Only one can exist at a time
 	var furniture: String = ""
 	var mob: String = ""
@@ -139,9 +141,12 @@ func set_data(newdata: Dictionary) -> void:
 	weight = newdata.get("weight", 1000)
 	mapwidth = newdata.get("mapwidth", 32)
 	mapheight = newdata.get("mapheight", 32)
-	levels = newdata.get(
-		"levels",
-		[[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+	# Convert legacy level data to the unified feature dictionary
+	levels = _convert_levels_legacy_to_feature(
+		newdata.get(
+			"levels",
+			[[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+		)
 	)
 	areas = newdata.get("areas", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
@@ -157,7 +162,8 @@ func get_data() -> Dictionary:
 	mydata["weight"] = weight
 	mydata["mapwidth"] = mapwidth
 	mydata["mapheight"] = mapheight
-	mydata["levels"] = levels
+	# Strip empty feature entries when saving
+	mydata["levels"] = _convert_levels_feature_for_save(levels)
 	if not areas.is_empty():
 		mydata["areas"] = areas
 	if not connections.is_empty():  # Omit connections if empty
@@ -243,7 +249,7 @@ func delete():
 			print_debug("Missing NPC '" + npc_id + "' while deleting map '" + id + "'")
 		for npc: DNpc in npcs:
 			npc.remove_map_from_spawn_maps(id)
-	
+
 	# Remove this map from quests
 	for quest_id in myreferences.get("quests", []):
 		var quests: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.QUESTS, quest_id)
@@ -531,3 +537,67 @@ func get_connection(direction: String) -> String:
 
 	# Return the connection type for the specified direction (e.g., "road" or "ground").
 	return connections[direction]
+
+
+# --- Helper functions for tile feature conversion ---
+
+
+# Converts legacy tile dictionaries to use the `feature` dictionary structure
+func _legacy_tile_to_feature(tile: Dictionary) -> Dictionary:
+	if tile.has("feature"):
+		return tile
+
+	if tile.has("furniture"):
+		var f = tile["furniture"]
+		tile["feature"] = {
+			"type": "furniture", "id": f.get("id", ""), "rotation": tile.get("rotation", 0)
+		}
+		if f.has("itemgroups"):
+			tile["feature"]["itemgroups"] = f["itemgroups"]
+		tile.erase("furniture")
+	elif tile.has("mob"):
+		var m = tile["mob"]
+		tile["feature"] = {
+			"type": "mob", "id": m.get("id", ""), "rotation": tile.get("rotation", 0)
+		}
+		tile.erase("mob")
+	elif tile.has("mobgroup"):
+		var mg = tile["mobgroup"]
+		tile["feature"] = {
+			"type": "mobgroup", "id": mg.get("id", ""), "rotation": tile.get("rotation", 0)
+		}
+		tile.erase("mobgroup")
+	elif tile.has("itemgroups"):
+		var groups = tile["itemgroups"]
+		tile["feature"] = {
+			"type": "itemgroup", "itemgroups": groups, "rotation": tile.get("rotation", 0)
+		}
+		tile.erase("itemgroups")
+
+	return tile
+
+
+# Applies legacy conversion to all tiles within all levels
+func _convert_levels_legacy_to_feature(raw_levels: Array) -> Array:
+	var converted: Array = []
+	for level in raw_levels:
+		var new_level: Array = []
+		for tile in level:
+			var t: Dictionary = tile.duplicate()
+			new_level.append(_legacy_tile_to_feature(t))
+		converted.append(new_level)
+	return converted
+
+
+# Prepares levels for saving by omitting empty `feature` entries
+func _convert_levels_feature_for_save(in_levels: Array) -> Array:
+	var result: Array = []
+	for level in in_levels:
+		var new_level: Array = []
+		for tile in level:
+			var t: Dictionary = tile.duplicate()
+			if t.has("feature") and t["feature"].is_empty():
+				t.erase("feature")
+			new_level.append(t)
+		result.append(new_level)
+	return result

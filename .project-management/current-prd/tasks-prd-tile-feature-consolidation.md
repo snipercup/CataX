@@ -48,6 +48,7 @@
 - `Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd` - Handles painting and erasing of entities in the map editor.
 - `Scenes/ContentManager/Mapeditor/Scripts/mapeditortile.gd` - Displays tiles in the map editor.
 - `Tests/Unit/test_map_manager.gd` - Current tests for map manager utilities.
+- `.project-management/current-prd/tasks-prd-tile-feature-consolidation.md` - Task list for tile feature consolidation.
 
 ### Proposed New Files
 - `Scripts/Helper/tile_feature_migration.gd` - Helper to convert legacy map data to the unified feature structure.
@@ -65,11 +66,11 @@
 - No UI layout changes are required; updates are limited to data structure handling.
 
 ## Tasks
-- [ ] 1.0 Refactor map tile data to use a unified `feature` dictionary. *(DMap.gd)*
-  - [ ] 1.1 Add `feature` property to the `maptile` class.
-  - [ ] 1.2 Update `set_data` and `get_data` to read/write the dictionary.
-  - [ ] 1.3 Convert legacy keys to `feature` when loading tiles.
-  - [ ] 1.4 Skip writing empty `feature` entries when saving.
+- [x] 1.0 Refactor map tile data to use a unified `feature` dictionary. *(DMap.gd)*
+  - [x] 1.1 Add `feature` property to the `maptile` class.
+  - [x] 1.2 Update `set_data` and `get_data` to read/write the dictionary.
+  - [x] 1.3 Convert legacy keys to `feature` when loading tiles.
+  - [x] 1.4 Skip writing empty `feature` entries when saving.
 - [ ] 2.0 Update map management logic to read/write the new `feature` field. *(map_manager.gd)*
   - [ ] 2.1 Modify `_process_entities_data` to output `feature` dictionaries.
   - [ ] 2.2 Update removal helpers to check `feature.type`.
