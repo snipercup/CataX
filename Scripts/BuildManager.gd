@@ -14,32 +14,43 @@ const TEXTURE_SCALE := 100.0
 const DEFAULT_FURNITURE_SIZE := Vector2(0.5, 0.5)
 const FURNITURE_Y_OFFSET := 1
 
+
 func log_debug(message: String) -> void:
 	print_debug("[BuildManager] %s" % message)
+
 
 func log_unknown_construction_type() -> void:
 	log_debug("Unknown construction type: %s" % construction_type)
 
+
 @export var level_generator: Node3D
 @export var hud: NodePath
+
 
 # Called when the node enters the scene
 func _ready():
 	# Connect the build menu visibility_changed signal to a local method
-	if not Helper.signal_broker.build_window_visibility_changed.is_connected(_on_build_menu_visibility_change):
-		Helper.signal_broker.build_window_visibility_changed.connect(_on_build_menu_visibility_change)
+	if not Helper.signal_broker.build_window_visibility_changed.is_connected(
+		_on_build_menu_visibility_change
+	):
+		Helper.signal_broker.build_window_visibility_changed.connect(
+			_on_build_menu_visibility_change
+		)
 	if not Helper.signal_broker.construction_chosen.is_connected(_on_hud_construction_chosen):
 		Helper.signal_broker.construction_chosen.connect(_on_hud_construction_chosen)
+
 
 # Keep the ghost visible while building
 func _process(_delta):
 	if is_building:
 		construction_ghost.visible = true
 
+
 # Cancel construction with right-click
 func _input(event: InputEvent):
 	if event.is_action_pressed("click_right") and is_building:
 		cancel_building()
+
 
 # Reset building state and hide the ghost
 func cancel_building():
@@ -49,13 +60,14 @@ func cancel_building():
 	construction_type = ""
 	construction_choice = ""
 
+
 # When the user selects an option in the BuildingMenu.tscn scene
 # type: One of "block" or "furniture". Choice: can be "concrete_wall" or some furniture id
 # Receive construction selection from HUD
 func _on_hud_construction_chosen(type: String, choice: String):
 	construction_type = type
 	construction_choice = choice
-	update_construction_ghost()  # Update the ghost based on the new selection
+	update_ghost()  # Update the ghost based on the new selection
 	start_building()
 
 
@@ -87,6 +99,8 @@ func on_construction_clicked(construction_data: Dictionary):
 			handle_furniture_construction(construction_data, chunk)
 		_:
 			log_unknown_construction_type()
+
+
 # Build a block at the specified location
 func handle_block_construction(construction_data: Dictionary, chunk: Chunk) -> void:
 	var numberofplanks: int = ItemManager.get_accessibleitem_amount("plank_2x4")
@@ -99,7 +113,14 @@ func handle_block_construction(construction_data: Dictionary, chunk: Chunk) -> v
 
 	var local_position = calculate_local_position(construction_data.pos, chunk.position)
 	chunk.add_block("concrete_00", local_position)
-	log_debug("Block placed at local position: %s in chunk at %s with type concrete_00" % [local_position, chunk.position])
+	log_debug(
+		(
+			"Block placed at local position: %s in chunk at %s with type concrete_00"
+			% [local_position, chunk.position]
+		)
+	)
+	update_ghost()
+
 
 # Spawn furniture in the chunk based on selection
 func handle_furniture_construction(construction_data: Dictionary, chunk: Chunk) -> void:
@@ -115,11 +136,20 @@ func handle_furniture_construction(construction_data: Dictionary, chunk: Chunk) 
 	construction_data.pos -= chunk.mypos
 
 	# Spawn the furniture with the adjusted position
-	chunk.spawn_furniture({
-		"json": {"id": construction_choice, "rotation": myrotation, "mode": "blueprint"},
-		"pos": construction_data.pos
-	})
-	log_debug("Furniture construction chosen. Type: %s, Choice: %s, Adjusted construction_data.pos: %s" % [construction_type, construction_choice, str(construction_data.pos)])
+	chunk.spawn_furniture(
+		{
+			"json": {"id": construction_choice, "rotation": myrotation, "mode": "blueprint"},
+			"pos": construction_data.pos
+		}
+	)
+	log_debug(
+		(
+			"Furniture construction chosen. Type: %s, Choice: %s, Adjusted construction_data.pos: %s"
+			% [construction_type, construction_choice, str(construction_data.pos)]
+		)
+	)
+	update_ghost()
+
 
 # Convert a world position to chunk-local coordinates
 func calculate_local_position(global_pos: Vector3, chunk_pos: Vector3) -> Vector3:
@@ -127,6 +157,7 @@ func calculate_local_position(global_pos: Vector3, chunk_pos: Vector3) -> Vector
 	var local_x = int(global_pos.x - chunk_pos.x) % CHUNK_SIZE
 	var local_z = int(global_pos.z - chunk_pos.z) % CHUNK_SIZE
 	return Vector3(local_x, global_pos.y, local_z)
+
 
 # React to build menu visibility changes
 func _on_build_menu_visibility_change(buildmenu):
@@ -136,12 +167,13 @@ func _on_build_menu_visibility_change(buildmenu):
 			var selection: Dictionary = buildmenu.get_selected_type_and_choice()
 			construction_type = selection.type
 			construction_choice = selection.choice
-			update_construction_ghost()
+			update_ghost()
 			start_building()
 		else:
 			set_building_state(true)
 	else:
 		set_building_state(false)
+
 
 # Toggle building mode visuals and state
 func set_building_state(isvisible: bool):
@@ -152,15 +184,18 @@ func set_building_state(isvisible: bool):
 	log_debug("Set building state: %s" % str(isvisible))
 
 
-# Updates the material and size of the construction ghost based on the construction type and choice
-func update_construction_ghost():
-	construction_ghost.reset_to_default() # Resets size, rotation, material, offset
+# Updates the construction ghost mesh and material based on the
+# current construction choice.
+func update_ghost():
+	construction_ghost.reset_to_default()  # Resets size, rotation, material, offset
 	if construction_type == "furniture":
 		# Get the RFurniture instance by its ID
 		var rfurniture: RFurniture = Runtimedata.furnitures.by_id(construction_choice)
 		if rfurniture:
 			# Retrieve the sprite material and set it to the construction ghost
-			var furniture_sprite_material: StandardMaterial3D = Runtimedata.furnitures.get_standard_material_by_id(construction_choice)
+			var furniture_sprite_material: StandardMaterial3D = (
+				Runtimedata.furnitures.get_standard_material_by_id(construction_choice)
+			)
 			construction_ghost.set_material(furniture_sprite_material)
 			construction_ghost.set_mesh_size(calculate_furniture_size(rfurniture))
 			if not rfurniture.edgesnapping == "None":
@@ -177,7 +212,7 @@ func update_construction_ghost():
 func calculate_furniture_size(rfurniture: RFurniture) -> Vector2:
 	var sprite_texture = rfurniture.sprite
 	if sprite_texture:
-		var sprite_width = sprite_texture.get_width() / TEXTURE_SCALE # Convert pixels to meters
-		var sprite_depth = sprite_texture.get_height() / TEXTURE_SCALE # Convert pixels to meters
+		var sprite_width = sprite_texture.get_width() / TEXTURE_SCALE  # Convert pixels to meters
+		var sprite_depth = sprite_texture.get_height() / TEXTURE_SCALE  # Convert pixels to meters
 		return Vector2(sprite_width, sprite_depth)  # Use height from support shape
 	return DEFAULT_FURNITURE_SIZE  # Default size if texture is not set

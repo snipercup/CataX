@@ -51,6 +51,8 @@
 
 ### Existing Files Modified
 - `Scripts/BuildManager.gd` - Separate ghost updates from build logic.
+### New Files Added
+- `Tests/Unit/test_build_manager.gd` - Tests ghost update calls.
 
 ### Files To Remove
 - None
@@ -64,10 +66,10 @@
 - [ ] 2.0 Refactor `BuildManager.gd`
 
 
-  - [ ] 2.1 Move ghost update logic into `update_ghost()` method
+  - [c] 2.1 Move ghost update logic into `update_ghost()` method
 
 
-  - [ ] 2.2 Invoke `update_ghost()` from build functions
+  - [c] 2.2 Invoke `update_ghost()` from build functions
 
 
-  - [ ] 2.3 Add tests for ghost placement
+  - [c] 2.3 Add tests for ghost placement
