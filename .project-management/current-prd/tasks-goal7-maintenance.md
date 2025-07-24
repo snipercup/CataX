@@ -34,7 +34,7 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 3.0 Replace blocking delays in chunk spawning loops
-  - [ ] 3.1 Identify blocking loops in `Scripts/Chunk.gd`
-  - [ ] 3.2 Switch to asynchronous calls or timers
-  - [ ] 3.3 Validate chunk generation speed improvements
+- [c] 3.0 Replace blocking delays in chunk spawning loops
+  - [c] 3.1 Identify blocking loops in `Scripts/Chunk.gd`
+  - [c] 3.2 Switch to asynchronous calls or timers
+  - [c] 3.3 Validate chunk generation speed improvements
