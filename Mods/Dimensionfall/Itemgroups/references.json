@@ -108,7 +108,8 @@
 			"field_grass_hill_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"generic_forest_finds": {
@@ -119,7 +120,8 @@
 			"forest_road_corner",
 			"forest_basic_00",
 			"forest_camp_00",
-			"forest_burned_00"
+			"forest_burned_00",
+			"forest_clearing"
 		]
 	},
 	"kitchen_cupboard": {
