@@ -72,7 +72,7 @@
   - [x] 1.3 Convert legacy keys to `feature` when loading tiles.
   - [x] 1.4 Skip writing empty `feature` entries when saving.
 - [ ] 2.0 Update map management logic to read/write the new `feature` field. *(map_manager.gd)*
-  - [c] 2.1 Modify `_process_entities_data` to output `feature` dictionaries.
+  - [x] 2.1 Modify `_process_entities_data` to output `feature` dictionaries.
   - [ ] 2.2 Update removal helpers to check `feature.type`.
   - [ ] 2.3 Replace references to legacy keys with `feature` accessors.
 - [ ] 3.0 Modify map editor painting logic to update `tileData.feature`. *(GridContainer.gd)*

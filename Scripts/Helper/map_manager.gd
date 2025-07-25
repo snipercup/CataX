@@ -416,13 +416,11 @@ func apply_area_clusters_to_tiles(
 			var processed_data = process_area_data(area_data, tile, picked_tile)
 
 			# Remove existing entities if new entities are present in processed data
-			var entities_to_check = ["mob", "furniture", "mobgroup", "itemgroups"]
-			var new_has_entities = entities_to_check.any(
-				func(entity): return processed_data.has(entity)
-			)
+			var new_has_feature: bool = processed_data.has("feature")
 
-			if new_has_entities:
-				# The processed data has an entity. Erase existing entities from the tile
+			if new_has_feature:
+				# Remove legacy entity fields and old feature entry
+				var entities_to_check = ["mob", "furniture", "mobgroup", "itemgroups", "feature"]
 				for key in entities_to_check:
 					tile.erase(key)
 
