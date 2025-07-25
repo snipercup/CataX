@@ -28,7 +28,8 @@
 			"forest_camp_00",
 			"forest_burned_00",
 			"military_bunker",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"Tree_00": {
@@ -62,7 +63,8 @@
 			"forest_camp_00",
 			"forest_burned_00",
 			"military_bunker",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"WillowTree_00": {
@@ -96,7 +98,8 @@
 			"forest_camp_00",
 			"forest_burned_00",
 			"military_bunker",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"bathtub": {
