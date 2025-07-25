@@ -233,7 +233,8 @@
 			"forest_basic_00",
 			"forest_camp_00",
 			"forest_burned_00",
-			"crater_small"
+			"crater_small",
+			"forest_clearing"
 		]
 	},
 	"dirt_light_01": {
@@ -257,7 +258,8 @@
 			"forest_basic_00",
 			"forest_camp_00",
 			"forest_burned_00",
-			"crater_small"
+			"crater_small",
+			"forest_clearing"
 		]
 	},
 	"dirt_light_02": {
@@ -278,7 +280,8 @@
 			"forest_basic_00",
 			"forest_camp_00",
 			"forest_burned_00",
-			"crater_small"
+			"crater_small",
+			"forest_clearing"
 		]
 	},
 	"dirt_light_grass_north_00": {
@@ -451,7 +454,8 @@
 			"forest_road_corner",
 			"forest_basic_00",
 			"forest_camp_00",
-			"forest_burned_00"
+			"forest_burned_00",
+			"forest_clearing"
 		]
 	},
 	"forest_underbrush_01": {
@@ -462,7 +466,8 @@
 			"forest_road_corner",
 			"forest_basic_00",
 			"forest_camp_00",
-			"forest_burned_00"
+			"forest_burned_00",
+			"forest_clearing"
 		]
 	},
 	"forest_underbrush_02": {
@@ -473,7 +478,8 @@
 			"forest_road_corner",
 			"forest_basic_00",
 			"forest_camp_00",
-			"forest_burned_00"
+			"forest_burned_00",
+			"forest_clearing"
 		]
 	},
 	"forest_underbrush_03": {
@@ -547,7 +553,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_dirt_01": {
@@ -587,7 +594,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_dirt_02": {
@@ -626,7 +634,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_dirt_center_00": {
@@ -671,7 +680,8 @@
 			"store_electronic_clothing",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_flowers_01": {
@@ -814,7 +824,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_medium_dirt_01": {
@@ -856,7 +867,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_medium_dirt_02": {
@@ -897,7 +909,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"crater_small",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_clearing"
 		]
 	},
 	"grass_plain": {
