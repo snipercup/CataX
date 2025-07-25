@@ -121,15 +121,16 @@ func initialize_chunk_data():
 		var mapsegmentData: Dictionary = Runtimedata.maps.by_id(chunk_data.id).get_data().duplicate(
 			true
 		)
+		# Helper.task_manager will run it in a thread
 		await Helper.task_manager.create_task(generate_new_chunk.bind(mapsegmentData)).completed
-		await spawn_processed_mobs()
-		await spawn_itemgroups()
+		await spawn_processed_mobs() # Runs on main thread
+		await spawn_itemgroups() # Runs on main thread
 		# Run the main spawn function on the main thread and let the furniturespawner
 		# handle offloading the work onto a thread.
 		add_furnitures_to_new_block()  # Last action, but chunk is ready when _on_furniture_spawned is called
 	else:  # This chunk is created from previously saved data
 		await Helper.task_manager.create_task(generate_saved_chunk).completed
-		await spawn_saved_mobs()
+		await spawn_saved_mobs() # Runs on main thread
 		# Run the main spawn function on the main thread and let the furniturespawner
 		# handle offloading the work onto a thread.
 		add_furnitures_to_map(chunk_data.furniture)  # Last action, chunk ready when _on_furniture_spawned is called
@@ -245,9 +246,7 @@ func generate_saved_chunk() -> void:
 func spawn_processed_mobs() -> void:
 	if not processed_level_data.has("mobs"):
 		return
-	mutex.lock()
 	var mobdatalist = processed_level_data.mobs.duplicate()
-	mutex.unlock()
 	var batch_size := 1  # Number of mob to spawn per batch
 	var count := 0
 	for mobdata: Dictionary in mobdatalist:
@@ -289,9 +288,7 @@ func add_furnitures_to_new_block():
 # When a map is loaded for the first time we spawn the itemgroups on the block
 # itemgroups are represented by a ContainerItem node
 func spawn_itemgroups() -> void:
-	mutex.lock()
 	var itemgroup_data = processed_level_data.itemgroups.duplicate()
-	mutex.unlock()
 	var total_itemgroups = itemgroup_data.size()
 	# Ensure we at least get 1 to avoid division by zero
 	var delay_every_n_itemgroups = max(1, total_itemgroups / 15)
@@ -328,9 +325,7 @@ func _is_object_in_range(objectposition: Vector3) -> bool:
 
 # Called when a save is loaded
 func spawn_saved_mobs() -> void:
-	mutex.lock()
 	var mobdata: Array = chunk_data.mobs.duplicate()
-	mutex.unlock()
 	var batch_size := 1  # Number of mob to spawn per batch
 	var count := 0
 	for mob: Dictionary in mobdata:
