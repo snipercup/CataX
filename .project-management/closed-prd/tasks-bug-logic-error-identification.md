@@ -64,3 +64,4 @@
   - [x] 1.2 Update related unit tests to cover missing chunk scenarios.
 - [x] 3.0 Safe bullet collision handling
   - [x] 3.1 Ensure `_on_body_shape_entered` and `_on_area_3d_body_shape_entered` skip null bodies and log appropriately.
+- [x] 4.0 Review: Added tests for missing chunk scenarios.

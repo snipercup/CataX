@@ -153,3 +153,43 @@ func test_process_entities_data():
 		assert_does_not_have(result, "mob", "Unexpected mob key")
 		assert_does_not_have(result, "mobgroup", "Unexpected mobgroup key")
 		assert_does_not_have(result, "itemgroup", "Unexpected itemgroup key")
+
+
+# Stub classes for chunk absence tests
+class StubLevelGenerator:
+	extends Node
+
+	func get_chunk(_coord: Vector2):
+		return null
+
+
+class StubPlayer:
+	extends Player
+
+	func get_y_position(_snapped: bool = false) -> float:
+		return 0.0
+
+
+func test_spawn_item_missing_chunk_returns_false():
+	map_manager.level_generator = StubLevelGenerator.new()
+	var player = StubPlayer.new()
+	Helper.overmap_manager.player = player
+	Helper.overmap_manager.player_current_cell = Vector2.ZERO
+	add_child(player)
+	assert_false(
+		map_manager.spawn_item_at_current_player_map("dummy", 1),
+		"Expected false when chunk is missing",
+	)
+	player.queue_free()
+
+
+func test_spawn_mob_missing_chunk_returns_false():
+	map_manager.level_generator = StubLevelGenerator.new()
+	var player = StubPlayer.new()
+	Helper.overmap_manager.player = player
+	add_child(player)
+	assert_false(
+		map_manager.spawn_mob_at_nearby_map("dummy", Vector2.ZERO),
+		"Expected false when chunk is missing",
+	)
+	player.queue_free()
