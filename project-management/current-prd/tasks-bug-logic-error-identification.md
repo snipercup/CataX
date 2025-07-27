@@ -50,6 +50,7 @@
 ### Existing Files Modified
 - `Scripts/Helper/map_manager.gd` - Add null checks when retrieving chunks and containers.
 - `Scripts/bullet.gd` - Ensure collision callbacks handle null bodies safely.
+- `Tests/Unit/test_map_manager.gd` - Cover chunk absence cases for spawn functions.
 
 ### Files To Remove
 - _None_
@@ -58,8 +59,8 @@
 - Unit tests should be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Harden chunk retrieval and item spawning
-  - [ ] 1.1 Add null-checks in `spawn_item_at_current_player_map` and `spawn_mob_at_nearby_map`.
-  - [ ] 1.2 Update related unit tests to cover missing chunk scenarios.
-- [ ] 3.0 Safe bullet collision handling
-  - [ ] 3.1 Ensure `_on_body_shape_entered` and `_on_area_3d_body_shape_entered` skip null bodies and log appropriately.
+- [x] 1.0 Harden chunk retrieval and item spawning
+  - [x] 1.1 Add null-checks in `spawn_item_at_current_player_map` and `spawn_mob_at_nearby_map`.
+  - [x] 1.2 Update related unit tests to cover missing chunk scenarios.
+- [x] 3.0 Safe bullet collision handling
+  - [x] 3.1 Ensure `_on_body_shape_entered` and `_on_area_3d_body_shape_entered` skip null bodies and log appropriately.
