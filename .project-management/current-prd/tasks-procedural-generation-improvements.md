@@ -47,6 +47,7 @@
 
 ## Relevant Files
 - `Scripts/Helper/overmap_area_generator.gd` - overmap area generation logic
+- `Tests/Unit/test_overmap_area_generator.gd` - tests for neighbor selection
 
 ### Proposed New Files
 - `/Tests/Unit/test_overmap_area_generator.gd` - unit tests for area generation
@@ -61,7 +62,7 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 2.0 Modularize neighbor selection in OvermapAreaGenerator
-  - [ ] 2.1 Extract neighbor selection logic into dedicated functions
-  - [ ] 2.2 Add comments describing the neighbor selection algorithm
-  - [ ] 2.3 Ensure area generation pipeline uses new functions correctly
+- [x] 2.0 Modularize neighbor selection in OvermapAreaGenerator
+  - [x] 2.1 Extract neighbor selection logic into dedicated functions
+  - [x] 2.2 Add comments describing the neighbor selection algorithm
+  - [x] 2.3 Ensure area generation pipeline uses new functions correctly
