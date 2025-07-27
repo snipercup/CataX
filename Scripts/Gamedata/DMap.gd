@@ -453,44 +453,37 @@ func remove_entity_from_map(entity_type: String, entity_id: String) -> void:
 # entity_type can be "tile", "furniture", "itemgroup" or "mob"
 # entity_id is the id of the tile, furniture, itemgroup or mob
 func remove_entity_from_levels(entity_type: String, entity_id: String) -> void:
-	# Iterate over each level in the map
 	for level in levels:
-		# Iterate through each entity in the level
 		for entity_index in range(level.size()):
-			var entity = level[entity_index]
+			var entity: Dictionary = level[entity_index]
 
 			match entity_type:
 				"id":
-					# Check if the entity's 'id' matches and replace the entire entity with an empty object
 					if entity.get("id", "") == entity_id:
-						level[entity_index] = {}  # Replacing entity with an empty object
-				"furniture":
-					# Check if the entity has 'furniture' and the 'id' within it matches
-					if entity.has("furniture") and entity["furniture"].get("id", "") == entity_id:
-						entity.erase("furniture")  # Removing the furniture object from the entity
-				"mob":
-					# Check if the entity has 'mob' and the 'id' within it matches
-					if entity.has("mob") and entity["mob"].get("id", "") == entity_id:
-						entity.erase("mob")  # Removing the mob object from the entity
-				"mobgroup":
-					# Check if the entity has 'mobgroup' and matches the given ID
-					if entity.has("mobgroup") and entity["mobgroup"].get("id", "") == entity_id:
-						entity.erase("mobgroup")  # Remove mobgroup from the entity
+						level[entity_index] = {}
+				"furniture", "mob", "mobgroup":
+					if (
+						entity.get("feature", {}).get("type", "") == entity_type
+						and entity["feature"].get("id", "") == entity_id
+					):
+						entity.erase("feature")
 				"itemgroup":
-					# Check if the entity has 'furniture' and 'itemgroups', then remove the itemgroup
-					if entity.has("furniture") and entity["furniture"].has("itemgroups"):
-						var itemgroups = entity["furniture"]["itemgroups"]
-						if itemgroups.has(entity_id):
-							itemgroups.erase(entity_id)
-							if itemgroups.size() == 0:
-								entity["furniture"].erase("itemgroups")
-					# Also, check and remove itemgroups from the entity itself if present
-					if entity.has("itemgroups"):
-						var entity_itemgroups = entity["itemgroups"]
-						if entity_itemgroups.has(entity_id):
-							entity_itemgroups.erase(entity_id)
-							if entity_itemgroups.size() == 0:
-								entity.erase("itemgroups")
+					if entity.has("feature"):
+						var feature = entity["feature"]
+						if feature.get("type", "") == "itemgroup":
+							var groups: Array = feature.get("itemgroups", [])
+							if groups.has(entity_id):
+								groups.erase(entity_id)
+								if groups.is_empty():
+									entity.erase("feature")
+								else:
+									feature["itemgroups"] = groups
+						elif feature.get("type", "") == "furniture" and feature.has("itemgroups"):
+							var groups_f: Array = feature["itemgroups"]
+							if groups_f.has(entity_id):
+								groups_f.erase(entity_id)
+								if groups_f.is_empty():
+									feature.erase("itemgroups")
 
 
 # Function to erase an entity from every area
