@@ -71,17 +71,17 @@
   - [x] 1.2 Update `set_data` and `get_data` to read/write the dictionary.
   - [x] 1.3 Convert legacy keys to `feature` when loading tiles.
   - [x] 1.4 Skip writing empty `feature` entries when saving.
-- [ ] 2.0 Update map management logic to read/write the new `feature` field. *(map_manager.gd)*
+- [x] 2.0 Update map management logic to read/write the new `feature` field. *(map_manager.gd)*
   - [x] 2.1 Modify `_process_entities_data` to output `feature` dictionaries.
   - [x] 2.2 Update removal helpers to check `feature.type`.
   - [x] 2.3 Replace references to legacy keys with `feature` accessors.
-- [ ] 3.0 Modify map editor painting logic to update `tileData.feature`. *(GridContainer.gd)*
-  - [c] 3.1 Remove legacy field clearing and set `tileData.feature` directly.
-  - [c] 3.2 Store rotation and itemgroup lists in the dictionary.
-- [ ] 4.0 Update tile display and tooltips to reference `tileData.feature`. *(mapeditortile.gd)*
-  - [ ] 4.1 Determine sprite based on `feature.type` and `id`.
-  - [ ] 4.2 Update tooltips to show feature information.
-  - [ ] 4.3 Remove checks for obsolete fields.
+- [x] 3.0 Modify map editor painting logic to update `tileData.feature`. *(GridContainer.gd)*
+-  - [x] 3.1 Remove legacy field clearing and set `tileData.feature` directly.
+-  - [x] 3.2 Store rotation and itemgroup lists in the dictionary.
+- [x] 4.0 Update tile display and tooltips to reference `tileData.feature`. *(mapeditortile.gd)*
+  - [x] 4.1 Determine sprite based on `feature.type` and `id`.
+  - [x] 4.2 Update tooltips to show feature information.
+  - [x] 4.3 Remove checks for obsolete fields.
 - [ ] 5.0 Add migration utilities and unit tests for legacy map conversion and editor behavior.
   - [ ] 5.1 Create `tile_feature_migration.gd` to convert stored maps.
   - [ ] 5.3 Extend map manager tests to cover the new feature structure.
