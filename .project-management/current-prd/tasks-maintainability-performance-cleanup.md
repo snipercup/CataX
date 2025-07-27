@@ -60,6 +60,7 @@
 
 ### Existing Files Modified
 - `Scripts/Mob/Mob.gd` - share meshes between mobs.
+- `Scripts/general.gd` - add mob mesh caching utilities.
 
 ### Files To Remove
 - *(none yet)*
@@ -69,8 +70,8 @@
 
 ## Tasks
 - [ ] 3.0 Implement shared mob mesh caching
-  - [ ] 3.1 Create global cache for mob meshes
-  - [ ] 3.2 Modify `Mob.gd` to reuse cached meshes
+  - [x] 3.1 Create global cache for mob meshes
+  - [x] 3.2 Modify `Mob.gd` to reuse cached meshes
   - [ ] 3.3 Validate memory usage improvements
 - [ ] 5.0 Audit and clean unused signals
   - [ ] 5.1 Search for unused signal connections

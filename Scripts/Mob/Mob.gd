@@ -2,12 +2,12 @@ class_name Mob
 extends CharacterBody3D
 
 var target_manager: Node3D = null
-var mob_position: Vector3 # The position it will move to when it is created
-var mob_rotation: int # The rotation it will rotate to when it is created
-var mob_json: Dictionary # The json that defines this mob
-var rmob: RMob # The data that defines this mob in general
-var meshInstance: MeshInstance3D # This mob's mesh instance
-var nav_agent: NavigationAgent3D # Used for pathfinding
+var mob_position: Vector3  # The position it will move to when it is created
+var mob_rotation: int  # The rotation it will rotate to when it is created
+var mob_json: Dictionary  # The json that defines this mob
+var rmob: RMob  # The data that defines this mob in general
+var meshInstance: MeshInstance3D  # This mob's mesh instance
+var nav_agent: NavigationAgent3D  # Used for pathfinding
 var collision_shape_3d = CollisionShape3D
 var current_chunk: Vector2
 var last_position: Vector3 = Vector3()
@@ -25,12 +25,12 @@ var current_idle_move_speed: float
 var sight_range: float = 200.0
 var sense_range: float = 50.0
 var hearing_range: float = 1000.0
-var dash: Dictionary = {} # to enable dash move. something like {"speed_multiplier":2,"cooldown":5,"duration":0.5}
-var hates_mobs: Dictionary = {} # A dictionary of strings containing the mob id's it hates
+var dash: Dictionary = {}  # to enable dash move. something like {"speed_multiplier":2,"cooldown":5,"duration":0.5}
+var hates_mobs: Dictionary = {}  # A dictionary of strings containing the mob id's it hates
 
 # States and flags
-var is_blinking: bool = false # flag to prevent multiple blink actions
-var original_material: StandardMaterial3D # To return to normal after blinking
+var is_blinking: bool = false  # flag to prevent multiple blink actions
+var original_material: StandardMaterial3D  # To return to normal after blinking
 var state_machine: StateMachine
 var terminated: bool = false
 var last_attacker: Node = null
@@ -45,6 +45,7 @@ func _init(mob_pos: Vector3, new_mob_json: Dictionary):
 	mob_position = mob_pos
 	initialize_mob()
 
+
 # Initializes the mob by setting up various components and properties
 func initialize_mob():
 	setup_basic_properties()
@@ -57,6 +58,7 @@ func initialize_mob():
 	apply_stats_from_dmob()
 	Helper.signal_broker.game_terminated.connect(terminate)
 
+
 # Set basic properties of the mob
 func setup_basic_properties():
 	wall_min_slide_angle = 0
@@ -65,6 +67,7 @@ func setup_basic_properties():
 	if mob_json.has("rotation"):
 		mob_rotation = mob_json.rotation
 	hates_mobs = Runtimedata.mobfactions.by_id(rmob.faction_id).get_mobs_by_relation_type("hostile")
+
 
 # Set collision layers and masks
 func setup_collision_layers_and_masks():
@@ -89,6 +92,7 @@ func create_navigation_agent():
 	nav_agent.avoidance_enabled = true
 	nav_agent.debug_enabled = false
 	add_child.call_deferred(nav_agent)
+
 
 # Create and configure StateMachine
 func create_state_machine():
@@ -116,7 +120,7 @@ func create_collision_shape():
 func create_mesh_instance():
 	meshInstance = MeshInstance3D.new()
 	# Set the layers to layer 5
-	meshInstance.layers = 1 << 4 # Layer numbers start at 0, so layer 5 is 1 shifted 4 times to the left
+	meshInstance.layers = 1 << 4  # Layer numbers start at 0, so layer 5 is 1 shifted 4 times to the left
 	meshInstance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	meshInstance.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 
@@ -127,6 +131,7 @@ func create_mesh_instance():
 	quadmesh.lightmap_size_hint = Vector2(7, 7)
 	meshInstance.mesh = quadmesh
 	add_child.call_deferred(meshInstance)
+
 
 # Set up the mob's initial health and position
 func _ready():
@@ -141,16 +146,19 @@ func _ready():
 	update_navigation_agent_map(current_chunk)
 	Helper.signal_broker.mob_spawned.emit(self)
 
+
 func _physics_process(_delta):
 	if global_transform.origin != last_position:
 		last_position = global_transform.origin
 		# Check if the mob has crossed into a new chunk
 		# Clamp the x and z positions to align with the 3D world cells
-		current_chunk = get_chunk_from_position(Vector3(
-			floor(global_transform.origin.x), 
-			global_transform.origin.y, 
-			floor(global_transform.origin.z)
-		))
+		current_chunk = get_chunk_from_position(
+			Vector3(
+				floor(global_transform.origin.x),
+				global_transform.origin.y,
+				floor(global_transform.origin.z)
+			)
+		)
 		if current_chunk != last_chunk:
 			# We have crossed over to another chunk so we use that navigationmap now.
 			update_navigation_agent_map(current_chunk)
@@ -168,9 +176,19 @@ func update_navigation_agent_map(chunk_position: Vector2):
 	if navigation_map_id:
 		nav_agent.set_navigation_map(navigation_map_id)
 	else:
-		print_debug("Tried to set navigation_map_id at "+str(chunk_position)+", but it was null. last_position = " + str(last_position) + ", last_chunk = " + str(last_chunk))
+		print_debug(
+			(
+				"Tried to set navigation_map_id at "
+				+ str(chunk_position)
+				+ ", but it was null. last_position = "
+				+ str(last_position)
+				+ ", last_chunk = "
+				+ str(last_chunk)
+			)
+		)
 		# Set the last chunk to one that doesn't exist so it will try to get a new map
-		last_chunk = Vector2(0.1,0.1)
+		last_chunk = Vector2(0.1, 0.1)
+
 
 # When the mob gets hit by an attack
 # attack_data: a dictionary like this:
@@ -184,7 +202,7 @@ func get_hit(attack_data: Dictionary):
 	last_attacker = attack_data.get("source", null)
 	var attack: Dictionary = attack_data.get("attack", {})
 	var rattack: RAttack = null
-	
+
 	if attack.has("id"):
 		rattack = Runtimedata.attacks.by_id(attack["id"])
 
@@ -196,7 +214,9 @@ func get_hit(attack_data: Dictionary):
 	var damage: float = 0.0
 	if rattack:
 		# 1. Use attack's calculated damage
-		var attack_effects: Dictionary = rattack.get_scaled_attribute_damage(attack.get("damage_multiplier", 1.0))
+		var attack_effects: Dictionary = rattack.get_scaled_attribute_damage(
+			attack.get("damage_multiplier", 1.0)
+		)
 		damage = attack_effects.get("damage", 0)
 	elif attack_data.has("damage"):
 		# 2. Use the direct "damage" value if no attack is present
@@ -209,7 +229,7 @@ func get_hit(attack_data: Dictionary):
 	var actual_hit_chance = hit_chance + 0.0  # Adjust hit chance modifier if needed
 
 	# Determine if the attack hits
-	if randf() <= actual_hit_chance: # / 100.0:
+	if randf() <= actual_hit_chance:  # / 100.0:
 		# Attack hits
 		current_health -= damage
 		if current_health <= 0:
@@ -236,10 +256,10 @@ func show_miss_indicator():
 
 	# Animate the miss indicator to disappear quickly
 	var tween = create_tween()
-	tween.tween_property(miss_label, "modulate:a", 0, 0.5).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(func():
-		miss_label.queue_free()  # Properly free the miss_label node
+	tween.tween_property(miss_label, "modulate:a", 0, 0.5).set_trans(Tween.TRANS_LINEAR).set_ease(
+		Tween.EASE_IN_OUT
 	)
+	tween.finished.connect(func(): miss_label.queue_free())  # Properly free the miss_label node
 
 
 # Handle the mob's death and trigger a corpse creation
@@ -252,9 +272,7 @@ func _die(killer = null):
 # Add a corpse to the map
 func add_corpse(pos: Vector3):
 	var itemdata: Dictionary = {
-		"global_position_x": pos.x,
-		"global_position_y": pos.y,
-		"global_position_z": pos.z
+		"global_position_x": pos.x, "global_position_y": pos.y, "global_position_z": pos.z
 	}
 
 	# Check if the mob data has a 'loot_group' property
@@ -269,25 +287,23 @@ func add_corpse(pos: Vector3):
 	# Finally add the new item with possibly set loot group to the tree
 	get_tree().get_root().add_child.call_deferred(newItem)
 
+
 # Sets the sprite to the mob
 # TODO: In order to optimize this, instead of calling original_mesh.duplicate()
 # We should keep track of every unique mesh (one for each type of mob)
 # Then we check if there has already been a mesh created for a mob with this
 # id and assign that mesh. Right now every mob has its own unique mesh
 func set_sprite(newSprite: Resource):
-	var original_mesh = meshInstance.mesh
-	var new_mesh = original_mesh.duplicate()  # Clone the mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_texture = newSprite
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	new_mesh.surface_set_material(0, material)
-	meshInstance.mesh = new_mesh  # Set the new mesh to MeshInstance3D
-	# Save the original material
+	meshInstance.mesh = General.get_mob_mesh(newSprite)
+	var material := meshInstance.mesh.surface_get_material(0).duplicate()
+	meshInstance.set_surface_override_material(0, material)
 	original_material = material.duplicate()
 
-# Applies its own data from the DMob instance it received
-# If it is created as a new mob, it will spawn with the default stats
-# If it is created from a saved game, it might have lower health for example
+	# Applies its own data from the DMob instance it received
+	# If it is created as a new mob, it will spawn with the default stats
+	# If it is created from a saved game, it might have lower health for example
+
+
 func apply_stats_from_dmob() -> void:
 	set_sprite(rmob.sprite)
 	attacks = rmob.attacks
@@ -300,42 +316,56 @@ func apply_stats_from_dmob() -> void:
 	sight_range = rmob.sight_range
 	sense_range = rmob.sense_range
 	hearing_range = rmob.hearing_range
-	dash = rmob.special_moves.get("dash",{})
+	dash = rmob.special_moves.get("dash", {})
 
 
 # Returns which chunk the mob is in right now. for example 0,0 or 0,32 or 96,32
 func get_chunk_from_position(chunkposition: Vector3) -> Vector2:
 	var x_position = chunkposition.x
 	var z_position = chunkposition.z
-	
+
 	var chunk_x_index = floor(x_position / 32.0)
 	var chunk_z_index = floor(z_position / 32.0)
-	
+
 	return Vector2(chunk_x_index * 32, chunk_z_index * 32)
+
 
 # The mob will blink once to indicate that it's hit
 # We enable emission and tween it to a white color so it's entirely white
 # Then we tween back to the normal emission color
 func start_blinking():
 	is_blinking = true
-	var blink_material = original_material.duplicate()
-	blink_material.set_feature(BaseMaterial3D.FEATURE_EMISSION, true)
-	var surfacemesh = meshInstance.mesh
-	var surfacematerial = surfacemesh.surface_get_material(0)
+	var surfacematerial = meshInstance.get_surface_override_material(0)
+	if surfacematerial == null:
+		surfacematerial = meshInstance.mesh.surface_get_material(0).duplicate()
+		meshInstance.set_surface_override_material(0, surfacematerial)
 	surfacematerial.set_feature(BaseMaterial3D.FEATURE_EMISSION, true)
 
 	var tween = create_tween()
-	tween.tween_property(surfacematerial, "emission", Color(1, 1, 1), 0.125).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(surfacematerial, "emission", original_material.emission, 0.125).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT).set_delay(0.125)
-
+	(
+		tween
+		. tween_property(surfacematerial, "emission", Color(1, 1, 1), 0.125)
+		. set_trans(Tween.TRANS_LINEAR)
+		. set_ease(Tween.EASE_IN_OUT)
+	)
+	(
+		tween
+		. tween_property(surfacematerial, "emission", original_material.emission, 0.125)
+		. set_trans(Tween.TRANS_LINEAR)
+		. set_ease(Tween.EASE_IN_OUT)
+		. set_delay(0.125)
+	)
 	tween.finished.connect(_on_tween_finished)
 
-# The mob is done blinking so we reset the relevant variables
+	# The mob is done blinking so we reset the relevant variables
+
+
 func _on_tween_finished():
-	var surfacemesh = meshInstance.mesh
-	var surfacematerial = surfacemesh.surface_get_material(0)
-	surfacematerial.set_feature(BaseMaterial3D.FEATURE_EMISSION, false)
+	var surfacematerial = meshInstance.get_surface_override_material(0)
+	if surfacematerial:
+		surfacematerial.set_feature(BaseMaterial3D.FEATURE_EMISSION, false)
 	is_blinking = false
+
 
 # Return mob data as a Dictionary
 func get_data() -> Dictionary:
@@ -363,29 +393,35 @@ func get_data() -> Dictionary:
 func terminate():
 	terminated = true
 
+
 # Return the faction id of the mob
 func get_faction() -> String:
 	return rmob.faction_id
+
 
 # Returns the current state of the state machine.
 # The return type is `State` or `null` if the state_machine is not initialized.
 func get_current_state() -> State:
 	return state_machine.current_state if state_machine else null
 
+
 # Returns if the mob's state machine has the specified state
 func has_state(state_name: String = "mobidle") -> bool:
 	return state_machine.states.has(state_name)
+
 
 func get_bullet_sprite() -> Texture:
 	var myattack: Dictionary = get_attack_of_type("ranged")
 	return Runtimedata.attacks.by_id(myattack.id).sprite
 
+
 # Returns the first attack of the specified type, if it has any
 # Exmple return value: {"id": "basic_melee", "damage_multiplier": 1, "type": "melee"}
 func get_attack_of_type(type: String = "melee") -> Dictionary:
-	if not rmob.attacks.has(type) or rmob.attacks.get(type,[]).size() < 1:
+	if not rmob.attacks.has(type) or rmob.attacks.get(type, []).size() < 1:
 		return {}
 	return rmob.attacks[type][0]
+
 
 # Returns the range of the first ranged attack, if it has any
 func get_ranged_range() -> float:
@@ -393,6 +429,7 @@ func get_ranged_range() -> float:
 	if rattack and rattack.get("myrange"):
 		return rattack.myrange
 	return 0.0
+
 
 # Returns the range of the first melee attack in the attack list, if it has any
 func get_melee_range() -> float:
