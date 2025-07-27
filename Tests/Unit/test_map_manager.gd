@@ -153,11 +153,3 @@ func test_process_entities_data():
 		assert_does_not_have(result, "mob", "Unexpected mob key")
 		assert_does_not_have(result, "mobgroup", "Unexpected mobgroup key")
 		assert_does_not_have(result, "itemgroup", "Unexpected itemgroup key")
-
-
-# New stub classes for chunk absence tests
-class StubLevelGenerator:
-	extends Node
-
-	func get_chunk(_coord: Vector2):
-		return null
