@@ -747,20 +747,15 @@ func rotate_level_clockwise() -> void:
 
 # Rotate the data for a single tile
 func rotate_tile_data(tile_data: Dictionary):
-	# Add rotation to the tile's data if it has an id
+	# Rotate tile sprite if a tile id is present
 	if tile_data.has("id"):
 		var tile_rotation = int(tile_data.get("rotation", 0))
 		tile_data["rotation"] = (tile_rotation + 90) % 360
-	if tile_data.has("mob"):
-		var mob_rotation = int(tile_data["mob"].get("rotation", 0))
-		tile_data["mob"]["rotation"] = (mob_rotation + 90) % 360
-	if tile_data.has("mobgroup"):
-		var mobgroup_rotation = int(tile_data["mobgroup"].get("rotation", 0))
-		tile_data["mobgroup"]["rotation"] = (mobgroup_rotation + 90) % 360
-	# Rotate furniture if present, initializing rotation to 0 if not set
-	if tile_data.has("furniture"):
-		var furniture_rotation = int(tile_data["furniture"].get("rotation", 0))
-		tile_data["furniture"]["rotation"] = (furniture_rotation + 90) % 360
+
+	# Rotate feature entry if present
+	if tile_data.has("feature"):
+		var feature_rot = int(tile_data.feature.get("rotation", 0))
+		tile_data.feature["rotation"] = (feature_rot + 90) % 360
 
 
 # Called when the user has drawn a rectangle with the copy button toggled on

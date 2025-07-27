@@ -76,8 +76,8 @@
   - [x] 2.2 Update removal helpers to check `feature.type`.
   - [x] 2.3 Replace references to legacy keys with `feature` accessors.
 - [ ] 3.0 Modify map editor painting logic to update `tileData.feature`. *(GridContainer.gd)*
-  - [ ] 3.1 Remove legacy field clearing and set `tileData.feature` directly.
-  - [ ] 3.2 Store rotation and itemgroup lists in the dictionary.
+  - [c] 3.1 Remove legacy field clearing and set `tileData.feature` directly.
+  - [c] 3.2 Store rotation and itemgroup lists in the dictionary.
 - [ ] 4.0 Update tile display and tooltips to reference `tileData.feature`. *(mapeditortile.gd)*
   - [ ] 4.1 Determine sprite based on `feature.type` and `id`.
   - [ ] 4.2 Update tooltips to show feature information.
