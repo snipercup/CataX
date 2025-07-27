@@ -299,11 +299,10 @@ func set_sprite(newSprite: Resource):
 	meshInstance.set_surface_override_material(0, material)
 	original_material = material.duplicate()
 
-	# Applies its own data from the DMob instance it received
-	# If it is created as a new mob, it will spawn with the default stats
-	# If it is created from a saved game, it might have lower health for example
 
-
+# Applies its own data from the DMob instance it received
+# If it is created as a new mob, it will spawn with the default stats
+# If it is created from a saved game, it might have lower health for example
 func apply_stats_from_dmob() -> void:
 	set_sprite(rmob.sprite)
 	attacks = rmob.attacks
