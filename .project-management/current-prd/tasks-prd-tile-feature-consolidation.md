@@ -73,8 +73,8 @@
   - [x] 1.4 Skip writing empty `feature` entries when saving.
 - [ ] 2.0 Update map management logic to read/write the new `feature` field. *(map_manager.gd)*
   - [x] 2.1 Modify `_process_entities_data` to output `feature` dictionaries.
-  - [ ] 2.2 Update removal helpers to check `feature.type`.
-  - [ ] 2.3 Replace references to legacy keys with `feature` accessors.
+  - [x] 2.2 Update removal helpers to check `feature.type`.
+  - [x] 2.3 Replace references to legacy keys with `feature` accessors.
 - [ ] 3.0 Modify map editor painting logic to update `tileData.feature`. *(GridContainer.gd)*
   - [ ] 3.1 Remove legacy field clearing and set `tileData.feature` directly.
   - [ ] 3.2 Store rotation and itemgroup lists in the dictionary.
