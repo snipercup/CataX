@@ -75,8 +75,6 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Audit direct NodePath dependencies across scenes and scripts.
-  - [ ] 1.1 Search for NodePath exports and get_node() uses.
 - [ ] 2.0 Convert HUD interactions to use signals via `Helper.signal_broker`.
   - [ ] 2.1 Add signals to hud.gd for HUD actions.
   - [ ] 2.2 Connect other scripts to HUD via Helper.signal_broker.
