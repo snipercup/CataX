@@ -144,11 +144,12 @@ func test_process_entities_data():
 	assert_eq(result.get("id", ""), "dirt_light_00", "Unexpected tile id")
 	assert_eq(result.get("rotation", 0), 180, "Rotation has changed")
 
-	if result.has("feature"):
+	if result.has("furniture"):
 		var valid_ids: Array[String] = ["Tree_00", "PineTree_00", "WillowTree_00"]
 		assert_eq(result.feature.type, "furniture", "Expected furniture feature")
 		assert_true(valid_ids.has(result.feature.id), "Unexpected furniture id")
 	else:
-		assert_false(result.has("mob"), "Unexpected mob key")
-		assert_false(result.has("mobgroup"), "Unexpected mobgroup key")
-		assert_false(result.has("itemgroup"), "Unexpected itemgroup key")
+		# No furniture was put onto the tile, but the tile shouldn't have any of the following
+		assert_does_not_have(result, "mob", "Unexpected mob key")
+		assert_does_not_have(result, "mobgroup", "Unexpected mobgroup key")
+		assert_does_not_have(result, "itemgroup", "Unexpected itemgroup key")
