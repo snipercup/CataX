@@ -167,16 +167,16 @@ func _process_entities_data(
 			if rotation == -1:
 				rotation = tile_area_rotation
 
-				# Store the selected entity in the unified feature dictionary
-				result["feature"] = {
-					"type": selected_entity["type"],
-					"rotation": rotation,
-				}
-				match selected_entity["type"]:
-					"furniture", "mob", "mobgroup":
-						result.feature["id"] = selected_entity["id"]
-					"itemgroup":
-						result.feature["itemgroups"] = [selected_entity["id"]]
+			# Store the selected entity in the unified feature dictionary
+			result["feature"] = {
+				"type": selected_entity["type"],
+				"rotation": rotation,
+			}
+			match selected_entity["type"]:
+				"furniture", "mob", "mobgroup":
+					result.feature["id"] = selected_entity["id"]
+				"itemgroup":
+					result.feature["itemgroups"] = [selected_entity["id"]]
 
 
 # Function to pick an item based on its count property
@@ -438,6 +438,8 @@ func apply_areas_to_tiles(selected_areas: Array, generated_mapdata: Dictionary) 
 	if generated_mapdata.has("levels"):
 		# Iterate through each level in the map
 		for level in generated_mapdata["levels"]:
+			if level.size() < 1:
+				continue  # Skip processing this level entirely
 			var width = 32  # Assuming 32x32 grid
 			var height = 32
 
