@@ -214,7 +214,7 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Review existing items and design three new crafting combinations
+- [ ] 1.0 Review existing items and design three new items
   - [ ] 1.1 Inspect `Mods/Dimensionfall/Items/Items.json` to understand current categories
   - [ ] 1.2 Draft three new items in line with the game theme.
 - [ ] 2.0 Create JSON definitions for the new items
