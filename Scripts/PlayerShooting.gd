@@ -4,8 +4,7 @@ extends Node3D
 @export var left_hand_item: Sprite3D
 @export var right_hand_item: Sprite3D
 
-@export var player: NodePath
-@export var hud: NodePath
+@onready var player: Node3D = get_parent()
 
 # Count bullets spawned for testing.
 var _bullet_count: int = 0
@@ -16,8 +15,7 @@ func _ready() -> void:
 
 
 func _on_projectile_spawned(projectile: Node, instigator: RID) -> void:
-	var p: Node3D = get_node(player)
-	if p and instigator == p.get_rid():
+	if instigator == player.get_rid():
 		_bullet_count += 1
 
 
