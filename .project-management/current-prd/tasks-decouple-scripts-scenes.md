@@ -81,7 +81,7 @@
   - [ ] 2.3 Remove old NodePath exports from hud.gd.
 - [ ] 3.0 Refactor Player and PlayerShooting to rely on signals instead of direct NodePaths.
   - [ ] 3.1 Emit signals from player.gd for state changes.
-  - [ ] 3.2 Update PlayerShooting.gd to use signals instead of NodePaths.
+  - [c] 3.2 Update PlayerShooting.gd to use signals instead of NodePaths.
   - [ ] 3.3 Connect Player signals to HUD via signal broker.
 - [ ] 4.0 Update scenes to remove exported NodePath properties and wire up signal connections.
   - [ ] 4.1 Remove NodePath exports from hud.tscn and player.tscn.
