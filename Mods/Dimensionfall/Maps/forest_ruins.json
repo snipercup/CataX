@@ -1,0 +1,19 @@
+{
+    "areas": [],
+    "categories": [
+        "Forest"
+    ],
+    "connections": {
+        "east": "ground",
+        "north": "ground",
+        "south": "ground",
+        "west": "ground"
+    },
+    "description": "Ruins of a collapsed cabin hidden deep in the woods, now overgrown and silent.",
+    "id": "forest_ruins",
+    "levels": [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
+    "mapheight": 32,
+    "mapwidth": 32,
+    "name": "Forest Ruins",
+    "weight": 500
+}
