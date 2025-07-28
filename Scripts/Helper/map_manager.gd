@@ -30,6 +30,9 @@ func spawn_item_at_current_player_map(item_id: String, quantity: int) -> bool:
 	var player: Player = Helper.overmap_manager.player
 	var player_coordinate: Vector2 = Helper.overmap_manager.player_current_cell
 	var chunk: Chunk = get_chunk_from_overmap_coordinate(player_coordinate)
+	if not chunk:
+		push_warning("Spawn item failed: chunk not found at " + str(player_coordinate))
+		return false
 	var current_player_y: float = player.get_y_position(true)
 	var same_y_furniture: Array[FurnitureStaticSrv] = chunk.get_furniture_at_y_level(
 		current_player_y
@@ -55,6 +58,7 @@ func spawn_mob_at_nearby_map(mob_id: String, coordinates: Vector2) -> bool:
 	var player: Player = Helper.overmap_manager.player
 	var chunk: Chunk = get_chunk_from_overmap_coordinate(coordinates)
 	if not chunk:
+		push_warning("Spawn mob failed: chunk not found at " + str(coordinates))
 		return false
 	var current_player_y: float = player.get_y_position(true)
 
@@ -139,7 +143,7 @@ func _process_tile_id(
 func _process_entities_data(
 	area_data: Dictionary, result: Dictionary, original_tile: Dictionary
 ) -> void:
-# Calculate the total count of tiles
+	# Calculate the total count of tiles
 	var tiles_data = area_data.get("tiles", [])
 	var total_tiles_count: int = calculate_total_count(tiles_data)
 
