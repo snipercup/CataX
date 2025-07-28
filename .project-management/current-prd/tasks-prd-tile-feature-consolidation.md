@@ -82,8 +82,8 @@
   - [x] 4.1 Determine sprite based on `feature.type` and `id`.
   - [x] 4.2 Update tooltips to show feature information.
   - [x] 4.3 Remove checks for obsolete fields.
-- [ ] 5.0 Add migration utilities and unit tests for legacy map conversion and editor behavior.
-  - [ ] 5.1 Create `tile_feature_migration.gd` to convert stored maps.
-  - [ ] 5.3 Extend map manager tests to cover the new feature structure.
+- [ ] 5.0 Update feature processing in chunk.gd.
+  - [ ] 5.1 Look for `tileJSON.has("mobgroup")` and similar statements and update them to use tileJSON.feature
+  - [ ] 5.2 At least the `process_level_data` will need an update.
 
 *End of document*
