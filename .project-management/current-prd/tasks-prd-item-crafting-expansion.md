@@ -203,15 +203,9 @@
 ```
 
 ## Relevant Files
-### Proposed New Files
-- `Mods/Dimensionfall/Items/new_items.json` - JSON file describing three new craftable or combinational items.
-- `Mods/Dimensionfall/Items/new_item_icons` - Placeholder directory for new item icons.
-- `/Tests/Unit/test_new_items.gd` - Tests ensuring new items load correctly and crafting logic works.
 
 ### Existing Files Modified
 - `Mods/Dimensionfall/Items/Items.json` - Add new item entries and craft recipes.
-- `Scripts/Runtimedata/RItems.gd` - Ensure runtime loading includes new item sprites.
-- `Scripts/CraftingMenu.gd` - Update menu if needed to reference new craftable items.
 
 ### Files To Remove
 - *(none)*
@@ -225,19 +219,8 @@
   - [ ] 1.2 Draft three new items mixing existing materials or introducing new ones
   - [ ] 1.3 Outline craft recipes and usage notes for each item
 - [ ] 2.0 Create JSON definitions for the new items
-  - [ ] 2.1 Create `Mods/Dimensionfall/Items/new_items.json` containing the item definitions
-  - [ ] 2.2 Append references to these items in `Items.json`
-  - [ ] 2.3 Validate JSON structure by loading the file in Godot
-- [ ] 3.0 Add placeholder textures for the new items
-  - [ ] 3.1 Save placeholder PNGs in `Mods/Dimensionfall/Items/new_item_icons`
-  - [ ] 3.2 Reference textures correctly in `new_items.json`
-- [ ] 4.0 Update runtime scripts to load and reference the new items
-  - [ ] 4.1 Extend `Scripts/Runtimedata/RItems.gd` initialization to include new item sprites
-  - [ ] 4.2 Update `Scripts/CraftingMenu.gd` to display the new craft recipes
-  - [ ] 4.3 Confirm `ItemProtosets.tres` remains consistent after changes
-- [ ] 5.0 Implement unit tests validating crafting functionality and item loading
-  - [ ] 5.1 Write `Tests/Unit/test_new_items.gd` to ensure new items load correctly
-  - [ ] 5.2 Add tests verifying craft recipes produce expected outputs
-  - [ ] 5.3 Run all tests to confirm existing functionality remains intact
+  - [ ] 2.1 Update `Mods/Dimensionfall/Items/Items.json` with the new item definitions
+- [ ] 3.0 Use placeholder textures for the new items
+  - [ ] 3.1 Use `./Mods/Dimensionfall/Items/9mm.png` as a sprite for each item as a placeholder
 
 *End of document*
