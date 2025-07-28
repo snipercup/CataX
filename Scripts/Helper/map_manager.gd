@@ -167,15 +167,16 @@ func _process_entities_data(
 			if rotation == -1:
 				rotation = tile_area_rotation
 
-			match selected_entity["type"]:
-				"furniture":
-					result["furniture"] = {"id": selected_entity["id"], "rotation": rotation}
-				"mob":
-					result["mob"] = {"id": selected_entity["id"], "rotation": rotation}
-				"mobgroup":
-					result["mobgroup"] = {"id": selected_entity["id"], "rotation": rotation}
-				"itemgroup":
-					result["itemgroups"] = [selected_entity["id"]]
+				# Store the selected entity in the unified feature dictionary
+				result["feature"] = {
+					"type": selected_entity["type"],
+					"rotation": rotation,
+				}
+				match selected_entity["type"]:
+					"furniture", "mob", "mobgroup":
+						result.feature["id"] = selected_entity["id"]
+					"itemgroup":
+						result.feature["itemgroups"] = [selected_entity["id"]]
 
 
 # Function to pick an item based on its count property
@@ -424,8 +425,9 @@ func apply_area_clusters_to_tiles(
 				func(entity): return processed_data.has(entity)
 			)
 
-			if new_has_entities:
-				# The processed data has an entity. Erase existing entities from the tile
+			if new_has_feature:
+				# Remove legacy entity fields and old feature entry
+				var entities_to_check = ["mob", "furniture", "mobgroup", "itemgroups", "feature"]
 				for key in entities_to_check:
 					tile.erase(key)
 
