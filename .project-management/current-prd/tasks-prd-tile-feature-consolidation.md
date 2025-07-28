@@ -49,6 +49,7 @@
 - `Scenes/ContentManager/Mapeditor/Scripts/mapeditortile.gd` - Displays tiles in the map editor.
 - `Tests/Unit/test_map_manager.gd` - Current tests for map manager utilities.
 - `.project-management/current-prd/tasks-prd-tile-feature-consolidation.md` - Task list for tile feature consolidation.
+- `Scripts/Chunk.gd` - Generates chunks and reads tile feature data.
 
 ### Proposed New Files
 - `Scripts/Helper/tile_feature_migration.gd` - Helper to convert legacy map data to the unified feature structure.
@@ -60,6 +61,7 @@
 - `Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd` - Update painting logic to modify `tileData.feature`.
 - `Scenes/ContentManager/Mapeditor/Scripts/mapeditortile.gd` - Display tiles and tooltips based on `tileData.feature`.
 - `Tests/Unit/test_map_manager.gd` - Update tests for new feature structure.
+- `Scripts/Chunk.gd` - Process feature dictionaries when generating chunks.
 
 ### Notes
 - Unit tests reside in `/Tests/Unit/`.
@@ -82,8 +84,8 @@
   - [x] 4.1 Determine sprite based on `feature.type` and `id`.
   - [x] 4.2 Update tooltips to show feature information.
   - [x] 4.3 Remove checks for obsolete fields.
-- [ ] 5.0 Update feature processing in chunk.gd.
-  - [ ] 5.1 Look for `tileJSON.has("mobgroup")` and similar statements and update them to use tileJSON.feature
-  - [ ] 5.2 At least the `process_level_data` will need an update.
+ - [x] 5.0 Update feature processing in chunk.gd.
+  - [x] 5.1 Look for `tileJSON.has("mobgroup")` and similar statements and update them to use tileJSON.feature
+  - [x] 5.2 At least the `process_level_data` will need an update.
 
 *End of document*

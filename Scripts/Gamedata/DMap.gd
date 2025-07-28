@@ -536,6 +536,21 @@ func get_connection(direction: String) -> String:
 
 
 # Converts legacy tile dictionaries to use the `feature` dictionary structure
+# A legacy tile looks like this:
+#	{
+#		"areas": [
+#			{
+#				"id": "floor_bedroom",
+#				"rotation": 0.0
+#			}
+#		],
+#		"furniture": {
+#			"id": "door_wood",
+#			"rotation": 180.0
+#		},
+#		"id": "floor_wood_boards_05",
+#		"rotation": 180.0
+#	},
 func _legacy_tile_to_feature(tile: Dictionary) -> Dictionary:
 	if tile.has("feature"):
 		return tile
@@ -543,31 +558,43 @@ func _legacy_tile_to_feature(tile: Dictionary) -> Dictionary:
 	if tile.has("furniture"):
 		var f = tile["furniture"]
 		tile["feature"] = {
-			"type": "furniture", "id": f.get("id", ""), "rotation": tile.get("rotation", 0)
+			"type": "furniture",
+			"id": f.get("id", ""),
+			"rotation": f.get("rotation", 0)
 		}
 		if f.has("itemgroups"):
 			tile["feature"]["itemgroups"] = f["itemgroups"]
 		tile.erase("furniture")
+
 	elif tile.has("mob"):
 		var m = tile["mob"]
 		tile["feature"] = {
-			"type": "mob", "id": m.get("id", ""), "rotation": tile.get("rotation", 0)
+			"type": "mob",
+			"id": m.get("id", ""),
+			"rotation": m.get("rotation", 0)
 		}
 		tile.erase("mob")
+
 	elif tile.has("mobgroup"):
 		var mg = tile["mobgroup"]
 		tile["feature"] = {
-			"type": "mobgroup", "id": mg.get("id", ""), "rotation": tile.get("rotation", 0)
+			"type": "mobgroup",
+			"id": mg.get("id", ""),
+			"rotation": mg.get("rotation", 0)
 		}
 		tile.erase("mobgroup")
+
 	elif tile.has("itemgroups"):
 		var groups = tile["itemgroups"]
 		tile["feature"] = {
-			"type": "itemgroup", "itemgroups": groups, "rotation": tile.get("rotation", 0)
+			"type": "itemgroup",
+			"itemgroups": groups,
+			"rotation": tile.get("rotation", 0)  # No per-itemgroup rotation, fallback to tile
 		}
 		tile.erase("itemgroups")
 
 	return tile
+
 
 
 # Applies legacy conversion to all tiles within all levels
