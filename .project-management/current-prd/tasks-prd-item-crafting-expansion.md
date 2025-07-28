@@ -1,5 +1,5 @@
 ## Selected maintenance goal
-- 15 - Item Combination and Crafting Expansion
+- 15 - Item Expansion
 
 ## Pre-Feature Development Project Tree
 ```
@@ -205,7 +205,7 @@
 ## Relevant Files
 
 ### Existing Files Modified
-- `Mods/Dimensionfall/Items/Items.json` - Add new item entries and craft recipes.
+- `Mods/Dimensionfall/Items/Items.json` - Add new item entries.
 
 ### Files To Remove
 - *(none)*
@@ -216,8 +216,7 @@
 ## Tasks
 - [ ] 1.0 Review existing items and design three new crafting combinations
   - [ ] 1.1 Inspect `Mods/Dimensionfall/Items/Items.json` to understand current categories
-  - [ ] 1.2 Draft three new items mixing existing materials or introducing new ones
-  - [ ] 1.3 Outline craft recipes and usage notes for each item
+  - [ ] 1.2 Draft three new items in line with the game theme.
 - [ ] 2.0 Create JSON definitions for the new items
   - [ ] 2.1 Update `Mods/Dimensionfall/Items/Items.json` with the new item definitions
 - [ ] 3.0 Use placeholder textures for the new items
