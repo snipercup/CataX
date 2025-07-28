@@ -58,8 +58,6 @@
 - `Scenes/player.tscn`
 - `Scripts/hud.gd`
 - `Scripts/PlayerShooting.gd`
-- `Scripts/BuildManager.gd`
-- `Scripts/EquippedItem.gd`
 
 ### Proposed New Files
 - `/Tests/Unit/test_hud_signals.gd` - Unit tests verifying HUD emits and receives signals correctly.
@@ -69,8 +67,6 @@
 - `hud.tscn` - remove NodePath properties referencing other scenes.
 - `Scenes/player.tscn` - update to remove NodePath linking to HUD.
 - `Scripts/PlayerShooting.gd` - replace `player` NodePath with signal connection.
-- `Scripts/BuildManager.gd` - remove unused `hud` NodePath export.
-- `Scripts/EquippedItem.gd` - drop unused `hud` NodePath.
 
 ### Files To Remove
 - none
@@ -81,7 +77,6 @@
 ## Tasks
 - [ ] 1.0 Audit direct NodePath dependencies across scenes and scripts.
   - [ ] 1.1 Search for NodePath exports and get_node() uses.
-  - [ ] 1.2 Document script-scene dependencies.
 - [ ] 2.0 Convert HUD interactions to use signals via `Helper.signal_broker`.
   - [ ] 2.1 Add signals to hud.gd for HUD actions.
   - [ ] 2.2 Connect other scripts to HUD via Helper.signal_broker.
@@ -93,7 +88,6 @@
 - [ ] 4.0 Update scenes to remove exported NodePath properties and wire up signal connections.
   - [ ] 4.1 Remove NodePath exports from hud.tscn and player.tscn.
   - [ ] 4.2 Connect scenes to signals in their _ready functions.
-  - [ ] 4.3 Ensure BuildManager and EquippedItem register with signal broker.
 - [ ] 5.0 Add unit tests to confirm HUD and Player signal interactions work as expected.
   - [ ] 5.1 Implement GUT test for HUD signals.
   - [ ] 5.2 Test PlayerShooting signal emissions.
