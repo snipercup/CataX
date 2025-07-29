@@ -222,5 +222,7 @@
   - [x] 2.1 Update `Mods/Dimensionfall/Items/Items.json` with the new item definitions
 - [x] 3.0 Use placeholder textures for the new items
   - [x] 3.1 Use `./Mods/Dimensionfall/Items/9mm.png` as a sprite for each item as a placeholder
+- [x] 4.0 Replace placeholder textures with final item sprites
+  - [x] 4.1 Updated `Items.json` to reference `rope_coil_32.png`, `water_purification_tablets_32.png`, and `meat_jerky_32.png`
 
 *End of document*
