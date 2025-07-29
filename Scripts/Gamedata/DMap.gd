@@ -119,6 +119,8 @@ class maptile:
 	var areas: Array = []
 	var id: String = ""  # The id of the tile
 	var rotation: int = 0
+	# Unified feature structure for this tile
+	var feature: Dictionary = {}
 	# Furniture, Mob and Itemgroups are mutually exclusive. Only one can exist at a time
 	var furniture: String = ""
 	var mob: String = ""
@@ -139,9 +141,12 @@ func set_data(newdata: Dictionary) -> void:
 	weight = newdata.get("weight", 1000)
 	mapwidth = newdata.get("mapwidth", 32)
 	mapheight = newdata.get("mapheight", 32)
-	levels = newdata.get(
-		"levels",
-		[[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+	# Convert legacy level data to the unified feature dictionary
+	levels = _convert_levels_legacy_to_feature(
+		newdata.get(
+			"levels",
+			[[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+		)
 	)
 	areas = newdata.get("areas", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
@@ -157,7 +162,8 @@ func get_data() -> Dictionary:
 	mydata["weight"] = weight
 	mydata["mapwidth"] = mapwidth
 	mydata["mapheight"] = mapheight
-	mydata["levels"] = levels
+	# Strip empty feature entries when saving
+	mydata["levels"] = _convert_levels_feature_for_save(levels)
 	if not areas.is_empty():
 		mydata["areas"] = areas
 	if not connections.is_empty():  # Omit connections if empty
@@ -243,7 +249,7 @@ func delete():
 			print_debug("Missing NPC '" + npc_id + "' while deleting map '" + id + "'")
 		for npc: DNpc in npcs:
 			npc.remove_map_from_spawn_maps(id)
-	
+
 	# Remove this map from quests
 	for quest_id in myreferences.get("quests", []):
 		var quests: Array = Gamedata.mods.get_all_content_by_id(DMod.ContentType.QUESTS, quest_id)
@@ -447,44 +453,37 @@ func remove_entity_from_map(entity_type: String, entity_id: String) -> void:
 # entity_type can be "tile", "furniture", "itemgroup" or "mob"
 # entity_id is the id of the tile, furniture, itemgroup or mob
 func remove_entity_from_levels(entity_type: String, entity_id: String) -> void:
-	# Iterate over each level in the map
 	for level in levels:
-		# Iterate through each entity in the level
 		for entity_index in range(level.size()):
-			var entity = level[entity_index]
+			var entity: Dictionary = level[entity_index]
 
 			match entity_type:
 				"id":
-					# Check if the entity's 'id' matches and replace the entire entity with an empty object
 					if entity.get("id", "") == entity_id:
-						level[entity_index] = {}  # Replacing entity with an empty object
-				"furniture":
-					# Check if the entity has 'furniture' and the 'id' within it matches
-					if entity.has("furniture") and entity["furniture"].get("id", "") == entity_id:
-						entity.erase("furniture")  # Removing the furniture object from the entity
-				"mob":
-					# Check if the entity has 'mob' and the 'id' within it matches
-					if entity.has("mob") and entity["mob"].get("id", "") == entity_id:
-						entity.erase("mob")  # Removing the mob object from the entity
-				"mobgroup":
-					# Check if the entity has 'mobgroup' and matches the given ID
-					if entity.has("mobgroup") and entity["mobgroup"].get("id", "") == entity_id:
-						entity.erase("mobgroup")  # Remove mobgroup from the entity
+						level[entity_index] = {}
+				"furniture", "mob", "mobgroup":
+					if (
+						entity.get("feature", {}).get("type", "") == entity_type
+						and entity["feature"].get("id", "") == entity_id
+					):
+						entity.erase("feature")
 				"itemgroup":
-					# Check if the entity has 'furniture' and 'itemgroups', then remove the itemgroup
-					if entity.has("furniture") and entity["furniture"].has("itemgroups"):
-						var itemgroups = entity["furniture"]["itemgroups"]
-						if itemgroups.has(entity_id):
-							itemgroups.erase(entity_id)
-							if itemgroups.size() == 0:
-								entity["furniture"].erase("itemgroups")
-					# Also, check and remove itemgroups from the entity itself if present
-					if entity.has("itemgroups"):
-						var entity_itemgroups = entity["itemgroups"]
-						if entity_itemgroups.has(entity_id):
-							entity_itemgroups.erase(entity_id)
-							if entity_itemgroups.size() == 0:
-								entity.erase("itemgroups")
+					if entity.has("feature"):
+						var feature = entity["feature"]
+						if feature.get("type", "") == "itemgroup":
+							var groups: Array = feature.get("itemgroups", [])
+							if groups.has(entity_id):
+								groups.erase(entity_id)
+								if groups.is_empty():
+									entity.erase("feature")
+								else:
+									feature["itemgroups"] = groups
+						elif feature.get("type", "") == "furniture" and feature.has("itemgroups"):
+							var groups_f: Array = feature["itemgroups"]
+							if groups_f.has(entity_id):
+								groups_f.erase(entity_id)
+								if groups_f.is_empty():
+									feature.erase("itemgroups")
 
 
 # Function to erase an entity from every area
@@ -531,3 +530,94 @@ func get_connection(direction: String) -> String:
 
 	# Return the connection type for the specified direction (e.g., "road" or "ground").
 	return connections[direction]
+
+
+# --- Helper functions for tile feature conversion ---
+
+
+# Converts legacy tile dictionaries to use the `feature` dictionary structure
+# A legacy tile looks like this:
+#	{
+#		"areas": [
+#			{
+#				"id": "floor_bedroom",
+#				"rotation": 0.0
+#			}
+#		],
+#		"furniture": {
+#			"id": "door_wood",
+#			"rotation": 180.0
+#		},
+#		"id": "floor_wood_boards_05",
+#		"rotation": 180.0
+#	},
+func _legacy_tile_to_feature(tile: Dictionary) -> Dictionary:
+	if tile.has("feature"):
+		return tile
+
+	if tile.has("furniture"):
+		var f = tile["furniture"]
+		tile["feature"] = {
+			"type": "furniture",
+			"id": f.get("id", ""),
+			"rotation": f.get("rotation", 0)
+		}
+		if f.has("itemgroups"):
+			tile["feature"]["itemgroups"] = f["itemgroups"]
+		tile.erase("furniture")
+
+	elif tile.has("mob"):
+		var m = tile["mob"]
+		tile["feature"] = {
+			"type": "mob",
+			"id": m.get("id", ""),
+			"rotation": m.get("rotation", 0)
+		}
+		tile.erase("mob")
+
+	elif tile.has("mobgroup"):
+		var mg = tile["mobgroup"]
+		tile["feature"] = {
+			"type": "mobgroup",
+			"id": mg.get("id", ""),
+			"rotation": mg.get("rotation", 0)
+		}
+		tile.erase("mobgroup")
+
+	elif tile.has("itemgroups"):
+		var groups = tile["itemgroups"]
+		tile["feature"] = {
+			"type": "itemgroup",
+			"itemgroups": groups,
+			"rotation": tile.get("rotation", 0)  # No per-itemgroup rotation, fallback to tile
+		}
+		tile.erase("itemgroups")
+
+	return tile
+
+
+
+# Applies legacy conversion to all tiles within all levels
+func _convert_levels_legacy_to_feature(raw_levels: Array) -> Array:
+	var converted: Array = []
+	for level in raw_levels:
+		var new_level: Array = []
+		for tile in level:
+			var t: Dictionary = tile.duplicate()
+			new_level.append(_legacy_tile_to_feature(t))
+		converted.append(new_level)
+	return converted
+
+
+# Prepares levels for saving by omitting empty `feature` entries
+func _convert_levels_feature_for_save(in_levels: Array) -> Array:
+	var result: Array = []
+	for level in in_levels:
+		var new_level: Array = []
+		for tile in level:
+			var t: Dictionary = tile.duplicate()
+			if t.has("feature") and t["feature"].is_empty():
+				t.erase("feature")
+			new_level.append(t)
+		result.append(new_level)
+	return result
