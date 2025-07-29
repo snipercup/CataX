@@ -47,10 +47,10 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
     Cross-check the implemented content with design documents, roadmap, and lore. Suggest additions or corrections to bring the game closer to its intended narrative and feature set.
 
 14. **Map Categorization and Template Generation**  
-    Review the categorized maps in `/mods/dimensionfall/maps` and pick one category. Add a new map to that category. The new map must include the following fields: `mapheight`, `mapwidth`, `name`, `weight`, `description`, `id`, `categories`, and `connections`. Include a `levels` array with a value of `[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]` representing 21 empty levels to allow manual map painting later. Use a name and description that aligns with the chosen category.
+    Three map categories are: "urban", "nature", "industrial". Add two more to this list for a total of 5 categories. Review the maps in `/mods/dimensionfall/maps` as an example of what the output should look like. For each category, add two new maps. The new maps must include the following fields: `mapheight`, `mapwidth`, `name`, `weight`, `description`, `id`, `categories`, and `connections`. Include a `levels` array with a value of `[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]` representing 21 empty levels to allow manual map painting later. Use a name and description that aligns with the chosen category. The end result will be a total of 10 new maps.
 
 15. **Add new items**  
-    Analyze the items in `/mods/dimensionfall/items` and propose three new items. Each item must include basic properties and appropriate type-specific fields (e.g., melee stats, food properties). Ensure the new items fit the theme of the game.
+    Three item categories are: "urban", "nature", "industrial". Add two more to this list for a total of 5 categories. For each category, analyze the items in `/mods/dimensionfall/items` and propose two new items. Each item must include basic properties and appropriate type-specific fields (e.g., melee stats, food properties). Ensure the new items fit the theme of the game. The end result will be a total of 10 new items.
 
 
 ---
