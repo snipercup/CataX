@@ -29,7 +29,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"survivor_gas_station",
-			"forest_clearing"
+			"forest_clearing",
+			"forest_ruins"
 		]
 	},
 	"Tree_00": {
@@ -64,7 +65,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"survivor_gas_station",
-			"forest_clearing"
+			"forest_clearing",
+			"forest_ruins"
 		]
 	},
 	"WillowTree_00": {
@@ -99,7 +101,8 @@
 			"forest_burned_00",
 			"military_bunker",
 			"survivor_gas_station",
-			"forest_clearing"
+			"forest_clearing",
+			"forest_ruins"
 		]
 	},
 	"bathtub": {
@@ -372,7 +375,8 @@
 			"industrial_control_center",
 			"factory_hall",
 			"warehouse_storage",
-			"military_bunker"
+			"military_bunker",
+			"forest_ruins"
 		]
 	},
 	"desk": {
@@ -400,7 +404,8 @@
 			"abandoned_building",
 			"forest_camp_00",
 			"scrap_yard",
-			"generichouse_corner"
+			"generichouse_corner",
+			"forest_ruins"
 		]
 	},
 	"display_case": {
