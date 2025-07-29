@@ -59,7 +59,8 @@
 			"factory_hall",
 			"warehouse_storage",
 			"military_bunker",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"forest_ruins"
 		]
 	},
 	"electronics_damaged": {
@@ -109,7 +110,8 @@
 			"military_bunker",
 			"crater_small",
 			"survivor_gas_station",
-			"forest_clearing"
+			"forest_clearing",
+			"forest_ruins"
 		]
 	},
 	"generic_forest_finds": {
@@ -121,7 +123,8 @@
 			"forest_basic_00",
 			"forest_camp_00",
 			"forest_burned_00",
-			"forest_clearing"
+			"forest_clearing",
+			"forest_ruins"
 		]
 	},
 	"kitchen_cupboard": {
@@ -176,6 +179,9 @@
 			"campfire_on",
 			"burned_tree_stump",
 			"burned_tree"
+		],
+		"maps": [
+			"forest_ruins"
 		]
 	},
 	"tree_forage": {

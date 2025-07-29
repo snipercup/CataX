@@ -146,8 +146,8 @@ func test_process_entities_data():
 
 	if result.has("furniture"):
 		var valid_ids: Array[String] = ["Tree_00", "PineTree_00", "WillowTree_00"]
-		# furniture has been selected from the area, so it must be a tree
-		assert_true(valid_ids.has(result.furniture.id), "Unexpected furniture")
+		assert_eq(result.feature.type, "furniture", "Expected furniture feature")
+		assert_true(valid_ids.has(result.feature.id), "Unexpected furniture id")
 	else:
 		# No furniture was put onto the tile, but the tile shouldn't have any of the following
 		assert_does_not_have(result, "mob", "Unexpected mob key")
