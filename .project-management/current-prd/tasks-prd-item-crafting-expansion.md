@@ -206,6 +206,7 @@
 
 ### Existing Files Modified
 - `Mods/Dimensionfall/Items/Items.json` - Add new item entries.
+- `.project-management/current-prd/tasks-prd-item-crafting-expansion.md` - Task updates.
 
 ### Files To Remove
 - *(none)*
@@ -214,12 +215,12 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Review existing items and design three new items
-  - [ ] 1.1 Inspect `Mods/Dimensionfall/Items/Items.json` to understand current categories
-  - [ ] 1.2 Draft three new items in line with the game theme.
-- [ ] 2.0 Create JSON definitions for the new items
-  - [ ] 2.1 Update `Mods/Dimensionfall/Items/Items.json` with the new item definitions
-- [ ] 3.0 Use placeholder textures for the new items
-  - [ ] 3.1 Use `./Mods/Dimensionfall/Items/9mm.png` as a sprite for each item as a placeholder
+- [x] 1.0 Review existing items and design three new items
+  - [x] 1.1 Inspect `Mods/Dimensionfall/Items/Items.json` to understand current categories
+  - [x] 1.2 Draft three new items in line with the game theme.
+- [x] 2.0 Create JSON definitions for the new items
+  - [x] 2.1 Update `Mods/Dimensionfall/Items/Items.json` with the new item definitions
+- [x] 3.0 Use placeholder textures for the new items
+  - [x] 3.1 Use `./Mods/Dimensionfall/Items/9mm.png` as a sprite for each item as a placeholder
 
 *End of document*

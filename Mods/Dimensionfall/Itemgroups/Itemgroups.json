@@ -56,6 +56,12 @@
 				"max": 1,
 				"min": 1,
 				"probability": 20
+			},
+			{
+				"id": "water_purification_tablets",
+				"max": 1,
+				"min": 1,
+				"probability": 1
 			}
 		],
 		"mode": "Collection",
@@ -178,6 +184,18 @@
 				"max": 1,
 				"min": 1,
 				"probability": 20
+			},
+			{
+				"id": "water_purification_tablets",
+				"max": 1,
+				"min": 1,
+				"probability": 5
+			},
+			{
+				"id": "rope_coil",
+				"max": 1,
+				"min": 1,
+				"probability": 1
 			}
 		],
 		"mode": "Collection",
@@ -346,6 +364,12 @@
 				"max": 1,
 				"min": 1,
 				"probability": 20
+			},
+			{
+				"id": "meat_jerky",
+				"max": 1,
+				"min": 1,
+				"probability": 4
 			}
 		],
 		"mode": "Collection",
@@ -1694,6 +1718,18 @@
 				"max": 1,
 				"min": 1,
 				"probability": 85
+			},
+			{
+				"id": "water_purification_tablets",
+				"max": 1,
+				"min": 1,
+				"probability": 4
+			},
+			{
+				"id": "rope_coil",
+				"max": 1,
+				"min": 1,
+				"probability": 1
 			}
 		],
 		"mode": "Collection",
