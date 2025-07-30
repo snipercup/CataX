@@ -61,7 +61,8 @@
 *(none at this stage)*
 
 ### Existing Files Modified
-*(none yet – to be determined in sub-tasks)*
+- `Scripts/Chunk.gd` - Refactored chunk generation functions
+- `Tests/Unit/test_chunk.gd` - Added coverage for new generation logic
 
 ### Files To Remove
 *(none)*
@@ -70,8 +71,8 @@
 - Unit tests are in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Refactor `Scripts/Chunk.gd` for clarity and modular functions
-  - [ ] 1.1 Break chunk generation into smaller methods
-  - [ ] 1.2 Document generation steps with comments
-  - [ ] 1.3 Remove redundant loops and variables
-  - [ ] 1.4 Extend `/Tests/Unit/test_chunk.gd`
+- [x] 1.0 Refactor `Scripts/Chunk.gd` for clarity and modular functions
+  - [x] 1.1 Break chunk generation into smaller methods
+  - [x] 1.2 Document generation steps with comments
+  - [x] 1.3 Remove redundant loops and variables
+  - [x] 1.4 Extend `/Tests/Unit/test_chunk.gd`
