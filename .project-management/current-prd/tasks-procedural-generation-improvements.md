@@ -201,20 +201,11 @@
 ```
 
 ## Relevant Files
-- `LevelGenerator.gd`
 - `Scripts/OvermapGrid.gd`
-- `Scripts/Helper/overmap_manager.gd`
-- `/Tests/Unit`
 
-### Proposed New Files
-- `Scripts/OvermapGridNoiseCache.gd` - Helper for caching noise values during grid generation.
-- `Tests/Unit/test_overmapgrid_noise_cache.gd` - Unit tests for noise caching behavior.
 
 ### Existing Files Modified
 - `Scripts/OvermapGrid.gd` - Use global grid size, integrate noise caching, update generation functions.
-- `Scripts/Helper/overmap_manager.gd` - Expose grid dimensions to OvermapGrid.
-- `LevelGenerator.gd` - Refactor chunk loading logic for dynamic radius.
-- `Tests/Unit/test_chunk.gd` - Extend tests to cover new chunk loading behavior.
 
 ### Files To Remove
 - *(none)*
@@ -226,15 +217,6 @@
 - [ ] 1.0 Parameterize OvermapGrid size
   - [ ] 1.1 Pass `grid_width` and `grid_height` from `overmap_manager` when creating `OvermapGrid` instances
   - [ ] 1.2 Update existing calls and ensure grids use new parameters
-- [ ] 2.0 Implement noise value caching
-  - [ ] 2.1 Create `OvermapGridNoiseCache.gd` to store/retrieve noise values
-  - [ ] 2.2 Modify `OvermapGrid.get_region_type` to consult the cache
-- [ ] 3.0 Refactor chunk loading
-  - [ ] 3.1 Adjust `LevelGenerator.process_next_chunk` to support a dynamic radius
-  - [ ] 3.2 Ensure `load_queue` and `unload_queue` handle overlapping operations safely
 - [ ] 4.0 Optimize road generation paths
   - [ ] 4.1 Streamline city connection logic to reduce duplicate paths
   - [ ] 4.2 Add comments clarifying connection rules
-- [ ] 5.0 Expand unit tests for procedural generation
-  - [ ] 5.1 Add tests for noise caching and grid sizing
-  - [ ] 5.2 Extend chunk loading tests to cover dynamic radius
