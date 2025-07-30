@@ -21,3 +21,8 @@ static func interact() -> Signal:
 # Signal emitted with the player's desired movement vector
 static func movement_vector() -> Signal:
 	return SignalFactory.get_signal_with_key("movement_vector", 0, ["vector", TYPE_VECTOR2])
+
+
+# Signal emitted when the reload key is pressed
+static func reload_weapon() -> Signal:
+	return SignalFactory.get_signal_with_key("reload_weapon", 0)

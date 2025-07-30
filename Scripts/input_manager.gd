@@ -28,7 +28,8 @@ func _input(event: InputEvent) -> void:
 		PlayerInputSignalBroker.run_toggled().emit(true)
 	elif event.is_action_released("run"):
 		PlayerInputSignalBroker.run_toggled().emit(false)
-
+	if event.is_action_pressed("reload_weapon"):
+		PlayerInputSignalBroker.reload_weapon().emit()
 	if event.is_action_pressed("interact"):
 		PlayerInputSignalBroker.interact().emit()
 

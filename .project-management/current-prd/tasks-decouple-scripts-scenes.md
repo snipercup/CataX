@@ -58,6 +58,8 @@
 - `Scenes/player.tscn`
 - `Scripts/hud.gd`
 - `Scripts/PlayerShooting.gd`
+- `Scripts/Helper/SignalBroker/player_input_signal_broker.gd`
+- `Scripts/input_manager.gd`
 
 ### Proposed New Files
 - `/Tests/Unit/test_hud_signals.gd` - Unit tests verifying HUD emits and receives signals correctly.
@@ -67,6 +69,8 @@
 - `hud.tscn` - remove NodePath properties referencing other scenes.
 - `Scenes/player.tscn` - update to remove NodePath linking to HUD.
 - `Scripts/PlayerShooting.gd` - replace `player` NodePath with signal connection.
+- `Scripts/Helper/SignalBroker/player_input_signal_broker.gd` - add reload_weapon signal.
+- `Scripts/input_manager.gd` - emit reload_weapon signal on input.
 
 ### Files To Remove
 - none
@@ -81,7 +85,7 @@
   - [ ] 2.3 Remove old NodePath exports from hud.gd.
 - [ ] 3.0 Refactor Player and PlayerShooting to rely on signals instead of direct NodePaths.
   - [ ] 3.1 Emit signals from player.gd for state changes.
-  - [c] 3.2 Update PlayerShooting.gd to use signals instead of NodePaths.
+  - [x] 3.2 Update PlayerShooting.gd to use signals instead of NodePaths.
   - [ ] 3.3 Connect Player signals to HUD via signal broker.
 - [ ] 4.0 Update scenes to remove exported NodePath properties and wire up signal connections.
   - [ ] 4.1 Remove NodePath exports from hud.tscn and player.tscn.
