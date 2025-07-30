@@ -326,15 +326,9 @@
 ## Relevant Files
 - `Documentation/Game_design/Lore.md` - World lore overview
 - `README.md` - Contains project roadmap
-- `Mods/Dimensionfall` - Core content mod with items, maps, quests
-
-### Proposed New Files
-- `Documentation/Design/style_guidelines.md` - Document naming conventions and lore alignment
 
 ### Existing Files Modified
 - `README.md` - Sync roadmap with implemented features
-- `Mods/Dimensionfall/Quests/Quests.json` - Update quest descriptions for lore consistency
-- `Mods/Dimensionfall/Items/Items.json` - Review item descriptions for lore alignment
 
 ### Files To Remove
 - None
@@ -343,24 +337,8 @@
 - Ensure modifications maintain existing game functionality.
 
 ## Tasks
-- [ ] 1.0 Review core mod content for lore consistency
-  - [ ] 1.1 Compare item descriptions in `Mods/Dimensionfall/Items/Items.json` with lore documents
-  - [ ] 1.2 Inspect map files in `Mods/Dimensionfall/maps` for naming and thematic accuracy
-  - [ ] 1.3 Propose revisions for any conflicting lore elements
 - [ ] 2.0 Audit roadmap versus implemented features
   - [ ] 2.1 Cross-check features listed in `README.md` against actual scenes and scripts
   - [ ] 2.2 Record missing or outdated roadmap entries
   - [ ] 2.3 Update `README.md` with the current feature status
-- [ ] 3.0 Evaluate quests for narrative coherence
-  - [ ] 3.1 Review quest chains in `Mods/Dimensionfall/Quests/Quests.json`
-  - [ ] 3.2 Flag quests referencing removed or unfinished content
-  - [ ] 3.3 Outline adjustments needed for a consistent story
-- [ ] 4.0 Document style guidelines for items, maps, and quests
-  - [ ] 4.1 Establish a consistent naming scheme
-  - [ ] 4.2 Provide example descriptions aligned with lore
-  - [ ] 4.3 Save guidelines to `Documentation/Design/style_guidelines.md`
-- [ ] 5.0 Update design docs referencing outdated features
-  - [ ] 5.1 Search documentation for obsolete references
-  - [ ] 5.2 Remove or revise outdated sections
-  - [ ] 5.3 Cross-reference updates with the roadmap
 
