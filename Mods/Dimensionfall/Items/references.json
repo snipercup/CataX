@@ -431,6 +431,11 @@
 			"zombie_loot"
 		]
 	},
+	"meat_jerky": {
+		"itemgroups": [
+			"refrigerator"
+		]
+	},
 	"medium_rock": {
 		"itemgroups": [
 			"generic_field_finds",
@@ -578,6 +583,12 @@
 		],
 		"quests": [
 			"starter_tutorial_00"
+		]
+	},
+	"rope_coil": {
+		"itemgroups": [
+			"cabinet_general",
+			"loot_gas_station"
 		]
 	},
 	"rotten_flesh_chunk": {
@@ -754,6 +765,13 @@
 	"wallet": {
 		"itemgroups": [
 			"zombie_loot",
+			"loot_gas_station"
+		]
+	},
+	"water_purification_tablets": {
+		"itemgroups": [
+			"cabinet_general",
+			"kitchen_cupboard",
 			"loot_gas_station"
 		]
 	},
