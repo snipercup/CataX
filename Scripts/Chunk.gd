@@ -133,81 +133,72 @@ func initialize_chunk_data():
 
 
 func generate_new_chunk(mapsegmentData: Dictionary):
-	# Area's on the map are applied to each tile that is marked with that area
+	# Apply map areas so tiles inherit their effects
 	Helper.map_manager.process_areas_in_map(mapsegmentData)
+	# Rotate the map data if this chunk specifies a rotation
 	if chunk_data.has("rotation") and not chunk_data.rotation == 0:
 		rotate_map(mapsegmentData)
+
+	# Store map levels for later use
 	_mapleveldata = mapsegmentData.levels
+	# Build block position dictionary used for mesh generation
 	block_positions = create_block_position_dictionary_new_arraymesh()
+
+	# Generate the mesh and bake navigation data
 	generate_chunk_mesh()
 	update_all_navigation_data()
+
+	# Process mobs, furniture and itemgroups
 	processed_level_data = process_level_data()
 	add_block_mobs()
 	add_itemgroups_to_new_block()
+
+	# Finalize state when done
 	reset_state()
 
 
-# Collects the furniture, mob, and itemgroups data from the mapdata to be spawned later. Only new chunks
+# Parses raw map levels and extracts mob, furniture and itemgroup data
 func process_level_data() -> Dictionary:
-	var offset: Vector3 = Vector3(0.5, 0.5, 0.5)  # Shift to center of the block
-	var level_number = 0
-	var tileJSON: Dictionary = {}
-	var processed_leveldata: Dictionary = {"furniture": [], "mobs": [], "itemgroups": []}
+	var offset: Vector3 = Vector3(0.5, 0.5, 0.5)
+	var level_number := 0
+	var processed_level_data: Dictionary = {"furniture": [], "mobs": [], "itemgroups": []}
 
 	for level in _mapleveldata:
 		if level != []:
-			var y: int = level_number - 10
-			var current_block = 0
+			var y := level_number - 10
 			for h in range(LEVEL_HEIGHT):
 				for w in range(LEVEL_WIDTH):
-					if level[current_block]:
-						tileJSON = level[current_block]
-						if tileJSON.has("id") and tileJSON.id != "":
-							if tileJSON.has("feature"):
-								var feature: Dictionary = tileJSON.feature
-								match feature.get("type", ""):
-									"mob":
-										processed_leveldata.mobs.append(
-											{
-												"json": feature,
-												"pos": Vector3(w, y + 1.0, h) + offset
-											}
-										)
-									"mobgroup":
-										var mobgroup_id: String = feature.get("id", "")
-										var random_mob_id: String = (
-											Runtimedata
-											. mobgroups
-											. by_id(mobgroup_id)
-											. get_random_mob_id()
-										)
-										if random_mob_id != "":
-											feature.id = random_mob_id
-											processed_leveldata.mobs.append(
-												{
-													"json": feature,
-													"pos": Vector3(w, y + 1.0, h) + offset
-												}
-											)
-									"furniture":
-										processed_leveldata.furniture.append(
-											{"json": feature, "pos": Vector3(w, y, h) + offset}
-										)
-									"itemgroup":
-										var itemgroups_json = feature.get("itemgroups", [])
-										processed_leveldata.itemgroups.append(
-											{
-												"json": itemgroups_json,
-												"pos": Vector3(w, y, h) + offset
-											}
-										)
-					current_block += 1
+					var index := h * LEVEL_WIDTH + w
+					var tileJSON: Dictionary = level[index]
+					if tileJSON and tileJSON.has("id") and tileJSON.id != "":
+						if tileJSON.has("feature"):
+							var feature: Dictionary = tileJSON.feature
+							var pos := Vector3(w, y, h)
+							_process_feature(feature, processed_level_data, pos + offset)
 		level_number += 1
-	return processed_leveldata
+
+	return processed_level_data
+
+
+func _process_feature(feature: Dictionary, processed: Dictionary, pos: Vector3) -> void:
+	match feature.get("type", ""):
+		"mob":
+			processed.mobs.append({"json": feature, "pos": pos + Vector3(0, 1.0, 0)})
+		"mobgroup":
+			var mobgroup_id: String = feature.get("id", "")
+			var random_mob_id: String = Runtimedata.mobgroups.by_id(mobgroup_id).get_random_mob_id()
+			if random_mob_id != "":
+				feature.id = random_mob_id
+				processed.mobs.append({"json": feature, "pos": pos + Vector3(0, 1.0, 0)})
+		"furniture":
+			processed.furniture.append({"json": feature, "pos": pos})
+		"itemgroup":
+			var itemgroups_json = feature.get("itemgroups", [])
+			processed.itemgroups.append({"json": itemgroups_json, "pos": pos})
 
 
 # Creates a dictionary of all block positions with a local x,y and z position
-# This function works with new mapdata
+# Iterates over each level of raw map data and extracts relevant tile info
 func create_block_position_dictionary_new_arraymesh() -> Dictionary:
 	var new_block_positions: Dictionary = {}
 	for level_index in range(len(_mapleveldata)):
@@ -215,9 +206,9 @@ func create_block_position_dictionary_new_arraymesh() -> Dictionary:
 		if level != []:
 			for h in range(LEVEL_HEIGHT):
 				for w in range(LEVEL_WIDTH):
-					var current_block_index = h * LEVEL_WIDTH + w
-					if level[current_block_index]:
-						var tileJSON = level[current_block_index]
+					var index := h * LEVEL_WIDTH + w
+					if level[index]:
+						var tileJSON = level[index]
 						if tileJSON.has("id") and tileJSON.id != "":
 							var block_position_key = (
 								str(w) + "," + str(level_index - 10) + "," + str(h)
