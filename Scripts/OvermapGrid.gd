@@ -35,7 +35,11 @@ enum Region { FOREST, PLAINS }
 # of something bigger like the tacticalmap
 class map_cell:
 	# Enum for revealed states
-	enum RevealedState { HIDDEN, REVEALED, EXPLORED, VISITED }  # Default state. The cell has been instanced onto a grid, nothing more  # the map has been revealed on the overmap when the player got close enough  # the map has been loaded as a chunk in the player's proximity at least once  # the player has entered the boundary of the map's coordinates
+  	# HIDDEN: Default state. The cell has been instanced onto a grid, nothing more  
+	# REVEALED: the map has been revealed on the overmap when the player got close enough  
+	# EXPLORED: the map has been loaded as a chunk in the player's proximity at least once 
+	# VISITED: the player has entered the boundary of the map's coordinates
+	enum RevealedState { HIDDEN, REVEALED, EXPLORED, VISITED }
 
 	var region = Region.PLAINS
 	var coordinate_x: int = 0
