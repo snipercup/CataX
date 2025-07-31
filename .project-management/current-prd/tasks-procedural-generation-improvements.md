@@ -202,10 +202,12 @@
 
 ## Relevant Files
 - `Scripts/OvermapGrid.gd`
+- `Scripts/Helper/overmap_manager.gd`
 
 
 ### Existing Files Modified
 - `Scripts/OvermapGrid.gd` - Use global grid size, integrate noise caching, update generation functions.
+- `Scripts/Helper/overmap_manager.gd` - Pass grid dimensions to OvermapGrid.
 
 ### Files To Remove
 - *(none)*
@@ -215,8 +217,8 @@
 
 ## Tasks
 - [ ] 1.0 Parameterize OvermapGrid size
-  - [ ] 1.1 Pass `grid_width` and `grid_height` from `overmap_manager` when creating `OvermapGrid` instances
-  - [ ] 1.2 Update existing calls and ensure grids use new parameters
+  - [x] 1.1 Pass `grid_width` and `grid_height` from `overmap_manager` when creating `OvermapGrid` instances
+  - [x] 1.2 Update existing calls and ensure grids use new parameters
 - [ ] 4.0 Optimize road generation paths
   - [ ] 4.1 Streamline city connection logic to reduce duplicate paths
   - [ ] 4.2 Add comments clarifying connection rules
