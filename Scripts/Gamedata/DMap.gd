@@ -416,12 +416,12 @@ func add_entities_to_set(level: Array, entity_set: Dictionary):
 			entity_set["mobs"].append(entity["mob"]["id"])
 		if entity.has("mobgroup") and not entity_set["mobgroups"].has(entity["mobgroup"]["id"]):  # Add mobgroup
 			entity_set["mobgroups"].append(entity["mobgroup"]["id"])
-		if entity.has("furniture"):
-			if not entity_set["furniture"].has(entity["furniture"]["id"]):
-				entity_set["furniture"].append(entity["furniture"]["id"])
-			# Add unique itemgroups from furniture
-			if entity["furniture"].has("itemgroups"):
-				for itemgroup in entity["furniture"]["itemgroups"]:
+		if entity.has("feature") and entity["feature"].get("type", "") == "furniture":
+			var furn: Dictionary = entity["feature"]
+			if not entity_set["furniture"].has(furn.get("id", "")):
+				entity_set["furniture"].append(furn.get("id", ""))
+			if furn.has("itemgroups"):
+				for itemgroup in furn["itemgroups"]:
 					if not entity_set["itemgroups"].has(itemgroup):
 						entity_set["itemgroups"].append(itemgroup)
 		if (
@@ -558,9 +558,7 @@ func _legacy_tile_to_feature(tile: Dictionary) -> Dictionary:
 	if tile.has("furniture"):
 		var f = tile["furniture"]
 		tile["feature"] = {
-			"type": "furniture",
-			"id": f.get("id", ""),
-			"rotation": f.get("rotation", 0)
+			"type": "furniture", "id": f.get("id", ""), "rotation": f.get("rotation", 0)
 		}
 		if f.has("itemgroups"):
 			tile["feature"]["itemgroups"] = f["itemgroups"]
@@ -568,33 +566,24 @@ func _legacy_tile_to_feature(tile: Dictionary) -> Dictionary:
 
 	elif tile.has("mob"):
 		var m = tile["mob"]
-		tile["feature"] = {
-			"type": "mob",
-			"id": m.get("id", ""),
-			"rotation": m.get("rotation", 0)
-		}
+		tile["feature"] = {"type": "mob", "id": m.get("id", ""), "rotation": m.get("rotation", 0)}
 		tile.erase("mob")
 
 	elif tile.has("mobgroup"):
 		var mg = tile["mobgroup"]
 		tile["feature"] = {
-			"type": "mobgroup",
-			"id": mg.get("id", ""),
-			"rotation": mg.get("rotation", 0)
+			"type": "mobgroup", "id": mg.get("id", ""), "rotation": mg.get("rotation", 0)
 		}
 		tile.erase("mobgroup")
 
 	elif tile.has("itemgroups"):
 		var groups = tile["itemgroups"]
 		tile["feature"] = {
-			"type": "itemgroup",
-			"itemgroups": groups,
-			"rotation": tile.get("rotation", 0)  # No per-itemgroup rotation, fallback to tile
+			"type": "itemgroup", "itemgroups": groups, "rotation": tile.get("rotation", 0)  # No per-itemgroup rotation, fallback to tile
 		}
 		tile.erase("itemgroups")
 
 	return tile
-
 
 
 # Applies legacy conversion to all tiles within all levels
