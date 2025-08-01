@@ -1,0 +1,6 @@
+{
+"id": "field_farmland",
+"name": "Field Farmland",
+"description": "Cultivated farmland with crops.",
+"categories": ["Field"]
+}

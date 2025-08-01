@@ -1,0 +1,6 @@
+{
+"id": "field_outpost",
+"name": "Field Outpost",
+"description": "Small defensive outpost in open fields.",
+"categories": ["Field"]
+}
