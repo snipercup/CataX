@@ -55,15 +55,15 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Audit current item data
-  - [ ] 1.1 Review `Items.json` structure and required fields
-  - [ ] 1.2 Verify existing categories and item references
-- [ ] 2.0 Extend item category list
-  - [ ] 2.1 Decide two new categories fitting the game setting
-- [ ] 3.0 Design ten new item concepts
-  - [ ] 3.1 Draft two items per category with descriptions and properties
-  - [ ] 3.2 Use "./Mods/Dimensionfall/Items/9mm.png" as placeholder sprite for each item
-- [ ] 4.0 Implement JSON updates
-  - [ ] 4.1 Insert new item definitions into `Items.json`
-- [ ] 5.0 Validate and document
-  - [ ] 5.1 Run unit tests to ensure item loading works
+- [x] 1.0 Audit current item data
+  - [x] 1.1 Review `Items.json` structure and required fields
+  - [x] 1.2 Verify existing categories and item references
+- [x] 2.0 Extend item category list
+  - [x] 2.1 Decide two new categories fitting the game setting
+- [x] 3.0 Design ten new item concepts
+  - [x] 3.1 Draft two items per category with descriptions and properties
+  - [x] 3.2 Use "./Mods/Dimensionfall/Items/9mm.png" as placeholder sprite for each item
+- [x] 4.0 Implement JSON updates
+  - [x] 4.1 Insert new item definitions into `Items.json`
+- [x] 5.0 Validate and document
+  - [x] 5.1 Run unit tests to ensure item loading works
