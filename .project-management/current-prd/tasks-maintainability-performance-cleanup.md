@@ -47,6 +47,10 @@
 
 ## Relevant Files
 
+- Scripts/FurnitureStaticSrv.gd: Added safe disconnect logic for minute_passed signal.
+- Scripts/item_manager.gd: Guarded disconnect calls with is_connected checks.
+- .project-management/current-prd/tasks-maintainability-performance-cleanup.md: Updated task statuses.
+
 ### Files To Remove
 - (none)
 
@@ -54,8 +58,8 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 4.0 Clean signal connections
-  - [ ] 4.1 Audit scripts for unused signals
-  - [ ] 4.2 Remove stale connections and document remaining ones
-  - [ ] 4.3 Verify no runtime warnings on connect/disconnect
+- [x] 4.0 Clean signal connections
+  - [x] 4.1 Audit scripts for unused signals
+  - [x] 4.2 Remove stale connections and document remaining ones
+  - [x] 4.3 Verify no runtime warnings on connect/disconnect
 *End of document*
