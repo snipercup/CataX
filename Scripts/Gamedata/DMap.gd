@@ -119,13 +119,9 @@ class maptile:
 	var areas: Array = []
 	var id: String = ""  # The id of the tile
 	var rotation: int = 0
-	# Unified feature structure for this tile
+	# Unified feature structure for this tile. Holds furniture, mobs, mobgroups
+	# and itemgroups in a single dictionary.
 	var feature: Dictionary = {}
-	# Furniture, Mob and Itemgroups are mutually exclusive. Only one can exist at a time
-	var furniture: String = ""
-	var mob: String = ""
-	var mobgroup: String = ""  # Add mobgroup support
-	var itemgroups: Array = []
 
 
 func _init(newid: String, newdataPath: String, myparent: DMaps):
@@ -412,29 +408,29 @@ func add_entities_in_area_to_set(myarea: Dictionary, entity_set: Dictionary):
 # Helper function to add entities to the respective sets
 func add_entities_to_set(level: Array, entity_set: Dictionary):
 	for entity in level:
-		if entity.has("mob") and not entity_set["mobs"].has(entity["mob"]["id"]):
-			entity_set["mobs"].append(entity["mob"]["id"])
-		if entity.has("mobgroup") and not entity_set["mobgroups"].has(entity["mobgroup"]["id"]):  # Add mobgroup
-			entity_set["mobgroups"].append(entity["mobgroup"]["id"])
-		if entity.has("feature") and entity["feature"].get("type", "") == "furniture":
-			var furn: Dictionary = entity["feature"]
-			if not entity_set["furniture"].has(furn.get("id", "")):
-				entity_set["furniture"].append(furn.get("id", ""))
-			if furn.has("itemgroups"):
-				for itemgroup in furn["itemgroups"]:
-					if not entity_set["itemgroups"].has(itemgroup):
-						entity_set["itemgroups"].append(itemgroup)
-		if (
-			entity.has("id")
-			and not entity_set["tiles"].has(entity["id"])
-			and not entity["id"] == ""
-		):
-			entity_set["tiles"].append(entity["id"])
-		# Add unique itemgroups directly from the entity
-		if entity.has("itemgroups"):
-			for itemgroup in entity["itemgroups"]:
-				if not entity_set["itemgroups"].has(itemgroup):
-					entity_set["itemgroups"].append(itemgroup)
+		if entity.has("feature"):
+			var feature: Dictionary = entity["feature"]
+			match feature.get("type", ""):
+				"mob":
+					var mid: String = feature.get("id", "")
+					if mid != "" and not entity_set["mobs"].has(mid):
+						entity_set["mobs"].append(mid)
+				"mobgroup":
+					var gid: String = feature.get("id", "")
+					if gid != "" and not entity_set["mobgroups"].has(gid):
+						entity_set["mobgroups"].append(gid)
+				"furniture":
+					var fid: String = feature.get("id", "")
+					if not entity_set["furniture"].has(fid):
+						entity_set["furniture"].append(fid)
+					if feature.has("itemgroups"):
+						for itemgroup in feature["itemgroups"]:
+							if not entity_set["itemgroups"].has(itemgroup):
+								entity_set["itemgroups"].append(itemgroup)
+				"itemgroup":
+					for itemgroup in feature.get("itemgroups", []):
+						if not entity_set["itemgroups"].has(itemgroup):
+							entity_set["itemgroups"].append(itemgroup)
 
 
 # Removes all instances of the provided entity from the map
