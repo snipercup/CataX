@@ -207,17 +207,20 @@
 	},
 	"dirt_dark_00": {
 		"maps": [
-			"field_farmland"
+			"field_farmland",
+			"underground_cave"
 		]
 	},
 	"dirt_dark_01": {
 		"maps": [
-			"field_farmland"
+			"field_farmland",
+			"underground_cave"
 		]
 	},
 	"dirt_dark_02": {
 		"maps": [
-			"field_farmland"
+			"field_farmland",
+			"underground_cave"
 		]
 	},
 	"dirt_light_00": {
@@ -251,7 +254,8 @@
 			"crater_small",
 			"forest_clearing",
 			"forest_ruins",
-			"field_outpost"
+			"field_outpost",
+			"underground_cave"
 		]
 	},
 	"dirt_light_01": {
@@ -278,7 +282,8 @@
 			"crater_small",
 			"forest_clearing",
 			"forest_ruins",
-			"field_outpost"
+			"field_outpost",
+			"underground_cave"
 		]
 	},
 	"dirt_light_02": {
@@ -302,7 +307,8 @@
 			"crater_small",
 			"forest_clearing",
 			"forest_ruins",
-			"field_outpost"
+			"field_outpost",
+			"underground_cave"
 		]
 	},
 	"dirt_light_grass_north_00": {
@@ -1671,7 +1677,8 @@
 			"RockyHill_NW",
 			"RockyHill_NE",
 			"RockyHill_SW",
-			"crater_small"
+			"crater_small",
+			"underground_cave"
 		]
 	},
 	"rock_floor_01": {
@@ -1680,7 +1687,8 @@
 			"RockyHill_NW",
 			"RockyHill_NE",
 			"RockyHill_SW",
-			"crater_small"
+			"crater_small",
+			"underground_cave"
 		]
 	},
 	"rock_floor_02": {
@@ -1688,7 +1696,8 @@
 			"RockyHill_SE",
 			"RockyHill_NW",
 			"RockyHill_SW",
-			"crater_small"
+			"crater_small",
+			"underground_cave"
 		]
 	},
 	"rock_floor_03": {
@@ -1696,14 +1705,16 @@
 			"RockyHill_SE",
 			"RockyHill_NW",
 			"RockyHill_NE",
-			"RockyHill_SW"
+			"RockyHill_SW",
+			"underground_cave"
 		]
 	},
 	"rock_floor_04": {
 		"maps": [
 			"RockyHill_SE",
 			"RockyHill_NW",
-			"RockyHill_SW"
+			"RockyHill_SW",
+			"underground_cave"
 		]
 	},
 	"rock_floor_05": {
@@ -1711,7 +1722,8 @@
 			"RockyHill_SE",
 			"RockyHill_NW",
 			"RockyHill_NE",
-			"RockyHill_SW"
+			"RockyHill_SW",
+			"underground_cave"
 		]
 	},
 	"rock_floor_06": {
@@ -1719,7 +1731,8 @@
 			"RockyHill_SE",
 			"RockyHill_NW",
 			"RockyHill_NE",
-			"RockyHill_SW"
+			"RockyHill_SW",
+			"underground_cave"
 		]
 	},
 	"rock_slope_00": {
@@ -1731,7 +1744,8 @@
 			"RockyHill_NE",
 			"RockyHill_SW",
 			"military_bunker",
-			"crater_small"
+			"crater_small",
+			"underground_cave"
 		]
 	},
 	"rocky_earth_00": {
