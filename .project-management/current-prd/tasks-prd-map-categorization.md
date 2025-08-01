@@ -57,23 +57,36 @@
 
 ## Relevant Files
 - `Mods/Dimensionfall/Maps/` - Existing map templates and categories
+- `Mods/Dimensionfall/Maps/references.json` - Map references for overmap areas
+- `Mods/Dimensionfall/Overmapareas/Overmapareas.json` - Map area definitions
+- `.project-management/current-prd/tasks-prd-map-categorization.md` - Task list
 
 ### Proposed New Files
-- `Mods/Dimensionfall/Maps/my_new_map.json` - Rename based on the contents of the map
-
+- `Mods/Dimensionfall/Maps/coastal_beach.json` - Basic beach area
+- `Mods/Dimensionfall/Maps/coastal_dock.json` - Dockside area
+- `Mods/Dimensionfall/Maps/field_farmland.json` - Farmland template
+- `Mods/Dimensionfall/Maps/field_outpost.json` - Field area with small outpost
+- `Mods/Dimensionfall/Maps/suburban_market.json` - Local market layout
+- `Mods/Dimensionfall/Maps/suburban_park.json` - Park in suburban area
+- `Mods/Dimensionfall/Maps/underground_cave.json` - Natural cave system
+- `Mods/Dimensionfall/Maps/underground_lab.json` - Secret underground lab
+- `Mods/Dimensionfall/Maps/urban_mall.json` - Shopping mall structure
+- `Mods/Dimensionfall/Maps/urban_plaza.json` - Central city plaza
 
 ### Files To Remove
 - None
 
 ### Notes
 - Unit tests should typically be placed in `/Tests/Unit/`.
+- Current categories: field, suburban, urban
+- Proposed additional categories: coastal, underground
 
 ## Tasks
-- [ ] 1.0 Audit current map categories and templates
-  - [ ] 1.1 Review `Overmapareas.json` for current categories
-- [ ] 2.0 come up with two additional map categories to the project
-  - [ ] 2.1 Remember these categories for when we create the new maps of all categories
-- [ ] 3.0 Create two new map JSON templates for each of the five categories
-  - [ ] 3.1 Create new maps based on the 5 categories
+- [x] 1.0 Audit current map categories and templates
+  - [x] 1.1 Review `Overmapareas.json` for current categories
+- [x] 2.0 come up with two additional map categories to the project
+  - [x] 2.1 Remember these categories for when we create the new maps of all categories
+- [x] 3.0 Create two new map JSON templates for each of the five categories
+  - [x] 3.1 Create new maps based on the 5 categories
 
 *End of document*
