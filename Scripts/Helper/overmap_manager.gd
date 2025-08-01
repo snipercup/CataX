@@ -260,7 +260,7 @@ func load_grid(grid_pos: Vector2):
 		unload_furthest_grid()
 
 	if not loaded_grids.has(grid_pos):
-		var grid = OvermapGrid.new()
+		var grid = OvermapGrid.new(grid_width, grid_height)
 		grid.pos = grid_pos
 		loaded_grids[grid_pos] = grid
 		load_grid_from_file(grid_pos)  # Loads grid data from storage if available
@@ -464,7 +464,7 @@ func load_grid_from_file(grid_key: Vector2) -> void:
 # Creates a new grid from grid data loaded from disk
 func process_loaded_grid_data(grid_data: Dictionary):
 	if grid_data:
-		var grid = OvermapGrid.new()
+		var grid = OvermapGrid.new(grid_width, grid_height)
 		grid.set_data(grid_data)
 		loaded_grids[grid.pos] = grid
 		grid.build_map_id_to_coordinates()
@@ -598,7 +598,7 @@ func get_revealed_priority(reveal_condition: String) -> Array:
 # This is used for visualization outside the game
 func create_new_grid_with_default_values() -> OvermapGrid:
 	# Step 1: Create a new OvermapGrid instance
-	var new_grid = OvermapGrid.new()
+	var new_grid = OvermapGrid.new(grid_width, grid_height)
 
 	# Step 2: Set default position for the grid (this can be customized or passed as an argument)
 	new_grid.pos = Vector2(0, 0)
