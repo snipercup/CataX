@@ -48,10 +48,5 @@
 - [ ] 3.0 Audit the codebase and replace any remaining references to `tile.furniture` with `tile.feature`.
   - [ ] 3.1 Search the repository for `tile.furniture` occurrences.
   - [ ] 3.2 Update each script to reference `tile.feature` instead.
-- [ ] 4.0 Remove legacy furniture rotation logic and ensure no code writes to `tile.furniture`.
-  - [ ] 4.1 Delete any obsolete helper functions tied to the `furniture` field.
-  - [ ] 4.2 Confirm that new saves no longer contain the deprecated property.
-- [ ] 5.0 Update documentation to reflect the unified feature rotation approach.
-  - [ ] 5.1 Document feature rotation behavior in `Documentation` or README.
   - [ ] 5.2 Mention the removal of the `furniture` property.
 *End of document*
