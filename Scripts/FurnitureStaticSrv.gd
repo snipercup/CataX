@@ -1262,7 +1262,7 @@ func _die(do_add_corpse: bool = true):
 	if is_container():
 		Helper.signal_broker.container_exited_proximity.emit(self)
 	if Helper.time_helper.minute_passed.is_connected(on_minute_passed):
-	Helper.time_helper.minute_passed.disconnect(on_minute_passed)
+		Helper.time_helper.minute_passed.disconnect(on_minute_passed)
 	free_resources()  # Free resources
 	queue_free()  # Remove the node from the scene tree
 
