@@ -416,14 +416,14 @@ func add_entities_to_set(level: Array, entity_set: Dictionary):
 			entity_set["mobs"].append(entity["mob"]["id"])
 		if entity.has("mobgroup") and not entity_set["mobgroups"].has(entity["mobgroup"]["id"]):  # Add mobgroup
 			entity_set["mobgroups"].append(entity["mobgroup"]["id"])
-			if entity.has("feature") and entity["feature"].get("type", "") == "furniture":
-				var furn: Dictionary = entity["feature"]
-				if not entity_set["furniture"].has(furn.get("id", "")):
-					entity_set["furniture"].append(furn.get("id", ""))
-				if furn.has("itemgroups"):
-					for itemgroup in furn["itemgroups"]:
-						if not entity_set["itemgroups"].has(itemgroup):
-							entity_set["itemgroups"].append(itemgroup)
+		if entity.has("feature") and entity["feature"].get("type", "") == "furniture":
+			var furn: Dictionary = entity["feature"]
+			if not entity_set["furniture"].has(furn.get("id", "")):
+				entity_set["furniture"].append(furn.get("id", ""))
+			if furn.has("itemgroups"):
+				for itemgroup in furn["itemgroups"]:
+					if not entity_set["itemgroups"].has(itemgroup):
+						entity_set["itemgroups"].append(itemgroup)
 		if (
 			entity.has("id")
 			and not entity_set["tiles"].has(entity["id"])
