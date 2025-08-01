@@ -57,21 +57,14 @@
 
 ## Relevant Files
 - `Mods/Dimensionfall/Maps/` - Existing map templates and categories
-- `Mods/Dimensionfall/Maps/references.json` - Map references for overmap areas
-- `Mods/Dimensionfall/Overmapareas/Overmapareas.json` - Map area definitions
 - `.project-management/current-prd/tasks-prd-map-categorization.md` - Task list
 
 ### Proposed New Files
-- `Mods/Dimensionfall/Maps/coastal_beach.json` - Basic beach area
-- `Mods/Dimensionfall/Maps/coastal_dock.json` - Dockside area
+- `Mods/Dimensionfall/Maps/underground_lab.json` - Secret underground lab
+- `Mods/Dimensionfall/Maps/underground_cave.json` - Natural cave system
 - `Mods/Dimensionfall/Maps/field_farmland.json` - Farmland template
 - `Mods/Dimensionfall/Maps/field_outpost.json` - Field area with small outpost
-- `Mods/Dimensionfall/Maps/suburban_market.json` - Local market layout
 - `Mods/Dimensionfall/Maps/suburban_park.json` - Park in suburban area
-- `Mods/Dimensionfall/Maps/underground_cave.json` - Natural cave system
-- `Mods/Dimensionfall/Maps/underground_lab.json` - Secret underground lab
-- `Mods/Dimensionfall/Maps/urban_mall.json` - Shopping mall structure
-- `Mods/Dimensionfall/Maps/urban_plaza.json` - Central city plaza
 
 ### Files To Remove
 - None
