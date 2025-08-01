@@ -50,4 +50,9 @@
   - [x] 3.1 Search the repository for `tile.furniture` occurrences.
   - [x] 3.2 Update each script to reference `tile.feature` instead.
   - [x] 5.2 Mention the removal of the `furniture` property.
+- [ ] 4.0 Review DMap.gd and replace any remaining references to furniture, mobs or itemgroups with `tile.feature`.
+  - [ ] 4.1 Update remove_my_reference_from_all_entities to use feature instead of mobs, itemgroups, furniture.
+  - [ ] 4.2 Update data_changed to reference `tile.feature` instead.
+  - [ ] 4.3 Update collect_unique_entities to use feature instead of mob, itemgroup and furniture.
+  - [ ] 4.4 Review the DMap script and replace the use of mobs, itemgroups and furniture with the feature property.
 *End of document*
