@@ -3003,50 +3003,6 @@
 		"weight": 0.5
 	},
 	{
-		"Medical": {
-		  "amount": 50.0,
-		  "attributes": [
-		    {"amount": 0.0, "id": "head_health"},
-		    {"amount": 0.0, "id": "torso_health"},
-		    {"amount": 0.0, "id": "left_arm_health"},
-		    {"amount": 0.0, "id": "right_arm_health"},
-		    {"amount": 0.0, "id": "left_leg_health"},
-		    {"amount": 0.0, "id": "right_leg_health"}
-		  ],
-		  "order": "Lowest first"
-		},
-		"description": "Contains essential supplies to treat injuries.",
-		"id": "first_aid_kit",
-		"image": "./Mods/Dimensionfall/Items/9mm.png",
-		"max_stack_size": 2,
-		"name": "First Aid Kit",
-		"sprite": "9mm.png",
-		"stack_size": 1,
-		"two_handed": false,
-		"volume": 20.0,
-		"weight": 1.0
-	},
-	{
-		"Medical": {
-		  "amount": 10.0,
-		  "attributes": [
-		    {"amount": 0.0, "id": "head_health"},
-		    {"amount": 0.0, "id": "torso_health"}
-		  ],
-		  "order": "Lowest first"
-		},
-		"description": "Pills that reduce pain and restore vitality.",
-		"id": "painkiller_pills",
-		"image": "./Mods/Dimensionfall/Items/9mm.png",
-		"max_stack_size": 20,
-		"name": "Painkiller Pills",
-		"sprite": "9mm.png",
-		"stack_size": 5,
-		"two_handed": false,
-		"volume": 2.0,
-		"weight": 0.1
-	},
-	{
 		"Tool": {
 		  "tool_qualities": {"utility": 1.0}
 		},
@@ -3075,32 +3031,6 @@
 		"two_handed": false,
 		"volume": 15.0,
 		"weight": 0.8
-	},
-	{
-		"Electronics": {"device_type": "utility"},
-		"description": "A compact solar charger that can recharge small devices.",
-		"id": "solar_charger",
-		"image": "./Mods/Dimensionfall/Items/9mm.png",
-		"max_stack_size": 1,
-		"name": "Solar Charger",
-		"sprite": "9mm.png",
-		"stack_size": 1,
-		"two_handed": false,
-		"volume": 20.0,
-		"weight": 0.5
-	},
-	{
-		"Electronics": {"device_type": "navigation"},
-		"description": "A handheld GPS device for navigation.",
-		"id": "handheld_gps",
-		"image": "./Mods/Dimensionfall/Items/9mm.png",
-		"max_stack_size": 1,
-		"name": "Handheld GPS",
-		"sprite": "9mm.png",
-		"stack_size": 1,
-		"two_handed": false,
-		"volume": 15.0,
-		"weight": 0.4
 	},
 	{
 		"Construction": {"material_type": "cement"},
