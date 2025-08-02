@@ -19,12 +19,12 @@ These steps show you how to make a simple change to the game without any coding
 3. Press the play button in the top-right to start the game
 4. Press 'Content editor' from the main menu and then 'Content manager'.
 5. Find the 'item groups' list in the left part of the content manager. You can collapse the other lists by clicking on their name
-6. Click on the + button next to 'Item Groups' to add a new item group. A pop-up will show, asking for an id. You have to make it unique, for example `basic_mob_loot_00`.
-7. The new item group is added to the list. Scroll down the list and double click the `basic_mob_loot_00` item group to edit it.
-8. A new editor is opened in a tab that allows you to change the properties of the item group. Click the image next to `Sprite:` to select a sprite for this item group. It can be any sprite, for example the machete.
+6. Click on the + button next to 'Item Groups' to add a new itemgroup. A pop-up will show, asking for an id. You have to make it unique, for example `basic_mob_loot_00`.
+7. The new itemgroup is added to the list. Scroll down the list and double click the `basic_mob_loot_00` itemgroup to edit it.
+8. A new editor is opened in a tab that allows you to change the properties of the itemgroup. Click the image next to `Sprite:` to select a sprite for this itemgroup. It can be any sprite, for example the machete.
 9. Enter a name and description, for example `Mob loot` and `Some loot the player can find in mobs`.
 10. You don't need to change the Group type, but you can hover over the drop-down menu to read what it does
-11. In the left list, expand the 'items' list if it is collapsed. Drag items from the list into the 'items' area of the item group editor. This allows you to compose a list of items you want to spawn when this item group is used.
+11. In the left list, expand the 'items' list if it is collapsed. Drag items from the list into the 'items' area of the itemgroup editor. This allows you to compose a list of items you want to spawn when this itemgroup is used.
 12. You don't need to edit the probability or min and max count, but you can hover the cursor on the controls to see what they do.
 13. Press 'Save' and 'Close' to finish your changes. Now that we are done, close the game and let's commit your changes to the branch.
 14. To commit your changes to your branch, read [this guide](https://docs.github.com/en/desktop/overview/getting-started-with-github-desktop#making-changes-in-a-branch) for Github Desktop (recommended) or [this guide](https://docs.github.com/en/get-started/using-git/pushing-commits-to-a-remote-repository) for git
