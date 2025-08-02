@@ -56,9 +56,6 @@
 ## Relevant Files
 - Reference *existing* project files here
 
-### Proposed New Files
-- `Documentation/coding_style.md` - Summarizes naming conventions and formatting rules for contributors.
-- `Documentation/contributor_guide.md` - Instructions for code style and documentation practices.
 
 ### Existing Files Modified
 - `README.md` - Correct typos and ensure consistent formatting.
@@ -66,7 +63,6 @@
 - `Documentation/` - Review and clean style across existing docs.
 - `Scripts/` - Rename variables and classes to follow conventions.
 - `Scenes/` - Update scene references after renaming.
-- `Mods/` - Harmonize field names and ensure metadata.
 - `Tests/Unit/` - Keep tests aligned with updated naming and docs.
 
 ### Files To Remove
@@ -80,7 +76,6 @@
 - [ ] 1.0 Standardize naming conventions across scripts and scenes
 	- [ ] 1.1 Inventory scripts and scenes for naming violations
 	- [ ] 1.2 Rename variables to snake_case and classes to PascalCase; update references
-	- [ ] 1.3 Document naming rules in a coding-style reference
 - [ ] 2.0 Improve function and class documentation
 	- [ ] 2.1 Scan for missing docstrings or comments
 	- [ ] 2.2 Write or revise docstrings detailing purpose, parameters, return values, side effects
@@ -88,14 +83,5 @@
 - [ ] 3.0 Correct documentation typos and formatting
 	- [ ] 3.1 Review README, FeatureList, and Documentation for typos and formatting issues
 	- [ ] 3.2 Correct spelling, fix markdown, ensure consistent headings and lists
-	- [ ] 3.3 Verify documentation builds and internal/external links
-- [ ] 4.0 Enforce a unified code style
-	- [ ] 4.1 Run style checks to verify tab indentation and detect trailing whitespace
-	- [ ] 4.2 Fix style violations, ensuring tab usage and cleaned whitespace
-	- [ ] 4.3 Add code style section to contributor guide summarizing conventions and tools
-- [ ] 5.0 Audit resource and mod definition files
-	- [ ] 5.1 Locate resource and mod files with inconsistent field names or missing metadata
-	- [ ] 5.2 Harmonize field names and ensure all entries include descriptive metadata
-	- [ ] 5.3 Update documentation to describe standardized resource and mod file schema
 
 *End of document*
