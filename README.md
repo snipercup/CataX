@@ -22,11 +22,11 @@ Check out the gameplay video:
 ## How to play
 You can find some demo releases [here](https://github.com/Khaligufzel/Dimensionfall/releases).
 Alternatively, you can play the game in the following way:
-- Download [Godot](https://godotengine.org/download/) from their website or from [steam](https://store.steampowered.com/app/404790/Godot_Engine/)
-- Download this project by going to the top-right of this page and clicking the green 'code' button and then click 'download zip'
-- Extract the zip file to a location of your choosing
-- Open Godot and click open project and navigate to the folder where you extracted the zip file
-- Open the project in Godot and click 'play' in the top-right
+- Download [Godot](https://godotengine.org/download/) from their website or from [Steam](https://store.steampowered.com/app/404790/Godot_Engine/)
+- Download this project by clicking the green 'Code' button at the top-right of this page and selecting 'Download ZIP'
+- Extract the ZIP file to a location of your choosing
+- Open Godot and click *Open Project*, then navigate to the folder where you extracted the ZIP file
+- Open the project in Godot and click *Play* in the top-right
 
 ## Features
 The game has the following features:
@@ -76,7 +76,7 @@ Additional features before our first release:
 ## Contribute
 If you like Godot and want to contribute, feel free to submit a pull request or issue on your ideas, or join us on discord. To make edits, start by reading the [getting started guide](https://github.com/Khaligufzel/Dimensionfall/blob/main/Documentation/Game_development/Getting_started.md).
 
-This is and always will be a hobby project and will not be for sale. However, if you want to, you can to donate to the developers:
+This will always be a hobby project and will not be for sale. However, if you want to, you can donate to the developers:
 
 Khaligufzel: https://ko-fi.com/khaligufzel
 
@@ -101,7 +101,7 @@ Official Discord:
 	Ambience Pack 1 -- Sci Fi Horror - https://opengameart.org/users/joth
 	Pressure - https://opengameart.org/users/yd
 	Ambience:
-	Nature Sounds Pack - https://opengameart.org/users/antoinemax (Lisence: CC-BY 4.0)
+        Nature Sounds Pack - https://opengameart.org/users/antoinemax (License: CC-BY 4.0)
 	Cricket sounds - https://opengameart.org/users/syncopika
 	Wind1 - https://opengameart.org/users/lukerustltd
 - SFX:
