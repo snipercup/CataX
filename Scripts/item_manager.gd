@@ -306,22 +306,22 @@ func reload_magazine(magazine: InventoryItem) -> void:
 	# Ensure we have a valid magazine and its "Magazine" property
 	if not magazine or not magazine.get_property("Magazine"):
 		return
-	
+
 	# Retrieve current magazine data
 	var magazine_properties: Dictionary = magazine.get_property("Magazine")
 	var ammo_type: String = magazine_properties.get("used_ammo", "")
-	
+
 	# Read current and maximum ammo counts
 	var current_ammo: int = int(magazine_properties.get("current_ammo", 0))
-	var max_ammo: int     = int(magazine_properties.get("max_ammo", 0))
-	
+	var max_ammo: int = int(magazine_properties.get("max_ammo", 0))
+
 	# Calculate how many rounds are needed to fill the magazine
 	var needed_ammo: int = max_ammo - current_ammo
 	if needed_ammo <= 0:
-		return # Magazine is already full or overfilled
-	
+		return  # Magazine is already full or overfilled
+
 	var total_ammo_loaded: int = 0
-	
+
 	# Loop until we've loaded all needed rounds or run out of ammo
 	while needed_ammo > 0:
 		# Find an ammo item of the correct type in the player inventory
@@ -331,28 +331,27 @@ func reload_magazine(magazine: InventoryItem) -> void:
 			transfer_items_to_inventory(playerInventory, ammo_type, needed_ammo)
 			ammo_item = playerInventory.get_item_by_id(ammo_type)
 			if not ammo_item:
-				break # No ammo available at all
-		
+				break  # No ammo available at all
+
 		# Determine how many rounds we can load from this stack
 		var stack_size: int = InventoryStacked.get_item_stack_size(ammo_item)
 		var ammo_to_load: int = min(needed_ammo, stack_size)
-		
+
 		# Update counters
 		total_ammo_loaded += ammo_to_load
-		needed_ammo      -= ammo_to_load
-		
+		needed_ammo -= ammo_to_load
+
 		# Deduct these rounds from the ammo stack
 		var new_stack_size: int = stack_size - ammo_to_load
 		InventoryStacked.set_item_stack_size(ammo_item, new_stack_size)
-		
+
 		# Refresh accessible items list to reflect inventory changes
 		update_accessible_items_list()
-	
+
 	# If we loaded any rounds, update the magazine's "current_ammo" property
 	if total_ammo_loaded > 0:
 		magazine_properties["current_ammo"] = current_ammo + total_ammo_loaded
 		magazine.set_property("Magazine", magazine_properties)
-
 
 
 # Function to remove an item from the inventory
@@ -504,9 +503,12 @@ func connect_inventory_signals(inventory: Inventory):
 
 
 func disconnect_inventory_signals(inventory: Inventory):
-	inventory.item_added.disconnect(_on_inventory_item_added)
-	inventory.item_removed.disconnect(_on_inventory_item_removed)
-	inventory.item_modified.disconnect(_on_inventory_item_modified)
+	if inventory.item_added.is_connected(_on_inventory_item_added):
+		inventory.item_added.disconnect(_on_inventory_item_added)
+	if inventory.item_removed.is_connected(_on_inventory_item_removed):
+		inventory.item_removed.disconnect(_on_inventory_item_removed)
+	if inventory.item_modified.is_connected(_on_inventory_item_modified):
+		inventory.item_modified.disconnect(_on_inventory_item_modified)
 
 
 func _on_inventory_item_added(item, inventory):
