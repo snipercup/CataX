@@ -56,7 +56,7 @@ Manage the game’s content dynamically using the Add/Remove Mods menu. From thi
 
 
 ### Content editor
-Content for this game is created in the content editor. On the left, you can select content to edit. You can edit tactical maps, maps, items, tiles, furniture, mobs, item groups, wearable slots, skills, and stats.
+Content for this game is created in the content editor. On the left, you can select content to edit. You can edit tactical maps, maps, items, tiles, furniture, mobs, itemgroups, wearable slots, skills, and stats.
 - All content is saved as JSON, which allows you to edit the files manually or using an external editor if you want to.
 - Content is loaded as mods, even the core content. Put all your json and sprites into /mods/yourmod/ and it can be read by the game.
 ![Catax_content_editor](Media/Catax_content_editor.png)
