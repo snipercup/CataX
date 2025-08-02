@@ -1261,7 +1261,8 @@ func _die(do_add_corpse: bool = true):
 		add_corpse(furniture_transform.get_position())  # Add wreck or corpse
 	if is_container():
 		Helper.signal_broker.container_exited_proximity.emit(self)
-	Helper.time_helper.minute_passed.disconnect(on_minute_passed)
+	if Helper.time_helper.minute_passed.is_connected(on_minute_passed):
+		Helper.time_helper.minute_passed.disconnect(on_minute_passed)
 	free_resources()  # Free resources
 	queue_free()  # Remove the node from the scene tree
 
