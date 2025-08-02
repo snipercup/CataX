@@ -1,9 +1,9 @@
 # Feature list
 
-This is an extended and detailed list of features for the dimensionfall game. These features are implemented unless a note says otherwise. 
+This is an extended and detailed list of features for the Dimensionfall game. These features are implemented unless a note says otherwise.
 
 
-### Combat:
+### Combat
 Ranged and melee combat are currently implemented. 
 - One-handed weapons can be dual-wielded, while two-handed weapons will occupy both slots.
 - Load and unload guns and magazines.
@@ -19,6 +19,7 @@ Ranged and melee combat are currently implemented.
 ![Catax_inventory](Media/Dimensionfall_inventory.png)
 
 ### Overmap
+
 The game will create an infinite map to explore. The world is divided by regions, each having their own opportunities and challenges. A marker will indicate your current location.
 
 ![Catax_overmap](Media/Dimensionfall_overmap.png)
@@ -55,7 +56,7 @@ Manage the game’s content dynamically using the Add/Remove Mods menu. From thi
 
 
 ### Content editor
-Content for this game is created in the content editor. On the left you can select content to edit. You can edit tacticalmaps, maps, items, tiles, furniture, mobs, itemgroups and wearable slots, skills and stats. 
+Content for this game is created in the content editor. On the left, you can select content to edit. You can edit tactical maps, maps, items, tiles, furniture, mobs, item groups, wearable slots, skills, and stats.
 - All content is saved as JSON, which allows you to edit the files manually or using an external editor if you want to.
 - Content is loaded as mods, even the core content. Put all your json and sprites into /mods/yourmod/ and it can be read by the game.
 ![Catax_content_editor](Media/Catax_content_editor.png)

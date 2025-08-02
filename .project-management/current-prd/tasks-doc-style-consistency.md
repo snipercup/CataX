@@ -60,10 +60,7 @@
 ### Existing Files Modified
 - `README.md` - Correct typos and ensure consistent formatting.
 - `FeatureList.md` - Fix spelling and adjust markdown headings.
-- `Documentation/` - Review and clean style across existing docs.
-- `Scripts/` - Rename variables and classes to follow conventions.
-- `Scenes/` - Update scene references after renaming.
-- `Tests/Unit/` - Keep tests aligned with updated naming and docs.
+- `Documentation/Game_development/Getting_started.md` - Improve contributor guide grammar and style.
 
 ### Files To Remove
 - None
@@ -80,8 +77,8 @@
 	- [ ] 2.1 Scan for missing docstrings or comments
 	- [ ] 2.2 Write or revise docstrings detailing purpose, parameters, return values, side effects
 	- [ ] 2.3 Insert inline comments explaining non-obvious logic
-- [ ] 3.0 Correct documentation typos and formatting
-	- [ ] 3.1 Review README, FeatureList, and Documentation for typos and formatting issues
-	- [ ] 3.2 Correct spelling, fix markdown, ensure consistent headings and lists
+- [x] 3.0 Correct documentation typos and formatting
+       - [x] 3.1 Review README, FeatureList, and Documentation for typos and formatting issues
+       - [x] 3.2 Correct spelling, fix markdown, ensure consistent headings and lists
 
 *End of document*
