@@ -4,6 +4,11 @@
 			"generic_forest_finds"
 		]
 	},
+	"adjustable_wrench": {
+		"itemgroups": [
+			"cabinet_general"
+		]
+	},
 	"apple": {
 		"itemgroups": [
 			"refrigerator",
@@ -204,6 +209,11 @@
 			"refrigerator"
 		]
 	},
+	"cement_bag": {
+		"itemgroups": [
+			"loot_gas_station"
+		]
+	},
 	"ceramic_fragments": {
 		"itemgroups": [
 			"debris_urban"
@@ -273,6 +283,11 @@
 		],
 		"quests": [
 			"quest_radio_signal_01"
+		]
+	},
+	"dried_fruit_mix": {
+		"itemgroups": [
+			"kitchen_cupboard"
 		]
 	},
 	"eggs": {
@@ -370,6 +385,11 @@
 			"zombie_loot"
 		]
 	},
+	"jar_honey": {
+		"itemgroups": [
+			"kitchen_cupboard"
+		]
+	},
 	"jeans": {
 		"itemgroups": [
 			"clothing_general",
@@ -457,6 +477,11 @@
 		"itemgroups": [
 			"electronics_store_medium",
 			"electronics_store_mixed"
+		]
+	},
+	"multi_tool": {
+		"itemgroups": [
+			"cabinet_general"
 		]
 	},
 	"mushrooms_forest": {
@@ -671,6 +696,11 @@
 	"stale_bread": {
 		"itemgroups": [
 			"urban_litter"
+		]
+	},
+	"steel_rebar": {
+		"itemgroups": [
+			"loot_gas_station"
 		]
 	},
 	"steel_scrap": {
