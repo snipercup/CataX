@@ -39,6 +39,9 @@
 		]
 	},
 	"bone_thrower": {
+		"maps": [
+			"underground_lab"
+		],
 		"mobfactions": [
 			"security_robots"
 		],
@@ -188,7 +191,8 @@
 		"maps": [
 			"urbanroad_cross",
 			"urbanroad_corner",
-			"urbanroad_t"
+			"urbanroad_t",
+			"underground_lab"
 		],
 		"mobfactions": [
 			"security_robots"
@@ -198,6 +202,9 @@
 		]
 	},
 	"spitter_zombie": {
+		"maps": [
+			"underground_lab"
+		],
 		"mobfactions": [
 			"security_robots"
 		],

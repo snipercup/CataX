@@ -62,6 +62,18 @@
 				"max": 1,
 				"min": 1,
 				"probability": 1
+			},
+			{
+				"id": "dried_fruit_mix",
+				"max": 1,
+				"min": 1,
+				"probability": 20
+			},
+			{
+				"id": "jar_honey",
+				"max": 1,
+				"min": 1,
+				"probability": 20
 			}
 		],
 		"mode": "Collection",
@@ -196,6 +208,18 @@
 				"max": 1,
 				"min": 1,
 				"probability": 1
+			},
+			{
+				"id": "adjustable_wrench",
+				"max": 1,
+				"min": 1,
+				"probability": 1
+			},
+			{
+				"id": "multi_tool",
+				"max": 1,
+				"min": 1,
+				"probability": 10
 			}
 		],
 		"mode": "Collection",
@@ -1727,6 +1751,18 @@
 			},
 			{
 				"id": "rope_coil",
+				"max": 1,
+				"min": 1,
+				"probability": 1
+			},
+			{
+				"id": "steel_rebar",
+				"max": 1,
+				"min": 1,
+				"probability": 1
+			},
+			{
+				"id": "cement_bag",
 				"max": 1,
 				"min": 1,
 				"probability": 1
