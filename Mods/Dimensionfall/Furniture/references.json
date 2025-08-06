@@ -30,7 +30,8 @@
 			"military_bunker",
 			"survivor_gas_station",
 			"forest_clearing",
-			"forest_ruins"
+			"forest_ruins",
+			"field_farmland"
 		]
 	},
 	"Tree_00": {
@@ -66,7 +67,8 @@
 			"military_bunker",
 			"survivor_gas_station",
 			"forest_clearing",
-			"forest_ruins"
+			"forest_ruins",
+			"field_farmland"
 		]
 	},
 	"WillowTree_00": {
@@ -145,7 +147,8 @@
 			"generichouse_end",
 			"RockyHill_SW",
 			"generichouse_corner",
-			"generichouse_t"
+			"generichouse_t",
+			"field_farmland"
 		]
 	},
 	"bench_garden": {
@@ -154,7 +157,8 @@
 			"subway_station",
 			"Generichouse",
 			"city_square",
-			"store_electronic_clothing"
+			"store_electronic_clothing",
+			"field_farmland"
 		]
 	},
 	"bench_wood": {
@@ -188,7 +192,8 @@
 			"industrial_control_center",
 			"military_bunker",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"bulletin_board": {
@@ -220,7 +225,8 @@
 			"generichouse_t",
 			"industrial_control_center",
 			"warehouse_storage",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"field_farmland"
 		]
 	},
 	"campfire_off": {
@@ -282,7 +288,8 @@
 			"industrial_control_center",
 			"military_bunker",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"chair_wood": {
@@ -306,7 +313,8 @@
 			"industrial_control_center",
 			"military_bunker",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"chemical_rack": {
@@ -364,7 +372,8 @@
 			"two_story_house",
 			"generichouse_end",
 			"generichouse_corner",
-			"generichouse_t"
+			"generichouse_t",
+			"field_farmland"
 		]
 	},
 	"crate_wood": {
@@ -418,7 +427,8 @@
 			"store_electronic_clothing",
 			"industrial_control_center",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"destroyed_fence": {
@@ -431,7 +441,8 @@
 			"forest_camp_00",
 			"scrap_yard",
 			"generichouse_corner",
-			"forest_ruins"
+			"forest_ruins",
+			"field_farmland"
 		]
 	},
 	"display_case": {
@@ -463,7 +474,8 @@
 			"warehouse_storage",
 			"military_bunker",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"equipment_rack": {
@@ -506,7 +518,8 @@
 			"industrial_control_center",
 			"factory_hall",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"light_machinery": {
@@ -545,7 +558,8 @@
 			"industrial_control_center",
 			"factory_hall",
 			"military_bunker",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"railroad_midsection": {
@@ -574,7 +588,8 @@
 			"generichouse_t",
 			"industrial_control_center",
 			"military_bunker",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"rusted_fridge": {
@@ -619,7 +634,8 @@
 			"industrial_control_center",
 			"factory_hall",
 			"generichouse_t",
-			"generichouse_cross"
+			"generichouse_cross",
+			"field_farmland"
 		]
 	},
 	"standing_mirror": {
@@ -661,7 +677,8 @@
 			"Generichouse_00",
 			"two_story_house",
 			"industrial_control_center",
-			"military_bunker"
+			"military_bunker",
+			"field_farmland"
 		]
 	},
 	"survivor_cot": {
@@ -711,7 +728,8 @@
 			"generichouse_t",
 			"industrial_control_center",
 			"military_bunker",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"tanker_wreck_01": {
@@ -728,7 +746,8 @@
 			"generichouse_corner",
 			"generichouse_cross",
 			"office_building_00",
-			"abandoned_building"
+			"abandoned_building",
+			"field_farmland"
 		]
 	},
 	"toilet_00": {
@@ -748,7 +767,8 @@
 			"store_electronic_clothing",
 			"factory_hall",
 			"military_bunker",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"tool_bench": {
@@ -784,7 +804,8 @@
 			"industrial_control_center",
 			"military_bunker",
 			"survivor_gas_station",
-			"underground_lab"
+			"underground_lab",
+			"field_farmland"
 		]
 	},
 	"truck_wreck_01": {
@@ -861,7 +882,8 @@
 			"store_electronic_clothing",
 			"industrial_control_center",
 			"military_bunker",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"field_farmland"
 		]
 	}
 }
