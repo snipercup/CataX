@@ -55,8 +55,6 @@
 - [ ] 2.0 Implement painting logic that places `npc_tile` with rotation and replaces existing `mob`, `mobgroup`, `furniture`, or `itemgroup` features (`Scenes/ContentManager/Mapeditor/Scripts/tilebrush.gd`).
   - [ ] 2.1 Extend painting function to recognize `npc_tile` selection and capture rotation data.
   - [ ] 2.2 Implement feature-replacement logic so `npc_tile` overwrites `mob`, `mobgroup`, `furniture`, or `itemgroup` on the same tile.
-  - [ ] 2.3 Add visual feedback to show placement with correct rotation.
-  - [ ] 2.4 Confirm that undo/redo operations properly record `npc_tile` placements.
 - [ ] 3.0 Persist `npc_tile` coordinates and rotation within map serialization (`Scripts/Gamedata/DMap.gd`, `Scripts/Gamedata/DMaps.gd`).
   - [ ] 3.1 Modify `DMap` to store `npc_tile` positions and rotation as part of map data.
   - [ ] 3.2 Update serialization methods to write `npc_tile` entries with rotation to file.
