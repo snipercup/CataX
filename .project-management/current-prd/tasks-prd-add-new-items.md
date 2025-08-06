@@ -57,11 +57,11 @@
 
 ## Tasks
 
-- [ ] 2.0 Design two new items for each category (urban, nature, industrial, medical, survival)
-- [ ] 2.1 Urban: draft two distinct item concepts with names, descriptions, basic stats (weight, value, durability), and urban-specific properties.
-- [ ] 2.2 Nature: draft two items with the above base stats plus nature-specific properties.
-- [ ] 2.3 Industrial: draft two items with base stats plus industrial-specific properties.
-- [ ] 2.4 Medical: draft two medical items, ensuring relevant properties (e.g., healing amount, dosage).
-- [ ] 2.5 Survival: draft two survival items with properties such as durability or environmental resistance.
-- [ ] 2.6 Assign the placeholder sprite `9mm.png` to each item.
+- [x] 2.0 Design two new items for each category (urban, nature, industrial, medical, survival)
+- [x] 2.1 Urban: draft two distinct item concepts with names, descriptions, basic stats (weight, value, durability), and urban-specific properties.
+- [x] 2.2 Nature: draft two items with the above base stats plus nature-specific properties.
+- [x] 2.3 Industrial: draft two items with base stats plus industrial-specific properties.
+- [x] 2.4 Medical: draft two medical items, ensuring relevant properties (e.g., healing amount, dosage).
+- [x] 2.5 Survival: draft two survival items with properties such as durability or environmental resistance.
+- [x] 2.6 Assign the placeholder sprite `9mm.png` to each item.
 *End of document*
