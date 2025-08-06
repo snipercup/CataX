@@ -36,7 +36,7 @@
 
 ### Existing Files Modified
 - `Scenes/ContentManager/Mapeditor/Scripts/mapeditor_brushcomposer.gd` - Adds `npc_tile` button to brush composer.
-- `Scenes/ContentManager/Mapeditor/Scripts/tilebrush.gd` - Implements painting logic for `npc_tile` with rotation and feature replacement.
+- `Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd` - Implements painting logic for `npc_tile` with rotation and feature replacement.
 - `Scripts/Gamedata/DMap.gd` - Stores `npc_tile` coordinates and rotation.
 - `Scripts/Gamedata/DMaps.gd` - Serializes and deserializes `npc_tile` data.
 - `Scripts/Helper/map_manager.gd` - Processes `npc_tile` entries and allows overwrites.
@@ -52,9 +52,9 @@
   - [x] 1.1 Update brush options list to include `npc_tile`, ensuring it appears in the composer UI.
   - [x] 1.2 Implement UI logic to select `npc_tile`, mirroring the selection flow used for `null_tile`.
   - [x] 1.3 Validate that selection updates internal state correctly and triggers necessary callbacks.
-- [ ] 2.0 Implement painting logic that places `npc_tile` with rotation and replaces existing `mob`, `mobgroup`, `furniture`, or `itemgroup` features (`Scenes/ContentManager/Mapeditor/Scripts/tilebrush.gd`).
-  - [ ] 2.1 Extend painting function to recognize `npc_tile` selection and capture rotation data.
-  - [ ] 2.2 Implement feature-replacement logic so `npc_tile` overwrites `mob`, `mobgroup`, `furniture`, or `itemgroup` on the same tile.
+- [x] 2.0 Implement painting logic that places `npc_tile` with rotation and replaces existing `mob`, `mobgroup`, `furniture`, or `itemgroup` features (`Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd`).
+  - [x] 2.1 Extend painting function to recognize `npc_tile` selection and capture rotation data.
+  - [x] 2.2 Implement feature-replacement logic so `npc_tile` overwrites `mob`, `mobgroup`, `furniture`, or `itemgroup` on the same tile.
 - [ ] 3.0 Persist `npc_tile` coordinates and rotation within map serialization (`Scripts/Gamedata/DMap.gd`, `Scripts/Gamedata/DMaps.gd`).
   - [ ] 3.1 Modify `DMap` to store `npc_tile` positions and rotation as part of map data.
   - [ ] 3.2 Update serialization methods to write `npc_tile` entries with rotation to file.
@@ -65,7 +65,7 @@
   - [ ] 4.2 Implement overwrite rules so subsequent features can replace `npc_tile` entries if needed.
   - [ ] 4.3 Verify that processing order respects existing feature priorities.
 - [ ] 5.0 Add tests covering brush placement, serialization/deserialization, and map processing of `npc_tile` entries (`Tests/Unit/`).
-  - [ ] 5.1 Write unit tests for brush placement and rotation handling in `tilebrush.gd`.
+  - [x] 5.1 Write unit tests for brush placement and rotation handling in `GridContainer.gd`.
   - [ ] 5.2 Write serialization/deserialization tests ensuring `npc_tile` data persists accurately.
   - [ ] 5.3 Add tests for map processing logic confirming correct overwrite behavior and logging.
   - [ ] 5.4 Run all existing test suites to ensure no regressions.
