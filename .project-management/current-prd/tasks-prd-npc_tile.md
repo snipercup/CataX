@@ -48,10 +48,10 @@
 - `npc_tile` uses `res://Scenes/ContentManager/Mapeditor/Images/nulltile_32.png` as its icon.
 
 ## Tasks
-- [ ] 1.0 Add `npc_tile` brush option alongside `null_tile` in the map editor brush composer (`Scenes/ContentManager/Mapeditor/Scripts/mapeditor_brushcomposer.gd`).
-  - [ ] 1.1 Update brush options list to include `npc_tile`, ensuring it appears in the composer UI.
-  - [ ] 1.2 Implement UI logic to select `npc_tile`, mirroring the selection flow used for `null_tile`.
-  - [ ] 1.3 Validate that selection updates internal state correctly and triggers necessary callbacks.
+ - [x] 1.0 Add `npc_tile` brush option alongside `null_tile` in the map editor brush composer (`Scenes/ContentManager/Mapeditor/Scripts/mapeditor_brushcomposer.gd`).
+  - [x] 1.1 Update brush options list to include `npc_tile`, ensuring it appears in the composer UI.
+  - [x] 1.2 Implement UI logic to select `npc_tile`, mirroring the selection flow used for `null_tile`.
+  - [x] 1.3 Validate that selection updates internal state correctly and triggers necessary callbacks.
 - [ ] 2.0 Implement painting logic that places `npc_tile` with rotation and replaces existing `mob`, `mobgroup`, `furniture`, or `itemgroup` features (`Scenes/ContentManager/Mapeditor/Scripts/tilebrush.gd`).
   - [ ] 2.1 Extend painting function to recognize `npc_tile` selection and capture rotation data.
   - [ ] 2.2 Implement feature-replacement logic so `npc_tile` overwrites `mob`, `mobgroup`, `furniture`, or `itemgroup` on the same tile.
