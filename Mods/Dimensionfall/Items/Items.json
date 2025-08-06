@@ -3065,5 +3065,246 @@
 		"two_handed": false,
 		"volume": 30.0,
 		"weight": 2.0
+	},
+	{
+		"Tool": {
+			"tool_qualities": {
+				"pry": 1
+			}
+		},
+		"category": "urban",
+		"description": "A sturdy metal bar for prying open doors and crates.",
+		"durability": 100,
+		"id": "crowbar",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 1,
+		"name": "Crowbar",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": true,
+		"value": 30,
+		"volume": 40.0,
+		"weight": 5.0
+	},
+	{
+		"Tool": {
+			"tool_qualities": {
+				"marking": 1
+			}
+		},
+		"category": "urban",
+		"description": "Can of spray paint for marking walls and signals.",
+		"durability": 50,
+		"id": "spray_paint",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 5,
+		"name": "Spray Paint",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 10,
+		"volume": 5.0,
+		"weight": 0.3
+	},
+	{
+		"Food": {
+			"attributes": [
+				{
+					"amount": 5.0,
+					"id": "food"
+				}
+			]
+		},
+		"category": "nature",
+		"description": "Sticky resin harvested from trees; useful as adhesive or fuel.",
+		"durability": 30,
+		"id": "tree_sap",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 5,
+		"name": "Tree Sap",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 5,
+		"volume": 2.0,
+		"weight": 0.2
+	},
+	{
+		"category": "nature",
+		"description": "A bundle of sturdy reeds gathered from a riverside, useful for crafting.",
+		"durability": 20,
+		"id": "river_reed",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 10,
+		"name": "River Reed",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 4,
+		"volume": 5.0,
+		"weight": 0.1
+	},
+	{
+		"Tool": {
+			"tool_qualities": {
+				"lubricate": 1
+			}
+		},
+		"category": "industrial",
+		"description": "A can of heavy-duty lubricant for maintaining machinery.",
+		"durability": 60,
+		"id": "industrial_lubricant",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 2,
+		"name": "Industrial Lubricant",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 25,
+		"volume": 15.0,
+		"weight": 1.0
+	},
+	{
+		"Wearable": {
+			"slot": "head"
+		},
+		"category": "industrial",
+		"description": "A hard hat to protect against falling debris in industrial zones.",
+		"durability": 100,
+		"id": "safety_helmet",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 1,
+		"name": "Safety Helmet",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 40,
+		"volume": 80.0,
+		"weight": 1.2
+	},
+	{
+		"Medical": {
+			"amount": 10.0,
+			"attributes": [
+				{
+					"amount": 0.0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "right_leg_health"
+				}
+			],
+			"order": "Lowest first"
+		},
+		"category": "medical",
+		"description": "Disposable antiseptic wipes for cleaning minor wounds.",
+		"durability": 20,
+		"id": "antiseptic_wipes",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 10,
+		"name": "Antiseptic Wipes",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 15,
+		"volume": 1.0,
+		"weight": 0.05
+	},
+	{
+		"Medical": {
+			"amount": 30.0,
+			"attributes": [
+				{
+					"amount": 0.0,
+					"id": "head_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "torso_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "left_arm_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "right_arm_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "left_leg_health"
+				},
+				{
+					"amount": 0.0,
+					"id": "right_leg_health"
+				}
+			],
+			"order": "Lowest first"
+		},
+		"category": "medical",
+		"description": "An adrenaline shot that boosts alertness and temporarily reduces pain.",
+		"durability": 5,
+		"id": "adrenaline_shot",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 5,
+		"name": "Adrenaline Shot",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 50,
+		"volume": 1.0,
+		"weight": 0.1
+	},
+	{
+		"category": "survival",
+		"description": "A compact thermal blanket that helps retain body heat in emergencies.",
+		"durability": 40,
+		"id": "thermal_blanket",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 1,
+		"name": "Thermal Blanket",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 20,
+		"volume": 100.0,
+		"weight": 1.0
+	},
+	{
+		"Tool": {
+			"tool_qualities": {
+				"water_purification": 1
+			}
+		},
+		"category": "survival",
+		"description": "A portable water filter straw for safe drinking from natural sources.",
+		"durability": 100,
+		"id": "water_filter_straw",
+		"image": "./Mods/Dimensionfall/Items/9mm.png",
+		"max_stack_size": 1,
+		"name": "Water Filter Straw",
+		"sprite": "9mm.png",
+		"stack_size": 1,
+		"two_handed": false,
+		"value": 35,
+		"volume": 10.0,
+		"weight": 0.3
 	}
 ]
