@@ -40,6 +40,7 @@
 - `Scripts/Gamedata/DMap.gd` - Stores `npc_tile` coordinates and rotation.
 - `Scripts/Gamedata/DMaps.gd` - Serializes and deserializes `npc_tile` data.
 - `Scripts/Helper/map_manager.gd` - Processes `npc_tile` entries and allows overwrites.
+- `Scenes/ContentManager/Mapeditor/Scripts/mapeditortile.gd` - Visualizes `npc_tile` features in the editor.
 
 ### Notes
 - Follow GDScript 4 syntax and Godot 4.4 best practices.
@@ -62,8 +63,8 @@
   - [x] 5.2 Write serialization/deserialization tests ensuring `npc_tile` data persists accurately.
   - [x] 5.3 Add tests for map processing logic confirming correct overwrite behavior and logging.
   - [x] 5.4 Run all existing test suites to ensure no regressions.
-- [ ] 6.0 Update `mapeditortile.gd` so that it can visualize the npc tile.
-  - [ ] 6.1 Update the `update_display` function to handle npc_tile feature.
-  - [ ] 6.2 Use the `npcTexture` to display the npc tile feature on the `ObjectSprite`.
+- [x] 6.0 Update `mapeditortile.gd` so that it can visualize the npc tile.
+  - [x] 6.1 Update the `update_display` function to handle npc_tile feature.
+  - [x] 6.2 Use the `npcTexture` to display the npc tile feature on the `ObjectSprite`.
 
 *End of document*

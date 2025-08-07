@@ -164,6 +164,10 @@ func update_display(tileData: Dictionary = {}, selected_area_name: String = "Non
 						. sprite
 					)
 					$ObjectSprite.show()
+				"npc_tile":
+					$ObjectSprite.rotation_degrees = feature_rot
+					$ObjectSprite.texture = load(npcTexture)
+					$ObjectSprite.show()
 				"itemgroup":
 					set_tile_itemgroups(tileData)
 
