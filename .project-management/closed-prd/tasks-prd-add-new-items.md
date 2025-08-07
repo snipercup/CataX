@@ -1,69 +1,67 @@
-## Selected maintenance goal
-- 15 - Add new items
+## Selected content goal
+- 2: Add New Items
 
 ## Pre-Feature Development Project Tree
 ```
 .
-├── AGENTS.md
-├── Assets
-│   └── Fonts
-├── Defaults
-│   ├── Blocks
-│   ├── Mobs
-│   ├── Player
-│   ├── Projectiles
-│   ├── Shaders
-│   └── Sprites
-├── Documentation
-│   ├── Game_design
-│   ├── Game_development
-│   └── Modding
-├── FeatureList.md
-├── Images
-│   ├── Icons
-│   └── Main menu
-├── ItemProtosets.tres
-├── LICENSE
-├── LevelGenerator.gd
-├── LevelGenerator.gd.uid
-├── LevelManager.gd
-├── LevelManager.gd.uid
-├── Main_menu_buttons.tres
-├── Media
-│   ├── Catax_basic.png
-│   ├── Catax_basic.png.import
-│   ├── Catax_basic_zoomed_out.png
-│   ├── Catax_basic_zoomed_out.png.import
-│   ├── Catax_content_editor.png
-│   ├── Catax_content_editor.png.import
-│   ├── Catax_crafting_editor.png
-│   ├── Catax_crafting_editor.png.import
-│   ├── Catax_furniture_editor.png
-│   ├── Catax_furniture_editor.png.import
-│   ├── Catax_item_editor.png
-│   ├── Catax_item_editor.png.import
-│   ├── Catax_itemgroup_editor.png
+./Assets
+./Assets/Fonts
+./Defaults
+./Defaults/Blocks
+./Defaults/Mobs
+./Defaults/Player
+./Defaults/Projectiles
+./Defaults/Shaders
+./Defaults/Sprites
+./Documentation
+./Documentation/Game_design
+./Documentation/Game_development
+./Documentation/Modding
+./Images
+./Images/Icons
+./Images/Main menu
+./Media
+./Mods
+./Mods/Backrooms
+./Mods/Core
+./Mods/Dimensionfall
+./Mods/Test
+./Scenes
+./Scenes/ContentManager
+./Scenes/Overmap
+./Scenes/UI
+./Scripts
+./Scripts/Components
+./Scripts/Gamedata
+./Scripts/Helper
+./Scripts/Mob
+./Scripts/Runtimedata
+./Shaders
+./Sounds
+./Sounds/Ambience
+./Sounds/Music
+./Sounds/SFX
+./Tests
+./Tests/Unit
+./Textures
 ```
 
 ## Relevant Files
-- Mods/Dimensionfall/Items/Items.json
+- `Mods/Dimensionfall/Items/Items.json`
+
+### Proposed New Files
+- None
 
 ### Existing Files Modified
-- Mods/Dimensionfall/Items/Items.json - Add definitions for new items.
-
-### Notes
-- Unit tests should typically be placed in `/Tests/Unit/`.
+- `Mods/Dimensionfall/Items/Items.json` - add medical and survival categories and ten new items
 
 ## Tasks
-- [x] 1.0 Audit current item data
-  - [x] 1.1 Review `Items.json` structure and required fields
-  - [x] 1.2 Verify existing categories and item references
-- [x] 2.0 Extend item category list
-  - [x] 2.1 Decide two new categories fitting the game setting
-- [x] 3.0 Design ten new item concepts
-  - [x] 3.1 Draft two items per category with descriptions and properties
-  - [x] 3.2 Use "./Mods/Dimensionfall/Items/9mm.png" as placeholder sprite for each item
-- [x] 4.0 Implement JSON updates
-  - [x] 4.1 Insert new item definitions into `Items.json`
-- [x] 5.0 Validate and document
-  - [x] 5.1 Run unit tests to ensure item loading works
+
+- [x] 2.0 Design two new items for each category (urban, nature, industrial, medical, survival)
+- [x] 2.1 Urban: draft two distinct item concepts with names, descriptions, basic stats (weight, value, durability), and urban-specific properties.
+- [x] 2.2 Nature: draft two items with the above base stats plus nature-specific properties.
+- [x] 2.3 Industrial: draft two items with base stats plus industrial-specific properties.
+- [x] 2.4 Medical: draft two medical items, ensuring relevant properties (e.g., healing amount, dosage).
+- [x] 2.5 Survival: draft two survival items with properties such as durability or environmental resistance.
+- [x] 2.6 Assign the placeholder sprite `9mm.png` to each item.
+*End of document*
