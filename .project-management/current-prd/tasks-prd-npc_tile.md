@@ -55,12 +55,12 @@
 - [x] 2.0 Implement painting logic that places `npc_tile` with rotation and replaces existing `mob`, `mobgroup`, `furniture`, or `itemgroup` features (`Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd`).
   - [x] 2.1 Extend painting function to recognize `npc_tile` selection and capture rotation data.
   - [x] 2.2 Implement feature-replacement logic so `npc_tile` overwrites `mob`, `mobgroup`, `furniture`, or `itemgroup` on the same tile.
-- [ ] 4.0 Handle `npc_tile` entries during map processing, logging their presence and allowing later features to overwrite them (`Scripts/Helper/map_manager.gd`).
-  - [ ] 4.1 Extend map processing loop to detect `npc_tile` entries and log them for debugging.
-- [ ] 5.0 Add tests covering brush placement, serialization/deserialization, and map processing of `npc_tile` entries (`Tests/Unit/`).
+- [x] 4.0 Handle `npc_tile` entries during map processing, logging their presence and allowing later features to overwrite them (`Scripts/Helper/map_manager.gd`).
+  - [x] 4.1 Extend map processing loop to detect `npc_tile` entries and log them for debugging.
+- [x] 5.0 Add tests covering brush placement, serialization/deserialization, and map processing of `npc_tile` entries (`Tests/Unit/`).
   - [x] 5.1 Write unit tests for brush placement and rotation handling in `GridContainer.gd`.
-  - [ ] 5.2 Write serialization/deserialization tests ensuring `npc_tile` data persists accurately.
-  - [ ] 5.3 Add tests for map processing logic confirming correct overwrite behavior and logging.
-  - [ ] 5.4 Run all existing test suites to ensure no regressions.
+  - [x] 5.2 Write serialization/deserialization tests ensuring `npc_tile` data persists accurately.
+  - [x] 5.3 Add tests for map processing logic confirming correct overwrite behavior and logging.
+  - [x] 5.4 Run all existing test suites to ensure no regressions.
 
 *End of document*
