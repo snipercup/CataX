@@ -4,7 +4,7 @@ extends Node
 var initial_state: State
 var current_state: State
 var states: Dictionary = {}
-var mob: CharacterBody3D # The mob that we are enabling the behaviour for
+var mob: CharacterBody3D  # The mob that we are enabling the behaviour for
 
 
 # Initialize the StateMachine
@@ -26,9 +26,9 @@ func _ready():
 		var mob_attack = create_mob_attack()
 		states["mobattack"] = mob_attack
 
-	# Connect transitions
-	for state in states.values():
-		state.Transistioned.connect(on_child_transition)
+		# Connect transitions
+		for state in states.values():
+			state.Transitioned.connect(on_child_transition)
 
 	# Set the initial state if specified
 	if initial_state:
@@ -51,13 +51,13 @@ func _physics_process(delta):
 func on_child_transition(state, new_state_name):
 	if state != current_state:
 		return
-		
+
 	var new_state = states.get(new_state_name.to_lower())
 	if !new_state:
 		return
 	if current_state:
 		current_state.exit()
-		
+
 	new_state.enter()
 	current_state = new_state
 
@@ -92,6 +92,7 @@ func create_mob_terminate() -> MobTerminate:
 	var mob_terminate = MobTerminate.new()
 	add_child.call_deferred(mob_terminate)
 	return mob_terminate
+
 
 # Create and configure MobRangedAttack
 func create_mob_ranged_attack() -> MobRangedAttack:
