@@ -220,6 +220,30 @@
 				"max": 1,
 				"min": 1,
 				"probability": 10
+			},
+			{
+				"id": "industrial_lubricant",
+				"max": 1,
+				"min": 1,
+				"probability": 2
+			},
+			{
+				"id": "tree_sap",
+				"max": 1,
+				"min": 1,
+				"probability": 1
+			},
+			{
+				"id": "crowbar",
+				"max": 1,
+				"min": 1,
+				"probability": 5
+			},
+			{
+				"id": "spray_paint",
+				"max": 1,
+				"min": 1,
+				"probability": 5
 			}
 		],
 		"mode": "Collection",
@@ -482,6 +506,12 @@
 				"max": 1,
 				"min": 1,
 				"probability": 20
+			},
+			{
+				"id": "safety_helmet",
+				"max": 1,
+				"min": 1,
+				"probability": 2
 			}
 		],
 		"mode": "Collection",
@@ -810,6 +840,12 @@
 				"max": 1,
 				"min": 1,
 				"probability": 20
+			},
+			{
+				"id": "river_reed",
+				"max": 1,
+				"min": 1,
+				"probability": 10
 			}
 		],
 		"mode": "Distribution",
@@ -1308,6 +1344,24 @@
 				"max": 2,
 				"min": 1,
 				"probability": 40
+			},
+			{
+				"id": "antiseptic_wipes",
+				"max": 1,
+				"min": 1,
+				"probability": 20
+			},
+			{
+				"id": "adrenaline_shot",
+				"max": 1,
+				"min": 1,
+				"probability": 1
+			},
+			{
+				"id": "thermal_blanket",
+				"max": 1,
+				"min": 1,
+				"probability": 2
 			}
 		],
 		"mode": "Collection",
@@ -1766,6 +1820,18 @@
 				"max": 1,
 				"min": 1,
 				"probability": 1
+			},
+			{
+				"id": "water_filter_straw",
+				"max": 1,
+				"min": 1,
+				"probability": 4
+			},
+			{
+				"id": "crowbar",
+				"max": 1,
+				"min": 1,
+				"probability": 10
 			}
 		],
 		"mode": "Collection",

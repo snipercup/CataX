@@ -9,6 +9,7 @@ This is the only AGENTS.md file, do not look for others.
 - If the user task message consists of just the word CreateTasks then open .project-management/generate-tasks.md for instructions, otherwise ignore this file.
 - If the user task message consists of just the word ClosePrd then open .project-management/close-prd.md for instructions, otherwise ignore this file.
 - If the user task message consists of just the word 'MaintenanceTasks' then open .project-management/maintenance-tasks.md for instructions, otherwise ignore this file.
+- If the user task message consists of just the word 'ContentTasks' then open .project-management/content-tasks.md for instructions, otherwise ignore this file.
 
 ## Relevant Folders
 1. Documentation: Used for users to understand the game and code
