@@ -501,7 +501,7 @@ func _on_null_tile_button_up():
 # Function to be called when the npc tile button is pressed
 func _on_npc_tile_button_up():
 	var npc_tile_properties = {
-		"texture": load("res://Scenes/ContentManager/Mapeditor/Images/nulltile_32.png"),
+		"texture": load("res://Scenes/ContentManager/Mapeditor/Images/npctile_32.png"),
 		"entityID": "npc_tile",
 		"entityType": "npc_tile",
 	}
