@@ -9,6 +9,16 @@
 			"cabinet_general"
 		]
 	},
+	"adrenaline_shot": {
+		"itemgroups": [
+			"first_aid"
+		]
+	},
+	"antiseptic_wipes": {
+		"itemgroups": [
+			"first_aid"
+		]
+	},
 	"apple": {
 		"itemgroups": [
 			"refrigerator",
@@ -263,6 +273,12 @@
 			"quest_holy_crusade_01"
 		]
 	},
+	"crowbar": {
+		"itemgroups": [
+			"loot_gas_station",
+			"cabinet_general"
+		]
+	},
 	"cutting_board": {
 		"furnitures": [
 			"countertop_wood"
@@ -372,6 +388,11 @@
 	"herbs_wild": {
 		"itemgroups": [
 			"generic_forest_finds"
+		]
+	},
+	"industrial_lubricant": {
+		"itemgroups": [
+			"cabinet_general"
 		]
 	},
 	"insulin": {
@@ -610,6 +631,11 @@
 			"starter_tutorial_00"
 		]
 	},
+	"river_reed": {
+		"itemgroups": [
+			"generic_field_finds"
+		]
+	},
 	"rope_coil": {
 		"itemgroups": [
 			"cabinet_general",
@@ -625,6 +651,11 @@
 		"itemgroups": [
 			"debris_urban",
 			"loot_gas_station"
+		]
+	},
+	"safety_helmet": {
+		"itemgroups": [
+			"clothing_general"
 		]
 	},
 	"scarf": {
@@ -693,6 +724,11 @@
 			"quest_radio_signal_01"
 		]
 	},
+	"spray_paint": {
+		"itemgroups": [
+			"cabinet_general"
+		]
+	},
 	"stale_bread": {
 		"itemgroups": [
 			"urban_litter"
@@ -744,6 +780,11 @@
 			"zombie_loot"
 		]
 	},
+	"thermal_blanket": {
+		"itemgroups": [
+			"first_aid"
+		]
+	},
 	"toaster": {
 		"itemgroups": [
 			"electronics_store_medium",
@@ -763,6 +804,11 @@
 	"transmitter": {
 		"quests": [
 			"quest_radio_signal_01"
+		]
+	},
+	"tree_sap": {
+		"itemgroups": [
+			"cabinet_general"
 		]
 	},
 	"tshirt": {
@@ -795,6 +841,11 @@
 	"wallet": {
 		"itemgroups": [
 			"zombie_loot",
+			"loot_gas_station"
+		]
+	},
+	"water_filter_straw": {
+		"itemgroups": [
 			"loot_gas_station"
 		]
 	},
