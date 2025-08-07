@@ -57,8 +57,6 @@
   - [x] 2.2 Implement feature-replacement logic so `npc_tile` overwrites `mob`, `mobgroup`, `furniture`, or `itemgroup` on the same tile.
 - [ ] 4.0 Handle `npc_tile` entries during map processing, logging their presence and allowing later features to overwrite them (`Scripts/Helper/map_manager.gd`).
   - [ ] 4.1 Extend map processing loop to detect `npc_tile` entries and log them for debugging.
-  - [ ] 4.2 Implement overwrite rules so subsequent features can replace `npc_tile` entries if needed.
-  - [ ] 4.3 Verify that processing order respects existing feature priorities.
 - [ ] 5.0 Add tests covering brush placement, serialization/deserialization, and map processing of `npc_tile` entries (`Tests/Unit/`).
   - [x] 5.1 Write unit tests for brush placement and rotation handling in `GridContainer.gd`.
   - [ ] 5.2 Write serialization/deserialization tests ensuring `npc_tile` data persists accurately.
