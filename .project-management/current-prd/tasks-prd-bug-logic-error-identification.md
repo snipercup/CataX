@@ -27,7 +27,13 @@
 
 ### Existing Files Modified
 - `Scripts/Mob/state.gd` - Rename `Transistioned` signal for clarity.
-- `Scripts/Mob/MobRangedAttack.gd` - Replace hard‑coded values with mob data properties.
+- `Scripts/Mob/StateMachine.gd` - Connect to renamed `Transitioned` signal.
+- `Scripts/Mob/MobAttack.gd` - Emit `Transitioned` for state changes.
+- `Scripts/Mob/MobIdle.gd` - Emit `Transitioned` for state changes.
+- `Scripts/Mob/MobRangedAttack.gd` - Emit `Transitioned` for state changes.
+- `Scripts/Mob/MobFollow.gd` - Emit `Transitioned` for state changes.
+- `Tests/Unit/test_mob.gd` - Update test for `Transitioned` signal.
+- `Tests/Unit/test_player.gd` - Update test for `Transitioned` signal.
 
 ### Files To Remove
 - None
@@ -36,9 +42,9 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 1.0 Fix misnamed mob state transition signal
-  - [ ] 1.1 In `Scripts/Mob/state.gd`, rename the `Transistioned` signal to `Transitioned`.
-  - [ ] 1.2 Update all references to the old signal name across the codebase.
-  - [ ] 1.3 Add unit tests (`Tests/Unit/test_state_transitions.gd`) verifying that `Transitioned` fires correctly when state changes occur.
+- [x] 1.0 Fix misnamed mob state transition signal
+  - [x] 1.1 In `Scripts/Mob/state.gd`, rename the `Transistioned` signal to `Transitioned`.
+  - [x] 1.2 Update all references to the old signal name across the codebase.
+  - [x] 1.3 Add unit tests (`Tests/Unit/test_state_transitions.gd`) verifying that `Transitioned` fires correctly when state changes occur.
 
 *End of document*
