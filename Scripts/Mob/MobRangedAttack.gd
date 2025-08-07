@@ -53,7 +53,7 @@ func shoot_projectile():
 
 	var spawn_position = mob.global_transform.origin + Vector3(0.0, -0.0, 0.0)
 	var target_position = spotted_target.global_position
-	var projectile_speed: float = 5 # TODO: implement mob.rmob.projectile_speed
+	var projectile_speed: float = 5 # TODO: Read from RAttack.projectile_speed
 
 	spawn_projectile(spawn_position, target_position, projectile_speed)
 
