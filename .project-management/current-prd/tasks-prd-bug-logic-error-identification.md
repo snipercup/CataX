@@ -40,9 +40,5 @@
   - [ ] 1.1 In `Scripts/Mob/state.gd`, rename the `Transistioned` signal to `Transitioned`.
   - [ ] 1.2 Update all references to the old signal name across the codebase.
   - [ ] 1.3 Add unit tests (`Tests/Unit/test_state_transitions.gd`) verifying that `Transitioned` fires correctly when state changes occur.
-- [ ] 2.0 Expose ranged attack cooldown and projectile speed through mob data
-  - [ ] 2.1 Modify `Scripts/Mob/MobRangedAttack.gd` to pull cooldown and projectile speed from mob data instead of hard‑coding them.
-  - [ ] 2.2 Ensure mob data definitions include fields for ranged cooldown and projectile speed where applicable.
-  - [ ] 2.3 Write unit tests (`Tests/Unit/test_mob_ranged_attack.gd`) confirming that cooldown and projectile speed are applied per mob data.
 
 *End of document*
