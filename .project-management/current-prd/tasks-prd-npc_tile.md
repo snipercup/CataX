@@ -62,5 +62,8 @@
   - [x] 5.2 Write serialization/deserialization tests ensuring `npc_tile` data persists accurately.
   - [x] 5.3 Add tests for map processing logic confirming correct overwrite behavior and logging.
   - [x] 5.4 Run all existing test suites to ensure no regressions.
+- [ ] 6.0 Update `mapeditortile.gd` so that it can visualize the npc tile.
+  - [ ] 6.1 Update the `update_display` function to handle npc_tile feature.
+  - [ ] 6.2 Use the `npcTexture` to display the npc tile feature on the `ObjectSprite`.
 
 *End of document*
