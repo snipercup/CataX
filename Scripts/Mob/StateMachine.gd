@@ -26,9 +26,9 @@ func _ready():
 		var mob_attack = create_mob_attack()
 		states["mobattack"] = mob_attack
 
-		# Connect transitions
-		for state in states.values():
-			state.Transitioned.connect(on_child_transition)
+	# Connect transitions
+	for state in states.values():
+		state.Transitioned.connect(on_child_transition)
 
 	# Set the initial state if specified
 	if initial_state:
