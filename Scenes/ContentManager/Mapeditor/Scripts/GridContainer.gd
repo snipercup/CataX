@@ -306,6 +306,11 @@ func apply_paint_to_tile(tile: Control, brush: Control, tilerotate: int):
 					"itemgroups": brushcomposer.get_itemgroup_entity_ids(),
 					"rotation": tilerotation,
 				}
+			"npc_tile":
+				tileData["feature"] = {
+					"type": "npc_tile",
+					"rotation": tilerotation,
+				}
 			_:
 				set_tile_id(tileData, brush.entityID)
 				set_rotation_amount(tileData, tilerotation)
