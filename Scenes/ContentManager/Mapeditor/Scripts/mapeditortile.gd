@@ -2,6 +2,7 @@ extends Control
 
 const defaultTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/emptyTile.png"
 const aboveTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/tileAbove.png"
+const npcTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/npctile.png"
 const areaTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/areatile.png"
 
 signal tile_clicked(clicked_tile: Control)
