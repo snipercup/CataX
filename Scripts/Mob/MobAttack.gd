@@ -2,10 +2,11 @@ extends State
 class_name MobAttack
 
 var attack_timer: Timer
-var mob: CharacterBody3D # The mob that we execute the attack for
+var mob: CharacterBody3D  # The mob that we execute the attack for
 
-var spotted_target: CharacterBody3D # This mob's current target for combat
+var spotted_target: CharacterBody3D  # This mob's current target for combat
 var is_in_attack_mode = false
+
 
 func _ready():
 	name = "MobAttack"
@@ -32,7 +33,7 @@ func exit():
 
 func physics_update(_delta: float):
 	if mob.terminated:
-		Transistioned.emit(self, "mobterminate") 
+		Transistioned.emit(self, "mobterminate")
 	# Rotation towards target using look_at
 	if spotted_target:
 		var target_position = spotted_target.global_position
@@ -40,16 +41,22 @@ func physics_update(_delta: float):
 		mob.meshInstance.look_at(target_position, Vector3.UP)
 
 	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(mob.global_position, spotted_target.global_position, 3, [self])
+	var query = PhysicsRayQueryParameters3D.create(
+		mob.global_position, spotted_target.global_position, 3, [self]
+	)
 	var result = space_state.intersect_ray(query)
 
 	if result and result.collider:
-
-		if (result.collider.is_in_group("Players") or result.collider.is_in_group("mobs")) and Vector3(mob.global_position).distance_to(spotted_target.global_position) <= mob.get_melee_range():
-
+		if (
+			(result.collider.is_in_group("Players") or result.collider.is_in_group("mobs"))
+			and (
+				Vector3(mob.global_position).distance_to(spotted_target.global_position)
+				<= mob.get_melee_range()
+			)
+		):
 			if !is_in_attack_mode:
 				is_in_attack_mode = true
-				try_to_attack()         
+				try_to_attack()
 		else:
 			is_in_attack_mode = false
 			stop_attacking()
@@ -76,8 +83,9 @@ func attack():
 	# Exmple: {"id": "basic_melee", "damage_multiplier": 1, "type": "melee"}
 	var chosen_attack: Dictionary = mob.get_attack_of_type("melee")
 	if not chosen_attack:
-		chosen_attack =  {}
+		chosen_attack = {}
 	_apply_attack_to_entity(chosen_attack)
+
 
 # Helper function to send attack data to the entity's get_hit method
 func _apply_attack_to_entity(chosen_attack: Dictionary) -> void:
@@ -85,7 +93,7 @@ func _apply_attack_to_entity(chosen_attack: Dictionary) -> void:
 		var attack_data: Dictionary = {
 			"attack": chosen_attack,
 			"mobposition": mob.global_position,
-			"hit_chance": 100, # Only used when attacking another mob, not the player
+			"hit_chance": 100,  # Only used when attacking another mob, not the player
 			"source": mob
 		}
 		spotted_target.get_hit(attack_data)
@@ -98,7 +106,12 @@ func stop_attacking():
 
 
 func _on_detection_target_spotted(entity):
-	spotted_target = entity # Replace with function body.
+	spotted_target = entity  # Replace with function body.
+
+
+func _on_detection_target_lost(_entity):
+	stop_attacking()
+	spotted_target = null
 
 
 func _on_attack_cooldown_timeout():

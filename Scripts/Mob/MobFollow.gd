@@ -1,19 +1,17 @@
 extends State
 class_name MobFollow
 
-
-
-var nav_agent: NavigationAgent3D # Used for pathfinding
-var mob: CharacterBody3D # The mob that we are enabling the follow behaviour for
-var mobCol: CollisionShape3D # The collision shape of the mob
+var nav_agent: NavigationAgent3D  # Used for pathfinding
+var mob: CharacterBody3D  # The mob that we are enabling the follow behaviour for
+var mobCol: CollisionShape3D  # The collision shape of the mob
 var pathfinding_timer: Timer
-var spotted_target: CharacterBody3D # This mob's current target for combat
+var spotted_target: CharacterBody3D  # This mob's current target for combat
 # Variables for dash state and timer
-var dash_timer: Timer = Timer.new()           # Timer for cooldown after a dash
-var is_dashing: bool = false                  # Flag to check if currently dashing
-
+var dash_timer: Timer = Timer.new()  # Timer for cooldown after a dash
+var is_dashing: bool = false  # Flag to check if currently dashing
 
 @onready var target_location = mob.position
+
 
 # Initializes the MobFollow state by setting up references to mob components
 # (collision shape, navigation agent) and configuring the pathfinding timer.
@@ -28,7 +26,7 @@ func _ready():
 	pathfinding_timer = follow_timer
 	add_child.call_deferred(follow_timer)
 	pathfinding_timer.timeout.connect(_on_timer_timeout)
-	
+
 	# Set up the dash cooldown timer
 	dash_timer.one_shot = true
 	add_child.call_deferred(dash_timer)
@@ -38,7 +36,7 @@ func _ready():
 	Helper.signal_broker.mob_killed.connect(_on_mob_killed)
 
 
-# Called when the mob enters the follow state. Starts the pathfinding timer 
+# Called when the mob enters the follow state. Starts the pathfinding timer
 # and initiates path creation towards the target location.
 func enter():
 	print("Following the target")
@@ -59,7 +57,7 @@ func physics_update(_delta: float):
 	if mob.terminated:
 		Transistioned.emit(self, "mobterminate")
 		return
-	
+
 	move_toward_target()
 	orient_toward_target()
 	check_for_target_in_range()
@@ -73,11 +71,15 @@ func move_toward_target():
 		var current_chunk = mob.get_chunk_from_position(target_location)
 		mob.update_navigation_agent_map(current_chunk)
 		return
-	
+
 	var dir = mob.to_local(next_pos).normalized()
-	
+
 	# Apply dash speed if dash is active
-	var move_speed = mob.current_move_speed * mob.dash["speed_multiplier"] if is_dashing else mob.current_move_speed
+	var move_speed = (
+		mob.current_move_speed * mob.dash["speed_multiplier"]
+		if is_dashing
+		else mob.current_move_speed
+	)
 	mob.velocity = dir * move_speed
 	mob.move_and_slide()
 
@@ -94,13 +96,13 @@ func orient_toward_target():
 func check_for_target_in_range():
 	if not spotted_target:
 		return
-	
+
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(
 		mobCol.global_position,
 		spotted_target.global_position,
-		(1 << 0) | (1 << 1) | (1 << 2), # Layer mask for layers 1 (player), 2 (mobs), and 3 (walls)
-		[self] # Exclude self
+		(1 << 0) | (1 << 1) | (1 << 2),  # Layer mask for layers 1 (player), 2 (mobs), and 3 (walls)
+		[self]  # Exclude self
 	)
 	var result = space_state.intersect_ray(query)
 
@@ -111,7 +113,9 @@ func check_for_target_in_range():
 			return
 
 		# If the ray hits a valid target before hitting a wall, continue checking attack range
-		var is_valid_target = result.collider.is_in_group("Players") or result.collider.is_in_group("mobs")
+		var is_valid_target = (
+			result.collider.is_in_group("Players") or result.collider.is_in_group("mobs")
+		)
 		var distance_to_target = mobCol.global_position.distance_to(spotted_target.global_position)
 
 		if is_valid_target:
@@ -145,6 +149,11 @@ func _on_timer_timeout():
 func _on_detection_target_spotted(entity):
 	target_location = entity.position
 	spotted_target = entity
+
+
+func _on_detection_target_lost(_entity):
+	spotted_target = null
+	Transistioned.emit(self, "mobidle")
 
 
 # Activates the dash move if the dash condition is met and starts the cooldown timer
