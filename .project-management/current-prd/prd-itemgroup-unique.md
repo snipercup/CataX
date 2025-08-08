@@ -7,7 +7,6 @@
 
 ## 3. User Stories
 - **As a modder**, I want the editor to ignore duplicate item drops so that itemgroups remain consistent.
-- **As a modder**, I want confidence that saving and loading itemgroups works reliably without duplicate IDs.
 
 ## 4. Functional Requirements
 1. When a modder drops an item onto an itemgroup editor, the system must check if the item ID already exists in the group.
@@ -27,7 +26,6 @@
 
 ## 8. Success Metrics
 - Modders can drop items into the itemgroup editor without creating duplicates.
-- Itemgroup files save and load without issues related to duplicate IDs.
 
 ## 9. Open Questions
 - None.
