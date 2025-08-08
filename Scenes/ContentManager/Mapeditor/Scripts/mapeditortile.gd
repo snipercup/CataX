@@ -2,6 +2,7 @@ extends Control
 
 const defaultTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/emptyTile.png"
 const aboveTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/tileAbove.png"
+const npcTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/npctile.png"
 const areaTexture: String = "res://Scenes/ContentManager/Mapeditor/Images/areatile.png"
 
 signal tile_clicked(clicked_tile: Control)
@@ -162,6 +163,10 @@ func update_display(tileData: Dictionary = {}, selected_area_name: String = "Non
 						. get_content_by_id(DMod.ContentType.FURNITURES, feature.get("id", ""))
 						. sprite
 					)
+					$ObjectSprite.show()
+				"npc_tile":
+					$ObjectSprite.rotation_degrees = feature_rot
+					$ObjectSprite.texture = load(npcTexture)
 					$ObjectSprite.show()
 				"itemgroup":
 					set_tile_itemgroups(tileData)

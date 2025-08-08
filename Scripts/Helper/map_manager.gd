@@ -10,6 +10,9 @@ extends Node
 # The level generator will register itself to this variable when it's ready
 var level_generator: Node = null
 
+# Stores `npc_tile` entries encountered during map processing for debugging
+var npc_tile_log: Array = []
+
 
 func get_chunk_from_position(position_in_3d_space: Vector3) -> Chunk:
 	return level_generator.get_chunk_from_position(position_in_3d_space)
@@ -417,6 +420,9 @@ func apply_area_clusters_to_tiles(
 		# Example tile: {"id":"road_asphalt_basic","areas":[{"id":"cars","rotation":270}]}
 		# Example picked_tile: {"id": "forest_underbrush_04", "count": 100}
 		for tile: Dictionary in cluster:
+			# Log `npc_tile` entries for debugging purposes
+			if tile.has("feature") and tile["feature"].get("type", "") == "npc_tile":
+				npc_tile_log.append(tile["feature"].duplicate())
 			var processed_data = process_area_data(area_data, tile, picked_tile)
 
 			# Remove existing entities if new entities are present in processed data
