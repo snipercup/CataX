@@ -1855,5 +1855,145 @@
 			"transparent": true,
 			"width_scale": 90
 		}
+	},
+	{
+		"categories": [
+			"Urban"
+		],
+		"description": "A weathered window frame salvaged from a crumbling building.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "North",
+		"id": "framed_window",
+		"moveable": false,
+		"name": "Framed Window",
+		"sprite": "windw_framed_100_95.png"
+	},
+	{
+		"categories": [
+			"Urban"
+		],
+		"description": "A heap of broken boards and rubble.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "debris_pile",
+		"moveable": true,
+		"name": "Debris Pile",
+		"sprite": "wreck_wood_generic_32.png"
+	},
+	{
+		"categories": [
+			"Nature"
+		],
+		"description": "A small pot of wildflowers bringing a touch of color to the wilderness.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "wildflower_pot",
+		"moveable": true,
+		"name": "Wildflower Pot",
+		"sprite": "pot_plant_32_32.png"
+	},
+	{
+		"categories": [
+			"Nature"
+		],
+		"description": "An old tree stump covered in thick moss.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "mossy_stump",
+		"moveable": false,
+		"name": "Mossy Stump",
+		"sprite": "burned_tree_stump_64.png"
+	},
+	{
+		"categories": [
+			"Industrial"
+		],
+		"description": "A portable generator providing limited electrical power.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "power_generator",
+		"moveable": false,
+		"name": "Power Generator",
+		"sprite": "battery_bank_80_45.png"
+	},
+	{
+		"categories": [
+			"Industrial"
+		],
+		"description": "A control console with buttons and gauges for machinery operations.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "control_console",
+		"moveable": false,
+		"name": "Control Console",
+		"sprite": "control_panel_80_30.png"
+	},
+	{
+		"categories": [
+			"Office"
+		],
+		"description": "A metal cabinet for organizing files and documents.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "North",
+		"id": "filing_cabinet",
+		"moveable": false,
+		"name": "Filing Cabinet",
+		"sprite": "cabinet_wood_100_50.png"
+	},
+	{
+		"categories": [
+			"Office"
+		],
+		"description": "A rolling whiteboard used for notes and planning.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "office_whiteboard",
+		"moveable": true,
+		"name": "Office Whiteboard",
+		"sprite": "bullitin_board_80_15.png"
+	},
+	{
+		"categories": [
+			"Recreation"
+		],
+		"description": "An old arcade cabinet still loaded with classic games.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "arcade_machine",
+		"moveable": false,
+		"name": "Arcade Machine",
+		"sprite": "vending_machine_50.png"
+	},
+	{
+		"categories": [
+			"Recreation"
+		],
+		"description": "A folding table set up for ping pong matches.",
+		"destruction": {
+			"group": "destroyed_furniture_medium"
+		},
+		"edgesnapping": "None",
+		"id": "ping_pong_table",
+		"moveable": false,
+		"name": "Ping Pong Table",
+		"sprite": "table_picknic_100_50.png"
 	}
 ]
