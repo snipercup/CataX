@@ -6,6 +6,12 @@ var current_state: State
 var states: Dictionary = {}
 var mob: CharacterBody3D  # The mob that we are enabling the behaviour for
 
+# Transition map:
+# mobidle -> mobfollow -> mobattack/mobrangedattack -> mobfollow/mobidle
+# any state -> mobterminate
+# Failure points include missing target references or requests for states not
+# present in the `states` dictionary.
+
 
 # Initialize the StateMachine
 func _ready():
@@ -51,15 +57,28 @@ func _physics_process(delta):
 func on_child_transition(state, new_state_name):
 	if state != current_state:
 		return
+	var target_state_name = new_state_name.to_lower()
 
-	var new_state = states.get(new_state_name.to_lower())
+	if _needs_target(target_state_name) and !_has_valid_target(state):
+		target_state_name = "mobidle"
+	var new_state: State = states.get(target_state_name)
 	if !new_state:
-		return
+		new_state = states.get("mobidle")
+		if !new_state:
+			return
 	if current_state:
 		current_state.exit()
-
 	new_state.enter()
 	current_state = new_state
+
+
+func _needs_target(state_name: String) -> bool:
+	return state_name in ["mobfollow", "mobattack", "mobrangedattack"]
+
+
+func _has_valid_target(state: State) -> bool:
+	var target = state.get("spotted_target")
+	return target and is_instance_valid(target)
 
 
 # Create and configure MobIdle
