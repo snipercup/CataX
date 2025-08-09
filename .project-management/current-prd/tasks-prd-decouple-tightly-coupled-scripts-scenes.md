@@ -66,12 +66,12 @@
 - Unit tests should typically be placed in `/Tests/Unit/`.
 
 ## Tasks
-- [ ] 4.0 Update `LevelManager` to receive player references via signal
-  - [ ] 4.1 Define a `player_spawned` signal in the relevant player or spawner script.
-  - [ ] 4.2 Modify `LevelManager.gd` to connect to `player_spawned` instead of polling groups.
-  - [ ] 4.3 Store the player reference provided via signal and update internal logic accordingly.
-  - [ ] 4.4 Clean up any residual group-check logic or unused variables.
-- [ ] 5.0 test
-  - [ ] 5.4 Ensure tests run and pass after refactoring.
+- [x] 4.0 Update `LevelManager` to receive player references via signal
+  - [x] 4.1 Define a `player_spawned` signal in the relevant player or spawner script.
+  - [x] 4.2 Modify `LevelManager.gd` to connect to `player_spawned` instead of polling groups.
+  - [x] 4.3 Store the player reference provided via signal and update internal logic accordingly.
+  - [x] 4.4 Clean up any residual group-check logic or unused variables.
+- [c] 5.0 test
+  - [c] 5.4 Ensure tests run and pass after refactoring.
 
 *End of document*
