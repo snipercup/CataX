@@ -234,7 +234,8 @@ func _physics_process(delta: float) -> void:
 				current_stamina += delta * stamina_regen_while_standing_still
 			else:
 				if movement_timer.time_left <= 0:
-					play_tile_footstep_sound()
+					if not testing and Helper.test_map_name == "":
+						play_tile_footstep_sound() # Only play in regular game, not testing
 					if not is_running or current_stamina == 0:
 						movement_timer.start(0.5)
 					else:
