@@ -1858,34 +1858,6 @@
 	},
 	{
 		"categories": [
-			"Urban"
-		],
-		"description": "A weathered window frame salvaged from a crumbling building.",
-		"destruction": {
-			"group": "destroyed_furniture_medium"
-		},
-		"edgesnapping": "North",
-		"id": "framed_window",
-		"moveable": false,
-		"name": "Framed Window",
-		"sprite": "windw_framed_100_95.png"
-	},
-	{
-		"categories": [
-			"Urban"
-		],
-		"description": "A heap of broken boards and rubble.",
-		"destruction": {
-			"group": "destroyed_furniture_medium"
-		},
-		"edgesnapping": "None",
-		"id": "debris_pile",
-		"moveable": true,
-		"name": "Debris Pile",
-		"sprite": "wreck_wood_generic_32.png"
-	},
-	{
-		"categories": [
 			"Nature"
 		],
 		"description": "A small pot of wildflowers bringing a touch of color to the wilderness.",
