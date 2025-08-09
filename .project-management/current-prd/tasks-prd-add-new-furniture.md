@@ -60,13 +60,13 @@ Textures
 
 ## Tasks
 
-- [ ] 1.0 Establish two new furniture categories
-- [ ] 1.1 Brainstorm and select two complementary category names that fit alongside Urban, Nature, and Industrial.
-- [ ] 2.0 Draft ten new furniture definitions
-- [ ] 2.1 For each of the five categories (Urban, Nature, Industrial, and the two new ones), outline two distinct furniture items.
-- [ ] 2.2 Assign a unique `id` to every furniture definition.
-- [ ] 2.3 Provide each furniture definition with a descriptive `name`.
-- [ ] 2.4 Specify the `moveable` field (true/false) for each definition.
-- [ ] 2.5 Confirm the definitions adhere to the expected data format and integrate properly with the existing furniture catalog.
+- [x] 1.0 Establish two new furniture categories
+- [x] 1.1 Brainstorm and select two complementary category names that fit alongside Urban, Nature, and Industrial.
+- [x] 2.0 Draft ten new furniture definitions
+- [x] 2.1 For each of the five categories (Urban, Nature, Industrial, and the two new ones), outline two distinct furniture items.
+- [x] 2.2 Assign a unique `id` to every furniture definition.
+- [x] 2.3 Provide each furniture definition with a descriptive `name`.
+- [x] 2.4 Specify the `moveable` field (true/false) for each definition.
+- [x] 2.5 Confirm the definitions adhere to the expected data format and integrate properly with the existing furniture catalog.
 
 *End of document*
