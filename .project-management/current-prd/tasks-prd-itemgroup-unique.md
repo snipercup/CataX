@@ -58,7 +58,6 @@
 - [ ] 1.0 Ensure item drops are unique in the itemgroup editor
   - [ ] 1.1 Locate the itemgroup editor code to understand how item drops are stored and manipulated
   - [ ] 1.2 Update the drop-adding mechanism to check for existing entries and avoid inserting duplicates
-  - [ ] 1.4 Display a brief inline message in the editor UI when a duplicate drop is attempted, highlighting its removal
 - [ ] 2.0 Create unit tests verifying duplicate item drops are ignored
   - [ ] 2.1 Write tests that attempt to insert duplicates into an itemgroup and confirm only one instance remains
 
