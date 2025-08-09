@@ -47,8 +47,7 @@
 - `Tests/Unit/test_itemgroup_editor.gd` - Unit tests verifying duplicate item drops are ignored.
 
 ### Existing Files Modified
-- `Scenes/ContentManager/Custom_Editors/Scripts/ItemgroupEditor.gd` - Enforces unique item drops and displays inline feedback.
-
+- `Scenes/ContentManager/Custom_Editors/Scripts/ItemgroupEditor.gd` - Enforces unique item drops.
 ### Notes
 
 - Unit tests should typically be placed in /Tests/Unit/.
