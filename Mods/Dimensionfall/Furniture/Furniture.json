@@ -14,7 +14,7 @@
 		"moveable": true,
 		"name": "Round wooden table",
 		"sprite": "table_64.png",
-		"weight": 10
+		"weight": 10.0
 	},
 	{
 		"categories": [
@@ -31,7 +31,7 @@
 		"moveable": true,
 		"name": "Wooden chair",
 		"sprite": "chair_32.png",
-		"weight": 2
+		"weight": 2.0
 	},
 	{
 		"Function": {
@@ -45,8 +45,8 @@
 		],
 		"construction": {
 			"items": {
-				"plank_2x4": 4,
-				"steel_scrap": 6
+				"plank_2x4": 4.0,
+				"steel_scrap": 6.0
 			}
 		},
 		"crafting": {
@@ -70,17 +70,17 @@
 		"sprite": "countertop_100_52.png",
 		"support_shape": {
 			"color": "8d401bff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
 		"Function": {
 			"container_group": "tree_forage",
-			"container_regeneration_time": 10,
+			"container_regeneration_time": 10.0,
 			"container_sprite_mode": "Random",
 			"is_container": true
 		},
@@ -100,7 +100,7 @@
 		"support_shape": {
 			"color": "653102ff",
 			"height": 0.5,
-			"radius_scale": 100,
+			"radius_scale": 100.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -108,7 +108,7 @@
 	{
 		"Function": {
 			"container_group": "tree_forage",
-			"container_regeneration_time": 10,
+			"container_regeneration_time": 10.0,
 			"container_sprite_mode": "Random",
 			"is_container": true
 		},
@@ -128,7 +128,7 @@
 		"support_shape": {
 			"color": "9b522fff",
 			"height": 0.5,
-			"radius_scale": 50,
+			"radius_scale": 50.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -136,7 +136,7 @@
 	{
 		"Function": {
 			"container_group": "tree_forage",
-			"container_regeneration_time": 10,
+			"container_regeneration_time": 10.0,
 			"container_sprite_mode": "Random",
 			"is_container": true
 		},
@@ -156,7 +156,7 @@
 		"support_shape": {
 			"color": "9e5137ff",
 			"height": 0.5,
-			"radius_scale": 50,
+			"radius_scale": 50.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -178,11 +178,11 @@
 		"sprite": "bench_wood_100_50.png",
 		"support_shape": {
 			"color": "8d4924ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -200,7 +200,7 @@
 		"moveable": true,
 		"name": "Potted plant",
 		"sprite": "pot_plant_32_32.png",
-		"weight": 1
+		"weight": 1.0
 	},
 	{
 		"categories": [
@@ -220,11 +220,11 @@
 		"sprite": "bed_wood_100_50.png",
 		"support_shape": {
 			"color": "8d4925ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.2,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -248,11 +248,11 @@
 		"sprite": "cabinet_wood_100_50.png",
 		"support_shape": {
 			"color": "864100ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -272,11 +272,11 @@
 		"sprite": "bookcase_wood_100_50.png",
 		"support_shape": {
 			"color": "96522eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -301,11 +301,11 @@
 		"sprite": "refrigerator_50_48.png",
 		"support_shape": {
 			"color": "bfbfbfff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.6,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -326,7 +326,7 @@
 		"support_shape": {
 			"color": "bdbebdff",
 			"height": 0.2,
-			"radius_scale": 40,
+			"radius_scale": 40.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -351,11 +351,11 @@
 		"sprite": "door_100_13.png",
 		"support_shape": {
 			"color": "c7632eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.9,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -375,11 +375,11 @@
 		"sprite": "bench_garden_90_40.png",
 		"support_shape": {
 			"color": "96522eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -403,11 +403,11 @@
 		"sprite": "wardrobe_80_40.png",
 		"support_shape": {
 			"color": "b75a2eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -427,11 +427,11 @@
 		"sprite": "table_picknic_100_50.png",
 		"support_shape": {
 			"color": "8d492eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.4,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -449,7 +449,7 @@
 		"moveable": true,
 		"name": "Office chair",
 		"sprite": "chair_office_50.png",
-		"weight": 1
+		"weight": 1.0
 	},
 	{
 		"categories": [
@@ -468,11 +468,11 @@
 		"sprite": "table_metal_100_50.png",
 		"support_shape": {
 			"color": "a7a7a7ff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.3,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -490,7 +490,7 @@
 		"moveable": true,
 		"name": "Standing lamp",
 		"sprite": "lamp_50.png",
-		"weight": 1
+		"weight": 1.0
 	},
 	{
 		"categories": [
@@ -509,11 +509,11 @@
 		"sprite": "desk_100_50.png",
 		"support_shape": {
 			"color": "af5225ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -533,11 +533,11 @@
 		"sprite": "bathtub_100_50.png",
 		"support_shape": {
 			"color": "a7a7a7ff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -557,11 +557,11 @@
 		"sprite": "stove_50_48.png",
 		"support_shape": {
 			"color": "aeaeaeff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -582,7 +582,7 @@
 		"support_shape": {
 			"color": "8e8e8eff",
 			"height": 0.2,
-			"radius_scale": 20,
+			"radius_scale": 20.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -604,11 +604,11 @@
 		"sprite": "sofa_100_50.png",
 		"support_shape": {
 			"color": "2d369dff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.2,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -627,11 +627,11 @@
 		"sprite": "cash_register_50.png",
 		"support_shape": {
 			"color": "9e9e9eff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.3,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -651,7 +651,7 @@
 		"moveable": true,
 		"name": "Shopping Cart",
 		"sprite": "shopping_cart_90_50.png",
-		"weight": 2
+		"weight": 2.0
 	},
 	{
 		"Function": {
@@ -673,11 +673,11 @@
 		"sprite": "display_case_100_50.png",
 		"support_shape": {
 			"color": "9f9f9fff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -700,11 +700,11 @@
 		"sprite": "vending_machine_50.png",
 		"support_shape": {
 			"color": "bf2e2eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.6,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -725,7 +725,7 @@
 		"moveable": true,
 		"name": "Clothing Rack",
 		"sprite": "clothing_rack_90_50.png",
-		"weight": 5
+		"weight": 5.0
 	},
 	{
 		"Function": {
@@ -746,11 +746,11 @@
 		"sprite": "store_shelf_90_50.png",
 		"support_shape": {
 			"color": "a7855bff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -772,11 +772,11 @@
 		"sprite": "security_gate_100_13.png",
 		"support_shape": {
 			"color": "8b8b8bff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.7,
 			"shape": "Box",
 			"transparent": true,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -796,7 +796,7 @@
 		"moveable": true,
 		"name": "Trash Bin",
 		"sprite": "trash_bin_32.png",
-		"weight": 1
+		"weight": 1.0
 	},
 	{
 		"Function": {
@@ -818,11 +818,11 @@
 		"sprite": "wall_shelf_100_40.png",
 		"support_shape": {
 			"color": "965a25ff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -841,11 +841,11 @@
 		"sprite": "glass_window.png",
 		"support_shape": {
 			"color": "869bcdff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.98,
 			"shape": "Box",
 			"transparent": true,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
@@ -868,11 +868,11 @@
 		"sprite": "damaged_shelves_90_45.png",
 		"support_shape": {
 			"color": "d76c2eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -892,11 +892,11 @@
 		"sprite": "fence_destroyed_90_10.png",
 		"support_shape": {
 			"color": "c75a1cff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": true,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -917,11 +917,11 @@
 		"sprite": "railroad_midsection.png",
 		"support_shape": {
 			"color": "a65a2eff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
@@ -942,11 +942,11 @@
 		"sprite": "railroad_railsection.png",
 		"support_shape": {
 			"color": "a65a2eff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
@@ -969,11 +969,11 @@
 		"sprite": "equipmentrack_100_46.png",
 		"support_shape": {
 			"color": "386c2fff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.7,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -996,11 +996,11 @@
 		"sprite": "first_aid_rack_72_46.png",
 		"support_shape": {
 			"color": "b3b3b3ff",
-			"depth_scale": 50,
+			"depth_scale": 50.0,
 			"height": 0.6,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 60
+			"width_scale": 60.0
 		}
 	},
 	{
@@ -1019,11 +1019,11 @@
 		"sprite": "transformer_box_72_46.png",
 		"support_shape": {
 			"color": "8a8a8aff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.9,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
@@ -1042,11 +1042,11 @@
 		"sprite": "ups_20_45.png",
 		"support_shape": {
 			"color": "212121ff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.7,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 50
+			"width_scale": 50.0
 		}
 	},
 	{
@@ -1075,7 +1075,7 @@
 		"support_shape": {
 			"color": "a7491cff",
 			"height": 0.2,
-			"radius_scale": 80,
+			"radius_scale": 80.0,
 			"shape": "Cylinder",
 			"transparent": true
 		}
@@ -1093,20 +1093,20 @@
 			"button_text": "Put out",
 			"drain_rate": 30,
 			"items": {
-				"branch": 50,
-				"cutting_board": 100,
-				"kindling_bundle": 25,
-				"leaf": 2,
-				"log": 100,
-				"long_stick": 100,
-				"pine_branch": 60,
-				"plank_2x4": 100,
-				"plant_remnants": 5,
-				"rolling_pin": 100,
-				"small_stick": 10,
-				"stick": 50,
-				"stone_spear": 100,
-				"wood_bundle": 75
+				"branch": 50.0,
+				"cutting_board": 100.0,
+				"kindling_bundle": 25.0,
+				"leaf": 2.0,
+				"log": 100.0,
+				"long_stick": 100.0,
+				"pine_branch": 60.0,
+				"plank_2x4": 100.0,
+				"plant_remnants": 5.0,
+				"rolling_pin": 100.0,
+				"small_stick": 10.0,
+				"stick": 50.0,
+				"stone_spear": 100.0,
+				"wood_bundle": 75.0
 			},
 			"pool": 1000,
 			"transform_into": "campfire_off"
@@ -1123,7 +1123,7 @@
 		"support_shape": {
 			"color": "ff4500ff",
 			"height": 0.2,
-			"radius_scale": 80,
+			"radius_scale": 80.0,
 			"shape": "Cylinder",
 			"transparent": true
 		}
@@ -1145,7 +1145,7 @@
 		"support_shape": {
 			"color": "2d2d2dff",
 			"height": 0.5,
-			"radius_scale": 50,
+			"radius_scale": 50.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -1167,7 +1167,7 @@
 		"support_shape": {
 			"color": "3e3e3eff",
 			"height": 0.2,
-			"radius_scale": 40,
+			"radius_scale": 40.0,
 			"shape": "Cylinder",
 			"transparent": false
 		}
@@ -1194,11 +1194,11 @@
 		"sprite": "car_01_300_200.png",
 		"support_shape": {
 			"color": "bc7c5aff",
-			"depth_scale": 75,
+			"depth_scale": 75.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1223,11 +1223,11 @@
 		"sprite": "car_00_300_200.png",
 		"support_shape": {
 			"color": "bc7c5aff",
-			"depth_scale": 75,
+			"depth_scale": 75.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1252,11 +1252,11 @@
 		"sprite": "truck_00_600_250.png",
 		"support_shape": {
 			"color": "bc7c5aff",
-			"depth_scale": 85,
+			"depth_scale": 85.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1281,11 +1281,11 @@
 		"sprite": "tanker_250_400.png",
 		"support_shape": {
 			"color": "2e52b7ff",
-			"depth_scale": 75,
+			"depth_scale": 75.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1309,11 +1309,11 @@
 		"sprite": "conveyor_straight_100.png",
 		"support_shape": {
 			"color": "d76c2eff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.4,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1337,11 +1337,11 @@
 		"sprite": "conveyor_corner_100.png",
 		"support_shape": {
 			"color": "d76c2eff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.4,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1364,11 +1364,11 @@
 		"sprite": "wooden_crate_64.png",
 		"support_shape": {
 			"color": "b75a2eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1391,11 +1391,11 @@
 		"sprite": "wooden_crate_48_64.png",
 		"support_shape": {
 			"color": "b75a2eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1415,11 +1415,11 @@
 		"sprite": "machine_conveyor_mid_100.png",
 		"support_shape": {
 			"color": "d76c2eff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.4,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -1439,11 +1439,11 @@
 		"sprite": "machine_conveyor_end_100.png",
 		"support_shape": {
 			"color": "d76c2eff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.4,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -1463,11 +1463,11 @@
 		"sprite": "machine_light_standalone_64.png",
 		"support_shape": {
 			"color": "736861ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.4,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1487,11 +1487,11 @@
 		"sprite": "tool_bench_100_45.png",
 		"support_shape": {
 			"color": "d0642eff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.3,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1512,11 +1512,11 @@
 		"sprite": "military_cot_100_45.png",
 		"support_shape": {
 			"color": "a6a6a6ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.2,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1536,11 +1536,11 @@
 		"sprite": "couch_damaged_100_50.png",
 		"support_shape": {
 			"color": "a66c52ff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.2,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1559,11 +1559,11 @@
 		"sprite": "control_panel_80_30.png",
 		"support_shape": {
 			"color": "dfc998ff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.9,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
@@ -1582,11 +1582,11 @@
 		"sprite": "battery_bank_80_45.png",
 		"support_shape": {
 			"color": "8a8a8aff",
-			"depth_scale": 100,
+			"depth_scale": 100.0,
 			"height": 0.9,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 100
+			"width_scale": 100.0
 		}
 	},
 	{
@@ -1610,11 +1610,11 @@
 		"sprite": "chemical_rack_100_45.png",
 		"support_shape": {
 			"color": "dfcf9eff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1633,11 +1633,11 @@
 		"sprite": "bullitin_board_80_15.png",
 		"support_shape": {
 			"color": "c75a1cff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": true,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1655,7 +1655,7 @@
 		"moveable": true,
 		"name": "Radioactive Barrel",
 		"sprite": "radioactive_barrel_red_32.png",
-		"weight": 10
+		"weight": 10.0
 	},
 	{
 		"categories": [
@@ -1672,7 +1672,7 @@
 		"moveable": true,
 		"name": "Radioactive Barrel",
 		"sprite": "radioactive_barrel_black_32.png",
-		"weight": 10
+		"weight": 10.0
 	},
 	{
 		"categories": [
@@ -1689,7 +1689,7 @@
 		"moveable": true,
 		"name": "Radioactive Barrel",
 		"sprite": "radioactive_barrel_yellow_32.png",
-		"weight": 10
+		"weight": 10.0
 	},
 	{
 		"Function": {
@@ -1714,11 +1714,11 @@
 		"sprite": "military_car_300_200.png",
 		"support_shape": {
 			"color": "38752fff",
-			"depth_scale": 75,
+			"depth_scale": 75.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1738,11 +1738,11 @@
 		"sprite": "sandbags_barricade_100_20.png",
 		"support_shape": {
 			"color": "dfc796ff",
-			"depth_scale": 95,
+			"depth_scale": 95.0,
 			"height": 0.5,
 			"shape": "Box",
 			"transparent": true,
-			"width_scale": 95
+			"width_scale": 95.0
 		}
 	},
 	{
@@ -1760,11 +1760,11 @@
 		"sprite": "gas_pump_70_40.png",
 		"support_shape": {
 			"color": "a6a6a6ff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.2,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -1783,11 +1783,11 @@
 		"sprite": "makeshift_barricade_100_20.png",
 		"support_shape": {
 			"color": "b8541cff",
-			"depth_scale": 80,
+			"depth_scale": 80.0,
 			"height": 0.2,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 80
+			"width_scale": 80.0
 		}
 	},
 	{
@@ -1803,11 +1803,11 @@
 		"sprite": "refridgerator_rusted_50_48.png",
 		"support_shape": {
 			"color": "e0c7b7ff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.8,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -1826,11 +1826,11 @@
 		"sprite": "survivor_cot_100_48.png",
 		"support_shape": {
 			"color": "c6b6aeff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.15,
 			"shape": "Box",
 			"transparent": false,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -1849,11 +1849,11 @@
 		"sprite": "chain_link_fence_100_10.png",
 		"support_shape": {
 			"color": "363636ff",
-			"depth_scale": 90,
+			"depth_scale": 90.0,
 			"height": 0.8,
 			"shape": "Box",
 			"transparent": true,
-			"width_scale": 90
+			"width_scale": 90.0
 		}
 	},
 	{
@@ -1868,7 +1868,8 @@
 		"id": "wildflower_pot",
 		"moveable": true,
 		"name": "Wildflower Pot",
-		"sprite": "pot_plant_32_32.png"
+		"sprite": "pot_plant_32_32.png",
+		"weight": 1.0
 	},
 	{
 		"categories": [
@@ -1882,7 +1883,15 @@
 		"id": "mossy_stump",
 		"moveable": false,
 		"name": "Mossy Stump",
-		"sprite": "burned_tree_stump_64.png"
+		"sprite": "burned_tree_stump_64.png",
+		"support_shape": {
+			"color": "ffffffff",
+			"depth_scale": 100.0,
+			"height": 0.5,
+			"shape": "Box",
+			"transparent": false,
+			"width_scale": 100.0
+		}
 	},
 	{
 		"categories": [
@@ -1896,7 +1905,15 @@
 		"id": "power_generator",
 		"moveable": false,
 		"name": "Power Generator",
-		"sprite": "battery_bank_80_45.png"
+		"sprite": "battery_bank_80_45.png",
+		"support_shape": {
+			"color": "ffffffff",
+			"depth_scale": 100.0,
+			"height": 0.5,
+			"shape": "Box",
+			"transparent": false,
+			"width_scale": 100.0
+		}
 	},
 	{
 		"categories": [
@@ -1910,7 +1927,15 @@
 		"id": "control_console",
 		"moveable": false,
 		"name": "Control Console",
-		"sprite": "control_panel_80_30.png"
+		"sprite": "control_panel_80_30.png",
+		"support_shape": {
+			"color": "ffffffff",
+			"depth_scale": 100.0,
+			"height": 0.5,
+			"shape": "Box",
+			"transparent": false,
+			"width_scale": 100.0
+		}
 	},
 	{
 		"categories": [
@@ -1924,7 +1949,15 @@
 		"id": "filing_cabinet",
 		"moveable": false,
 		"name": "Filing Cabinet",
-		"sprite": "cabinet_wood_100_50.png"
+		"sprite": "cabinet_wood_100_50.png",
+		"support_shape": {
+			"color": "ffffffff",
+			"depth_scale": 100.0,
+			"height": 0.5,
+			"shape": "Box",
+			"transparent": false,
+			"width_scale": 100.0
+		}
 	},
 	{
 		"categories": [
@@ -1938,7 +1971,8 @@
 		"id": "office_whiteboard",
 		"moveable": true,
 		"name": "Office Whiteboard",
-		"sprite": "bullitin_board_80_15.png"
+		"sprite": "bullitin_board_80_15.png",
+		"weight": 1.0
 	},
 	{
 		"categories": [
@@ -1952,7 +1986,15 @@
 		"id": "arcade_machine",
 		"moveable": false,
 		"name": "Arcade Machine",
-		"sprite": "vending_machine_50.png"
+		"sprite": "vending_machine_50.png",
+		"support_shape": {
+			"color": "ffffffff",
+			"depth_scale": 100.0,
+			"height": 0.5,
+			"shape": "Box",
+			"transparent": false,
+			"width_scale": 100.0
+		}
 	},
 	{
 		"categories": [
@@ -1966,6 +2008,14 @@
 		"id": "ping_pong_table",
 		"moveable": false,
 		"name": "Ping Pong Table",
-		"sprite": "table_picknic_100_50.png"
+		"sprite": "table_picknic_100_50.png",
+		"support_shape": {
+			"color": "ffffffff",
+			"depth_scale": 100.0,
+			"height": 0.5,
+			"shape": "Box",
+			"transparent": false,
+			"width_scale": 100.0
+		}
 	}
 ]
