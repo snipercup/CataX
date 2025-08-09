@@ -49,11 +49,6 @@ Textures
 ## Relevant Files
 - Existing project files that will be touched during implementation.
 
-### Proposed New Files
-- `Mods/Dimensionfall/Furniture/FurnitureCategories.json` - Defines the existing and newly added furniture categories with placeholder sprites.
-- `/Tests/Unit/test_furniture_categories.gd` - Unit tests ensuring furniture categories load properly.
-- `/Tests/Unit/test_furniture_definitions.gd` - Unit tests validating new furniture definitions.
-
 ### Existing Files Modified
 - `Mods/Dimensionfall/Furniture/Furniture.json` - Add ten new furniture definitions spanning five categories.
 
@@ -67,8 +62,6 @@ Textures
 
 - [ ] 1.0 Establish two new furniture categories
 - [ ] 1.1 Brainstorm and select two complementary category names that fit alongside Urban, Nature, and Industrial.
-- [ ] 1.2 Add both categories to the category configuration file, referencing `./Mods/Dimensionfall/furniture/toilet_48.png` as the placeholder sprite.
-- [ ] 1.3 Verify the new categories load correctly within the game or project environment.
 - [ ] 2.0 Draft ten new furniture definitions
 - [ ] 2.1 For each of the five categories (Urban, Nature, Industrial, and the two new ones), outline two distinct furniture items.
 - [ ] 2.2 Assign a unique `id` to every furniture definition.
