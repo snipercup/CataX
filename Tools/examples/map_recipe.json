@@ -1,7 +1,7 @@
 {
 	"id": "generated_meadow_prototype",
 	"name": "Generated Meadow Prototype",
-	"description": "A deterministic meadow with a clearing, path, and scattered flowers.",
+	"description": "A deterministic meadow with a clearing, path, scattered flowers, and reusable flower clusters.",
 	"seed": 20260715,
 	"base_tile": {
 		"palette": "ground"
@@ -55,12 +55,30 @@
 			}
 		},
 		{
-			"type": "set",
-			"x": 16,
-			"y": 15,
-			"tile": {
-				"id": "grass_flowers_01"
-			}
+			"type": "pattern",
+			"pattern": "wildflower_cluster",
+			"at": [
+				15,
+				12
+			]
+		},
+		{
+			"type": "pattern",
+			"pattern": "wildflower_cluster",
+			"at": [
+				19,
+				20
+			],
+			"rotation": 90
+		},
+		{
+			"type": "pattern",
+			"pattern": "wildflower_cluster",
+			"at": [
+				12,
+				20
+			],
+			"rotation": 270
 		}
 	],
 	"palette": {
@@ -109,6 +127,55 @@
 				"id": "grass_flowers_01",
 				"weight": 1,
 				"rotation": "random"
+			}
+		]
+	},
+	"patterns": {
+		"wildflower_cluster": [
+			{
+				"at": [
+					0,
+					0
+				],
+				"tile": {
+					"palette": "flowers"
+				}
+			},
+			{
+				"at": [
+					1,
+					0
+				],
+				"tile": {
+					"palette": "flowers"
+				}
+			},
+			{
+				"at": [
+					-1,
+					1
+				],
+				"tile": {
+					"palette": "flowers"
+				}
+			},
+			{
+				"at": [
+					0,
+					1
+				],
+				"tile": {
+					"palette": "flowers"
+				}
+			},
+			{
+				"at": [
+					1,
+					1
+				],
+				"tile": {
+					"palette": "flowers"
+				}
 			}
 		]
 	}

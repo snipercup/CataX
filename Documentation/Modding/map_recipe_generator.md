@@ -26,9 +26,10 @@ The root must be a JSON object with these fields:
 | `id` | string | Map ID using only letters, numbers, `_`, and `-`. |
 | `name` | non-empty string | Display name. |
 | `description` | non-empty string | Map description. |
-| `seed` | integer | Fixed seed used by random rotations and scatter. Recipe input only; the map format does not store it. |
+| `seed` | integer | Fixed seed used by palettes, random tile rotations, scatter, and pattern cells. Recipe input only; the map format does not store it. |
 | `base_tile` | tile object | Tile initially placed in every cell. |
 | `palette` | object | Named weighted tile sets that tile objects can reference. Optional; defaults to `{}`. |
+| `patterns` | object | Named arrays of relative tile placements used by `pattern` operations. Optional; defaults to `{}`. |
 | `regions` | array | Legacy filled rectangles. Optional; defaults to `[]`. |
 | `operations` | array | Ordered placement operations. Optional; defaults to `[]`. |
 
@@ -59,7 +60,25 @@ Palette entries are objects with `id`, optional positive integer `weight` (defau
 }
 ```
 
-Legacy `regions` are applied first in array order, followed by `operations` in array order. Later placements overwrite earlier cells. `regions` remain supported for version-one recipes and use the same filled-rectangle placement implementation as `rectangle` operations.
+Legacy `regions` are applied first in array order, followed by `operations` in array order. Pattern cells are expanded in their definition order at the position of the invoking operation. Later placements overwrite earlier cells, including repeated offsets inside one pattern. `regions` remain supported for version-one recipes and use the same filled-rectangle placement implementation as `rectangle` operations.
+
+## Reusable cell patterns
+
+`patterns` maps a name to a non-empty array of relative tile placements. Pattern names follow the same naming rules as palettes. Every cell has an integer `[x, y]` offset in `at` and a `tile`; offsets may be negative, and tiles may use raw IDs, palettes, rotations, or `null` just like operation tiles.
+
+Pattern definitions do not consume random numbers. An invoked pattern consumes randomness in cell-array order only when a cell uses a palette or `"random"` tile rotation. Unused definitions therefore do not change generated output.
+
+```json
+{
+  "patterns": {
+    "wildflower_cluster": [
+      {"at": [0, 0], "tile": {"palette": "flowers"}},
+      {"at": [1, 0], "tile": {"palette": "flowers"}},
+      {"at": [-1, 1], "tile": {"palette": "flowers"}}
+    ]
+  }
+}
+```
 
 ## Placement operations
 
@@ -115,10 +134,25 @@ Selects unique cells in a rectangular `region` using the recipe's seeded random-
 }
 ```
 
+### `pattern`
+
+Places every cell from a named pattern relative to an anchor. Fields: `type`, `pattern`, `at`, and optional `rotation`. Rotation defaults to `0` and accepts fixed clockwise quarter turns: `0`, `90`, `180`, or `270`.
+
+Offsets rotate around the anchor: `90` maps `[x, y]` to `[-y, x]`. The generator preflights the complete expansion and rejects the operation if any resulting cell is outside the map; patterns are never clipped or partially applied.
+
+```json
+{
+  "type": "pattern",
+  "pattern": "wildflower_cluster",
+  "at": [16, 12],
+  "rotation": 90
+}
+```
+
 ## Validation and limitations
 
 The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, malformed tile databases, unknown tile IDs, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output.
 
 The output uses 21 levels, with the generated row-major grid at index 10. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator does not yet create features, furniture, areas, roads as semantic objects, buildings, towns, additional levels, or complex templates. Structural validity also does not yet guarantee walkability or gameplay quality.
+The generator does not yet create features, furniture, areas, roads as semantic objects, buildings, towns, additional levels, nested patterns, or shape-based templates. Structural validity also does not yet guarantee walkability or gameplay quality.

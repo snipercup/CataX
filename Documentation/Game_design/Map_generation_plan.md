@@ -126,6 +126,8 @@ The generator currently supports:
 * ordered `set`, `rectangle`, `rectangle_outline`, `line`, and `scatter` operations;
 * inclusive Bresenham line rasterization;
 * deterministic scatter by count or density;
+* root-level reusable cell-pattern definitions;
+* ordered pattern placement at an anchor with fixed quarter-turn rotation;
 * root-level weighted tile palettes referenced by base tiles and placement operations;
 * fixed tile rotations;
 * deterministic random rotations;
@@ -150,7 +152,7 @@ unused levels: []
 
 ## 5. Generator and validator tests: complete for version 1
 
-The current Python test suite contains 38 tests and passes.
+The current Python test suite contains 44 tests and passes.
 
 Coverage includes:
 
@@ -169,6 +171,7 @@ Coverage includes:
 * invalid IDs;
 * unknown tile IDs;
 * palette references, weighted deterministic selection, and malformed palette rejection;
+* reusable pattern expansion, rotation, ordering, determinism, compatibility, and validation;
 * invalid metadata;
 * malformed tile databases;
 * out-of-bounds placement;
@@ -388,12 +391,16 @@ Delivered:
 * palette references from `base_tile`, legacy `regions`, and every placement operation;
 * strict palette validation and known tile-ID checking;
 * updated example recipe using palettes for ground, clearing, paths, and flowers.
+* named reusable cell patterns with signed offsets;
+* anchored pattern operations with fixed quarter-turn rotation;
+* strict pattern-definition, reference, field, and expanded-bounds validation;
+* deterministic cell-order expansion using existing tile and palette semantics;
+* updated example recipe reusing one flower-cluster pattern at three orientations.
 
 Remaining goals:
 
-* reusable pattern definitions beyond weighted tile sets;
 * richer automatic rotation rules;
-* additional examples that reduce raw IDs throughout recipes.
+* richer reusable patterns built from shapes or nested composition.
 
 ### Success criterion
 
@@ -648,13 +655,13 @@ An agent can create a new playable map from a concise design request, run all re
 
 # Recommended immediate next task
 
-The next contribution should stay narrow: **Phase 4B tile palettes and deterministic variation**.
+The next contribution should stay narrow: **complete Phase 4B pattern rotation and composition rules**.
 
-Keep the completed placement-operation schema stable. Add named, recipe-level tile palettes that can be referenced anywhere an operation currently accepts a tile. Palette entries should use validated tile IDs and positive integer weights, select deterministically from the recipe seed, preserve explicit tile objects and `null`, and reject unknown palette names or malformed entries.
+Keep the completed placement-operation and cell-pattern schemas stable. Extend pattern invocation with a deterministic `"random"` quarter-turn rotation, define its RNG ordering precisely, and investigate whether one minimal shape-based or nested composition rule can be added without creating a second placement engine.
 
-The branch should not add furniture, areas, buildings, semantic roads, towns, or additional levels. Its success criterion is visibly varied terrain without one recipe entry per cell.
+The branch should not add furniture, areas, buildings, semantic roads, towns, or additional levels. Its success criterion is deterministic pattern-level variation and one demonstrably useful composition rule without weakening strict bounds or unknown-field validation.
 
-Before implementation, inspect the current generator, tests, tile database, recipe documentation, and example. Define how palette selection interacts with `"random"` rotation and RNG ordering, add focused compatibility and validation tests, update the example and documentation, use `Tools/generate_map_examples.py` to compare at least three deterministic variants in the content-editor preview, validate the generated maps, inspect dimensions and tile count, and run `git diff --check`.
+Before implementation, inspect the current generator, tests, recipe documentation, and example. Define how pattern rotation interacts with palette selection, tile-level `"random"` rotation, and RNG ordering; add focused compatibility and validation tests; update the example and documentation; use `Tools/generate_map_examples.py` to compare at least three deterministic variants in the content-editor preview; validate the generated maps; inspect dimensions and tile count; and run `git diff --check`.
 
 Do not commit or push unless explicitly requested.
 
@@ -675,7 +682,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Documentation and recognizable outdoor example
 [Complete] Development moved to snipercup/CataX
 
-[Next]     Palettes and deterministic variation
+[In progress] Palettes, reusable cell patterns, and deterministic variation
+[Next]     Pattern-level random rotation and richer composition
 [Planned]  Features and furniture
 [Planned]  Areas and buildings
 [Planned]  Roads and map connections
