@@ -222,6 +222,189 @@ class MapGeneratorTests(unittest.TestCase):
 
         self.assertEqual(level.count({"id": "dirt_light_00"}), 4)
 
+    def test_pattern_operation_places_relative_cells_with_quarter_turn_rotation(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["patterns"] = {
+            "corner": [
+                {"at": [0, 0], "tile": {"id": "dirt_light_00"}},
+                {"at": [1, 0], "tile": {"id": "grass_flowers_01"}},
+                {"at": [0, 1], "tile": None},
+            ]
+        }
+        recipe["operations"] = [
+            {
+                "type": "pattern",
+                "pattern": "corner",
+                "at": [10, 10],
+                "rotation": 90,
+            }
+        ]
+
+        level = generate_map(recipe, TILES_PATH)["levels"][10]
+
+        self.assertEqual(level[10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(level[11 * 32 + 10], {"id": "grass_flowers_01"})
+        self.assertEqual(level[10 * 32 + 9], {})
+
+    def test_pattern_cells_and_later_operations_follow_ordered_overwrite_semantics(
+        self,
+    ):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["patterns"] = {
+            "overlap": [
+                {"at": [0, 0], "tile": {"id": "dirt_light_00"}},
+                {"at": [0, 0], "tile": {"id": "grass_flowers_01"}},
+            ]
+        }
+        recipe["operations"] = [
+            {"type": "pattern", "pattern": "overlap", "at": [4, 5]},
+            {"type": "set", "x": 4, "y": 5, "tile": None},
+        ]
+
+        level = generate_map(recipe, TILES_PATH)["levels"][10]
+
+        self.assertEqual(level[5 * 32 + 4], {})
+
+    def test_pattern_palette_selection_is_deterministic(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["palette"] = {
+            "detail": [
+                {"id": "grass_flowers_00", "weight": 1, "rotation": "random"},
+                {"id": "grass_flowers_01", "weight": 1, "rotation": "random"},
+            ]
+        }
+        recipe["patterns"] = {
+            "details": [
+                {"at": [0, 0], "tile": {"palette": "detail"}},
+                {"at": [1, 0], "tile": {"palette": "detail"}},
+                {"at": [2, 0], "tile": {"palette": "detail"}},
+            ]
+        }
+        recipe["operations"] = [
+            {"type": "pattern", "pattern": "details", "at": [5, 5]}
+        ]
+
+        first = generate_map(recipe, TILES_PATH)
+        second = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(first, second)
+
+    def test_unused_pattern_definition_does_not_change_rng_order(self):
+        recipe = valid_recipe()
+        expected = generate_map(recipe, TILES_PATH)
+        recipe["patterns"] = {
+            "unused": [
+                {
+                    "at": [0, 0],
+                    "tile": {"id": "grass_flowers_00", "rotation": "random"},
+                }
+            ]
+        }
+
+        self.assertEqual(generate_map(recipe, TILES_PATH), expected)
+
+    def test_pattern_definitions_are_strictly_validated_even_when_unused(self):
+        cases = [
+            ({"patterns": []}, "patterns must be an object"),
+            (
+                {"patterns": {"": [{"at": [0, 0], "tile": None}]}},
+                "pattern names must be non-empty strings",
+            ),
+            (
+                {"patterns": {"bad name": [{"at": [0, 0], "tile": None}]}},
+                "may contain only letters",
+            ),
+            (
+                {"patterns": {"empty": []}},
+                "patterns.empty must be a non-empty array",
+            ),
+            (
+                {"patterns": {"bad": [42]}},
+                r"patterns.bad\[0\] must be an object",
+            ),
+            (
+                {"patterns": {"bad": [{"tile": None}]}},
+                r"patterns.bad\[0\].at is required",
+            ),
+            (
+                {"patterns": {"bad": [{"at": [0, 0]}]}},
+                r"patterns.bad\[0\].tile is required",
+            ),
+            (
+                {"patterns": {"bad": [{"at": [True, 0], "tile": None}]}},
+                "must be a two-integer array",
+            ),
+            (
+                {
+                    "patterns": {
+                        "bad": [{"at": [0, 0], "tile": None, "extra": 1}]
+                    }
+                },
+                r"unknown patterns.bad\[0\] field 'extra'",
+            ),
+            (
+                {
+                    "patterns": {
+                        "bad": [
+                            {"at": [0, 0], "tile": {"id": "missing_tile"}}
+                        ]
+                    }
+                },
+                "unknown tile 'missing_tile'",
+            ),
+        ]
+        for changes, expected_message in cases:
+            with self.subTest(changes=changes):
+                recipe = valid_recipe()
+                recipe.update(changes)
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+    def test_pattern_operations_reject_invalid_references_fields_and_bounds(self):
+        base_pattern = {"patterns": {"one": [{"at": [1, 0], "tile": None}]}}
+        cases = [
+            (
+                {"type": "pattern", "pattern": "missing", "at": [1, 1]},
+                "unknown pattern 'missing'",
+            ),
+            (
+                {"type": "pattern", "pattern": "one", "at": [1]},
+                "must be a two-integer array",
+            ),
+            (
+                {
+                    "type": "pattern",
+                    "pattern": "one",
+                    "at": [1, 1],
+                    "rotation": "random",
+                },
+                "rotation must be 0, 90, 180, or 270",
+            ),
+            (
+                {
+                    "type": "pattern",
+                    "pattern": "one",
+                    "at": [1, 1],
+                    "extra": 1,
+                },
+                r"unknown operations\[0\] field 'extra'",
+            ),
+            (
+                {"type": "pattern", "pattern": "one", "at": [31, 0]},
+                "outside the 32x32 map at \\[32, 0\\]",
+            ),
+        ]
+        for operation, expected_message in cases:
+            with self.subTest(operation=operation):
+                recipe = valid_recipe()
+                recipe.update(base_pattern)
+                recipe["operations"] = [operation]
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
     def test_invalid_operations_are_rejected_with_clear_errors(self):
         base_region = {"x": 0, "y": 0, "width": 2, "height": 2}
         cases = [

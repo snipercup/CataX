@@ -32,14 +32,16 @@ DEFAULT_CONNECTIONS = {
 VALID_ROTATIONS = (0, 90, 180, 270)
 TILE_FIELDS = {"id", "palette", "rotation"}
 PALETTE_FIELDS = {"id", "weight", "rotation"}
-PALETTE_NAME_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
+DEFINITION_NAME_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
 REGION_FIELDS = {"x", "y", "width", "height", "tile"}
 SET_FIELDS = {"type", "x", "y", "tile"}
 RECTANGLE_FIELDS = {"type", "x", "y", "width", "height", "tile"}
 LINE_FIELDS = {"type", "from", "to", "tile"}
 SCATTER_FIELDS = {"type", "region", "tile", "count", "density"}
 SCATTER_REGION_FIELDS = {"x", "y", "width", "height"}
-OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
+PATTERN_CELL_FIELDS = {"at", "tile"}
+PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "rotation"}
+TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 RECIPE_FIELDS = {
     "id",
     "name",
@@ -47,6 +49,7 @@ RECIPE_FIELDS = {
     "seed",
     "base_tile",
     "palette",
+    "patterns",
     "regions",
     "operations",
 }
@@ -167,9 +170,10 @@ def _validate_palette(
         if not isinstance(name, str) or not name.strip():
             raise RecipeError("palette names must be non-empty strings")
         _validate_unicode(name, f"palette.{name}")
-        if PALETTE_NAME_PATTERN.fullmatch(name) is None:
+        if DEFINITION_NAME_PATTERN.fullmatch(name) is None:
             raise RecipeError(
-                f"palette name '{name}' may contain only letters, numbers, underscores, and hyphens"
+                f"palette name '{name}' may contain only letters, numbers, "
+                "underscores, and hyphens"
             )
         if not isinstance(entries, list) or not entries:
             raise RecipeError(f"palette.{name} must be a non-empty array")
@@ -177,6 +181,60 @@ def _validate_palette(
             _validate_palette_entry(entry, known_tiles, f"palette.{name}[{index}]")
             for index, entry in enumerate(entries)
         ]
+    return validated
+
+
+def _validate_pattern_offset(value: Any, context: str) -> tuple[int, int]:
+    if (
+        not isinstance(value, list)
+        or len(value) != 2
+        or any(type(coordinate) is not int for coordinate in value)
+    ):
+        raise RecipeError(f"{context} must be a two-integer array")
+    return value[0], value[1]
+
+
+def _validate_patterns(
+    patterns: Any,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    if not isinstance(patterns, dict):
+        raise RecipeError("patterns must be an object")
+    validated: dict[str, list[dict[str, Any]]] = {}
+    for name, cells in patterns.items():
+        if not isinstance(name, str) or not name.strip():
+            raise RecipeError("pattern names must be non-empty strings")
+        _validate_unicode(name, f"patterns.{name}")
+        if DEFINITION_NAME_PATTERN.fullmatch(name) is None:
+            raise RecipeError(
+                f"pattern name '{name}' may contain only letters, numbers, "
+                "underscores, and hyphens"
+            )
+        if not isinstance(cells, list) or not cells:
+            raise RecipeError(f"patterns.{name} must be a non-empty array")
+        validated_cells: list[dict[str, Any]] = []
+        for index, cell in enumerate(cells):
+            context = f"patterns.{name}[{index}]"
+            if not isinstance(cell, dict):
+                raise RecipeError(f"{context} must be an object")
+            unknown_fields = sorted(set(cell) - PATTERN_CELL_FIELDS)
+            if unknown_fields:
+                raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+            if "at" not in cell:
+                raise RecipeError(f"{context}.at is required")
+            if "tile" not in cell:
+                raise RecipeError(f"{context}.tile is required")
+            offset = _validate_pattern_offset(cell["at"], f"{context}.at")
+            _validate_tile_spec(
+                cell["tile"],
+                known_tiles,
+                f"{context}.tile",
+                allow_empty=True,
+                palette=palette,
+            )
+            validated_cells.append({"at": offset, "tile": cell["tile"]})
+        validated[name] = validated_cells
     return validated
 
 
@@ -475,6 +533,65 @@ def _apply_scatter(
         )
 
 
+def _rotate_offset(x: int, y: int, rotation: int) -> tuple[int, int]:
+    if rotation == 90:
+        return -y, x
+    if rotation == 180:
+        return -x, -y
+    if rotation == 270:
+        return y, -x
+    return x, y
+
+
+def _apply_pattern(
+    level: list[dict[str, Any]],
+    operation: dict[str, Any],
+    rng: random.Random,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+    patterns: dict[str, list[dict[str, Any]]],
+    context: str,
+) -> None:
+    unknown_fields = sorted(set(operation) - PATTERN_OPERATION_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+    pattern_name = operation.get("pattern")
+    if not isinstance(pattern_name, str) or not pattern_name.strip():
+        raise RecipeError(f"{context}.pattern must be a non-empty string")
+    _validate_unicode(pattern_name, f"{context}.pattern")
+    if pattern_name not in patterns:
+        raise RecipeError(
+            f"{context}.pattern references unknown pattern '{pattern_name}'"
+        )
+    anchor_x, anchor_y = _point(operation.get("at"), f"{context}.at")
+    rotation = operation.get("rotation", 0)
+    if type(rotation) is not int or rotation not in VALID_ROTATIONS:
+        raise RecipeError(f"{context}.rotation must be 0, 90, 180, or 270")
+
+    placements: list[tuple[int, int, Any]] = []
+    for index, cell in enumerate(patterns[pattern_name]):
+        cell_x, cell_y = cell["at"]
+        offset_x, offset_y = _rotate_offset(cell_x, cell_y, rotation)
+        x = anchor_x + offset_x
+        y = anchor_y + offset_y
+        if not 0 <= x < MAP_WIDTH or not 0 <= y < MAP_HEIGHT:
+            raise RecipeError(
+                f"{context} places patterns.{pattern_name}[{index}] outside the "
+                f"{MAP_WIDTH}x{MAP_HEIGHT} map at [{x}, {y}]"
+            )
+        placements.append((x, y, cell["tile"]))
+
+    for index, (x, y, tile_spec) in enumerate(placements):
+        level[y * MAP_WIDTH + x] = _make_tile(
+            tile_spec,
+            rng,
+            known_tiles,
+            f"{context}.pattern.{pattern_name}[{index}].tile",
+            allow_empty=True,
+            palette=palette,
+        )
+
+
 def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
     """Validate a recipe and return map data matching DMap's saved format."""
     if not isinstance(recipe, dict):
@@ -498,6 +615,7 @@ def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
         raise RecipeError("seed must be an integer")
     known_tiles = _tile_ids(Path(tiles_path))
     palette = _validate_palette(recipe.get("palette", {}), known_tiles)
+    patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
     rng = random.Random(seed)
     level = [
         _make_tile(
@@ -525,7 +643,7 @@ def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
         if not isinstance(operation, dict):
             raise RecipeError(f"{context} must be an object")
         operation_type = operation.get("type")
-        if operation_type in OPERATION_TYPES and "tile" not in operation:
+        if operation_type in TILE_OPERATION_TYPES and "tile" not in operation:
             raise RecipeError(f"{context}.tile is required")
         if operation_type == "set":
             _apply_set(level, operation, rng, known_tiles, palette, context)
@@ -541,6 +659,10 @@ def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
             _apply_line(level, operation, rng, known_tiles, palette, context)
         elif operation_type == "scatter":
             _apply_scatter(level, operation, rng, known_tiles, palette, context)
+        elif operation_type == "pattern":
+            _apply_pattern(
+                level, operation, rng, known_tiles, palette, patterns, context
+            )
         else:
             raise RecipeError(
                 f"{context}.type has unknown operation '{operation_type}'"
