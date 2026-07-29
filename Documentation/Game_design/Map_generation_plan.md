@@ -33,12 +33,13 @@ Create a forest settlement with:
 
 The generator should handle the mechanical work:
 
-* converting coordinates to array indices;
+* converting top-down coordinates and logical z values to level and tile-array indices;
 * producing all 1024 entries per populated level;
 * inserting valid tile and furniture IDs;
 * generating metadata;
 * creating areas and connections;
-* enforcing bounds;
+* enforcing horizontal and vertical bounds;
+* creating and validating transitions between logical levels;
 * producing deterministic output;
 * rejecting invalid designs before they reach Godot.
 
@@ -226,7 +227,7 @@ The current recipe language is intentionally minimal. It cannot yet express most
 
 It does not currently support:
 
-* reusable pattern definitions beyond tile palettes;
+* nested, shape-based, or multi-level pattern composition;
 * circles or irregular regions;
 * terrain blending;
 * multiple populated vertical levels;
@@ -351,7 +352,7 @@ A developer can run one documented command, launch Godot, and inspect at least t
 
 ## Phase 4B — Tile palettes and reusable patterns
 
-**Status: in progress**
+**Status: complete**
 
 Raw tile IDs are cumbersome and encourage agents to invent invalid identifiers. Introduce semantic recipe-level palettes.
 
@@ -397,14 +398,96 @@ Delivered:
 * deterministic cell-order expansion using existing tile and palette semantics;
 * updated example recipe reusing one flower-cluster pattern at three orientations.
 
-Remaining goals:
-
-* richer automatic rotation rules;
-* richer reusable patterns built from shapes or nested composition.
-
 ### Success criterion
 
 The generator can create terrain that looks varied without requiring a recipe entry for every cell.
+
+This criterion is met by weighted palettes, deterministic scatter, and reusable cell patterns. Richer nested and shape-based composition belongs in Phase 8 rather than extending this foundation phase indefinitely.
+
+## Phase 4C — Vertical levels and 3D placement foundations
+
+**Status: next; requires schema and runtime investigation**
+
+Dimensionfall maps already contain 21 level arrays. Level-array index `10` is logical elevation `0`, with valid logical elevations from `-10` through `+10`:
+
+```text
+level-array index = logical z + 10
+logical z = level-array index - 10
+```
+
+Existing maps use this structure for hills, holes, craters, underground locations, and multi-story buildings. The generator needs a shared vertical-coordinate contract before features, rooms, buildings, and templates are added.
+
+Goals:
+
+* add recipe-level logical `z` coordinates while preserving top-down `[x, y]` coordinates;
+* default omitted `z` to `0` so existing recipes remain compatible;
+* support multiple populated level arrays;
+* allow every placement operation and pattern invocation to target a logical level;
+* investigate a per-level recipe structure for substantial multi-level maps;
+* define per-level base-tile and empty-level behavior;
+* map logical elevations `-10` through `+10` to level-array indices `0` through `20`;
+* preserve exactly 1024 entries in every populated level and `[]` for unused levels;
+* define deterministic operation and RNG ordering across levels;
+* validate horizontal bounds, vertical bounds, duplicate level definitions, and complete pattern expansion;
+* investigate slope, stair, support, collision, and traversal semantics before enforcing gameplay rules.
+
+Recommended compatibility form for individual placement:
+
+```json
+{
+  "type": "pattern",
+  "pattern": "wildflower_cluster",
+  "at": [16, 12],
+  "z": 1,
+  "rotation": 90
+}
+```
+
+For larger recipes, prefer grouping content by logical level rather than repeating `z` on every operation:
+
+```json
+{
+  "levels": [
+    {
+      "z": 0,
+      "base_tile": {"palette": "ground"},
+      "operations": []
+    },
+    {
+      "z": 1,
+      "operations": []
+    }
+  ]
+}
+```
+
+The detailed schema must define whether legacy root-level placement can coexist with a `levels` entry for `z: 0`. Ambiguous ordering must be rejected unless an explicit merge contract is adopted.
+
+Initial structural validation:
+
+* `z` is an integer from `-10` through `+10`;
+* converted level indices remain within `0` through `20`;
+* the output always contains exactly 21 level arrays;
+* every populated level contains exactly 1024 row-major tile entries;
+* unused levels remain `[]`;
+* every operation and expanded pattern remains horizontally and vertically in bounds;
+* duplicate or ambiguous per-level definitions are rejected;
+* identical recipes and seeds produce identical output across every populated level.
+
+Runtime investigation must determine:
+
+* how tiles with `shape: "slope"` connect adjacent logical levels;
+* how slope and stair rotation determines lower and upper endpoints;
+* whether transitions require corresponding tiles on both levels;
+* how floors, walls, roofs, ceilings, and intentional air gaps occupy stacked levels;
+* whether support is determined by tile presence, collision shape, or another runtime rule;
+* which transition, support, and reachability checks can be reproduced reliably in Python.
+
+Reference fixtures should include existing hills, depressions, deep craters, buildings, and underground maps such as `field_grass_hill_00`, `field_grass_hole_00`, `crater_small`, `two_story_house`, and `underground_lab`.
+
+### Success criterion
+
+Generate and validate one two-level hill and one two-level depression from recipes. Each map has correctly sized populated levels, preserves unused levels as `[]`, uses valid transition tiles, loads in Godot, and permits runtime traversal between generated elevations.
 
 ## Phase 5 — Features and furniture
 
@@ -420,7 +503,8 @@ The agent should first determine:
 * how rotation and state are encoded;
 * how IDs are validated;
 * whether occupied tiles require supporting terrain;
-* how multi-tile objects work.
+* how multi-tile objects work;
+* whether tall features occupy or block cells on adjacent logical levels.
 
 Likely recipe concepts:
 
@@ -429,11 +513,13 @@ Likely recipe concepts:
   "features": [
     {
       "template": "tree",
-      "at": [5, 8]
+      "at": [5, 8],
+      "z": 0
     },
     {
       "template": "bench",
       "at": [15, 13],
+      "z": 0,
       "rotation": 90
     }
   ]
@@ -443,16 +529,17 @@ Likely recipe concepts:
 Necessary validation:
 
 * known feature IDs;
-* bounds;
+* horizontal and vertical bounds;
 * occupied-cell conflicts;
-* support rules;
+* support rules on the target logical level;
+* conflicts with incompatible geometry above or below;
 * prohibited overlap;
 * deterministic scatter;
 * placement failure reporting.
 
 ### Success criterion
 
-Generate an outdoor map with trees, rocks, vegetation, and simple interactable or decorative objects.
+Generate an outdoor map with trees, rocks, vegetation, and simple interactable or decorative objects. The first example may remain at `z: 0`, but the feature schema and validation must support explicit logical levels from its first version.
 
 ## Phase 6 — Areas, rooms, and buildings
 
@@ -462,7 +549,7 @@ The generator needs semantic areas before it can create convincing buildings.
 
 Capabilities:
 
-* named rectangular or polygonal areas;
+* named, level-aware rectangular or polygonal areas;
 * room boundaries;
 * floors and walls;
 * doors and openings;
@@ -470,7 +557,9 @@ Capabilities:
 * area metadata;
 * reusable building footprints;
 * furniture anchors;
-* optional additional levels.
+* multi-level building geometry using logical z coordinates;
+* occupied-floor, wall, ceiling, roof, and intentional-air-space semantics;
+* vertical transition anchors.
 
 Example concept:
 
@@ -479,7 +568,10 @@ Example concept:
   "buildings": [
     {
       "template": "small_cabin",
-      "origin": [10, 9],
+      "origin": {
+        "at": [10, 9],
+        "z": 0
+      },
       "entrance": "south",
       "area_id": "cabin_1"
     }
@@ -493,12 +585,15 @@ Important checks:
 * doors connect compatible cells;
 * walls do not block all access;
 * area definitions match physical boundaries;
-* upper levels have valid support and transitions;
+* upper geometry has valid support according to the runtime rules established in Phase 4C;
+* occupied floors have valid, unobstructed vertical transitions;
+* stairs and slopes connect valid destinations on adjacent logical levels;
+* roofs, ceilings, and walls do not incorrectly occupy walkable interior cells;
 * furniture remains inside intended rooms.
 
 ### Success criterion
 
-Generate one small, enterable building that loads correctly and has a reachable interior.
+Generate one small, enterable building that loads correctly and has a reachable interior. The generated structure must exercise vertical geometry and include at least two reachable occupied floors, valid support, a working vertical transition, and correctly scoped rooms and furniture.
 
 ## Phase 7 — Roads and map connections
 
@@ -532,6 +627,8 @@ Generate a map with one or more working edge connections and a traversable road 
 
 Once primitives and object placement work, add reusable templates.
 
+This phase owns richer composition deferred from Phase 4B, including nested patterns, shape-based definitions, complex automatic rotation, and multi-level template composition.
+
 Possible templates:
 
 ```text
@@ -555,7 +652,9 @@ Templates should be:
 * deterministic;
 * validated independently;
 * composable;
-* able to expose anchors such as entrances and road connections.
+* able to expose anchors such as entrances, road connections, floors, roofs, and vertical transitions;
+* able to contain level-relative sections using `dz` offsets;
+* validated across their complete three-dimensional extent before placement.
 
 Example:
 
@@ -564,7 +663,10 @@ Example:
   "placements": [
     {
       "template": "village_square",
-      "origin": [16, 16],
+      "origin": {
+        "at": [16, 16],
+        "z": 0
+      },
       "rotation": 0
     },
     {
@@ -576,9 +678,24 @@ Example:
 }
 ```
 
+Multi-level templates should describe relative level sections rather than embedding absolute level-array indices:
+
+```json
+{
+  "template": "small_cabin",
+  "levels": [
+    {"dz": 0, "operations": []},
+    {"dz": 1, "operations": []},
+    {"dz": 2, "operations": []}
+  ]
+}
+```
+
+Placement resolves each section with `absolute z = origin z + dz`. Rotation must transform horizontal offsets and transition orientation without changing `dz`.
+
 ### Success criterion
 
-Create a small settlement by composing templates rather than manually specifying every wall, road, and object.
+Create a small settlement by composing templates rather than manually specifying every wall, road, object, and populated level. Templates can include validated multi-level structures and expose usable horizontal and vertical anchors.
 
 ## Phase 9 — Semantic map recipes
 
@@ -609,6 +726,7 @@ The generator or a planning layer would translate those requirements into:
 * anchors;
 * templates;
 * primitives;
+* logical levels and vertical transitions;
 * placement constraints;
 * routing;
 * validation.
@@ -633,10 +751,17 @@ Keeping planning separate from final generation would make failures easier to in
 
 Structural validity is not enough. Generated maps eventually need higher-level checks:
 
-* all required locations are reachable;
+* all required locations and occupied floors are reachable;
 * edge connections are usable;
 * doors are not blocked;
 * buildings have interiors;
+* every vertical transition has a valid destination;
+* stairs, ramps, and transition endpoints are not blocked;
+* upper geometry has valid support according to established runtime rules;
+* no feature intersects incompatible geometry above or below;
+* roofs and ceilings do not occupy walkable interior cells incorrectly;
+* required underground sections have a route to the surface;
+* all generated logical elevations remain within `-10` through `+10`;
 * paths do not end unexpectedly;
 * important objects are accessible;
 * no impossible overlaps occur;
@@ -649,19 +774,21 @@ Some checks can be implemented in Python. Others may need Godot or project runti
 
 ### Final success criterion
 
-An agent can create a new playable map from a concise design request, run all relevant checks, and produce a map that needs refinement rather than structural repair.
+An agent can create a new playable, potentially multi-level map from a concise design request, run all relevant checks, and produce a map that needs refinement rather than structural repair.
 
 ---
 
 # Recommended immediate next task
 
-The next contribution should stay narrow: **complete Phase 4B pattern rotation and composition rules**.
+The next contribution should begin **Phase 4C vertical-level schema and 3D placement foundations**.
 
-Keep the completed placement-operation and cell-pattern schemas stable. Extend pattern invocation with a deterministic `"random"` quarter-turn rotation, define its RNG ordering precisely, and investigate whether one minimal shape-based or nested composition rule can be added without creating a second placement engine.
+First inspect the runtime, content editor, tile definitions, and representative existing maps to document the authoritative logical-z, slope, stair, support, and transition behavior. Use logical `z` values from `-10` through `+10`, map `z: 0` to level-array index `10`, and keep `[x, y]` as the top-down coordinate format.
 
-The branch should not add furniture, areas, buildings, semantic roads, towns, or additional levels. Its success criterion is deterministic pattern-level variation and one demonstrably useful composition rule without weakening strict bounds or unknown-field validation.
+Then add the smallest backwards-compatible multi-level recipe contract: omitted `z` continues targeting logical level `0`; explicit per-level content can populate additional levels; every populated level contains exactly 1024 entries; unused levels remain `[]`; and all existing operations and pattern invocations use the same level-aware placement path. Reject ambiguous duplicate level definitions, invalid z values, and expansions outside horizontal or vertical bounds.
 
-Before implementation, inspect the current generator, tests, recipe documentation, and example. Define how pattern rotation interacts with palette selection, tile-level `"random"` rotation, and RNG ordering; add focused compatibility and validation tests; update the example and documentation; use `Tools/generate_map_examples.py` to compare at least three deterministic variants in the content-editor preview; validate the generated maps; inspect dimensions and tile count; and run `git diff --check`.
+Keep this contribution focused on terrain and structural generation. Do not add furniture, semantic areas, buildings, roads, towns, nested patterns, or broad gameplay validation. Do not invent support rules that are not confirmed by the runtime.
+
+Add focused tests for z/index conversion, legacy compatibility, multiple populated levels, determinism and RNG ordering across levels, per-level operation ordering, invalid and duplicate z definitions, horizontal and vertical bounds, exact level sizes, and unused-level preservation. Generate one two-level hill and one two-level depression, validate both maps, inspect them in the content editor, verify traversal in Godot, and run `git diff --check`.
 
 Do not commit or push unless explicitly requested.
 
@@ -682,14 +809,14 @@ Do not commit or push unless explicitly requested.
 [Complete] Documentation and recognizable outdoor example
 [Complete] Development moved to snipercup/CataX
 
-[In progress] Palettes, reusable cell patterns, and deterministic variation
-[Next]     Pattern-level random rotation and richer composition
+[Complete] Palettes, reusable cell patterns, and deterministic variation
+[Next]     Vertical-level schema and 3D placement foundations
 [Planned]  Features and furniture
-[Planned]  Areas and buildings
+[Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
-[Planned]  Reusable templates
+[Planned]  Multi-level reusable templates and richer composition
 [Planned]  Semantic map planning
-[Planned]  Connectivity and gameplay validation
+[Planned]  3D connectivity and gameplay validation
 [Target]   Agent-generated playable maps
 ```
 
