@@ -1158,15 +1158,18 @@ func _create_cube_collider(block_sub_position: Vector3) -> CollisionShape3D:
 # Creates a collider for a slope and puts it at the right place and rotation
 func _create_slope_collider(block_sub_position: Vector3, block_rotation: int) -> CollisionShape3D:
 	var collider = CollisionShape3D.new()
-	collider.shape = ConvexPolygonShape3D.new()
-	collider.shape.points = [
-		Vector3(0.5, 0.5, 0.5),
-		Vector3(0.5, 0.5, -0.5),
-		Vector3(-0.5, -0.5, 0.5),
-		Vector3(0.5, -0.5, 0.5),
-		Vector3(0.5, -0.5, -0.5),
-		Vector3(-0.5, -0.5, -0.5)
-	]
+	var shape = ConvexPolygonShape3D.new()
+	shape.points = PackedVector3Array(
+		[
+			Vector3(0.5, 0.5, 0.5),
+			Vector3(0.5, 0.5, -0.5),
+			Vector3(-0.5, -0.5, 0.5),
+			Vector3(0.5, -0.5, 0.5),
+			Vector3(0.5, -0.5, -0.5),
+			Vector3(-0.5, -0.5, -0.5)
+		]
+	)
+	collider.shape = shape
 	# Apply rotation for slopes
 	var rotation_transform = Transform3D(
 		Basis().rotated(Vector3.UP, deg_to_rad(block_rotation)), Vector3.ZERO

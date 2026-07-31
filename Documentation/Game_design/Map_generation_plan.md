@@ -157,7 +157,7 @@ level-array index: logical z + 10
 
 ## 5. Generator and validator tests: complete for version 1
 
-The current Python test suite contains 53 tests and passes.
+The current Python test suite contains 53 tests and passes. A focused four-test GUT suite also verifies the slope rotation contract across runtime geometry paths.
 
 Coverage includes:
 
@@ -183,6 +183,9 @@ Coverage includes:
 * duplicate, ambiguous, malformed, and nested z-definition rejection;
 * exact 21-level output and validator rejection of incorrect level counts;
 * maintained two-level hill and depression recipes with structurally supported slope endpoints;
+* editor-facing slope rotation conversion and rendered-mesh high edges in Godot;
+* matching collision high edges for all four slope rotations;
+* matching navigation-source high edges for all four slope rotations;
 * invalid metadata;
 * malformed tile databases;
 * out-of-bounds placement;
@@ -451,7 +454,9 @@ Delivered:
 * automatic preservation of all-empty levels as `[]` and exactly 1024 entries for every populated level;
 * independent validator enforcement of exactly 21 level arrays;
 * maintained two-level hill and depression recipes using known `shape: "slope"` transition tiles;
-* focused tests for vertical bounds, compatibility, every placement type, deterministic ordering, malformed schemas, exact level shape, and slope endpoint support.
+* focused tests for vertical bounds, compatibility, every placement type, deterministic ordering, malformed schemas, exact level shape, and slope endpoint support;
+* focused GUT tests for editor-to-runtime slope conversion and matching mesh, collider, and navigation-source high edges;
+* robust convex slope-collider construction that initializes the shape before assigning it to a collision node.
 
 Recommended compatibility form for individual placement:
 
@@ -483,7 +488,7 @@ For larger recipes, prefer grouping content by logical level rather than repeati
 }
 ```
 
-The detailed schema must define whether legacy root-level placement can coexist with a `levels` entry for `z: 0`. Ambiguous ordering must be rejected unless an explicit merge contract is adopted.
+Legacy root-level `base_tile`, `regions`, and `operations` cannot coexist with grouped `levels`. The generator rejects that ambiguous layout instead of inventing merge or overwrite ordering.
 
 Initial structural validation:
 
@@ -504,13 +509,15 @@ Runtime investigation established:
 * `Chunk.get_block_rotation()` converts those newly loaded slope values before mesh, collision, and navigation code uses its internal orientation, so recipes must preserve the editor-facing values rather than pre-converting them;
 * existing hills, holes, and buildings place slope tiles on the upper of the two connected logical levels;
 * the maintained examples can therefore validate occupied high-side and lower-level low-side endpoints without inventing a broader support model.
+* focused GUT coverage confirms all four editor rotations produce matching high edges in rendered mesh vertices, convex collision geometry, and navigation-source faces.
 
 Runtime investigation must still determine:
 
 * whether transitions require corresponding tiles on both levels;
 * how floors, walls, roofs, ceilings, and intentional air gaps occupy stacked levels;
 * whether support is determined by tile presence, collision shape, or another runtime rule;
-* which transition, support, and reachability checks can be reproduced reliably in Python.
+* whether the asynchronously baked navigation mesh joins the lower and upper walkable surfaces for every slope orientation;
+* which broader transition, support, and reachability checks belong in Python, Godot unit tests, or later gameplay validation.
 
 Reference fixtures should include existing hills, depressions, deep craters, buildings, and underground maps such as `field_grass_hill_00`, `field_grass_hole_00`, `crater_small`, `two_story_house`, and `underground_lab`.
 
@@ -518,7 +525,7 @@ Reference fixtures should include existing hills, depressions, deep craters, bui
 
 Generate and validate one two-level hill and one two-level depression from recipes. Each map has correctly sized populated levels, preserves unused levels as `[]`, uses valid transition tiles, loads in Godot, and permits runtime traversal between generated elevations.
 
-The structural generation, validation, transition-tile layout, and headless Godot editor-loading portions are delivered. Interactive player traversal remains to be verified before Phase 4C is complete.
+The structural generation, validation, transition-tile layout, headless Godot editor loading, and deterministic mesh/collision/navigation-source orientation checks are delivered. Asynchronous navigation baking and interactive player traversal remain to be verified before Phase 4C is complete.
 
 ## Phase 5 — Features and furniture
 
@@ -811,11 +818,11 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should finish **Phase 4C runtime traversal verification and transition validation** without expanding into furniture or buildings.
+The next contribution should finish **Phase 4C baked-navigation and player-traversal verification** without expanding into furniture or buildings.
 
-First generate `map_recipe_two_level_hill.json` and `map_recipe_two_level_depression.json` into a development mod, inspect both in the content editor, and verify with a controllable player or an equivalent project-supported runtime test that all four slope rotations permit movement between the intended adjacent levels. Record any mismatch between mesh, collision, navigation, and player movement rather than changing the recipe contract speculatively.
+Generate `map_recipe_two_level_hill.json` and `map_recipe_two_level_depression.json` into a development mod, inspect both in the content editor, and verify with a controllable player that all four slope rotations permit movement between the intended adjacent levels in both directions. Record any mismatch between the already-tested mesh, collision, and navigation-source high edges and the asynchronously baked navigation mesh or player movement.
 
-Then convert only confirmed runtime behavior into focused automated checks. At minimum, determine whether a reliable Godot integration test can load a generated map, construct its chunk geometry, and verify slope endpoints or navigation connectivity. Keep the existing Python endpoint check structural: it may require occupied high and low neighbors, but it must not claim general walkability. Document which support and transition checks remain runtime-only.
+If the navigation bake can be awaited reliably without making GUT slow or flaky, add a narrow Godot integration test that confirms lower and upper surfaces are connected for each rotation. Otherwise, document baked connectivity and player traversal as manual runtime checks. Keep the Python endpoint check structural; it may require occupied high and low neighbors, but it must not claim general walkability.
 
 If traversal succeeds and an appropriate repeatable verification is in place, mark Phase 4C complete and make Phase 5 feature/furniture schema investigation next. If traversal exposes an engine issue, keep Phase 4C in progress and address the smallest runtime or recipe-example correction with regression coverage.
 
@@ -845,7 +852,7 @@ Do not commit or push unless explicitly requested.
 [Complete] Palettes, reusable cell patterns, and deterministic variation
 [In progress] Vertical-level schema and 3D placement foundations
 [Delivered] Structural multi-level recipes, validation, and slope examples
-[Next]     Runtime traversal verification and confirmed transition checks
+[Next]     Baked-navigation and player-traversal verification
 [Planned]  Features and furniture
 [Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
