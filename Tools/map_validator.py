@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Set
 
 MAP_WIDTH = 32
 MAP_HEIGHT = 32
+LEVEL_COUNT = 21
 POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
 
 class MapValidationError(Exception):
@@ -107,6 +108,11 @@ class MapValidator:
         if not isinstance(levels, list):
              self.add_error(file_path, "'levels' must be an array.")
         else:
+            if len(levels) != LEVEL_COUNT:
+                self.add_error(
+                    file_path,
+                    f"Level count: expected {LEVEL_COUNT}, actual {len(levels)}"
+                )
             for level_idx, level in enumerate(levels):
                 if not isinstance(level, list):
                     self.add_error(file_path, f"Level {level_idx} is not an array (list).")

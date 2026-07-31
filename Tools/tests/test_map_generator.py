@@ -56,6 +56,224 @@ class MapGeneratorTests(unittest.TestCase):
             [270, 0, 180, 180, 90, 180, 270, 90, 180, 0, 270, 180],
         )
 
+    def test_legacy_regions_and_every_operation_can_target_logical_z(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["patterns"] = {
+            "one": [{"at": [0, 0], "tile": {"id": "grass_flowers_01"}}]
+        }
+        recipe["regions"] = [
+            {
+                "x": 1,
+                "y": 1,
+                "z": -1,
+                "width": 2,
+                "height": 1,
+                "tile": {"id": "dirt_light_00"},
+            }
+        ]
+        recipe["operations"] = [
+            {
+                "type": "set",
+                "x": 1,
+                "y": 1,
+                "z": 1,
+                "tile": {"id": "dirt_light_00"},
+            },
+            {
+                "type": "rectangle",
+                "x": 2,
+                "y": 1,
+                "z": 1,
+                "width": 2,
+                "height": 1,
+                "tile": {"id": "dirt_light_00"},
+            },
+            {
+                "type": "rectangle_outline",
+                "x": 4,
+                "y": 1,
+                "z": 1,
+                "width": 2,
+                "height": 2,
+                "tile": {"id": "dirt_light_00"},
+            },
+            {
+                "type": "line",
+                "from": [6, 1],
+                "to": [7, 1],
+                "z": 1,
+                "tile": {"id": "dirt_light_00"},
+            },
+            {
+                "type": "scatter",
+                "region": {"x": 8, "y": 1, "width": 1, "height": 1},
+                "count": 1,
+                "z": 1,
+                "tile": {"id": "dirt_light_00"},
+            },
+            {"type": "pattern", "pattern": "one", "at": [9, 1], "z": 1},
+        ]
+
+        levels = generate_map(recipe, TILES_PATH)["levels"]
+
+        self.assertEqual(len(levels[9]), 1024)
+        self.assertEqual(levels[9][1 * 32 + 1], {"id": "dirt_light_00"})
+        self.assertEqual(len(levels[10]), 1024)
+        self.assertEqual(len(levels[11]), 1024)
+        for x in range(1, 9):
+            self.assertEqual(levels[11][1 * 32 + x], {"id": "dirt_light_00"})
+        self.assertEqual(levels[11][1 * 32 + 9], {"id": "grass_flowers_01"})
+        self.assertTrue(all(level == [] for level in levels[:9]))
+        self.assertTrue(all(level == [] for level in levels[12:]))
+
+    def test_grouped_levels_apply_in_declaration_order_with_local_overwrites(self):
+        recipe = valid_recipe()
+        del recipe["base_tile"]
+        del recipe["regions"]
+        recipe["levels"] = [
+            {
+                "z": 1,
+                "base_tile": {"id": "grass_plain_01"},
+                "regions": [
+                    {
+                        "x": 2,
+                        "y": 2,
+                        "width": 2,
+                        "height": 1,
+                        "tile": {"id": "dirt_light_00"},
+                    }
+                ],
+                "operations": [
+                    {"type": "set", "x": 2, "y": 2, "tile": None}
+                ],
+            },
+            {"z": 0, "base_tile": {"id": "dirt_light_00"}},
+        ]
+
+        levels = generate_map(recipe, TILES_PATH)["levels"]
+
+        self.assertEqual(levels[11][2 * 32 + 2], {})
+        self.assertEqual(levels[11][2 * 32 + 3], {"id": "dirt_light_00"})
+        self.assertTrue(all(tile == {"id": "dirt_light_00"} for tile in levels[10]))
+
+    def test_grouped_levels_are_deterministic_and_consume_rng_in_declaration_order(self):
+        recipe = valid_recipe()
+        recipe["seed"] = 19
+        recipe["palette"] = {
+            "ground": [
+                {"id": "grass_plain_01", "weight": 1},
+                {"id": "grass_flowers_00", "weight": 1},
+            ]
+        }
+        del recipe["base_tile"]
+        del recipe["regions"]
+        recipe["levels"] = [
+            {"z": 1, "base_tile": {"palette": "ground"}},
+            {"z": 0, "base_tile": {"palette": "ground"}},
+        ]
+
+        first = generate_map(recipe, TILES_PATH)
+        second = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(first, second)
+        self.assertEqual(
+            [tile["id"] for tile in first["levels"][11][:6]],
+            [
+                "grass_plain_01",
+                "grass_plain_01",
+                "grass_plain_01",
+                "grass_flowers_00",
+                "grass_flowers_00",
+                "grass_flowers_00",
+            ],
+        )
+        self.assertEqual(
+            [tile["id"] for tile in first["levels"][10][:3]],
+            ["grass_flowers_00", "grass_flowers_00", "grass_plain_01"],
+        )
+
+    def test_grouped_levels_reject_ambiguous_or_malformed_definitions(self):
+        cases = [
+            ({"levels": []}, "levels must be a non-empty array"),
+            ({"levels": [42]}, r"levels\[0\] must be an object"),
+            ({"levels": [{}]}, r"levels\[0\].z is required"),
+            (
+                {"levels": [{"z": 0}, {"z": 0}]},
+                r"levels\[1\].z duplicates logical level 0",
+            ),
+            (
+                {"levels": [{"z": 0, "extra": True}]},
+                r"unknown levels\[0\] field 'extra'",
+            ),
+        ]
+        for changes, expected_message in cases:
+            with self.subTest(changes=changes):
+                recipe = valid_recipe()
+                del recipe["base_tile"]
+                del recipe["regions"]
+                recipe.update(changes)
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+        recipe = valid_recipe()
+        recipe["levels"] = [{"z": 1}]
+        with self.assertRaisesRegex(
+            RecipeError, "recipe.base_tile cannot be combined with recipe.levels"
+        ):
+            generate_map(recipe, TILES_PATH)
+
+    def test_logical_z_rejects_boolean_and_out_of_range_values(self):
+        for invalid_z in (-11, 11, True, 1.5, "1"):
+            with self.subTest(invalid_z=invalid_z):
+                recipe = valid_recipe()
+                recipe["operations"] = [
+                    {
+                        "type": "set",
+                        "x": 0,
+                        "y": 0,
+                        "z": invalid_z,
+                        "tile": None,
+                    }
+                ]
+                with self.assertRaisesRegex(
+                    RecipeError, "must be an integer between -10 and 10"
+                ):
+                    generate_map(recipe, TILES_PATH)
+
+    def test_grouped_operations_inherit_z_and_reject_nested_z(self):
+        recipe = valid_recipe()
+        del recipe["base_tile"]
+        del recipe["regions"]
+        recipe["levels"] = [
+            {
+                "z": -1,
+                "operations": [
+                    {"type": "set", "x": 0, "y": 0, "z": -1, "tile": None}
+                ],
+            }
+        ]
+
+        with self.assertRaisesRegex(
+            RecipeError, "must be omitted because the enclosing level defines z"
+        ):
+            generate_map(recipe, TILES_PATH)
+
+    def test_explicit_level_with_only_empty_tiles_remains_unused(self):
+        recipe = valid_recipe()
+        del recipe["base_tile"]
+        del recipe["regions"]
+        recipe["levels"] = [
+            {
+                "z": 3,
+                "operations": [
+                    {"type": "set", "x": 0, "y": 0, "tile": None}
+                ],
+            }
+        ]
+
+        self.assertEqual(generate_map(recipe, TILES_PATH)["levels"][13], [])
+
     def test_rectangular_regions_replace_tiles_in_row_major_grid(self):
         recipe = valid_recipe()
         recipe["base_tile"] = {"id": "grass_plain_01"}
@@ -712,15 +930,63 @@ class MapGeneratorTests(unittest.TestCase):
                 ):
                     generate_map(recipe, TILES_PATH)
 
-    def test_example_recipe_generates_successfully(self):
-        recipe_path = ROOT / "Tools" / "examples" / "map_recipe.json"
-        generated = generate_map(
-            json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
-        )
+    def test_example_recipes_generate_successfully(self):
+        cases = {
+            "map_recipe.json": {10},
+            "map_recipe_two_level_hill.json": {10, 11},
+            "map_recipe_two_level_depression.json": {9, 10},
+        }
+        for filename, expected_populated_indices in cases.items():
+            with self.subTest(filename=filename):
+                recipe_path = ROOT / "Tools" / "examples" / filename
+                generated = generate_map(
+                    json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+                )
 
-        self.assertEqual(generated["mapwidth"], 32)
-        self.assertEqual(generated["mapheight"], 32)
-        self.assertEqual(len(generated["levels"][10]), 1024)
+                self.assertEqual(generated["mapwidth"], 32)
+                self.assertEqual(generated["mapheight"], 32)
+                self.assertEqual(
+                    {
+                        index
+                        for index, level in enumerate(generated["levels"])
+                        if level
+                    },
+                    expected_populated_indices,
+                )
+                for index in expected_populated_indices:
+                    self.assertEqual(len(generated["levels"][index]), 1024)
+
+    def test_multi_level_examples_have_supported_slope_endpoints(self):
+        high_direction = {
+            0: (0, -1),
+            90: (1, 0),
+            180: (0, 1),
+            270: (-1, 0),
+        }
+        for filename in (
+            "map_recipe_two_level_hill.json",
+            "map_recipe_two_level_depression.json",
+        ):
+            with self.subTest(filename=filename):
+                recipe_path = ROOT / "Tools" / "examples" / filename
+                generated = generate_map(
+                    json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+                )
+                slopes = []
+                for level_index, level in enumerate(generated["levels"]):
+                    for tile_index, tile in enumerate(level):
+                        if tile.get("id") == "grass_ramp_00":
+                            slopes.append((level_index, tile_index, tile))
+
+                self.assertEqual(len(slopes), 4)
+                for level_index, tile_index, tile in slopes:
+                    x = tile_index % 32
+                    y = tile_index // 32
+                    delta_x, delta_y = high_direction[tile.get("rotation", 0)]
+                    high_index = (y + delta_y) * 32 + x + delta_x
+                    low_index = (y - delta_y) * 32 + x - delta_x
+                    self.assertTrue(generated["levels"][level_index][high_index])
+                    self.assertTrue(generated["levels"][level_index - 1][low_index])
 
     def test_invalid_unicode_metadata_is_rejected_with_a_clear_error(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -827,6 +1093,22 @@ class MapValidatorDimensionTests(unittest.TestCase):
 
         self.assertEqual(map_data["levels"][0], [])
         self.assertEqual(self.validate(map_data), [])
+
+    def test_rejects_incorrect_level_count(self):
+        for count in (20, 22):
+            with self.subTest(count=count):
+                map_data = generate_map(valid_recipe(), TILES_PATH)
+                if count == 20:
+                    map_data["levels"].pop()
+                else:
+                    map_data["levels"].append([])
+
+                errors = self.validate(map_data)
+
+                self.assertTrue(any("Level count" in error for error in errors))
+                self.assertTrue(
+                    any(f"expected 21, actual {count}" in error for error in errors)
+                )
 
 
 if __name__ == "__main__":

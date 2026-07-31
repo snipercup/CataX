@@ -21,6 +21,8 @@ except ImportError:  # Direct execution from Tools/.
 
 LEVEL_COUNT = 21
 POPULATED_LEVEL_INDEX = 10
+MIN_LOGICAL_Z = -POPULATED_LEVEL_INDEX
+MAX_LOGICAL_Z = LEVEL_COUNT - POPULATED_LEVEL_INDEX - 1
 MAP_WIDTH = 32
 MAP_HEIGHT = 32
 DEFAULT_CONNECTIONS = {
@@ -29,19 +31,23 @@ DEFAULT_CONNECTIONS = {
     "south": "ground",
     "west": "ground",
 }
+# Recipe rotations use the same editor-facing values stored in map JSON. Keep
+# them unchanged here; Chunk.get_block_rotation() applies shape-specific runtime
+# conversion when a newly generated map is loaded.
 VALID_ROTATIONS = (0, 90, 180, 270)
 TILE_FIELDS = {"id", "palette", "rotation"}
 PALETTE_FIELDS = {"id", "weight", "rotation"}
 DEFINITION_NAME_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
-REGION_FIELDS = {"x", "y", "width", "height", "tile"}
-SET_FIELDS = {"type", "x", "y", "tile"}
-RECTANGLE_FIELDS = {"type", "x", "y", "width", "height", "tile"}
-LINE_FIELDS = {"type", "from", "to", "tile"}
-SCATTER_FIELDS = {"type", "region", "tile", "count", "density"}
+REGION_FIELDS = {"x", "y", "z", "width", "height", "tile"}
+SET_FIELDS = {"type", "x", "y", "z", "tile"}
+RECTANGLE_FIELDS = {"type", "x", "y", "z", "width", "height", "tile"}
+LINE_FIELDS = {"type", "from", "to", "z", "tile"}
+SCATTER_FIELDS = {"type", "region", "z", "tile", "count", "density"}
 SCATTER_REGION_FIELDS = {"x", "y", "width", "height"}
 PATTERN_CELL_FIELDS = {"at", "tile"}
-PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "rotation"}
+PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "z", "rotation"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
+LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
     "id",
     "name",
@@ -52,6 +58,7 @@ RECIPE_FIELDS = {
     "patterns",
     "regions",
     "operations",
+    "levels",
 }
 
 
@@ -333,6 +340,31 @@ def _coordinate(value: Any, context: str, maximum: int) -> int:
     return value
 
 
+def _logical_z(value: Any, context: str) -> int:
+    if type(value) is not int or not MIN_LOGICAL_Z <= value <= MAX_LOGICAL_Z:
+        raise RecipeError(
+            f"{context} must be an integer between {MIN_LOGICAL_Z} and {MAX_LOGICAL_Z}"
+        )
+    return value
+
+
+def _level_index(logical_z: int) -> int:
+    return logical_z + POPULATED_LEVEL_INDEX
+
+
+def _new_empty_level() -> list[dict[str, Any]]:
+    return [{} for _ in range(MAP_WIDTH * MAP_HEIGHT)]
+
+
+def _get_or_create_level(
+    levels: list[list[dict[str, Any]]], logical_z: int
+) -> list[dict[str, Any]]:
+    index = _level_index(logical_z)
+    if not levels[index]:
+        levels[index] = _new_empty_level()
+    return levels[index]
+
+
 def _apply_set(
     level: list[dict[str, Any]],
     operation: dict[str, Any],
@@ -592,56 +624,51 @@ def _apply_pattern(
         )
 
 
-def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
-    """Validate a recipe and return map data matching DMap's saved format."""
-    if not isinstance(recipe, dict):
-        raise RecipeError("recipe must be a JSON object")
-    unknown_fields = sorted(set(recipe) - RECIPE_FIELDS)
-    if unknown_fields:
-        raise RecipeError(f"unknown recipe field '{unknown_fields[0]}'")
+def _target_z(
+    spec: dict[str, Any], context: str, inherited_z: int | None
+) -> int:
+    if inherited_z is not None:
+        if "z" in spec:
+            raise RecipeError(
+                f"{context}.z must be omitted because the enclosing level defines z"
+            )
+        return inherited_z
+    return _logical_z(spec.get("z", 0), f"{context}.z")
 
-    required_strings = ("id", "name", "description")
-    for field in required_strings:
-        if not isinstance(recipe.get(field), str) or not recipe[field].strip():
-            raise RecipeError(f"{field} must be a non-empty string")
-        _validate_unicode(recipe[field], field)
-    if re.fullmatch(r"[A-Za-z0-9_-]+", recipe["id"]) is None:
-        raise RecipeError(
-            "id may contain only letters, numbers, underscores, and hyphens"
-        )
 
-    seed = recipe.get("seed")
-    if type(seed) is not int:
-        raise RecipeError("seed must be an integer")
-    known_tiles = _tile_ids(Path(tiles_path))
-    palette = _validate_palette(recipe.get("palette", {}), known_tiles)
-    patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
-    rng = random.Random(seed)
-    level = [
-        _make_tile(
-            recipe.get("base_tile"), rng, known_tiles, "base_tile", palette=palette
-        )
-        for _ in range(MAP_WIDTH * MAP_HEIGHT)
-    ]
-
-    regions = recipe.get("regions", [])
+def _apply_layout(
+    levels: list[list[dict[str, Any]]],
+    regions: Any,
+    operations: Any,
+    rng: random.Random,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+    patterns: dict[str, list[dict[str, Any]]],
+    context_prefix: str = "",
+    inherited_z: int | None = None,
+) -> None:
+    regions_context = f"{context_prefix}regions"
     if not isinstance(regions, list):
-        raise RecipeError("regions must be an array")
+        raise RecipeError(f"{regions_context} must be an array")
     for index, region in enumerate(regions):
-        context = f"regions[{index}]"
+        context = f"{regions_context}[{index}]"
         if not isinstance(region, dict):
             raise RecipeError(f"{context} must be an object")
+        logical_z = _target_z(region, context, inherited_z)
+        level = _get_or_create_level(levels, logical_z)
         _apply_rectangle(
             level, region, rng, known_tiles, palette, context, REGION_FIELDS
         )
 
-    operations = recipe.get("operations", [])
+    operations_context = f"{context_prefix}operations"
     if not isinstance(operations, list):
-        raise RecipeError("operations must be an array")
+        raise RecipeError(f"{operations_context} must be an array")
     for index, operation in enumerate(operations):
-        context = f"operations[{index}]"
+        context = f"{operations_context}[{index}]"
         if not isinstance(operation, dict):
             raise RecipeError(f"{context} must be an object")
+        logical_z = _target_z(operation, context, inherited_z)
+        level = _get_or_create_level(levels, logical_z)
         operation_type = operation.get("type")
         if operation_type in TILE_OPERATION_TYPES and "tile" not in operation:
             raise RecipeError(f"{context}.tile is required")
@@ -668,8 +695,120 @@ def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
                 f"{context}.type has unknown operation '{operation_type}'"
             )
 
-    levels = [[] for _ in range(LEVEL_COUNT)]
-    levels[POPULATED_LEVEL_INDEX] = level
+
+def _generate_levels(
+    recipe: dict[str, Any],
+    rng: random.Random,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+    patterns: dict[str, list[dict[str, Any]]],
+) -> list[list[dict[str, Any]]]:
+    levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
+    if "levels" not in recipe:
+        ground_level = _get_or_create_level(levels, 0)
+        for index in range(MAP_WIDTH * MAP_HEIGHT):
+            ground_level[index] = _make_tile(
+                recipe.get("base_tile"),
+                rng,
+                known_tiles,
+                "base_tile",
+                palette=palette,
+            )
+        _apply_layout(
+            levels,
+            recipe.get("regions", []),
+            recipe.get("operations", []),
+            rng,
+            known_tiles,
+            palette,
+            patterns,
+        )
+        return levels
+
+    conflicting_fields = [
+        field for field in ("base_tile", "regions", "operations") if field in recipe
+    ]
+    if conflicting_fields:
+        raise RecipeError(
+            f"recipe.{conflicting_fields[0]} cannot be combined with recipe.levels"
+        )
+    level_specs = recipe["levels"]
+    if not isinstance(level_specs, list) or not level_specs:
+        raise RecipeError("levels must be a non-empty array")
+
+    validated_specs: list[tuple[int, dict[str, Any]]] = []
+    seen_z: set[int] = set()
+    for index, level_spec in enumerate(level_specs):
+        context = f"levels[{index}]"
+        if not isinstance(level_spec, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(level_spec) - LEVEL_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if "z" not in level_spec:
+            raise RecipeError(f"{context}.z is required")
+        logical_z = _logical_z(level_spec["z"], f"{context}.z")
+        if logical_z in seen_z:
+            raise RecipeError(f"{context}.z duplicates logical level {logical_z}")
+        seen_z.add(logical_z)
+        validated_specs.append((logical_z, level_spec))
+
+    for index, (logical_z, level_spec) in enumerate(validated_specs):
+        context = f"levels[{index}]"
+        level = _get_or_create_level(levels, logical_z)
+        if "base_tile" in level_spec:
+            for tile_index in range(MAP_WIDTH * MAP_HEIGHT):
+                level[tile_index] = _make_tile(
+                    level_spec["base_tile"],
+                    rng,
+                    known_tiles,
+                    f"{context}.base_tile",
+                    palette=palette,
+                )
+        _apply_layout(
+            levels,
+            level_spec.get("regions", []),
+            level_spec.get("operations", []),
+            rng,
+            known_tiles,
+            palette,
+            patterns,
+            context_prefix=f"{context}.",
+            inherited_z=logical_z,
+        )
+
+    for index, level in enumerate(levels):
+        if level and not any(level):
+            levels[index] = []
+    return levels
+
+
+def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
+    """Validate a recipe and return map data matching DMap's saved format."""
+    if not isinstance(recipe, dict):
+        raise RecipeError("recipe must be a JSON object")
+    unknown_fields = sorted(set(recipe) - RECIPE_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown recipe field '{unknown_fields[0]}'")
+
+    required_strings = ("id", "name", "description")
+    for field in required_strings:
+        if not isinstance(recipe.get(field), str) or not recipe[field].strip():
+            raise RecipeError(f"{field} must be a non-empty string")
+        _validate_unicode(recipe[field], field)
+    if re.fullmatch(r"[A-Za-z0-9_-]+", recipe["id"]) is None:
+        raise RecipeError(
+            "id may contain only letters, numbers, underscores, and hyphens"
+        )
+
+    seed = recipe.get("seed")
+    if type(seed) is not int:
+        raise RecipeError("seed must be an integer")
+    known_tiles = _tile_ids(Path(tiles_path))
+    palette = _validate_palette(recipe.get("palette", {}), known_tiles)
+    patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
+    rng = random.Random(seed)
+    levels = _generate_levels(recipe, rng, known_tiles, palette, patterns)
 
     return {
         "id": recipe["id"],

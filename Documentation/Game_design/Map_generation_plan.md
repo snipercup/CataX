@@ -121,14 +121,16 @@ The generator currently supports:
 * display name;
 * description;
 * deterministic integer seed;
-* one populated level at level-array index 10;
-* a base tile covering the entire map;
+* legacy-compatible ground-level generation at level-array index 10;
+* explicit logical levels from `z: -10` through `z: 10`;
+* multiple populated levels using per-placement `z` or grouped `levels` definitions;
+* a base tile covering the entire legacy ground level or an explicit grouped level;
 * ordered rectangular regions;
-* ordered `set`, `rectangle`, `rectangle_outline`, `line`, and `scatter` operations;
+* ordered, level-aware `set`, `rectangle`, `rectangle_outline`, `line`, and `scatter` operations;
 * inclusive Bresenham line rasterization;
 * deterministic scatter by count or density;
 * root-level reusable cell-pattern definitions;
-* ordered pattern placement at an anchor with fixed quarter-turn rotation;
+* ordered, level-aware pattern placement at an anchor with fixed quarter-turn rotation;
 * root-level weighted tile palettes referenced by base tiles and placement operations;
 * fixed tile rotations;
 * deterministic random rotations;
@@ -149,11 +151,13 @@ mapwidth: 32
 mapheight: 32
 populated level size: 1024
 unused levels: []
+logical z range: -10 through +10
+level-array index: logical z + 10
 ```
 
 ## 5. Generator and validator tests: complete for version 1
 
-The current Python test suite contains 44 tests and passes.
+The current Python test suite contains 53 tests and passes.
 
 Coverage includes:
 
@@ -173,6 +177,12 @@ Coverage includes:
 * unknown tile IDs;
 * palette references, weighted deterministic selection, and malformed palette rejection;
 * reusable pattern expansion, rotation, ordering, determinism, compatibility, and validation;
+* logical-z conversion and bounds;
+* legacy per-placement z targeting across every operation type;
+* grouped multi-level generation, declaration order, local overwrite order, and RNG order;
+* duplicate, ambiguous, malformed, and nested z-definition rejection;
+* exact 21-level output and validator rejection of incorrect level counts;
+* maintained two-level hill and depression recipes with structurally supported slope endpoints;
 * invalid metadata;
 * malformed tile databases;
 * out-of-bounds placement;
@@ -230,7 +240,6 @@ It does not currently support:
 * nested, shape-based, or multi-level pattern composition;
 * circles or irregular regions;
 * terrain blending;
-* multiple populated vertical levels;
 * features or furniture;
 * areas or rooms;
 * doors;
@@ -406,7 +415,7 @@ This criterion is met by weighted palettes, deterministic scatter, and reusable 
 
 ## Phase 4C — Vertical levels and 3D placement foundations
 
-**Status: next; requires schema and runtime investigation**
+**Status: in progress; structural generation delivered, runtime traversal verification remains**
 
 Dimensionfall maps already contain 21 level arrays. Level-array index `10` is logical elevation `0`, with valid logical elevations from `-10` through `+10`:
 
@@ -430,6 +439,19 @@ Goals:
 * define deterministic operation and RNG ordering across levels;
 * validate horizontal bounds, vertical bounds, duplicate level definitions, and complete pattern expansion;
 * investigate slope, stair, support, collision, and traversal semantics before enforcing gameplay rules.
+
+Delivered:
+
+* logical `z` validation from `-10` through `+10` and conversion to the fixed 21 level-array indices;
+* backwards-compatible root placement where omitted `z` remains logical level `0`;
+* optional `z` on legacy regions and every root placement operation, including pattern invocation;
+* strict grouped `levels` definitions with unique `z`, optional per-level base tiles, regions, and operations;
+* rejection of ambiguous mixing between grouped levels and root `base_tile`, `regions`, or `operations`;
+* declaration-order RNG consumption across grouped levels and existing region-before-operation ordering within each level;
+* automatic preservation of all-empty levels as `[]` and exactly 1024 entries for every populated level;
+* independent validator enforcement of exactly 21 level arrays;
+* maintained two-level hill and depression recipes using known `shape: "slope"` transition tiles;
+* focused tests for vertical bounds, compatibility, every placement type, deterministic ordering, malformed schemas, exact level shape, and slope endpoint support.
 
 Recommended compatibility form for individual placement:
 
@@ -474,10 +496,17 @@ Initial structural validation:
 * duplicate or ambiguous per-level definitions are rejected;
 * identical recipes and seeds produce identical output across every populated level.
 
-Runtime investigation must determine:
+Runtime investigation established:
 
-* how tiles with `shape: "slope"` connect adjacent logical levels;
-* how slope and stair rotation determines lower and upper endpoints;
+* `Chunk.create_block_position_dictionary_new_arraymesh()` maps level-array index `i` to world height `i - 10`;
+* tiles with `shape: "slope"` generate sloped mesh, collision, and navigation geometry within one vertical block;
+* recipe and map-editor slope rotation selects the high edge: `0` north, `90` east, `180` south, and `270` west;
+* `Chunk.get_block_rotation()` converts those newly loaded slope values before mesh, collision, and navigation code uses its internal orientation, so recipes must preserve the editor-facing values rather than pre-converting them;
+* existing hills, holes, and buildings place slope tiles on the upper of the two connected logical levels;
+* the maintained examples can therefore validate occupied high-side and lower-level low-side endpoints without inventing a broader support model.
+
+Runtime investigation must still determine:
+
 * whether transitions require corresponding tiles on both levels;
 * how floors, walls, roofs, ceilings, and intentional air gaps occupy stacked levels;
 * whether support is determined by tile presence, collision shape, or another runtime rule;
@@ -488,6 +517,8 @@ Reference fixtures should include existing hills, depressions, deep craters, bui
 ### Success criterion
 
 Generate and validate one two-level hill and one two-level depression from recipes. Each map has correctly sized populated levels, preserves unused levels as `[]`, uses valid transition tiles, loads in Godot, and permits runtime traversal between generated elevations.
+
+The structural generation, validation, transition-tile layout, and headless Godot editor-loading portions are delivered. Interactive player traversal remains to be verified before Phase 4C is complete.
 
 ## Phase 5 — Features and furniture
 
@@ -780,15 +811,17 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should begin **Phase 4C vertical-level schema and 3D placement foundations**.
+The next contribution should finish **Phase 4C runtime traversal verification and transition validation** without expanding into furniture or buildings.
 
-First inspect the runtime, content editor, tile definitions, and representative existing maps to document the authoritative logical-z, slope, stair, support, and transition behavior. Use logical `z` values from `-10` through `+10`, map `z: 0` to level-array index `10`, and keep `[x, y]` as the top-down coordinate format.
+First generate `map_recipe_two_level_hill.json` and `map_recipe_two_level_depression.json` into a development mod, inspect both in the content editor, and verify with a controllable player or an equivalent project-supported runtime test that all four slope rotations permit movement between the intended adjacent levels. Record any mismatch between mesh, collision, navigation, and player movement rather than changing the recipe contract speculatively.
 
-Then add the smallest backwards-compatible multi-level recipe contract: omitted `z` continues targeting logical level `0`; explicit per-level content can populate additional levels; every populated level contains exactly 1024 entries; unused levels remain `[]`; and all existing operations and pattern invocations use the same level-aware placement path. Reject ambiguous duplicate level definitions, invalid z values, and expansions outside horizontal or vertical bounds.
+Then convert only confirmed runtime behavior into focused automated checks. At minimum, determine whether a reliable Godot integration test can load a generated map, construct its chunk geometry, and verify slope endpoints or navigation connectivity. Keep the existing Python endpoint check structural: it may require occupied high and low neighbors, but it must not claim general walkability. Document which support and transition checks remain runtime-only.
 
-Keep this contribution focused on terrain and structural generation. Do not add furniture, semantic areas, buildings, roads, towns, nested patterns, or broad gameplay validation. Do not invent support rules that are not confirmed by the runtime.
+If traversal succeeds and an appropriate repeatable verification is in place, mark Phase 4C complete and make Phase 5 feature/furniture schema investigation next. If traversal exposes an engine issue, keep Phase 4C in progress and address the smallest runtime or recipe-example correction with regression coverage.
 
-Add focused tests for z/index conversion, legacy compatibility, multiple populated levels, determinism and RNG ordering across levels, per-level operation ordering, invalid and duplicate z definitions, horizontal and vertical bounds, exact level sizes, and unused-level preservation. Generate one two-level hill and one two-level depression, validate both maps, inspect them in the content editor, verify traversal in Godot, and run `git diff --check`.
+Do not add furniture, semantic areas, buildings, roads, towns, nested patterns, multi-level templates, or unconfirmed general support rules in this contribution.
+
+Run the complete Python suite, relevant Godot tests or smoke checks, both example generations through `Tools/map_validator.py`, and `git diff --check`.
 
 Do not commit or push unless explicitly requested.
 
@@ -810,7 +843,9 @@ Do not commit or push unless explicitly requested.
 [Complete] Development moved to snipercup/CataX
 
 [Complete] Palettes, reusable cell patterns, and deterministic variation
-[Next]     Vertical-level schema and 3D placement foundations
+[In progress] Vertical-level schema and 3D placement foundations
+[Delivered] Structural multi-level recipes, validation, and slope examples
+[Next]     Runtime traversal verification and confirmed transition checks
 [Planned]  Features and furniture
 [Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
