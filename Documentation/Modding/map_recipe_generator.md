@@ -235,4 +235,6 @@ Slope rotations in recipes use the same values shown by the map editor:
 | `180` | south |
 | `270` | west |
 
-The generator preserves these editor-facing values in map JSON. When a newly generated map is loaded, `Chunk.get_block_rotation()` applies the slope's shape-specific 90-degree conversion before rendered mesh, collision, and navigation geometry use the internal orientation. Do not pre-convert recipe rotations to the internal `calculate_slope_vertices()` mapping. The maintained examples exercise these known slope endpoints; they are not a general-purpose transition validator.
+The generator preserves these editor-facing values in map JSON. When a newly generated map is loaded, `Chunk.get_block_rotation()` applies the slope's shape-specific conversion before rendered mesh, collision, and navigation geometry use the internal orientation. Do not pre-convert recipe rotations to the internal `calculate_slope_vertices()` mapping.
+
+`Tests/Unit/test_chunk_slope_rotation.gd` verifies all four editor rotations against the converted runtime rotation and confirms matching high edges in rendered mesh vertices, convex collision geometry, and navigation-source faces. The Python example test separately confirms that the authored high-side tile and lower-level low-side tile are occupied. These checks do not bake a navigation mesh or drive a player, so final walkability in both directions remains a Godot runtime verification.

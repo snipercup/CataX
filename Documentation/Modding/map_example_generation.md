@@ -28,6 +28,16 @@ The maintained recipe examples are:
 
 For both multi-level examples, slope rotations use the map editor convention: `0` has its high edge north, `90` east, `180` south, and `270` west. The generator writes those values directly; Godot performs the slope-specific runtime conversion when loading a newly generated map.
 
+When manually testing either multi-level example, check every slope from both directions:
+
+1. approach from the lower-level side;
+2. walk up the visible slope and onto the high-side tile;
+3. turn around and walk back down;
+4. confirm there is no invisible wall or collision plane with a different orientation;
+5. repeat for north, east, south, and west high edges.
+
+Automated GUT coverage verifies that conversion, rendering vertices, collision geometry, and navigation-source faces agree on each high edge. Manual testing is still required to confirm the asynchronously baked navigation mesh and player controller traverse the complete transition correctly.
+
 Copy the corresponding command for the map you want to inspect:
 
 ```bash
@@ -215,6 +225,15 @@ Show all command options:
 
 ```bash
 python3 Tools/generate_map_examples.py --help
+```
+
+Run the focused Godot slope-geometry regression suite:
+
+```bash
+godot --headless --path . \
+  -s addons/gut/gut_cmdln.gd \
+  -gtest=Tests/Unit/test_chunk_slope_rotation.gd \
+  -gexit
 ```
 
 Validate all generated maps in a temporary output directory:
