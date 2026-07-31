@@ -8,6 +8,64 @@ Run all commands from the repository root. On the standard Hermes host checkout:
 cd ~/local/dimensionfall/repository
 ```
 
+## Generate one maintained recipe directly into the mod
+
+Use `Tools/map_generator.py` when you want to select one recipe, preserve its map ID, and publish exactly one map directly into the Dimensionfall mod:
+
+```bash
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_two_level_hill.json \
+  Mods/Dimensionfall/Maps/generated_two_level_hill.json
+```
+
+The maintained recipe examples are:
+
+| Recipe | Output map | Purpose |
+|---|---|---|
+| `Tools/examples/map_recipe.json` | `Mods/Dimensionfall/Maps/generated_meadow_prototype.json` | Ground-level palettes, placement operations, scatter, and reusable patterns. |
+| `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
+| `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
+
+For both multi-level examples, slope rotations use the map editor convention: `0` has its high edge north, `90` east, `180` south, and `270` west. The generator writes those values directly; Godot performs the slope-specific runtime conversion when loading a newly generated map.
+
+Copy the corresponding command for the map you want to inspect:
+
+```bash
+# Ground-level meadow
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe.json \
+  Mods/Dimensionfall/Maps/generated_meadow_prototype.json
+
+# Two-level hill
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_two_level_hill.json \
+  Mods/Dimensionfall/Maps/generated_two_level_hill.json
+
+# Two-level depression
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_two_level_depression.json \
+  Mods/Dimensionfall/Maps/generated_two_level_depression.json
+```
+
+The output filename should match the recipe's `id`, followed by `.json`. The generator validates the map before publishing it and refuses to replace an existing file. To deliberately regenerate the same map after editing its recipe, add `--overwrite`:
+
+```bash
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_two_level_hill.json \
+  Mods/Dimensionfall/Maps/generated_two_level_hill.json \
+  --overwrite
+```
+
+After generating a map, start or restart Godot and follow the content-editor steps below. Files created directly with `map_generator.py` are not registered in the example runner's cleanup manifest. Remove them explicitly when manual testing is complete:
+
+```bash
+rm Mods/Dimensionfall/Maps/generated_meadow_prototype.json
+rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
+rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
+```
+
+Only run the removal command for a file you actually generated. These maintained IDs are intended for development examples; do not overwrite a map with the same ID if it has been repurposed as project content.
+
 ## Safe first run
 
 Generate three variants in a temporary directory:
@@ -80,6 +138,25 @@ python3 Tools/generate_map_examples.py \
   --variants 2 \
   --seed 500
 ```
+
+For example, generate one cleanup-managed hill and one cleanup-managed depression directly in the mod folder:
+
+```bash
+python3 Tools/generate_map_examples.py \
+  Tools/examples/map_recipe_two_level_hill.json \
+  Tools/examples/map_recipe_two_level_depression.json \
+  --output-dir Mods/Dimensionfall/Maps \
+  --variants 1
+```
+
+This produces:
+
+```text
+Mods/Dimensionfall/Maps/generated_two_level_hill_example_001.json
+Mods/Dimensionfall/Maps/generated_two_level_depression_example_001.json
+```
+
+Use `map_generator.py` for one exact recipe output. Use `generate_map_examples.py` when you want multiple seeds, multiple recipes in one command, or manifest-based cleanup.
 
 Use a different tile database when testing another mod's recipe:
 
@@ -159,7 +236,7 @@ for path in sorted(Path("/tmp/dimensionfall-map-examples").glob("*.json")):
     print(
         path.name,
         f"{data['mapwidth']}x{data['mapheight']}",
-        f"ground tiles={len(data['levels'][10])}",
+        f"ground entries={len(data['levels'][10])}",
         f"populated levels={populated}",
     )
 PY
@@ -168,6 +245,6 @@ PY
 ## Current limitations
 
 - Variants change the recipe seed; they do not synthesize new recipe operations.
-- Generated maps contain terrain only. Furniture, areas, buildings, semantic roads, and additional populated levels are not supported yet.
+- Generated maps contain terrain only. Multiple populated logical levels are supported, but furniture, areas, buildings, semantic roads, multi-level templates, and automatic traversal validation are not supported yet.
 - The maps can be inspected with the existing content-editor preview, but the runner does not launch Godot or inject maps into an already-running editor session.
 - Installing examples under `Mods/Dimensionfall/Maps` makes them available to the content editor, but does not automatically reference them from overmap-area generation.

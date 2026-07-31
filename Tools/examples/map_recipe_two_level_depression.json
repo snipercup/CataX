@@ -1,0 +1,75 @@
+{
+	"id": "generated_two_level_depression",
+	"name": "Generated Two-Level Depression",
+	"description": "A structural multi-level example with a lowered dirt floor and four slopes.",
+	"seed": 4102,
+	"levels": [
+		{
+			"z": 0,
+			"base_tile": {
+				"id": "grass_plain_01"
+			},
+			"operations": [
+				{
+					"type": "rectangle",
+					"x": 10,
+					"y": 10,
+					"width": 12,
+					"height": 12,
+					"tile": null
+				},
+				{
+					"type": "set",
+					"x": 10,
+					"y": 15,
+					"tile": {
+						"id": "grass_ramp_00",
+						"rotation": 270
+					}
+				},
+				{
+					"type": "set",
+					"x": 21,
+					"y": 16,
+					"tile": {
+						"id": "grass_ramp_00",
+						"rotation": 90
+					}
+				},
+				{
+					"type": "set",
+					"x": 15,
+					"y": 10,
+					"tile": {
+						"id": "grass_ramp_00",
+						"rotation": 0
+					}
+				},
+				{
+					"type": "set",
+					"x": 16,
+					"y": 21,
+					"tile": {
+						"id": "grass_ramp_00",
+						"rotation": 180
+					}
+				}
+			]
+		},
+		{
+			"z": -1,
+			"operations": [
+				{
+					"type": "rectangle",
+					"x": 10,
+					"y": 10,
+					"width": 12,
+					"height": 12,
+					"tile": {
+						"id": "dirt_light_00"
+					}
+				}
+			]
+		}
+	]
+}
