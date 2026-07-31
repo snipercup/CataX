@@ -33,6 +33,7 @@ func get_data_of_type(type: DMod.ContentType) -> RefCounted:
 func reconstruct(enabled_mods: Array[DMod] = []) -> void:
 	if enabled_mods.is_empty():
 		enabled_mods = Gamedata.mods.get_mods_in_state_order(true)
+	reset()
 
 	# Clear the stats by resetting the instance
 	stats = RStats.new(enabled_mods)
@@ -76,4 +77,28 @@ func reconstruct(enabled_mods: Array[DMod] = []) -> void:
 
 
 func reset() -> void:
+	for content_instance: RefCounted in gamedata_map.values():
+		if content_instance.has_method("get_all"):
+			content_instance.get_all().clear()
 	gamedata_map.clear()
+	maps = null
+	tacticalmaps = null
+	furnitures = null
+	items = null
+	tiles = null
+	mobs = null
+	itemgroups = null
+	playerattributes = null
+	wearableslots = null
+	skills = null
+	stats = null
+	quests = null
+	overmapareas = null
+	mobgroups = null
+	mobfactions = null
+	attacks = null
+	npcs = null
+
+
+func _exit_tree() -> void:
+	reset()

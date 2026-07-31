@@ -15,7 +15,7 @@ func before_each():
 		"global_position_z": 1,
 		"itemgroups": ["generic_test_itemgroup"]
 	})
-	add_child(test_container)
+	add_child_autoqfree(test_container)
 	await get_tree().process_frame
 
 func after_each():

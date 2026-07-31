@@ -32,6 +32,20 @@ func _init(inventory_: Inventory) -> void:
     inventory = inventory_
 
 
+func cleanup() -> void:
+    var constraints: Array[Object] = [
+        _weight_constraint,
+        _stacks_constraint,
+        _grid_constraint,
+    ]
+    _weight_constraint = null
+    _stacks_constraint = null
+    _grid_constraint = null
+    for constraint: Object in constraints:
+        if is_instance_valid(constraint):
+            constraint.free()
+
+
 func _on_item_added(item: InventoryItem) -> void:
     var enforce_constraints_success = _enforce_constraints(item)
     assert(enforce_constraints_success, "Failed to enforce constraints!")

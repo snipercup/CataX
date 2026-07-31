@@ -11,7 +11,7 @@ func before_each():
 	const PLAYER_SCENE = preload("res://Scenes/player.tscn")
 	player = PLAYER_SCENE.instantiate()
 	player.testing = true
-	add_child(player)
+	add_child_autoqfree(player)
 	await get_tree().process_frame
 
 func after_each():

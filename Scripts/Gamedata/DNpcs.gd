@@ -36,6 +36,14 @@ func get_all() -> Dictionary:
 	return npcdict
 
 
+func clear() -> void:
+	for npc: DNpc in npcdict.values():
+		npc.parent = null
+		npc.sprite = null
+	npcdict.clear()
+	sprites.clear()
+
+
 func by_id(npcid: String) -> DNpc:
 	return npcdict[npcid]
 
@@ -74,6 +82,9 @@ func append_new(newnpc: DNpc) -> void:
 # Delete an NPC by its ID and save changes
 func delete_by_id(npcid: String) -> void:
 	if npcdict.has(npcid):
-		npcdict[npcid].delete()
+		var npc: DNpc = npcdict[npcid]
+		npc.delete()
+		npc.parent = null
+		npc.sprite = null
 		npcdict.erase(npcid)
 		save_npcs_to_disk()

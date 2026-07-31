@@ -52,3 +52,11 @@ func _create_container_material(tex: Texture) -> StandardMaterial3D:
 	mat.albedo_texture = tex
 	mat.flags_transparent = true
 	return mat
+
+
+func _exit_tree() -> void:
+	if mods:
+		mods.clear()
+		mods = null
+	materials.clear()
+	textures.clear()

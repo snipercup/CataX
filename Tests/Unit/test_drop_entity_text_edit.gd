@@ -11,7 +11,7 @@ func before_all():
 
 func before_each():
 	drop_widget = drop_scene.instantiate()
-	add_child(drop_widget)
+	add_child_autoqfree(drop_widget)
 	var mycontenttypes: Array[DMod.ContentType] = [DMod.ContentType.WEARABLESLOTS, DMod.ContentType.PLAYERATTRIBUTES]
 	drop_widget.set_content_types(mycontenttypes)
 	await get_tree().process_frame

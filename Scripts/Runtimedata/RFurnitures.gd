@@ -54,6 +54,10 @@ func by_id(furnitureid: String) -> RFurniture:
 func has_id(furnitureid: String) -> bool:
 	return furnituredict.has(furnitureid)
 
+
+func get_all() -> Dictionary:
+	return furnituredict
+
 # Returns the sprite of the furniture
 func sprite_by_id(furnitureid: String) -> Texture:
 	return furnituredict[furnitureid].sprite

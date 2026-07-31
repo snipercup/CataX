@@ -24,9 +24,9 @@ func before_each():
 	test_chunk.mypos = Vector3(32, 0, 64)  # Example position (chunk (1, 2) with 32x32 blocks)
 	test_chunk.chunk_data = {"id": "basic_test_map", "rotation": 0}
 
-	add_child(mock_level_manager)
-	add_child(mock_level_generator)
-	add_child(test_chunk)
+	add_child_autoqfree(mock_level_manager)
+	add_child_autoqfree(mock_level_generator)
+	add_child_autoqfree(test_chunk)
 
 	await get_tree().process_frame
 
@@ -34,11 +34,13 @@ func before_each():
 # Runs after each test.
 func after_each():
 	if test_chunk and is_instance_valid(test_chunk):
-		test_chunk.queue_free()
+		test_chunk.unload_chunk()
+		await wait_until(func(): return not is_instance_valid(test_chunk), 10, 0.1)
 	if mock_level_manager:
 		mock_level_manager.queue_free()
 	if mock_level_generator:
 		mock_level_generator.queue_free()
+	await get_tree().process_frame
 
 
 # Runs after all tests.
@@ -83,23 +85,23 @@ func test_chunk_load_unload():
 	# Check (0, 0) -> "dot_tile", rotation 0 --> top-left block
 	var block_00 = test_chunk.get_block_at(level_index, Vector2i(0, 0))
 	assert_eq(block_00.get("id", ""), "dot_tile", "Block at (0, 0) is not 'dot_tile'.")
-	assert_eq(block_00.get("rotation", 0.0), 0.0, "Block at (0, 0) does not have rotation 0.")
+	assert_eq(block_00.get("rotation", 0), 0, "Block at (0, 0) does not have rotation 0.")
 
 	# Check (0, 31) -> "dot_tile", rotation 270 --> top-right block
 	var block_031 = test_chunk.get_block_at(level_index, Vector2i(0, 31))
 	assert_eq(block_031.get("id", ""), "dot_tile", "Block at (0, 31) is not 'dot_tile'.")
-	assert_eq(block_031.get("rotation", 0.0), 90.0, "Block at (0, 31) does not have rotation 270.")
+	assert_eq(block_031.get("rotation", 0), 90, "Block at (0, 31) does not have rotation 270.")
 
 	# Check (31, 0) -> "dot_tile", rotation 90 --> bottom-left block
 	var block_310 = test_chunk.get_block_at(level_index, Vector2i(31, 0))
 	assert_eq(block_310.get("id", ""), "dot_tile", "Block at (31, 0) is not 'dot_tile'.")
-	assert_eq(block_310.get("rotation", 0.0), 270.0, "Block at (31, 0) does not have rotation 90.")
+	assert_eq(block_310.get("rotation", 0), 270, "Block at (31, 0) does not have rotation 90.")
 
 	# Check (31, 31) -> "dot_tile", rotation 180 --> bottom-right block
 	var block_3131 = test_chunk.get_block_at(level_index, Vector2i(31, 31))
 	assert_eq(block_3131.get("id", ""), "dot_tile", "Block at (31, 31) is not 'dot_tile'.")
 	assert_eq(
-		block_3131.get("rotation", 0.0), 180.0, "Block at (31, 31) does not have rotation 180."
+		block_3131.get("rotation", 0), 180, "Block at (31, 31) does not have rotation 180."
 	)
 
 	# Call `unload_chunk` and wait for the chunk to be null

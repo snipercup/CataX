@@ -59,6 +59,9 @@ func after_each():
 		mock_level_manager.queue_free()
 	if mock_level_generator:
 		mock_level_generator.queue_free()
+	if mock_target_manager:
+		mock_target_manager.queue_free()
+	await get_tree().process_frame
 
 
 # Runs after all tests.
@@ -179,7 +182,7 @@ func test_mob_melee_combat():
 
 	# Test that the mobs are moving and getting closer
 	var initial_distance: float = first_mob.global_position.distance_to(second_mob.global_position)
-	await wait_frames(30)
+	await wait_physics_frames(30)
 	var new_distance: float = first_mob.global_position.distance_to(second_mob.global_position)
 	assert_true(
 		new_distance < initial_distance,
@@ -192,7 +195,7 @@ func test_mob_melee_combat():
 	assert_true(second_mob.has_state("mobattack"), "Mob should have the mobattack state")
 
 	# Test that the mob transitions into the mob attack state
-	await wait_frames(30)
+	await wait_physics_frames(30)
 	var first_state: State = first_mob.get_current_state()
 	assert_not_null(first_state, "Mob has no state")
 	assert_is(first_state, MobFollow, "Mob should have MobFollow state")
@@ -282,7 +285,7 @@ func test_mob_ranged_vs_melee():
 
 	# Test that the mobs are moving and getting closer
 	var initial_distance: float = first_mob.global_position.distance_to(second_mob.global_position)
-	await wait_frames(30)
+	await wait_physics_frames(30)
 	var new_distance: float = first_mob.global_position.distance_to(second_mob.global_position)
 	assert_true(
 		new_distance < initial_distance,
@@ -293,7 +296,7 @@ func test_mob_ranged_vs_melee():
 	)
 
 	# Test that the mob transitions into the mob ranged attack state
-	await wait_frames(30)
+	await wait_physics_frames(30)
 	var first_state: State = first_mob.get_current_state()
 	assert_not_null(first_state, "Mob has no state")
 	assert_is(first_state, MobRangedAttack, "A different state then expected")
@@ -375,7 +378,7 @@ func test_mob_ranged_vs_furniture():
 
 	# Test that the mobs are moving and getting closer
 	var initial_distance: float = first_mob.global_position.distance_to(second_mob.global_position)
-	await wait_frames(30)
+	await wait_physics_frames(30)
 	var new_distance: float = first_mob.global_position.distance_to(second_mob.global_position)
 	assert_true(
 		new_distance < initial_distance,
@@ -386,7 +389,7 @@ func test_mob_ranged_vs_furniture():
 	)
 
 	# Test that the mob transitions into the mob ranged attack state
-	await wait_frames(30)
+	await wait_physics_frames(30)
 	var first_state: State = first_mob.get_current_state()
 	assert_not_null(first_state, "Mob has no state")
 	assert_is(first_state, MobRangedAttack, "A different state then expected")

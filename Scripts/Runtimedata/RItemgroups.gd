@@ -50,6 +50,10 @@ func by_id(itemgroupid: String) -> RItemgroup:
 func has_id(itemgroupid: String) -> bool:
 	return itemgroupdict.has(itemgroupid)
 
+
+func get_all() -> Dictionary:
+	return itemgroupdict
+
 # Returns the sprite of the item group
 func sprite_by_id(itemgroupid: String) -> Texture:
 	return itemgroupdict[itemgroupid].sprite

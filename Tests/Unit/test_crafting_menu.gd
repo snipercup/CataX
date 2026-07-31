@@ -2,9 +2,9 @@ extends GutTest
 
 
 func test_update_recipe_buttons_adds_buttons():
-	var menu := preload("res://Scripts/CraftingMenu.gd").new()
+	var menu = autofree(preload("res://Scripts/CraftingMenu.gd").new())
 	menu.recipeVBoxContainer = VBoxContainer.new()
-	add_child(menu.recipeVBoxContainer)
+	add_child_autoqfree(menu.recipeVBoxContainer)
 
 	var recipes := [{}, {}, {}]
 	menu._update_recipe_buttons(recipes)

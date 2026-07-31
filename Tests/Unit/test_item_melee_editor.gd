@@ -44,8 +44,8 @@ func after_all():
 
 
 func test_editor_loads_melee_data():
-	assert_eq(editor_instance.damage_spin_box.value, 5)
-	assert_eq(editor_instance.reach_spin_box.value, 1)
+	assert_eq(editor_instance.damage_spin_box.value, 5.0)
+	assert_eq(editor_instance.reach_spin_box.value, 1.0)
 	assert_eq(editor_instance.used_skill_text_edit.get_text(), "bashing")
 	assert_eq(editor_instance.skill_xp_spin_box.value, 1.0)
 	assert_eq(editor_instance.damage_stat_text_edit.get_text(), "strength")

@@ -11,9 +11,9 @@ func before_all():
 
 func before_each():
 	item_manager = preload("res://Scripts/item_manager.gd").new()
-	add_child(item_manager)
+	add_child_autoqfree(item_manager)
 	await get_tree().process_frame
-	item_manager.playerInventory = item_manager.initialize_inventory()
+	item_manager.playerInventory = autoqfree(item_manager.initialize_inventory())
 
 
 func after_each():
@@ -26,9 +26,9 @@ func after_all():
 
 
 func _create_magazine(ammo: int) -> InventoryItem:
-	var mag: InventoryItem = item_manager.playerInventory.create_and_add_item(
+	var mag: InventoryItem = autoqfree(item_manager.playerInventory.create_and_add_item(
 		"generic_test_pistol_magazine"
-	)
+	))
 	var props = mag.get_property("Magazine")
 	props["current_ammo"] = ammo
 	mag.set_property("Magazine", props)
@@ -36,13 +36,13 @@ func _create_magazine(ammo: int) -> InventoryItem:
 
 
 func _create_ammo(inv: InventoryStacked, amount: int) -> InventoryItem:
-	var ammo: InventoryItem = inv.create_and_add_item("bullet_9mm")
+	var ammo: InventoryItem = autoqfree(inv.create_and_add_item("bullet_9mm"))
 	InventoryStacked.set_item_stack_size(ammo, amount)
 	return ammo
 
 
 func _setup_proximity_inventory() -> InventoryStacked:
-	var prox = item_manager.initialize_inventory()
+	var prox = autoqfree(item_manager.initialize_inventory())
 	item_manager.proximityInventories["test"] = prox
 	item_manager.connect_inventory_signals(prox)
 	item_manager.update_accessible_items_list()

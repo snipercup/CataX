@@ -52,6 +52,10 @@ func by_id(itemid: String) -> RItem:
 func has_id(itemid: String) -> bool:
 	return itemdict.has(itemid)
 
+
+func get_all() -> Dictionary:
+	return itemdict
+
 # Returns the sprite of the item
 func sprite_by_id(itemid: String) -> Texture:
 	return itemdict[itemid].sprite

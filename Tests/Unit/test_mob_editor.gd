@@ -106,7 +106,7 @@ func test_editor_toggles_dash_ability():
 	assert_eq(test_mob.special_moves.has("dash"), true, "Expected dash ability to be saved")
 	assert_eq(test_mob.special_moves["dash"]["speed_multiplier"], 3.0, "Expected correct dash speed multiplier")
 	assert_eq(test_mob.special_moves["dash"]["duration"], 1.0, "Expected correct dash duration")
-	assert_eq(test_mob.special_moves["dash"]["cooldown"], 5, "Expected correct dash cooldown")
+	assert_eq(test_mob.special_moves["dash"]["cooldown"], 5.0, "Expected correct dash cooldown")
 
 
 func test_editor_saves_mob_attributes():
@@ -120,7 +120,7 @@ func test_editor_saves_mob_attributes():
 	# Validate saved values
 	assert_eq(test_mob.health, 150, "Expected health to be saved")
 	assert_eq(test_mob.move_speed, 3.5, "Expected move speed to be saved")
-	assert_eq(test_mob.sight_range, 25.0, "Expected sight range to be saved")
+	assert_eq(test_mob.sight_range, 25, "Expected sight range to be saved")
 
 
 func test_editor_preserves_attack_metadata():

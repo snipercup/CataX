@@ -36,6 +36,11 @@ func before_each():
 func after_each():
 	if editor_instance:
 		editor_instance.queue_free()
+	if my_dnpcs:
+		my_dnpcs.clear()
+	my_dnpc = null
+	my_dnpcs = null
+	await get_tree().process_frame
 
 
 func after_all():
@@ -46,7 +51,7 @@ func test_editor_loads_npc_data() -> void:
 	assert_eq(editor_instance.IDTextLabel.text, "test_npc")
 	assert_eq(editor_instance.NameTextEdit.text, "Testy")
 	assert_eq(editor_instance.DescriptionTextEdit.text, "A test NPC")
-	assert_eq(editor_instance.healthSpinBox.value, 10)
+	assert_eq(editor_instance.healthSpinBox.value, 10.0)
 
 
 func test_editor_saves_npc_data() -> void:
@@ -69,7 +74,7 @@ func test_spawn_map_ui_loads_and_saves() -> void:
 	var id_label := editor_instance.spawnMapsGrid.get_child(1) as Label
 	var spin_box := editor_instance.spawnMapsGrid.get_child(2) as SpinBox
 	assert_eq(id_label.text, "basic_test_map")
-	assert_eq(spin_box.value, 50)
+	assert_eq(spin_box.value, 50.0)
 
 	spin_box.value = 20
 	editor_instance._on_save_button_button_up()

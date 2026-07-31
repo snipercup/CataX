@@ -4,7 +4,7 @@ extends GutTest
 # Tests map_manager logging and overwriting of `npc_tile` features
 func test_npc_tile_logged_and_overwritten():
 	var MapManager = load("res://Scripts/Helper/map_manager.gd")
-	var manager = MapManager.new()
+	var manager = autofree(MapManager.new())
 	var tile = {
 		"id": "base", "areas": [{"id": "area"}], "feature": {"type": "npc_tile", "rotation": 0}
 	}
