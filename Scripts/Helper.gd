@@ -40,6 +40,9 @@ func _ready():
 	add_child(save_helper)
 	add_child(quest_helper)
 	add_child(time_helper)
+	add_child(task_manager)
+	task_manager.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(map_manager)
 	add_child(overmap_manager)
 	signal_broker.game_ended.connect(_on_game_ended)
 
@@ -56,6 +59,11 @@ func initialize_helpers():
 func _process(_delta: float) -> void:
 	# task_manager can't _process on it's own so we call it from here
 	task_manager._process(_delta)
+
+
+func _exit_tree() -> void:
+	SignalFactory.clear_registered_signals()
+	signal_broker = null
 
 
 # Called when the game is over and everything will need to be reset to default

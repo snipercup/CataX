@@ -1,7 +1,7 @@
 extends GutTest
 
 
-class TestState:
+class StubState:
 	extends State
 
 	func enter():
@@ -9,7 +9,7 @@ class TestState:
 
 
 func test_transitioned_signal_fires():
-	var state = TestState.new()
-	add_child(state)
+	var state = StubState.new()
+	add_child_autoqfree(state)
 	state.call_deferred("enter")
 	assert_true(await wait_for_signal(state.Transitioned, 1), "Transitioned signal did not fire")

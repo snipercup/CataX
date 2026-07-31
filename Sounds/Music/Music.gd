@@ -37,6 +37,17 @@ func _ready():
 	Helper.signal_broker.game_loaded.connect(_on_game_loaded)
 	Helper.signal_broker.game_ended.connect(_on_game_ended)
 
+
+func _exit_tree() -> void:
+	for child in get_children():
+		if child is AudioStreamPlayer:
+			child.stop()
+			child.stream = null
+	TRACKS.clear()
+	theme_tracks.clear()
+	current_track = null
+	next_track = null
+
 func play_theme(theme: int, repeat_themes: bool = true):
 	if current_theme != theme or !StreamPlayer.playing:
 		is_repeating = false # Prevent accidentally starting an old track playing

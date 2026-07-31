@@ -154,6 +154,20 @@ func initialize_inventory() -> InventoryStacked:
 	return newInventory
 
 
+func _exit_tree() -> void:
+	var owned_inventories: Array[Inventory] = []
+	if is_instance_valid(playerInventory):
+		owned_inventories.append(playerInventory)
+	if is_instance_valid(proximityInventory) and proximityInventory not in owned_inventories:
+		owned_inventories.append(proximityInventory)
+	playerInventory = null
+	proximityInventory = null
+	for inventory: Inventory in owned_inventories:
+		inventory.free()
+	proximityInventories.clear()
+	allAccessibleItems.clear()
+
+
 func create_starting_items():
 	var starting_items_group: RItemgroup = Runtimedata.itemgroups.by_id("starting_items")
 	if not starting_items_group:

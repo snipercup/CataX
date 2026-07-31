@@ -11,9 +11,9 @@ func before_all():
 
 func before_each():
 	item_manager = preload("res://Scripts/item_manager.gd").new()
-	add_child(item_manager)
+	add_child_autoqfree(item_manager)
 	await get_tree().process_frame
-	item_manager.playerInventory = item_manager.initialize_inventory()
+	item_manager.playerInventory = autoqfree(item_manager.initialize_inventory())
 
 
 func after_each():
@@ -26,13 +26,13 @@ func after_all():
 
 
 func _create_weapon() -> InventoryItem:
-	return item_manager.playerInventory.create_and_add_item("generic_test_pistol")
+	return autoqfree(item_manager.playerInventory.create_and_add_item("generic_test_pistol"))
 
 
 func _create_magazine(ammo: int) -> InventoryItem:
-	var mag: InventoryItem = item_manager.playerInventory.create_and_add_item(
+	var mag: InventoryItem = autoqfree(item_manager.playerInventory.create_and_add_item(
 		"generic_test_pistol_magazine"
-	)
+	))
 	var props = mag.get_property("Magazine")
 	props["current_ammo"] = ammo
 	mag.set_property("Magazine", props)
@@ -40,7 +40,7 @@ func _create_magazine(ammo: int) -> InventoryItem:
 
 
 func _create_ammo(amount: int) -> InventoryItem:
-	var ammo: InventoryItem = item_manager.playerInventory.create_and_add_item("bullet_9mm")
+	var ammo: InventoryItem = autoqfree(item_manager.playerInventory.create_and_add_item("bullet_9mm"))
 	InventoryStacked.set_item_stack_size(ammo, amount)
 	return ammo
 
@@ -63,7 +63,7 @@ func test_start_reload_inserts_magazine() -> void:
 	var gun = _create_weapon()
 	var mag = _create_magazine(10)
 	item_manager.start_reload(gun, 0.01, mag)
-	await wait_frames(5)
+	await wait_physics_frames(5)
 	assert_eq(gun.get_property("current_magazine"), mag, "Magazine should be inserted")
 	assert_false(
 		item_manager.playerInventory.has_item(mag), "Magazine should be removed from inventory"

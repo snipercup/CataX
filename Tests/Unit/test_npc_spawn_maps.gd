@@ -36,3 +36,5 @@ func test_spawn_maps_persist() -> void:
 	assert_eq(loaded.spawn_maps.size(), 1)
 	assert_eq(loaded.spawn_maps[0].id, "Generichouse")
 	dnpcs_reload.delete_by_id("spawn_test")
+	dnpcs.clear()
+	dnpcs_reload.clear()

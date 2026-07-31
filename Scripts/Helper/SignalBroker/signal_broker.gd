@@ -1,5 +1,5 @@
 class_name SignalBroker
-extends Node
+extends RefCounted
 
 # This script functions as a connection point for signals.
 # It is indended to aid in communication between nodes during gameplay

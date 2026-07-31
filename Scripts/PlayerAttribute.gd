@@ -248,6 +248,22 @@ func set_data(data: Dictionary):
 		fixed_mode = FixedMode.new(data["fixed_mode"], player, self)
 
 
+func cleanup() -> void:
+	if default_mode:
+		default_mode.stop_depletion()
+		default_mode.depletion_timer = null
+		default_mode.player = null
+		default_mode.playerattr = null
+	if fixed_mode:
+		fixed_mode.player = null
+		fixed_mode.playerattr = null
+	default_mode = null
+	fixed_mode = null
+	attribute_data = null
+	player = null
+	sprite = null
+
+
 # Reduces the amount of the default_mode
 func reduce_amount(amount: float):
 	if default_mode:

@@ -49,6 +49,13 @@ static func destroy_factory_signal(signal_id: String, key) -> void:
 		if RegisteredSignals[signal_id].is_empty():
 			RegisteredSignals.erase(signal_id)
 
+
+static func clear_registered_signals() -> void:
+	for signal_id in RegisteredSignals.keys():
+		for key in RegisteredSignals[signal_id].keys():
+			owner_class.remove_user_signal(build_signal_name(signal_id, key))
+	RegisteredSignals.clear()
+
 # Return a string identifier based on the signal_id and key provided.
 # signal_id: The identifier for the class of signal
 # key: The key to identify the specific signal within the class of signal

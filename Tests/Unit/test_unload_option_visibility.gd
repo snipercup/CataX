@@ -11,9 +11,9 @@ func before_all():
 
 func before_each():
 	item_manager = preload("res://Scripts/item_manager.gd").new()
-	add_child(item_manager)
+	add_child_autoqfree(item_manager)
 	await get_tree().process_frame
-	item_manager.playerInventory = item_manager.initialize_inventory()
+	item_manager.playerInventory = autoqfree(item_manager.initialize_inventory())
 
 
 func after_each():
@@ -25,7 +25,7 @@ func _create_control() -> CtrlInventoryStackedCustom:
 	var scene := preload("res://Scenes/UI/CtrlInventoryStackedCustom.tscn")
 	var control: CtrlInventoryStackedCustom = scene.instantiate()
 	control.my_inventory = item_manager.playerInventory
-	add_child(control)
+	add_child_autoqfree(control)
 	await get_tree().process_frame
 	return control
 
@@ -39,7 +39,7 @@ func _get_menu_texts(control: CtrlInventoryStackedCustom) -> Array:
 
 func test_unload_hidden_without_magazine():
 	var control = await _create_control()
-	var gun = item_manager.playerInventory.create_and_add_item("generic_test_pistol")
+	var gun = autoqfree(item_manager.playerInventory.create_and_add_item("generic_test_pistol"))
 	control._build_context_menu([gun])
 	var texts = _get_menu_texts(control)
 	assert_false(texts.has("Unload"), "Unload should be hidden when no magazine is inserted")
@@ -47,8 +47,8 @@ func test_unload_hidden_without_magazine():
 
 func test_unload_visible_with_magazine():
 	var control = await _create_control()
-	var gun = item_manager.playerInventory.create_and_add_item("generic_test_pistol")
-	var mag = item_manager.playerInventory.create_and_add_item("generic_test_pistol_magazine")
+	var gun = autoqfree(item_manager.playerInventory.create_and_add_item("generic_test_pistol"))
+	var mag = autoqfree(item_manager.playerInventory.create_and_add_item("generic_test_pistol_magazine"))
 	item_manager.insert_magazine(gun, mag)
 	control._build_context_menu([gun])
 	var texts = _get_menu_texts(control)

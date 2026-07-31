@@ -50,6 +50,12 @@ func _load_mod_from_folder(modinfo_path: String, enabled_states: Dictionary) -> 
 func get_all() -> Dictionary:
 	return mod_dict
 
+
+func clear() -> void:
+	for mod: DMod in mod_dict.values():
+		mod.clear()
+	mod_dict.clear()
+
 ### ----------------------- Mod State Management -----------------------
 
 # Adds a new mod and writes it to `user://mods_state.cfg` as enabled
@@ -245,6 +251,9 @@ func save_references(content_instance: RefCounted) -> void:
 func get_mod_list_states() -> Array:
 	var config = ConfigFile.new()
 	var path = "user://mods_state.cfg"
+
+	if not FileAccess.file_exists(path):
+		return []
 
 	if config.load(path) == OK:
 		return config.get_value("mods", "states", [])

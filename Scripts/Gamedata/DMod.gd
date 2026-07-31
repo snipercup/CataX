@@ -134,6 +134,17 @@ func get_data_of_type(type: ContentType) -> RefCounted:
 		return null
 
 
+# Break container/content reference cycles before this mod is released.
+func clear() -> void:
+	for content_instance: RefCounted in content_instances.values():
+		if content_instance.has_method("clear"):
+			content_instance.clear()
+		elif content_instance.has_method("get_all"):
+			content_instance.get_all().clear()
+	content_instances.clear()
+	parent = null
+
+
 # Get data function to return a dictionary with all properties
 func get_modinfo() -> Dictionary:
 	return {

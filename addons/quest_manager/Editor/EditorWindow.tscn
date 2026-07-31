@@ -203,7 +203,7 @@ mouse_filter = 1
 right_disconnects = true
 zoom_min = 0.2
 zoom_max = 2.0
-zoom_step = 0.2
+zoom_step = 1.2
 
 [node name="right_mouse_list" type="PopupMenu" parent="MarginContainer/hb/Quest Panel"]
 unique_name_in_owner = true

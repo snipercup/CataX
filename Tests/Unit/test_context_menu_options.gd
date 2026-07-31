@@ -9,9 +9,9 @@ func before_all():
 
 func before_each():
 	item_manager = preload('res://Scripts/item_manager.gd').new()
-	add_child(item_manager)
+	add_child_autoqfree(item_manager)
 	await get_tree().process_frame
-	item_manager.playerInventory = item_manager.initialize_inventory()
+	item_manager.playerInventory = autoqfree(item_manager.initialize_inventory())
 
 func after_each():
 	if item_manager:
@@ -21,13 +21,13 @@ func _create_control() -> CtrlInventoryStackedCustom:
 	var scene := preload('res://Scenes/UI/CtrlInventoryStackedCustom.tscn')
 	var control: CtrlInventoryStackedCustom = scene.instantiate()
 	control.my_inventory = item_manager.playerInventory
-	add_child(control)
+	add_child_autoqfree(control)
 	await get_tree().process_frame
 	return control
 
 func test_drop_option_always_present():
 	var control = await _create_control()
-	var item = item_manager.playerInventory.create_and_add_item('generic_test_item')
+	var item = autoqfree(item_manager.playerInventory.create_and_add_item('generic_test_item'))
 	control._build_context_menu([item])
 	var texts: Array = []
 	for i in range(control.context_menu.get_item_count()):
@@ -36,7 +36,7 @@ func test_drop_option_always_present():
 
 func test_inapplicable_actions_omitted():
 	var control = await _create_control()
-	var item = item_manager.playerInventory.create_and_add_item('generic_test_item')
+	var item = autoqfree(item_manager.playerInventory.create_and_add_item('generic_test_item'))
 	control._build_context_menu([item])
 	var texts: Array = []
 	for i in range(control.context_menu.get_item_count()):
@@ -46,7 +46,7 @@ func test_inapplicable_actions_omitted():
 
 func test_applicable_actions_present():
 	var control = await _create_control()
-	var item = item_manager.playerInventory.create_and_add_item('generic_test_pistol')
+	var item = autoqfree(item_manager.playerInventory.create_and_add_item('generic_test_pistol'))
 	control._build_context_menu([item])
 	var texts: Array = []
 	for i in range(control.context_menu.get_item_count()):

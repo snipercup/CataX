@@ -45,8 +45,6 @@ func file_names_in_dir(dir_name: String, extension_filter: Array = []) -> Array:
 				file_names.append(file_name)
 			file_name = dir.get_next()
 		dir.list_dir_end()  # Close the directory read operation
-	else:
-		print_debug("Failed to open directory: " + dir_name)
 	return file_names
 
 # This function lists all the folders in a specified directory. 
@@ -62,8 +60,6 @@ func folder_names_in_dir(path: String) -> Array:
 				dirs.append(folder_name)
 			folder_name = dir.get_next()
 		dir.list_dir_end()  # Close the directory read operation
-	else:
-		print_debug("An error occurred when trying to access the path: " + path)
 	return dirs
 
 # This function takes a JSON string and saves it as a JSON file.

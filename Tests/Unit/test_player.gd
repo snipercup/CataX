@@ -116,7 +116,7 @@ func test_knockback():
 	assert_true(
 		player.knockback_active, "Knockback should be active after calling _perform_knockback."
 	)
-	await wait_frames(10)
+	await wait_physics_frames(10)
 	assert_true(
 		player.global_position != initial_position, "Player should have moved due to knockback."
 	)
@@ -141,7 +141,7 @@ func test_stun_effect():
 	player.add_stun(5.0)
 	assert_true(player.is_stunned(), "Player should be stunned after receiving stun.")
 
-	await wait_frames(60)  # Allow stun to wear off
+	await wait_physics_frames(60)  # Allow stun to wear off
 	assert_false(player.is_stunned(), "Player should recover from stun over time.")
 
 
@@ -190,20 +190,20 @@ func test_player_state_save_load():
 
 	# Reset and reload state
 	player.set_state({"stamina": 100, "nutrition": 30})
-	assert_eq(player.current_stamina, 100, "Stamina should be set to 100.")
-	assert_eq(player.current_nutrition, 30, "Nutrition should be set to 30.")
+	assert_eq(player.current_stamina, 100.0, "Stamina should be set to 100.")
+	assert_eq(player.current_nutrition, 30.0, "Nutrition should be set to 30.")
 
 	# Restore saved state
 	player.set_state(saved_state)
-	assert_eq(player.current_stamina, 50, "Stamina should be restored from save state.")
-	assert_eq(player.current_nutrition, 70, "Nutrition should be restored from save state.")
+	assert_eq(player.current_stamina, 50.0, "Stamina should be restored from save state.")
+	assert_eq(player.current_nutrition, 70.0, "Nutrition should be restored from save state.")
 
 
 # Test player state saving and loading
 func test_player_vs_melee_mob():
 	# Target manager is required for the mob to start targeting
 	const TargetManager = preload("res://Scripts/target_manager.gd")
-	var mock_target_manager = TargetManager.new()
+	var mock_target_manager = autoqfree(TargetManager.new())
 	mock_target_manager.name = "TargetManager"
 	add_child(mock_target_manager)
 

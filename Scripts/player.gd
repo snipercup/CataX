@@ -92,6 +92,12 @@ func _ready():
 		Helper.signal_broker.player_spawned.emit(self)
 
 
+func _exit_tree() -> void:
+	for attribute: PlayerAttribute in attributes.values():
+		attribute.cleanup()
+	attributes.clear()
+
+
 # Connect necessary signals for interaction and updates
 func _connect_signals():
 	Helper.signal_broker.food_item_used.connect(_on_food_item_used)

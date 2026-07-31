@@ -86,6 +86,24 @@ func _init() -> void:
     _constraint_manager = ConstraintManager.new(self)
 
 
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_PREDELETE:
+        prepare_to_free()
+
+
+func prepare_to_free() -> void:
+    if _constraint_manager == null:
+        return
+    _constraint_manager.cleanup()
+    _constraint_manager = null
+
+
+## Exposes the constraint manager for teardown verification and diagnostics.
+## References obtained here become invalid after [method prepare_to_free] or inventory disposal.
+func get_constraint_manager() -> RefCounted:
+    return _constraint_manager
+
+
 func _ready() -> void:
     for item in get_items():
         _connect_item_signals(item)

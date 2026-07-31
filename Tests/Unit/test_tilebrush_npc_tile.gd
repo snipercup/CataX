@@ -32,13 +32,13 @@ class MapStub:
 
 
 func test_apply_paint_to_tile_sets_npc_tile_feature():
-	var grid = load("res://Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd").new()
-	var tile = TileStub.new()
-	var tile_parent = Control.new()
+	var grid = autofree(load("res://Scenes/ContentManager/Mapeditor/Scripts/GridContainer.gd").new())
+	var tile = autofree(TileStub.new())
+	var tile_parent = autofree(Control.new())
 	tile_parent.add_child(tile)
-	var map = MapStub.new()
+	var map = autofree(MapStub.new())
 	map.levels[0][0] = {"feature": {"type": "mob", "id": "zombie"}}
-	var map_editor = Control.new()
+	var map_editor = autofree(Control.new())
 	assert_eq(map.levels[0][0], {"feature": {"type": "mob", "id": "zombie"}})
 	#map_editor.currentMap = map
 	#grid.mapEditor = map_editor
