@@ -69,6 +69,7 @@ signal chunk_unloaded(chunkdata: Dictionary)  # The chunk is fully unloaded
 # Signals that the chunk is partly loaded and the next chunk can start loading
 signal chunk_ready
 signal chunk_generated  # When the chunk is completely done generating
+signal navigation_mesh_baked  # The chunk's asynchronously baked navigation mesh is ready
 
 
 func _ready():
@@ -622,18 +623,13 @@ func update_navigation_mesh():
 # synchronisation happens on the main thread.
 func _on_finish_baking():
 	navigation_region.set_navigation_mesh(navigation_mesh)
+	navigation_mesh_baked.emit()
 
 
 # Setup the navigation for this chunk. It gets a new map and a new region
 # You can fiddle with the numbers to improve agent navigation
 func setup_navigation():
-	# Adjust the navigation mesh settings as before
-	navigation_mesh.cell_size = 0.1
-	navigation_mesh.agent_height = 0.5
-	# Changint the agent_radius will also make the navigationmesh grow or shrink. This is because
-	# there is a margin around the navigationmesh to prevent agents from colliding with the wall.
-	navigation_mesh.agent_radius = 0.2
-	navigation_mesh.agent_max_slope = 46
+	_configure_navigation_mesh(navigation_mesh)
 
 	# Create a new navigation region for this chunk
 	navigation_region = NavigationRegion3D.new()
@@ -645,10 +641,19 @@ func setup_navigation():
 
 	# The navigation region of this chunk is associated with its own navigation map
 	# The cell size should be the same as the navigation_mesh.cell_size
-	NavigationServer3D.map_set_cell_size(navigation_map_id, 0.1)
+	NavigationServer3D.map_set_cell_size(navigation_map_id, navigation_mesh.cell_size)
 
 	# Set the new navigation map to the navigation region
 	navigation_region.set_navigation_map(navigation_map_id)
+
+
+func _configure_navigation_mesh(target_navigation_mesh: NavigationMesh) -> void:
+	target_navigation_mesh.cell_size = 0.1
+	target_navigation_mesh.agent_height = 0.5
+	# Changing the agent_radius will also make the navigation mesh grow or shrink. This is because
+	# there is a margin around the navigation mesh to prevent agents from colliding with the wall.
+	target_navigation_mesh.agent_radius = 0.2
+	target_navigation_mesh.agent_max_slope = 46
 
 
 # This function creates a atlas texture which is a combination of the textures that we need

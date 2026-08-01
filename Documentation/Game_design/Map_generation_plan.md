@@ -157,7 +157,7 @@ level-array index: logical z + 10
 
 ## 5. Generator and validator tests: complete for version 1
 
-The current Python test suite contains 53 tests and passes. A focused four-test GUT suite also verifies the slope rotation contract across runtime geometry paths.
+The current Python test suite contains 53 tests and passes. Focused GUT suites verify slope rotation and baked connectivity across Godot runtime geometry paths.
 
 Coverage includes:
 
@@ -186,6 +186,7 @@ Coverage includes:
 * editor-facing slope rotation conversion and rendered-mesh high edges in Godot;
 * matching collision high edges for all four slope rotations;
 * matching navigation-source high edges for all four slope rotations;
+* asynchronously baked, bidirectional navigation paths across all four slope rotations;
 * invalid metadata;
 * malformed tile databases;
 * out-of-bounds placement;
@@ -418,7 +419,7 @@ This criterion is met by weighted palettes, deterministic scatter, and reusable 
 
 ## Phase 4C — Vertical levels and 3D placement foundations
 
-**Status: in progress; structural generation delivered, runtime traversal verification remains**
+**Status: complete**
 
 Dimensionfall maps already contain 21 level arrays. Level-array index `10` is logical elevation `0`, with valid logical elevations from `-10` through `+10`:
 
@@ -456,7 +457,10 @@ Delivered:
 * maintained two-level hill and depression recipes using known `shape: "slope"` transition tiles;
 * focused tests for vertical bounds, compatibility, every placement type, deterministic ordering, malformed schemas, exact level shape, and slope endpoint support;
 * focused GUT tests for editor-to-runtime slope conversion and matching mesh, collider, and navigation-source high edges;
-* robust convex slope-collider construction that initializes the shape before assigning it to a collision node.
+* robust convex slope-collider construction that initializes the shape before assigning it to a collision node;
+* an explicit `navigation_mesh_baked` completion signal for deterministic asynchronous verification;
+* focused Godot integration coverage that bakes one chunk navigation map and verifies low-to-high and high-to-low paths for every slope orientation;
+* manual player-controller verification on the maintained two-level hill and depression maps, covering all four slope orientations in both directions without traversal or invisible-collision problems.
 
 Recommended compatibility form for individual placement:
 
@@ -510,13 +514,14 @@ Runtime investigation established:
 * existing hills, holes, and buildings place slope tiles on the upper of the two connected logical levels;
 * the maintained examples can therefore validate occupied high-side and lower-level low-side endpoints without inventing a broader support model.
 * focused GUT coverage confirms all four editor rotations produce matching high edges in rendered mesh vertices, convex collision geometry, and navigation-source faces.
+* the real asynchronous navigation bake synchronizes all four transition orientations into a chunk navigation map, with queryable paths in both directions between lower and upper surfaces.
+* manual playtesting of the generated hill and depression confirms that the player controller can walk up and down every slope orientation without problems.
 
-Runtime investigation must still determine:
+Later phases must determine broader structure-specific rules as their schemas are introduced:
 
 * whether transitions require corresponding tiles on both levels;
 * how floors, walls, roofs, ceilings, and intentional air gaps occupy stacked levels;
 * whether support is determined by tile presence, collision shape, or another runtime rule;
-* whether the asynchronously baked navigation mesh joins the lower and upper walkable surfaces for every slope orientation;
 * which broader transition, support, and reachability checks belong in Python, Godot unit tests, or later gameplay validation.
 
 Reference fixtures should include existing hills, depressions, deep craters, buildings, and underground maps such as `field_grass_hill_00`, `field_grass_hole_00`, `crater_small`, `two_story_house`, and `underground_lab`.
@@ -525,11 +530,11 @@ Reference fixtures should include existing hills, depressions, deep craters, bui
 
 Generate and validate one two-level hill and one two-level depression from recipes. Each map has correctly sized populated levels, preserves unused levels as `[]`, uses valid transition tiles, loads in Godot, and permits runtime traversal between generated elevations.
 
-The structural generation, validation, transition-tile layout, headless Godot editor loading, and deterministic mesh/collision/navigation-source orientation checks are delivered. Asynchronous navigation baking and interactive player traversal remain to be verified before Phase 4C is complete.
+This success criterion is met. The maintained recipes generate valid two-level maps, deterministic Godot tests cover mesh, collision, navigation-source geometry, and asynchronously baked bidirectional paths, and manual playtesting confirms that the real player controller traverses all four slope orientations in both directions without problems.
 
 ## Phase 5 — Features and furniture
 
-**Status: planned; requires schema investigation**
+**Status: next; requires schema investigation**
 
 This is where generated maps start becoming playable rather than merely visual.
 
@@ -818,15 +823,13 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should finish **Phase 4C baked-navigation and player-traversal verification** without expanding into furniture or buildings.
+The next contribution should begin **Phase 5 feature and furniture schema investigation**, followed by the smallest useful level-aware implementation.
 
-Generate `map_recipe_two_level_hill.json` and `map_recipe_two_level_depression.json` into a development mod, inspect both in the content editor, and verify with a controllable player that all four slope rotations permit movement between the intended adjacent levels in both directions. Record any mismatch between the already-tested mesh, collision, and navigation-source high edges and the asynchronously baked navigation mesh or player movement.
+First inspect representative maps, `DMap`/`DTile`, runtime furniture data, furniture spawners, and the content editor to establish the existing serialized feature contract. Document how a single-cell furniture feature stores its type, ID, rotation, state or mode, and logical level; how furniture IDs are validated; and which conflicts the runtime already prevents or permits.
 
-If the navigation bake can be awaited reliably without making GUT slow or flaky, add a narrow Godot integration test that confirms lower and upper surfaces are connected for each rotation. Otherwise, document baked connectivity and player traversal as manual runtime checks. Keep the Python endpoint check structural; it may require occupied high and low neighbors, but it must not claim general walkability.
+Then add only the narrowest generator support justified by that investigation: explicit level-aware placement of known single-cell furniture features, strict schema and ID validation, deterministic overwrite or conflict behavior, and one maintained outdoor example at logical `z: 0`. Reuse the existing tile `feature` representation rather than introducing a parallel object array.
 
-If traversal succeeds and an appropriate repeatable verification is in place, mark Phase 4C complete and make Phase 5 feature/furniture schema investigation next. If traversal exposes an engine issue, keep Phase 4C in progress and address the smallest runtime or recipe-example correction with regression coverage.
-
-Do not add furniture, semantic areas, buildings, roads, towns, nested patterns, multi-level templates, or unconfirmed general support rules in this contribution.
+Do not add multi-tile furniture, automatic support inference, rooms, buildings, roads, towns, nested patterns, or broad placement systems in the first Phase 5 contribution. Preserve backwards compatibility for terrain-only recipes and keep all feature placement explicitly level-aware from its first version.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, both example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -850,10 +853,10 @@ Do not commit or push unless explicitly requested.
 [Complete] Development moved to snipercup/CataX
 
 [Complete] Palettes, reusable cell patterns, and deterministic variation
-[In progress] Vertical-level schema and 3D placement foundations
-[Delivered] Structural multi-level recipes, validation, and slope examples
-[Next]     Baked-navigation and player-traversal verification
-[Planned]  Features and furniture
+[Complete] Vertical-level schema and 3D placement foundations
+[Complete] Structural generation, slope geometry, baked paths, and player traversal
+[Next]     Feature and furniture schema investigation
+[Planned]  Level-aware single-cell furniture placement
 [Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition
