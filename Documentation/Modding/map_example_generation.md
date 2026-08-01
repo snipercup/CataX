@@ -36,7 +36,7 @@ When manually testing either multi-level example, check every slope from both di
 4. confirm there is no invisible wall or collision plane with a different orientation;
 5. repeat for north, east, south, and west high edges.
 
-Automated GUT coverage verifies that conversion, rendering vertices, collision geometry, and navigation-source faces agree on each high edge. Manual testing is still required to confirm the asynchronously baked navigation mesh and player controller traverse the complete transition correctly.
+Automated GUT coverage verifies that conversion, rendering vertices, collision geometry, and navigation-source faces agree on each high edge. A focused integration test also performs the asynchronous bake and verifies bidirectional navigation paths across every orientation. Manual playtesting of the maintained hill and depression has confirmed that the real player controller can walk up and down all four orientations without traversal or invisible-collision problems. Repeat the checklist after changing slope geometry, collision, navigation settings, or player movement behavior.
 
 Copy the corresponding command for the map you want to inspect:
 
@@ -227,12 +227,13 @@ Show all command options:
 python3 Tools/generate_map_examples.py --help
 ```
 
-Run the focused Godot slope-geometry regression suite:
+Run the focused Godot slope geometry and baked-navigation regression suites:
 
 ```bash
 godot --headless --path . \
   -s addons/gut/gut_cmdln.gd \
   -gtest=Tests/Unit/test_chunk_slope_rotation.gd \
+  -gtest=Tests/Unit/test_chunk_slope_navigation.gd \
   -gexit
 ```
 
@@ -264,6 +265,6 @@ PY
 ## Current limitations
 
 - Variants change the recipe seed; they do not synthesize new recipe operations.
-- Generated maps contain terrain only. Multiple populated logical levels are supported, but furniture, areas, buildings, semantic roads, multi-level templates, and automatic traversal validation are not supported yet.
+- Generated maps contain terrain only. Multiple populated logical levels, automated baked-path checks, and manually verified player traversal are supported for the maintained slopes, but furniture, areas, buildings, semantic roads, and multi-level templates are not supported yet.
 - The maps can be inspected with the existing content-editor preview, but the runner does not launch Godot or inject maps into an already-running editor session.
 - Installing examples under `Mods/Dimensionfall/Maps` makes them available to the content editor, but does not automatically reference them from overmap-area generation.
