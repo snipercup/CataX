@@ -26,9 +26,10 @@ The root must be a JSON object with these fields:
 | `id` | string | Map ID using only letters, numbers, `_`, and `-`. |
 | `name` | non-empty string | Display name. |
 | `description` | non-empty string | Map description. |
-| `seed` | integer | Fixed seed used by palettes, random tile rotations, scatter, and pattern cells. Recipe input only; the map format does not store it. |
+| `seed` | integer | Fixed seed used by tile and furniture palettes, random rotations, scatter, and pattern cells. Recipe input only; the map format does not store it. |
 | `base_tile` | tile object | Legacy-mode tile initially placed in every cell at `z: 0`. Required unless `levels` is used. |
 | `palette` | object | Named weighted tile sets that tile objects can reference. Optional; defaults to `{}`. |
+| `furniture_palette` | object | Named weighted furniture sets used by `furniture_scatter`. Optional; defaults to `{}`. |
 | `patterns` | object | Named arrays of relative tile placements used by `pattern` operations. Optional; defaults to `{}`. |
 | `regions` | array | Legacy filled rectangles. Optional; defaults to `[]`. |
 | `operations` | array | Ordered placement operations. Optional; defaults to `[]`. |
@@ -43,7 +44,7 @@ A tile object has exactly one of:
 
 It may also include an optional `rotation` when using `id`. Rotation is `0`, `90`, `180`, `270`, or `"random"`. Operation tiles may be `null`, which writes the project's empty-tile representation, `{}`.
 
-Palette entries are objects with `id`, optional positive integer `weight` (default `1`), and optional `rotation`. Palette names may contain only letters, numbers, underscores, and hyphens. Palette selection uses the same seeded random-number generator as scatter and random rotation, so the same complete recipe and seed produce identical output. Changing a recipe from a raw tile to a palette reference may change later random choices because palette selection consumes random numbers.
+Palette entries are objects with `id`, optional positive integer `weight` (default `1`), and optional `rotation`. Palette names may contain only letters, numbers, underscores, and hyphens. Palette selection uses the same seeded random-number generator as scatter, furniture scatter, and random rotation, so the same complete recipe and seed produce identical output. Changing a recipe from a raw tile to a palette reference may change later random choices because palette selection consumes random numbers.
 
 ```json
 {
@@ -147,6 +148,25 @@ Pattern definitions do not consume random numbers. An invoked pattern consumes r
 }
 ```
 
+## Furniture palettes
+
+`furniture_palette` maps a name to a non-empty weighted array of known furniture entries. Entries have `id`, optional positive integer `weight` (default `1`), and optional editor-facing `rotation` (`0`, `90`, `180`, `270`, or `"random"`). Furniture palette names use the same letters/numbers/underscore/hyphen rule as tile palettes. Every entry is validated against the selected furniture database, including unused palette definitions.
+
+```json
+{
+  "furniture_palette": {
+    "clearing_trees": [
+      {"id": "Tree_00", "weight": 4, "rotation": "random"},
+      {"id": "PineTree_00", "weight": 3, "rotation": "random"},
+      {"id": "WillowTree_00", "weight": 1, "rotation": "random"},
+      {"id": "burned_tree_stump", "weight": 2, "rotation": "random"}
+    ]
+  }
+}
+```
+
+Definitions themselves consume no randomness. An invoked `furniture_scatter` first samples eligible cells, in row-major candidate order, and then selects one palette entry and resolves any random rotation for each sampled cell in the sample order. This is part of the shared recipe RNG stream: moving, adding, or removing an earlier RNG-consuming operation can change later selections.
+
 ## Placement operations
 
 Every operation requires a `type`. Unknown operation types and fields are errors. At the recipe root, every operation accepts optional logical `z` and defaults to `0`. Inside a grouped level, the operation inherits `z` and must omit the field.
@@ -249,13 +269,34 @@ The operation consumes no randomness. Repeating a furniture operation on the sam
 
 The serialized feature has no logical-level, static/movable, state, or mode field. `Chunk.process_level_data()` derives world height from the containing level-array index, and runtime furniture data selects the static or physics spawner from the referenced furniture definition's `moveable` property. Blueprint `mode` belongs to saved runtime furniture state and is not part of a newly generated map feature.
 
+### `furniture_scatter`
+
+Places a bounded number of single-cell furniture features selected from a named `furniture_palette`. Fields: `type`, `region`, `palette`, exactly one of `count` or `density`, and optional root-level `z`.
+
+- `count` is an integer from zero through the geometric region area.
+- `density` is a number from `0` through `1`; the requested placement count is `floor(region area × density)`.
+- Eligible cells must already contain terrain on the target logical level and must not already have a feature.
+- If the requested count exceeds the remaining eligible cells, generation fails before mutating the scatter operation's target cells.
+- Candidate coordinates are enumerated in row-major order, then sampled without replacement with the recipe RNG. Each sampled cell selects one weighted furniture entry and resolves its rotation in sample order.
+- Scatter embeds the same `feature` object as explicit `furniture`; it does not infer footprints, itemgroups, or adjacent-level occupancy.
+
+```json
+{
+  "type": "furniture_scatter",
+  "region": {"x": 8, "y": 8, "width": 16, "height": 16},
+  "z": 0,
+  "count": 24,
+  "palette": "clearing_trees"
+}
+```
+
 ## Validation and limitations
 
-The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, logical levels outside `-10` through `10`, duplicate grouped levels, ambiguous root/grouped layouts, malformed tile or furniture databases, unknown tile and furniture IDs, unsupported furniture cells, feature conflicts, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output. The validator independently requires exactly 21 level arrays and exactly 1024 entries in every populated level, and structurally validates embedded furniture fields, IDs, rotations, and itemgroup arrays.
+The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, logical levels outside `-10` through `10`, duplicate grouped levels, ambiguous root/grouped layouts, malformed tile or furniture databases, unknown tile and furniture IDs, malformed weights, unsupported furniture cells, feature conflicts, scatter requests that exceed eligible cells, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output. The validator independently requires exactly 21 level arrays and exactly 1024 entries in every populated level, and structurally validates embedded furniture fields, IDs, rotations, and itemgroup arrays.
 
 The output uses 21 levels; logical `z: 0` is row-major grid index `10`. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator currently creates only explicit, known, single-cell furniture features. It does not yet support furniture scatter or palettes, furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, other feature types, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates.
+The generator currently creates explicit, known, single-cell furniture features and deterministic weighted furniture scatter over eligible terrain. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, other feature types, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates.
 
 The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
 

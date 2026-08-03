@@ -576,14 +576,17 @@ Delivered:
 * a maintained `generated_furnished_clearing` recipe at logical `z: 0` using a garden bench, tree, and pine tree;
 * Python coverage for root and grouped logical levels, exact serialization, support and feature conflicts, operation ordering, strict validation, compatibility, and maintained-example output;
 * Godot coverage confirming `Chunk.process_level_data()` preserves the feature and derives the expected world height from its serialized logical level.
+* named weighted furniture palettes with strict known-ID, positive-weight, and editor-facing rotation validation;
+* bounded `furniture_scatter` operations that enumerate terrain-without-feature candidates in row-major order, sample them without replacement, select weighted furniture deterministically, and fail before placement when count exceeds eligibility;
+* an expanded furnished clearing with explicit garden bench, unlit campfire, and potted plant plus 24 conflict-aware tree, pine, willow, or burned-stump placements;
+* verification that the current core furniture database has no rock, grass, or wild-vegetation furniture definitions, so the maintained recipe deliberately does not claim unavailable asset categories.
 
 Still required before Phase 5 is complete:
 
-* deterministic furniture palettes and/or scatter suitable for natural outdoor distribution;
-* a broader maintained outdoor composition containing representative trees, rocks, vegetation, and simple decorative or interactable objects;
-* conflict-aware scatter candidate selection and clear failure reporting when requested density cannot fit;
-* decisions about furniture itemgroup authoring, movable furniture examples, multi-tile footprints, tall features, and adjacent-level conflicts, each introduced only when supported by runtime evidence;
-* runtime/manual inspection of the maintained furnished clearing.
+* manual runtime inspection of the weighted scatter, including static and movable furniture spawning, authored rotations, and any collision or navigation effects;
+* a real content decision for rocks and wild vegetation: add valid furniture definitions and assets through the normal content workflow, or revise the phase success criterion to use available terrain detail instead of nonexistent furniture IDs;
+* decisions about furniture itemgroup authoring, multi-tile footprints, tall features, and adjacent-level conflicts, each introduced only when supported by runtime evidence;
+* documented inspection results for the maintained furnished clearing, including whether spawned features alter local navigation as intended.
 
 ### Success criterion
 
@@ -828,11 +831,11 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should advance **Phase 5** with deterministic, conflict-aware outdoor furniture distribution while retaining the delivered single-cell feature contract.
+The next contribution should finish the remaining evidence and content decision needed for **Phase 5**, without widening the generator schema.
 
-Investigate representative natural furniture IDs and then add one narrow reusable selection mechanism for furniture, preferably named weighted furniture palettes plus a bounded scatter operation. Scatter must select only cells that already have terrain and no feature, consume RNG in documented deterministic order, reject unknown IDs and malformed weights, and fail clearly when the requested count exceeds eligible cells. Keep logical `z` explicit at the root and inherited inside grouped levels.
+First, generate `generated_furnished_clearing` and inspect it in the map editor and with `save and test`. Verify the three explicit features, the 24 seeded scatter features, rotations, static-versus-movable spawning, collision, and local navigation behavior. Record the real-player result in the map plan and modding guide.
 
-Extend the maintained furnished clearing with representative trees, rocks, vegetation, and one simple decorative or interactable object. Do not add multi-tile furniture, itemgroup population, automatic adjacent-level support inference, rooms, buildings, roads, towns, nested patterns, or generalized feature templates in this contribution.
+Then resolve the documented asset gap through the normal content workflow: either add actual core furniture definitions and assets for rocks and wild vegetation, with their own content validation and runtime inspection, or revise the Phase 5 success criterion to rely on the available terrain-detail system rather than inventing furniture IDs. Do not add unbacked IDs, multi-tile footprints, itemgroup generation, automatic support inference, rooms, buildings, roads, towns, nested patterns, or generalized feature templates.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -860,7 +863,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Structural generation, slope geometry, baked paths, and player traversal
 [Complete] Feature and furniture schema investigation
 [Complete] Level-aware single-cell furniture placement
-[Next]     Deterministic conflict-aware outdoor furniture distribution
+[Complete] Deterministic conflict-aware outdoor furniture distribution
+[Next]     Phase 5 runtime inspection and outdoor-content decision
 [Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

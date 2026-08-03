@@ -407,6 +407,145 @@ class MapGeneratorTests(unittest.TestCase):
 
         self.assertEqual(tile, {"id": "dirt_light_00"})
 
+
+    def test_furniture_scatter_uses_weighted_palette_on_eligible_cells_only(self):
+        recipe = valid_recipe()
+        recipe["seed"] = 41
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["furniture_palette"] = {
+            "forest": [
+                {"id": "Tree_00", "weight": 3, "rotation": "random"},
+                {"id": "PineTree_00", "weight": 1, "rotation": 90},
+            ]
+        }
+        recipe["operations"] = [
+            {"type": "furniture", "x": 1, "y": 1, "id": "bench_garden"},
+            {"type": "set", "x": 2, "y": 1, "tile": None},
+            {
+                "type": "furniture_scatter",
+                "region": {"x": 0, "y": 0, "width": 4, "height": 2},
+                "count": 6,
+                "palette": "forest",
+            },
+        ]
+
+        first = generate_map(recipe, TILES_PATH)
+        second = generate_map(recipe, TILES_PATH)
+        level = first["levels"][10]
+        scattered = [
+            (index % 32, index // 32, tile["feature"])
+            for index, tile in enumerate(level)
+            if tile.get("feature", {}).get("id") in {"Tree_00", "PineTree_00"}
+        ]
+
+        self.assertEqual(first, second)
+        self.assertEqual(len(scattered), 6)
+        self.assertTrue(all(0 <= x < 4 and 0 <= y < 2 for x, y, _ in scattered))
+        self.assertFalse(level[1 * 32 + 1].get("feature", {}).get("id") in {"Tree_00", "PineTree_00"})
+        self.assertEqual(level[1 * 32 + 1]["feature"]["id"], "bench_garden")
+        self.assertEqual(level[1 * 32 + 2], {})
+        self.assertTrue(
+            all(feature["rotation"] in {0, 90, 180, 270} for _, _, feature in scattered)
+        )
+
+    def test_furniture_scatter_rejects_insufficient_eligible_cells(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["furniture_palette"] = {"forest": [{"id": "Tree_00"}]}
+        recipe["operations"] = [
+            {"type": "furniture", "x": 0, "y": 0, "id": "bench_garden"},
+            {
+                "type": "furniture_scatter",
+                "region": {"x": 0, "y": 0, "width": 2, "height": 1},
+                "count": 2,
+                "palette": "forest",
+            },
+        ]
+
+        with self.assertRaisesRegex(RecipeError, "requests 2 placements but only 1 eligible"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_grouped_furniture_scatter_inherits_logical_level_and_uses_density(self):
+        recipe = valid_recipe()
+        del recipe["base_tile"]
+        del recipe["regions"]
+        recipe["furniture_palette"] = {"forest": [{"id": "Tree_00"}]}
+        recipe["levels"] = [
+            {
+                "z": 1,
+                "base_tile": {"id": "grass_plain_01"},
+                "operations": [
+                    {
+                        "type": "furniture_scatter",
+                        "region": {"x": 0, "y": 0, "width": 3, "height": 3},
+                        "density": 0.5,
+                        "palette": "forest",
+                    }
+                ],
+            }
+        ]
+
+        levels = generate_map(recipe, TILES_PATH)["levels"]
+
+        self.assertEqual(
+            sum(
+                tile.get("feature", {}).get("id") == "Tree_00"
+                for tile in levels[11]
+            ),
+            4,
+        )
+        self.assertEqual(levels[10], [])
+
+    def test_furniture_palette_and_scatter_strictly_validate_schema(self):
+        cases = [
+            (
+                {"furniture_palette": {"forest": [{"id": "missing"}]}},
+                "unknown furniture 'missing'",
+            ),
+            (
+                {"furniture_palette": {"forest": [{"id": "Tree_00", "weight": 0}]}},
+                "weight must be a positive integer",
+            ),
+            (
+                {"furniture_palette": {"forest": [{"id": "Tree_00", "rotation": 45}]}},
+                "rotation must be 0, 90, 180, 270, or 'random'",
+            ),
+            (
+                {
+                    "operations": [
+                        {
+                            "type": "furniture_scatter",
+                            "region": {"x": 0, "y": 0, "width": 1, "height": 1},
+                            "count": 1,
+                            "palette": "missing",
+                        }
+                    ]
+                },
+                "unknown furniture palette 'missing'",
+            ),
+            (
+                {
+                    "furniture_palette": {"forest": [{"id": "Tree_00"}]},
+                    "operations": [
+                        {
+                            "type": "furniture_scatter",
+                            "region": {"x": 0, "y": 0, "width": 1, "height": 1},
+                            "count": 1,
+                            "palette": "forest",
+                            "extra": True,
+                        }
+                    ],
+                },
+                r"unknown operations\[0\] field 'extra'",
+            ),
+        ]
+        for changes, expected_message in cases:
+            with self.subTest(changes=changes):
+                recipe = valid_recipe()
+                recipe.update(changes)
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
     def test_furniture_operation_strictly_validates_schema_id_and_rotation(self):
         cases = [
             (
@@ -1109,8 +1248,38 @@ class MapGeneratorTests(unittest.TestCase):
             for tile in generated["levels"][10]
             if tile.get("feature", {}).get("type") == "furniture"
         }
+        furniture_tiles = [
+            tile
+            for tile in generated["levels"][10]
+            if tile.get("feature", {}).get("type") == "furniture"
+        ]
 
-        self.assertEqual(furniture_ids, {"bench_garden", "Tree_00", "PineTree_00"})
+        self.assertTrue(
+            {"bench_garden", "campfire_off", "plant_pot_00"}.issubset(furniture_ids)
+        )
+        self.assertTrue(
+            furniture_ids <= {
+                "Tree_00",
+                "PineTree_00",
+                "WillowTree_00",
+                "burned_tree_stump",
+                "bench_garden",
+                "campfire_off",
+                "plant_pot_00",
+            }
+        )
+        self.assertEqual(len(furniture_tiles), 27)
+        self.assertTrue(
+            any(
+                tile["feature"]["id"] in {
+                    "Tree_00",
+                    "PineTree_00",
+                    "WillowTree_00",
+                    "burned_tree_stump",
+                }
+                for tile in furniture_tiles
+            )
+        )
         self.assertTrue(
             all(
                 tile.get("id")

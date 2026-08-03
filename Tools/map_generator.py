@@ -37,6 +37,7 @@ DEFAULT_CONNECTIONS = {
 VALID_ROTATIONS = (0, 90, 180, 270)
 TILE_FIELDS = {"id", "palette", "rotation"}
 PALETTE_FIELDS = {"id", "weight", "rotation"}
+FURNITURE_PALETTE_FIELDS = {"id", "weight", "rotation"}
 DEFINITION_NAME_PATTERN = re.compile(r"[A-Za-z0-9_-]+")
 REGION_FIELDS = {"x", "y", "z", "width", "height", "tile"}
 SET_FIELDS = {"type", "x", "y", "z", "tile"}
@@ -47,6 +48,7 @@ SCATTER_REGION_FIELDS = {"x", "y", "width", "height"}
 PATTERN_CELL_FIELDS = {"at", "tile"}
 PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "z", "rotation"}
 FURNITURE_OPERATION_FIELDS = {"type", "x", "y", "z", "id", "rotation"}
+FURNITURE_SCATTER_FIELDS = {"type", "region", "z", "palette", "count", "density"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -56,6 +58,7 @@ RECIPE_FIELDS = {
     "seed",
     "base_tile",
     "palette",
+    "furniture_palette",
     "patterns",
     "regions",
     "operations",
@@ -167,6 +170,8 @@ def _furniture_ids(furnitures_path: Path) -> set[str]:
 
 
 def _contains_furniture_operations(recipe: dict[str, Any]) -> bool:
+    if "furniture_palette" in recipe:
+        return True
     operation_groups = [recipe.get("operations")]
     levels = recipe.get("levels")
     if isinstance(levels, list):
@@ -176,11 +181,65 @@ def _contains_furniture_operations(recipe: dict[str, Any]) -> bool:
             if isinstance(level, dict)
         )
     return any(
-        isinstance(operation, dict) and operation.get("type") == "furniture"
+        isinstance(operation, dict)
+        and operation.get("type") in {"furniture", "furniture_scatter"}
         for operations in operation_groups
         if isinstance(operations, list)
         for operation in operations
     )
+
+
+def _validate_furniture_palette_entry(
+    entry: Any,
+    known_furnitures: set[str],
+    context: str,
+) -> dict[str, Any]:
+    if not isinstance(entry, dict):
+        raise RecipeError(f"{context} must be an object")
+    unknown_fields = sorted(set(entry) - FURNITURE_PALETTE_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+    furniture_id = entry.get("id")
+    if not isinstance(furniture_id, str) or not furniture_id.strip():
+        raise RecipeError(f"{context}.id must be a non-empty string")
+    _validate_unicode(furniture_id, f"{context}.id")
+    if furniture_id not in known_furnitures:
+        raise RecipeError(f"{context}.id references unknown furniture '{furniture_id}'")
+    weight = entry.get("weight", 1)
+    if type(weight) is not int or weight <= 0:
+        raise RecipeError(f"{context}.weight must be a positive integer")
+    rotation = entry.get("rotation", 0)
+    if rotation != "random" and (
+        type(rotation) is not int or rotation not in VALID_ROTATIONS
+    ):
+        raise RecipeError(f"{context}.rotation must be 0, 90, 180, 270, or 'random'")
+    return {"id": furniture_id, "weight": weight, "rotation": rotation}
+
+
+def _validate_furniture_palette(
+    furniture_palette: Any, known_furnitures: set[str]
+) -> dict[str, list[dict[str, Any]]]:
+    if not isinstance(furniture_palette, dict):
+        raise RecipeError("furniture_palette must be an object")
+    validated: dict[str, list[dict[str, Any]]] = {}
+    for name, entries in furniture_palette.items():
+        if not isinstance(name, str) or not name.strip():
+            raise RecipeError("furniture palette names must be non-empty strings")
+        _validate_unicode(name, f"furniture_palette.{name}")
+        if DEFINITION_NAME_PATTERN.fullmatch(name) is None:
+            raise RecipeError(
+                f"furniture palette name '{name}' may contain only letters, numbers, "
+                "underscores, and hyphens"
+            )
+        if not isinstance(entries, list) or not entries:
+            raise RecipeError(f"furniture_palette.{name} must be a non-empty array")
+        validated[name] = [
+            _validate_furniture_palette_entry(
+                entry, known_furnitures, f"furniture_palette.{name}[{index}]"
+            )
+            for index, entry in enumerate(entries)
+        ]
+    return validated
 
 
 def _validate_palette_entry(
@@ -698,6 +757,74 @@ def _apply_furniture(
     }
 
 
+def _apply_furniture_scatter(
+    level: list[dict[str, Any]],
+    operation: dict[str, Any],
+    rng: random.Random,
+    furniture_palette: dict[str, list[dict[str, Any]]],
+    context: str,
+) -> None:
+    unknown_fields = sorted(set(operation) - FURNITURE_SCATTER_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+    region = operation.get("region")
+    if not isinstance(region, dict):
+        raise RecipeError(f"{context}.region must be an object")
+    unknown_region_fields = sorted(set(region) - SCATTER_REGION_FIELDS)
+    if unknown_region_fields:
+        raise RecipeError(
+            f"unknown {context}.region field '{unknown_region_fields[0]}'"
+        )
+    dimensions = _rectangle_dimensions(region, f"{context}.region")
+    palette_name = operation.get("palette")
+    if not isinstance(palette_name, str) or not palette_name.strip():
+        raise RecipeError(f"{context}.palette must be a non-empty string")
+    _validate_unicode(palette_name, f"{context}.palette")
+    if palette_name not in furniture_palette:
+        raise RecipeError(
+            f"{context}.palette references unknown furniture palette '{palette_name}'"
+        )
+    has_count = "count" in operation
+    has_density = "density" in operation
+    if has_count == has_density:
+        raise RecipeError(f"{context} must define exactly one of count or density")
+    area = dimensions["width"] * dimensions["height"]
+    if has_count:
+        count = operation["count"]
+        if type(count) is not int or not 0 <= count <= area:
+            raise RecipeError(
+                f"{context}.count must be an integer between 0 and {area}"
+            )
+    else:
+        density = operation["density"]
+        if type(density) not in (int, float) or not 0 <= density <= 1:
+            raise RecipeError(f"{context}.density must be a number between 0 and 1")
+        count = int(area * density)
+    candidates = [
+        y * MAP_WIDTH + x
+        for y in range(dimensions["y"], dimensions["y"] + dimensions["height"])
+        for x in range(dimensions["x"], dimensions["x"] + dimensions["width"])
+        if isinstance(level[y * MAP_WIDTH + x].get("id"), str)
+        and level[y * MAP_WIDTH + x]["id"]
+        and "feature" not in level[y * MAP_WIDTH + x]
+    ]
+    if count > len(candidates):
+        raise RecipeError(
+            f"{context} requests {count} placements but only {len(candidates)} eligible cells remain"
+        )
+    for level_index in rng.sample(candidates, count):
+        entry = _select_weighted_palette_entry(furniture_palette[palette_name], rng)
+        rotation = entry["rotation"]
+        if rotation == "random":
+            rotation = rng.choice(VALID_ROTATIONS)
+        level[level_index]["feature"] = {
+            "type": "furniture",
+            "id": entry["id"],
+            "rotation": rotation,
+            "itemgroups": [],
+        }
+
+
 def _target_z(
     spec: dict[str, Any], context: str, inherited_z: int | None
 ) -> int:
@@ -719,6 +846,7 @@ def _apply_layout(
     palette: dict[str, list[dict[str, Any]]],
     patterns: dict[str, list[dict[str, Any]]],
     known_furnitures: set[str],
+    furniture_palette: dict[str, list[dict[str, Any]]],
     context_prefix: str = "",
     inherited_z: int | None = None,
 ) -> None:
@@ -767,6 +895,10 @@ def _apply_layout(
             )
         elif operation_type == "furniture":
             _apply_furniture(level, operation, known_furnitures, context)
+        elif operation_type == "furniture_scatter":
+            _apply_furniture_scatter(
+                level, operation, rng, furniture_palette, context
+            )
         else:
             raise RecipeError(
                 f"{context}.type has unknown operation '{operation_type}'"
@@ -780,6 +912,7 @@ def _generate_levels(
     palette: dict[str, list[dict[str, Any]]],
     patterns: dict[str, list[dict[str, Any]]],
     known_furnitures: set[str],
+    furniture_palette: dict[str, list[dict[str, Any]]],
 ) -> list[list[dict[str, Any]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
     if "levels" not in recipe:
@@ -801,6 +934,7 @@ def _generate_levels(
             palette,
             patterns,
             known_furnitures,
+            furniture_palette,
         )
         return levels
 
@@ -853,6 +987,7 @@ def _generate_levels(
             palette,
             patterns,
             known_furnitures,
+            furniture_palette,
             context_prefix=f"{context}.",
             inherited_z=logical_z,
         )
@@ -898,10 +1033,19 @@ def generate_map(
             )
         known_furnitures = _furniture_ids(Path(furnitures_path))
     palette = _validate_palette(recipe.get("palette", {}), known_tiles)
+    furniture_palette = _validate_furniture_palette(
+        recipe.get("furniture_palette", {}), known_furnitures
+    )
     patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
     rng = random.Random(seed)
     levels = _generate_levels(
-        recipe, rng, known_tiles, palette, patterns, known_furnitures
+        recipe,
+        rng,
+        known_tiles,
+        palette,
+        patterns,
+        known_furnitures,
+        furniture_palette,
     )
 
     return {
