@@ -1,18 +1,42 @@
 {
 	"id": "generated_furnished_clearing",
 	"name": "Generated Furnished Clearing",
-	"description": "A deterministic outdoor clearing with known single-cell furniture features on logical ground level.",
-	"seed": 20260801,
+	"description": "A deterministic outdoor clearing with weighted, conflict-aware single-cell furniture distribution on logical ground level.",
+	"seed": 20260802,
 	"base_tile": {
 		"id": "grass_plain_01"
+	},
+	"furniture_palette": {
+		"clearing_trees": [
+			{
+				"id": "Tree_00",
+				"weight": 4,
+				"rotation": "random"
+			},
+			{
+				"id": "PineTree_00",
+				"weight": 3,
+				"rotation": "random"
+			},
+			{
+				"id": "WillowTree_00",
+				"weight": 1,
+				"rotation": "random"
+			},
+			{
+				"id": "burned_tree_stump",
+				"weight": 2,
+				"rotation": "random"
+			}
+		]
 	},
 	"operations": [
 		{
 			"type": "rectangle",
-			"x": 10,
-			"y": 10,
-			"width": 12,
-			"height": 12,
+			"x": 8,
+			"y": 8,
+			"width": 16,
+			"height": 16,
 			"tile": {
 				"id": "grass_dirt_00"
 			}
@@ -27,19 +51,31 @@
 		},
 		{
 			"type": "furniture",
-			"x": 12,
-			"y": 12,
+			"x": 15,
+			"y": 16,
 			"z": 0,
-			"id": "Tree_00",
+			"id": "campfire_off",
 			"rotation": 0
 		},
 		{
 			"type": "furniture",
-			"x": 20,
-			"y": 12,
+			"x": 17,
+			"y": 16,
 			"z": 0,
-			"id": "PineTree_00",
-			"rotation": 270
+			"id": "plant_pot_00",
+			"rotation": 180
+		},
+		{
+			"type": "furniture_scatter",
+			"region": {
+				"x": 8,
+				"y": 8,
+				"width": 16,
+				"height": 16
+			},
+			"z": 0,
+			"count": 24,
+			"palette": "clearing_trees"
 		}
 	]
 }
