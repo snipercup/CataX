@@ -1,0 +1,45 @@
+{
+	"id": "generated_furnished_clearing",
+	"name": "Generated Furnished Clearing",
+	"description": "A deterministic outdoor clearing with known single-cell furniture features on logical ground level.",
+	"seed": 20260801,
+	"base_tile": {
+		"id": "grass_plain_01"
+	},
+	"operations": [
+		{
+			"type": "rectangle",
+			"x": 10,
+			"y": 10,
+			"width": 12,
+			"height": 12,
+			"tile": {
+				"id": "grass_dirt_00"
+			}
+		},
+		{
+			"type": "furniture",
+			"x": 16,
+			"y": 16,
+			"z": 0,
+			"id": "bench_garden",
+			"rotation": 90
+		},
+		{
+			"type": "furniture",
+			"x": 12,
+			"y": 12,
+			"z": 0,
+			"id": "Tree_00",
+			"rotation": 0
+		},
+		{
+			"type": "furniture",
+			"x": 20,
+			"y": 12,
+			"z": 0,
+			"id": "PineTree_00",
+			"rotation": 270
+		}
+	]
+}

@@ -13,7 +13,7 @@ python3 Tools/map_generator.py \
 python3 Tools/map_validator.py /tmp/generated_meadow_prototype.json
 ```
 
-The output filename must be `<id>.json`, matching the map loader's filename-derived ID. Existing output is protected. Pass `--overwrite` only when replacement is intended. Use `--tiles PATH` to validate tile IDs against a tile database other than `Mods/Dimensionfall/Tiles/Tiles.json`.
+The output filename must be `<id>.json`, matching the map loader's filename-derived ID. Existing output is protected. Pass `--overwrite` only when replacement is intended. Use `--tiles PATH` to validate tile IDs against a tile database other than `Mods/Dimensionfall/Tiles/Tiles.json`. Furniture operations validate against `Furniture/Furniture.json` beside the selected `Tiles` directory by default; use `--furniture PATH` when that database is elsewhere.
 
 For batch generation of deterministic seed variants and instructions for inspecting them in Godot's content editor, see [`map_example_generation.md`](map_example_generation.md).
 
@@ -61,7 +61,7 @@ Palette entries are objects with `id`, optional positive integer `weight` (defau
 }
 ```
 
-Legacy `regions` are applied first in array order, followed by `operations` in array order. Pattern cells are expanded in their definition order at the position of the invoking operation. Later placements on the same logical level overwrite earlier cells, including repeated offsets inside one pattern. `regions` remain supported for version-one recipes and use the same filled-rectangle placement implementation as `rectangle` operations.
+Legacy `regions` are applied first in array order, followed by `operations` in array order. Pattern cells are expanded in their definition order at the position of the invoking operation. Later tile placements on the same logical level overwrite earlier cells, including the complete `feature` of an earlier furnished tile. A furniture operation instead rejects a cell that already has a feature. `regions` remain supported for version-one recipes and use the same filled-rectangle placement implementation as `rectangle` operations.
 
 ## Logical levels
 
@@ -216,15 +216,48 @@ Offsets rotate around the anchor: `90` maps `[x, y]` to `[-y, x]`. The generator
 }
 ```
 
+### `furniture`
+
+Embeds one known single-cell furniture feature in an existing terrain tile. Fields: `type`, `x`, `y`, `id`, optional root-level `z`, and optional `rotation`. Rotation defaults to `0` and accepts fixed editor-facing quarter turns: `0`, `90`, `180`, or `270`.
+
+```json
+{
+  "type": "furniture",
+  "x": 16,
+  "y": 16,
+  "z": 0,
+  "id": "bench_garden",
+  "rotation": 90
+}
+```
+
+The target cell must already contain a terrain tile on the selected logical level and must not already contain a feature. The generator validates `id` against the selected furniture database and writes the existing map/editor representation:
+
+```json
+{
+  "id": "grass_dirt_00",
+  "feature": {
+    "type": "furniture",
+    "id": "bench_garden",
+    "rotation": 90,
+    "itemgroups": []
+  }
+}
+```
+
+The operation consumes no randomness. Repeating a furniture operation on the same cell is a conflict error. A later tile operation deliberately replaces the complete tile dictionary and therefore removes an earlier feature, following the established ordered tile-overwrite behavior.
+
+The serialized feature has no logical-level, static/movable, state, or mode field. `Chunk.process_level_data()` derives world height from the containing level-array index, and runtime furniture data selects the static or physics spawner from the referenced furniture definition's `moveable` property. Blueprint `mode` belongs to saved runtime furniture state and is not part of a newly generated map feature.
+
 ## Validation and limitations
 
-The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, logical levels outside `-10` through `10`, duplicate grouped levels, ambiguous root/grouped layouts, malformed tile databases, unknown tile IDs, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output. The validator independently requires exactly 21 level arrays and exactly 1024 entries in every populated level.
+The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, logical levels outside `-10` through `10`, duplicate grouped levels, ambiguous root/grouped layouts, malformed tile or furniture databases, unknown tile and furniture IDs, unsupported furniture cells, feature conflicts, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output. The validator independently requires exactly 21 level arrays and exactly 1024 entries in every populated level, and structurally validates embedded furniture fields, IDs, rotations, and itemgroup arrays.
 
 The output uses 21 levels; logical `z: 0` is row-major grid index `10`. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator does not yet create features, furniture, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates. It does not infer support or transition validity from stacked tiles. Structural validity and the presence of slope tiles do not yet guarantee walkability, reachability, or gameplay quality.
+The generator currently creates only explicit, known, single-cell furniture features. It does not yet support furniture scatter or palettes, furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, other feature types, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates.
 
-Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
+The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
 
 Slope rotations in recipes use the same values shown by the map editor:
 

@@ -23,6 +23,7 @@ The maintained recipe examples are:
 | Recipe | Output map | Purpose |
 |---|---|---|
 | `Tools/examples/map_recipe.json` | `Mods/Dimensionfall/Maps/generated_meadow_prototype.json` | Ground-level palettes, placement operations, scatter, and reusable patterns. |
+| `Tools/examples/map_recipe_furniture_outdoor.json` | `Mods/Dimensionfall/Maps/generated_furnished_clearing.json` | Explicit known single-cell furniture on supported terrain at logical `z: 0`. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 
@@ -45,6 +46,11 @@ Copy the corresponding command for the map you want to inspect:
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe.json \
   Mods/Dimensionfall/Maps/generated_meadow_prototype.json
+
+# Ground-level furnished clearing
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_furniture_outdoor.json \
+  Mods/Dimensionfall/Maps/generated_furnished_clearing.json
 
 # Two-level hill
 python3 Tools/map_generator.py \
@@ -70,6 +76,7 @@ After generating a map, start or restart Godot and follow the content-editor ste
 
 ```bash
 rm Mods/Dimensionfall/Maps/generated_meadow_prototype.json
+rm Mods/Dimensionfall/Maps/generated_furnished_clearing.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
 rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
 ```
@@ -135,6 +142,8 @@ Content Manager
 
 If Godot was already running when files were generated, restart it so mod content is loaded again. The existing map-editor preview displays generated map JSON; the Python tool does not create a separate image or HTML preview.
 
+For the maintained furnished clearing, confirm that the editor shows a garden bench at `[16, 16]`, a tree at `[12, 12]`, and a pine tree at `[20, 12]`. Use `save and test` to confirm that the referenced static furniture spawns on the ground-level terrain with the authored rotations. The recipe intentionally leaves `itemgroups` empty and does not exercise container contents, movable furniture, multi-cell occupancy, or cross-level support rules.
+
 Dimensionfall also looks for a same-named `.png` map sprite during startup. The runner intentionally generates map JSON only, so Godot currently logs a non-fatal missing-resource error for that sprite. This does not prevent the JSON map from loading or the map editor's tile-grid preview from rendering it.
 
 ## Generate from specific recipes
@@ -168,7 +177,7 @@ Mods/Dimensionfall/Maps/generated_two_level_depression_example_001.json
 
 Use `map_generator.py` for one exact recipe output. Use `generate_map_examples.py` when you want multiple seeds, multiple recipes in one command, or manifest-based cleanup.
 
-Use a different tile database when testing another mod's recipe:
+Use different tile and furniture databases when testing another mod's furniture recipe:
 
 ```bash
 python3 Tools/generate_map_examples.py \
@@ -176,6 +185,8 @@ python3 Tools/generate_map_examples.py \
   --output-dir /tmp/dimensionfall-map-examples \
   --tiles path/to/Tiles.json
 ```
+
+The example runner infers `Furniture/Furniture.json` beside the selected `Tiles` directory. For a one-map invocation whose furniture database lives elsewhere, use `Tools/map_generator.py --furniture path/to/Furniture.json`.
 
 ## Overwrite protection
 
@@ -265,6 +276,6 @@ PY
 ## Current limitations
 
 - Variants change the recipe seed; they do not synthesize new recipe operations.
-- Generated maps contain terrain only. Multiple populated logical levels, automated baked-path checks, and manually verified player traversal are supported for the maintained slopes, but furniture, areas, buildings, semantic roads, and multi-level templates are not supported yet.
+- Generated maps support terrain plus explicit known single-cell furniture on existing terrain cells. Furniture scatter, furniture palettes, itemgroup contents, multi-tile or tall features, automatic support inference, areas, buildings, semantic roads, and multi-level templates are not supported yet.
 - The maps can be inspected with the existing content-editor preview, but the runner does not launch Godot or inject maps into an already-running editor session.
 - Installing examples under `Mods/Dimensionfall/Maps` makes them available to the content editor, but does not automatically reference them from overmap-area generation.

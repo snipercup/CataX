@@ -8,6 +8,7 @@ from Tools.map_validator import MapValidator
 
 ROOT = Path(__file__).resolve().parents[2]
 TILES_PATH = ROOT / "Mods" / "Dimensionfall" / "Tiles" / "Tiles.json"
+FURNITURES_PATH = ROOT / "Mods" / "Dimensionfall" / "Furniture" / "Furniture.json"
 
 
 def valid_recipe():
@@ -315,6 +316,147 @@ class MapGeneratorTests(unittest.TestCase):
 
         self.assertEqual(level[2 * 32 + 3], {"id": "dirt_light_00"})
         self.assertEqual(level[2 * 32 + 2], {"id": "grass_plain_01"})
+
+    def test_furniture_operation_embeds_known_feature_on_explicit_logical_level(self):
+        recipe = valid_recipe()
+        recipe["operations"] = [
+            {
+                "type": "set",
+                "x": 4,
+                "y": 5,
+                "z": 1,
+                "tile": {"id": "grass_plain_01"},
+            },
+            {
+                "type": "furniture",
+                "x": 4,
+                "y": 5,
+                "z": 1,
+                "id": "bench_garden",
+                "rotation": 90,
+            },
+        ]
+
+        levels = generate_map(
+            recipe, TILES_PATH, furnitures_path=FURNITURES_PATH
+        )["levels"]
+
+        self.assertEqual(
+            levels[11][5 * 32 + 4],
+            {
+                "id": "grass_plain_01",
+                "feature": {
+                    "type": "furniture",
+                    "id": "bench_garden",
+                    "rotation": 90,
+                    "itemgroups": [],
+                },
+            },
+        )
+
+    def test_grouped_furniture_inherits_level_and_defaults_rotation(self):
+        recipe = valid_recipe()
+        del recipe["base_tile"]
+        del recipe["regions"]
+        recipe["levels"] = [
+            {
+                "z": -1,
+                "base_tile": {"id": "grass_plain_01"},
+                "operations": [
+                    {"type": "furniture", "x": 3, "y": 2, "id": "Tree_00"}
+                ],
+            }
+        ]
+
+        tile = generate_map(recipe, TILES_PATH)["levels"][9][2 * 32 + 3]
+
+        self.assertEqual(tile["feature"]["rotation"], 0)
+        self.assertEqual(tile["feature"]["id"], "Tree_00")
+
+    def test_furniture_requires_terrain_and_rejects_feature_conflicts(self):
+        recipe = valid_recipe()
+        recipe["operations"] = [
+            {
+                "type": "furniture",
+                "x": 1,
+                "y": 1,
+                "z": 1,
+                "id": "bench_garden",
+            }
+        ]
+        with self.assertRaisesRegex(RecipeError, "requires supporting terrain"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe = valid_recipe()
+        recipe["operations"] = [
+            {"type": "furniture", "x": 1, "y": 1, "id": "bench_garden"},
+            {"type": "furniture", "x": 1, "y": 1, "id": "Tree_00"},
+        ]
+        with self.assertRaisesRegex(RecipeError, "conflicts with an existing feature"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_later_tile_operation_explicitly_replaces_furniture_feature(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["operations"] = [
+            {"type": "furniture", "x": 1, "y": 1, "id": "bench_garden"},
+            {"type": "set", "x": 1, "y": 1, "tile": {"id": "dirt_light_00"}},
+        ]
+
+        tile = generate_map(recipe, TILES_PATH)["levels"][10][1 * 32 + 1]
+
+        self.assertEqual(tile, {"id": "dirt_light_00"})
+
+    def test_furniture_operation_strictly_validates_schema_id_and_rotation(self):
+        cases = [
+            (
+                {"type": "furniture", "x": 1, "y": 1, "id": "missing"},
+                "unknown furniture 'missing'",
+            ),
+            (
+                {"type": "furniture", "x": 1, "y": 1, "id": ""},
+                "id must be a non-empty string",
+            ),
+            (
+                {
+                    "type": "furniture",
+                    "x": 1,
+                    "y": 1,
+                    "id": "bench_garden",
+                    "rotation": "random",
+                },
+                "rotation must be 0, 90, 180, or 270",
+            ),
+            (
+                {
+                    "type": "furniture",
+                    "x": 1,
+                    "y": 1,
+                    "id": "bench_garden",
+                    "extra": True,
+                },
+                r"unknown operations\[0\] field 'extra'",
+            ),
+        ]
+        for operation, expected_message in cases:
+            with self.subTest(operation=operation):
+                recipe = valid_recipe()
+                recipe["operations"] = [operation]
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+    def test_terrain_only_recipe_does_not_require_furniture_database(self):
+        with tempfile.TemporaryDirectory() as directory:
+            tiles_path = Path(directory) / "Tiles.json"
+            tiles_path.write_text(
+                json.dumps([{"id": "grass_plain_01"}]), encoding="utf-8"
+            )
+            recipe = valid_recipe()
+            recipe["base_tile"] = {"id": "grass_plain_01"}
+
+            generated = generate_map(recipe, tiles_path)
+
+        self.assertEqual(generated["levels"][10][0], {"id": "grass_plain_01"})
 
     def test_rectangle_operation_is_filled_and_later_operations_overwrite(self):
         recipe = valid_recipe()
@@ -933,6 +1075,7 @@ class MapGeneratorTests(unittest.TestCase):
     def test_example_recipes_generate_successfully(self):
         cases = {
             "map_recipe.json": {10},
+            "map_recipe_furniture_outdoor.json": {10},
             "map_recipe_two_level_hill.json": {10, 11},
             "map_recipe_two_level_depression.json": {9, 10},
         }
@@ -955,6 +1098,26 @@ class MapGeneratorTests(unittest.TestCase):
                 )
                 for index in expected_populated_indices:
                     self.assertEqual(len(generated["levels"][index]), 1024)
+
+    def test_furniture_example_uses_known_features_on_supported_ground_tiles(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_outdoor.json"
+        generated = generate_map(
+            json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+        )
+        furniture_ids = {
+            tile["feature"]["id"]
+            for tile in generated["levels"][10]
+            if tile.get("feature", {}).get("type") == "furniture"
+        }
+
+        self.assertEqual(furniture_ids, {"bench_garden", "Tree_00", "PineTree_00"})
+        self.assertTrue(
+            all(
+                tile.get("id")
+                for tile in generated["levels"][10]
+                if tile.get("feature", {}).get("type") == "furniture"
+            )
+        )
 
     def test_multi_level_examples_have_supported_slope_endpoints(self):
         high_direction = {
@@ -1109,6 +1272,42 @@ class MapValidatorDimensionTests(unittest.TestCase):
                 self.assertTrue(
                     any(f"expected 21, actual {count}" in error for error in errors)
                 )
+
+    def test_validates_furniture_feature_structure(self):
+        invalid_features = [
+            ("not-an-object", "feature is not an object"),
+            ({"type": "furniture", "rotation": 0}, "invalid or missing ID"),
+            (
+                {"type": "furniture", "id": "bench_garden", "rotation": 45},
+                "invalid rotation",
+            ),
+            (
+                {
+                    "type": "furniture",
+                    "id": "bench_garden",
+                    "rotation": 0,
+                    "itemgroups": [1],
+                },
+                "itemgroups must be an array of strings",
+            ),
+            (
+                {
+                    "type": "furniture",
+                    "id": "bench_garden",
+                    "rotation": 0,
+                    "unexpected": True,
+                },
+                "unknown field 'unexpected'",
+            ),
+        ]
+        for feature, expected_message in invalid_features:
+            with self.subTest(feature=feature):
+                map_data = generate_map(valid_recipe(), TILES_PATH)
+                map_data["levels"][10][0]["feature"] = feature
+
+                errors = self.validate(map_data)
+
+                self.assertTrue(any(expected_message in error for error in errors))
 
 
 if __name__ == "__main__":

@@ -151,6 +151,52 @@ class MapValidator:
                         except (ValueError, TypeError):
                              self.add_error(file_path, f"Level {level_idx}, Tile ID '{tile['id']}' has non-numeric rotation: {rot}")
 
+                    # Furniture is stored as a single feature embedded in a terrain tile.
+                    if 'feature' in tile:
+                        feature = tile['feature']
+                        if not isinstance(feature, dict):
+                            self.add_error(
+                                file_path,
+                                f"Level {level_idx}, Tile ID '{tile['id']}' feature is not an object."
+                            )
+                        elif feature.get('type') == 'furniture':
+                            allowed_fields = {'type', 'id', 'rotation', 'itemgroups'}
+                            unknown_fields = sorted(set(feature) - allowed_fields)
+                            if unknown_fields:
+                                self.add_error(
+                                    file_path,
+                                    f"Level {level_idx}, Tile ID '{tile['id']}' furniture feature has unknown field '{unknown_fields[0]}'"
+                                )
+                            furniture_id = feature.get('id')
+                            if not isinstance(furniture_id, str) or not furniture_id:
+                                self.add_error(
+                                    file_path,
+                                    f"Level {level_idx}, Tile ID '{tile['id']}' furniture feature has invalid or missing ID"
+                                )
+                            if 'rotation' in feature:
+                                rotation = feature['rotation']
+                                valid_feature_rotations = {0, 90, 180, 270}
+                                try:
+                                    float_rotation = float(rotation) % 360
+                                    if float_rotation not in valid_feature_rotations:
+                                        self.add_error(
+                                            file_path,
+                                            f"Level {level_idx}, Furniture ID '{furniture_id}' has invalid rotation: {rotation}"
+                                        )
+                                except (ValueError, TypeError):
+                                    self.add_error(
+                                        file_path,
+                                        f"Level {level_idx}, Furniture ID '{furniture_id}' has non-numeric rotation: {rotation}"
+                                    )
+                            if 'itemgroups' in feature and not (
+                                isinstance(feature['itemgroups'], list)
+                                and all(isinstance(itemgroup, str) for itemgroup in feature['itemgroups'])
+                            ):
+                                self.add_error(
+                                    file_path,
+                                    f"Level {level_idx}, Furniture ID '{furniture_id}' itemgroups must be an array of strings"
+                                )
+
                     # Area References Check
                     if 'areas' in tile and isinstance(tile['areas'], list):
                         for area_ref in tile['areas']:
