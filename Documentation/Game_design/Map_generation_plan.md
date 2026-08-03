@@ -459,6 +459,7 @@ Delivered:
 * focused GUT tests for editor-to-runtime slope conversion and matching mesh, collider, and navigation-source high edges;
 * robust convex slope-collider construction that initializes the shape before assigning it to a collision node;
 * an explicit `navigation_mesh_baked` completion signal for deterministic asynchronous verification;
+* safe handling of stale asynchronous bake callbacks when a chunk has already begun unloading;
 * focused Godot integration coverage that bakes one chunk navigation map and verifies low-to-high and high-to-low paths for every slope orientation;
 * manual player-controller verification on the maintained two-level hill and depression maps, covering all four slope orientations in both directions without traversal or invisible-collision problems.
 
@@ -534,51 +535,55 @@ This success criterion is met. The maintained recipes generate valid two-level m
 
 ## Phase 5 — Features and furniture
 
-**Status: next; requires schema investigation**
+**Status: in progress; schema investigation and explicit single-cell placement delivered**
 
 This is where generated maps start becoming playable rather than merely visual.
 
-The agent should first determine:
+Schema investigation established:
 
-* how features are represented;
-* how furniture or objects are stored;
-* whether objects belong directly to tiles or separate arrays;
-* how rotation and state are encoded;
-* how IDs are validated;
-* whether occupied tiles require supporting terrain;
-* how multi-tile objects work;
-* whether tall features occupy or block cells on adjacent logical levels.
+* newly generated furniture is stored as one `feature` dictionary embedded directly in a non-empty terrain tile, not in a separate map-level object array;
+* the serialized feature uses `type: "furniture"`, a furniture `id`, an editor-facing quarter-turn `rotation`, and optional `itemgroups`;
+* no state or mode field is present in authored map features; blueprint `mode` appears only in saved runtime furniture data;
+* logical height is inherited from the containing level-array index, and `Chunk.process_level_data()` converts index `i` to world height `i - 10`;
+* runtime furniture data chooses the static or physics spawner from the referenced furniture definition's `moveable` property;
+* furniture IDs come from the merged furniture definitions; the generator validates against the selected `Furniture.json` database for this initial core-mod workflow;
+* the map editor permits only one feature dictionary per terrain cell and writes an empty `itemgroups` array when no container contents are selected;
+* existing map data does not encode a general multi-tile footprint or adjacent-level occupancy contract, so neither is inferred in this first slice.
 
-Likely recipe concepts:
+Delivered recipe concept:
 
 ```json
 {
-  "features": [
-    {
-      "template": "tree",
-      "at": [5, 8],
-      "z": 0
-    },
-    {
-      "template": "bench",
-      "at": [15, 13],
-      "z": 0,
-      "rotation": 90
-    }
-  ]
+  "type": "furniture",
+  "x": 15,
+  "y": 13,
+  "z": 0,
+  "id": "bench_garden",
+  "rotation": 90
 }
 ```
 
-Necessary validation:
+Delivered:
 
-* known feature IDs;
-* horizontal and vertical bounds;
-* occupied-cell conflicts;
-* support rules on the target logical level;
-* conflicts with incompatible geometry above or below;
-* prohibited overlap;
-* deterministic scatter;
-* placement failure reporting.
+* root-level furniture operations with optional logical `z`, defaulting to `0` consistently with existing operations;
+* grouped-level furniture operations that inherit the enclosing logical level and reject repeated nested `z`;
+* strict operation fields, horizontal and vertical bounds, known furniture-ID checks, and fixed quarter-turn rotation validation;
+* required supporting terrain on the target cell and rejection when that tile already has a feature;
+* explicit ordered behavior: a duplicate furniture placement conflicts, while a later terrain operation replaces the complete earlier tile and feature;
+* established map/editor serialization with `type`, `id`, `rotation`, and empty `itemgroups`;
+* lazy furniture-database loading so terrain-only recipes remain compatible and do not require furniture data;
+* independent structural validator checks for furniture feature fields, ID shape, rotation, and itemgroup arrays;
+* a maintained `generated_furnished_clearing` recipe at logical `z: 0` using a garden bench, tree, and pine tree;
+* Python coverage for root and grouped logical levels, exact serialization, support and feature conflicts, operation ordering, strict validation, compatibility, and maintained-example output;
+* Godot coverage confirming `Chunk.process_level_data()` preserves the feature and derives the expected world height from its serialized logical level.
+
+Still required before Phase 5 is complete:
+
+* deterministic furniture palettes and/or scatter suitable for natural outdoor distribution;
+* a broader maintained outdoor composition containing representative trees, rocks, vegetation, and simple decorative or interactable objects;
+* conflict-aware scatter candidate selection and clear failure reporting when requested density cannot fit;
+* decisions about furniture itemgroup authoring, movable furniture examples, multi-tile footprints, tall features, and adjacent-level conflicts, each introduced only when supported by runtime evidence;
+* runtime/manual inspection of the maintained furnished clearing.
 
 ### Success criterion
 
@@ -823,15 +828,13 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should begin **Phase 5 feature and furniture schema investigation**, followed by the smallest useful level-aware implementation.
+The next contribution should advance **Phase 5** with deterministic, conflict-aware outdoor furniture distribution while retaining the delivered single-cell feature contract.
 
-First inspect representative maps, `DMap`/`DTile`, runtime furniture data, furniture spawners, and the content editor to establish the existing serialized feature contract. Document how a single-cell furniture feature stores its type, ID, rotation, state or mode, and logical level; how furniture IDs are validated; and which conflicts the runtime already prevents or permits.
+Investigate representative natural furniture IDs and then add one narrow reusable selection mechanism for furniture, preferably named weighted furniture palettes plus a bounded scatter operation. Scatter must select only cells that already have terrain and no feature, consume RNG in documented deterministic order, reject unknown IDs and malformed weights, and fail clearly when the requested count exceeds eligible cells. Keep logical `z` explicit at the root and inherited inside grouped levels.
 
-Then add only the narrowest generator support justified by that investigation: explicit level-aware placement of known single-cell furniture features, strict schema and ID validation, deterministic overwrite or conflict behavior, and one maintained outdoor example at logical `z: 0`. Reuse the existing tile `feature` representation rather than introducing a parallel object array.
+Extend the maintained furnished clearing with representative trees, rocks, vegetation, and one simple decorative or interactable object. Do not add multi-tile furniture, itemgroup population, automatic adjacent-level support inference, rooms, buildings, roads, towns, nested patterns, or generalized feature templates in this contribution.
 
-Do not add multi-tile furniture, automatic support inference, rooms, buildings, roads, towns, nested patterns, or broad placement systems in the first Phase 5 contribution. Preserve backwards compatibility for terrain-only recipes and keep all feature placement explicitly level-aware from its first version.
-
-Run the complete Python suite, relevant Godot tests or smoke checks, both example generations through `Tools/map_validator.py`, and `git diff --check`.
+Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
 Do not commit or push unless explicitly requested.
 
@@ -855,8 +858,9 @@ Do not commit or push unless explicitly requested.
 [Complete] Palettes, reusable cell patterns, and deterministic variation
 [Complete] Vertical-level schema and 3D placement foundations
 [Complete] Structural generation, slope geometry, baked paths, and player traversal
-[Next]     Feature and furniture schema investigation
-[Planned]  Level-aware single-cell furniture placement
+[Complete] Feature and furniture schema investigation
+[Complete] Level-aware single-cell furniture placement
+[Next]     Deterministic conflict-aware outdoor furniture distribution
 [Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

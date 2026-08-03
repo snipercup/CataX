@@ -31,7 +31,8 @@
 			"survivor_gas_station",
 			"forest_clearing",
 			"forest_ruins",
-			"field_farmland"
+			"field_farmland",
+			"generated_furnished_clearing"
 		]
 	},
 	"Tree_00": {
@@ -68,7 +69,8 @@
 			"survivor_gas_station",
 			"forest_clearing",
 			"forest_ruins",
-			"field_farmland"
+			"field_farmland",
+			"generated_furnished_clearing"
 		]
 	},
 	"WillowTree_00": {
@@ -158,7 +160,8 @@
 			"Generichouse",
 			"city_square",
 			"store_electronic_clothing",
-			"field_farmland"
+			"field_farmland",
+			"generated_furnished_clearing"
 		]
 	},
 	"bench_wood": {

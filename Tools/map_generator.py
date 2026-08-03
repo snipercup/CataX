@@ -46,6 +46,7 @@ SCATTER_FIELDS = {"type", "region", "z", "tile", "count", "density"}
 SCATTER_REGION_FIELDS = {"x", "y", "width", "height"}
 PATTERN_CELL_FIELDS = {"at", "tile"}
 PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "z", "rotation"}
+FURNITURE_OPERATION_FIELDS = {"type", "x", "y", "z", "id", "rotation"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -86,6 +87,7 @@ def write_map(
     output_path: Path,
     tiles_path: Path,
     overwrite: bool = False,
+    furnitures_path: Path | None = None,
 ) -> None:
     output_path = Path(output_path)
     if output_path.exists() and not overwrite:
@@ -93,7 +95,11 @@ def write_map(
             f"output already exists: {output_path}; use --overwrite to replace it"
         )
 
-    generated = generate_map(load_recipe(Path(recipe_path)), Path(tiles_path))
+    generated = generate_map(
+        load_recipe(Path(recipe_path)),
+        Path(tiles_path),
+        furnitures_path=furnitures_path,
+    )
     expected_name = f"{generated['id']}.json"
     if output_path.name != expected_name:
         raise RecipeError(
@@ -146,6 +152,35 @@ def _tile_ids(tiles_path: Path) -> set[str]:
         for tile in tile_data
         if isinstance(tile, dict) and isinstance(tile.get("id"), str)
     }
+
+
+def _furniture_ids(furnitures_path: Path) -> set[str]:
+    with furnitures_path.open(encoding="utf-8") as handle:
+        furniture_data = json.load(handle)
+    if not isinstance(furniture_data, list):
+        raise RecipeError("furniture database must be a JSON array")
+    return {
+        furniture["id"]
+        for furniture in furniture_data
+        if isinstance(furniture, dict) and isinstance(furniture.get("id"), str)
+    }
+
+
+def _contains_furniture_operations(recipe: dict[str, Any]) -> bool:
+    operation_groups = [recipe.get("operations")]
+    levels = recipe.get("levels")
+    if isinstance(levels, list):
+        operation_groups.extend(
+            level.get("operations")
+            for level in levels
+            if isinstance(level, dict)
+        )
+    return any(
+        isinstance(operation, dict) and operation.get("type") == "furniture"
+        for operations in operation_groups
+        if isinstance(operations, list)
+        for operation in operations
+    )
 
 
 def _validate_palette_entry(
@@ -624,6 +659,45 @@ def _apply_pattern(
         )
 
 
+def _apply_furniture(
+    level: list[dict[str, Any]],
+    operation: dict[str, Any],
+    known_furnitures: set[str],
+    context: str,
+) -> None:
+    unknown_fields = sorted(set(operation) - FURNITURE_OPERATION_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+    x = _coordinate(operation.get("x"), f"{context}.x", MAP_WIDTH)
+    y = _coordinate(operation.get("y"), f"{context}.y", MAP_HEIGHT)
+    furniture_id = operation.get("id")
+    if not isinstance(furniture_id, str) or not furniture_id.strip():
+        raise RecipeError(f"{context}.id must be a non-empty string")
+    _validate_unicode(furniture_id, f"{context}.id")
+    if furniture_id not in known_furnitures:
+        raise RecipeError(
+            f"{context}.id references unknown furniture '{furniture_id}'"
+        )
+    rotation = operation.get("rotation", 0)
+    if type(rotation) is not int or rotation not in VALID_ROTATIONS:
+        raise RecipeError(f"{context}.rotation must be 0, 90, 180, or 270")
+    tile = level[y * MAP_WIDTH + x]
+    if not isinstance(tile.get("id"), str) or not tile["id"]:
+        raise RecipeError(
+            f"{context} requires supporting terrain at [{x}, {y}] on its target level"
+        )
+    if "feature" in tile:
+        raise RecipeError(
+            f"{context} conflicts with an existing feature at [{x}, {y}] on its target level"
+        )
+    tile["feature"] = {
+        "type": "furniture",
+        "id": furniture_id,
+        "rotation": rotation,
+        "itemgroups": [],
+    }
+
+
 def _target_z(
     spec: dict[str, Any], context: str, inherited_z: int | None
 ) -> int:
@@ -644,6 +718,7 @@ def _apply_layout(
     known_tiles: set[str],
     palette: dict[str, list[dict[str, Any]]],
     patterns: dict[str, list[dict[str, Any]]],
+    known_furnitures: set[str],
     context_prefix: str = "",
     inherited_z: int | None = None,
 ) -> None:
@@ -690,6 +765,8 @@ def _apply_layout(
             _apply_pattern(
                 level, operation, rng, known_tiles, palette, patterns, context
             )
+        elif operation_type == "furniture":
+            _apply_furniture(level, operation, known_furnitures, context)
         else:
             raise RecipeError(
                 f"{context}.type has unknown operation '{operation_type}'"
@@ -702,6 +779,7 @@ def _generate_levels(
     known_tiles: set[str],
     palette: dict[str, list[dict[str, Any]]],
     patterns: dict[str, list[dict[str, Any]]],
+    known_furnitures: set[str],
 ) -> list[list[dict[str, Any]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
     if "levels" not in recipe:
@@ -722,6 +800,7 @@ def _generate_levels(
             known_tiles,
             palette,
             patterns,
+            known_furnitures,
         )
         return levels
 
@@ -773,6 +852,7 @@ def _generate_levels(
             known_tiles,
             palette,
             patterns,
+            known_furnitures,
             context_prefix=f"{context}.",
             inherited_z=logical_z,
         )
@@ -783,7 +863,12 @@ def _generate_levels(
     return levels
 
 
-def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
+def generate_map(
+    recipe: dict[str, Any],
+    tiles_path: Path,
+    *,
+    furnitures_path: Path | None = None,
+) -> dict[str, Any]:
     """Validate a recipe and return map data matching DMap's saved format."""
     if not isinstance(recipe, dict):
         raise RecipeError("recipe must be a JSON object")
@@ -805,10 +890,19 @@ def generate_map(recipe: dict[str, Any], tiles_path: Path) -> dict[str, Any]:
     if type(seed) is not int:
         raise RecipeError("seed must be an integer")
     known_tiles = _tile_ids(Path(tiles_path))
+    known_furnitures: set[str] = set()
+    if _contains_furniture_operations(recipe):
+        if furnitures_path is None:
+            furnitures_path = (
+                Path(tiles_path).parent.parent / "Furniture" / "Furniture.json"
+            )
+        known_furnitures = _furniture_ids(Path(furnitures_path))
     palette = _validate_palette(recipe.get("palette", {}), known_tiles)
     patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
     rng = random.Random(seed)
-    levels = _generate_levels(recipe, rng, known_tiles, palette, patterns)
+    levels = _generate_levels(
+        recipe, rng, known_tiles, palette, patterns, known_furnitures
+    )
 
     return {
         "id": recipe["id"],
@@ -840,9 +934,23 @@ def main(argv: list[str] | None = None) -> int:
         ),
         help="tile database path (defaults to the core Dimensionfall tile database)",
     )
+    parser.add_argument(
+        "--furniture",
+        type=Path,
+        help=(
+            "furniture database path (defaults to Furniture/Furniture.json next "
+            "to the selected Tiles directory)"
+        ),
+    )
     args = parser.parse_args(argv)
     try:
-        write_map(args.recipe, args.output, args.tiles, args.overwrite)
+        write_map(
+            args.recipe,
+            args.output,
+            args.tiles,
+            args.overwrite,
+            args.furniture,
+        )
     except (RecipeError, OSError, json.JSONDecodeError) as error:
         parser.exit(2, f"error: {error}\n")
     print(f"Generated {args.output}")

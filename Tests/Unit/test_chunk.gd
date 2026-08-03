@@ -128,3 +128,31 @@ func test_processed_level_data_defaults():
 	assert_eq(data.furniture.size(), 0, "Expected no furniture in basic_test_map")
 	assert_eq(data.mobs.size(), 0, "Expected no mobs in basic_test_map")
 	assert_eq(data.itemgroups.size(), 0, "Expected no itemgroups in basic_test_map")
+
+
+func test_process_level_data_preserves_furniture_feature_and_logical_height():
+	await wait_for_signal(test_chunk.chunk_generated, 5)
+	var levels: Array = []
+	levels.resize(Chunk.MAX_LEVELS)
+	levels.fill([])
+	var upper_level: Array = []
+	upper_level.resize(Chunk.LEVEL_WIDTH * Chunk.LEVEL_HEIGHT)
+	upper_level.fill({})
+	var feature := {
+		"type": "furniture",
+		"id": "bench_garden",
+		"rotation": 90,
+		"itemgroups": [],
+	}
+	upper_level[3 * Chunk.LEVEL_WIDTH + 2] = {
+		"id": "grass_plain_01",
+		"feature": feature,
+	}
+	levels[11] = upper_level
+	test_chunk._mapleveldata = levels
+
+	var processed := test_chunk.process_level_data()
+
+	assert_eq(processed.furniture.size(), 1)
+	assert_eq(processed.furniture[0].json, feature)
+	assert_eq(processed.furniture[0].pos, Vector3(2.5, 1.5, 3.5))

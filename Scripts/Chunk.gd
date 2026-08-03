@@ -622,6 +622,9 @@ func update_navigation_mesh():
 # chunks share the same navigationmap, calling this will cause a stutter because the navigation
 # synchronisation happens on the main thread.
 func _on_finish_baking():
+	# An asynchronous bake can finish after its chunk has begun unloading.
+	if not is_instance_valid(navigation_region) or is_queued_for_deletion():
+		return
 	navigation_region.set_navigation_mesh(navigation_mesh)
 	navigation_mesh_baked.emit()
 
