@@ -6,6 +6,14 @@ var current_state: State
 var states: Dictionary = {}
 var mob: CharacterBody3D  # The mob that we are enabling the behaviour for
 
+# State transitions:
+# mobidle -> mobfollow
+# mobfollow -> mobrangedattack | mobattack | mobidle | mobterminate
+# mobattack -> mobfollow | mobterminate
+# mobrangedattack -> mobfollow | mobterminate
+# any state -> mobterminate
+# Failure points: transitions that rely on target references may fail if the target is lost.
+
 
 # Initialize the StateMachine
 func _ready():
@@ -51,10 +59,17 @@ func _physics_process(delta):
 func on_child_transition(state, new_state_name):
 	if state != current_state:
 		return
+	# Validate target references before changing states
+	if state is MobFollow or state is MobAttack or state is MobRangedAttack:
+		var target = state.spotted_target
+		if !target or !is_instance_valid(target):
+			new_state_name = "mobidle"
 
 	var new_state = states.get(new_state_name.to_lower())
 	if !new_state:
-		return
+		# Fallback to initial state when requested state is missing
+		new_state = initial_state
+
 	if current_state:
 		current_state.exit()
 

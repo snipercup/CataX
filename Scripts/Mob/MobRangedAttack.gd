@@ -27,6 +27,9 @@ func physics_update(_delta: float):
 	if mob.terminated:
 		Transitioned.emit(self, "mobterminate")
 		return
+	if not spotted_target or !is_instance_valid(spotted_target):
+		Transitioned.emit(self, "mobfollow")
+		return
 
 	var ranged_range: int = mob.get_ranged_range()
 

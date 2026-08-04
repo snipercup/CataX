@@ -34,11 +34,15 @@ func exit():
 func physics_update(_delta: float):
 	if mob.terminated:
 		Transitioned.emit(self, "mobterminate")
-	# Rotation towards target using look_at
-	if spotted_target:
-		var target_position = spotted_target.global_position
-		target_position.y = mob.meshInstance.global_position.y  # Align y-axis to avoid tilting
-		mob.meshInstance.look_at(target_position, Vector3.UP)
+
+		# Rotation towards target using look_at
+	if not spotted_target or !is_instance_valid(spotted_target):
+		stop_attacking()
+		return
+		# Rotation towards target using look_at
+	var target_position = spotted_target.global_position
+	target_position.y = mob.meshInstance.global_position.y  # Align y-axis to avoid tilting
+	mob.meshInstance.look_at(target_position, Vector3.UP)
 
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(
@@ -89,7 +93,11 @@ func attack():
 
 # Helper function to send attack data to the entity's get_hit method
 func _apply_attack_to_entity(chosen_attack: Dictionary) -> void:
-	if spotted_target and spotted_target.has_method("get_hit"):
+	if (
+		spotted_target
+		and is_instance_valid(spotted_target)
+		and spotted_target.has_method("get_hit")
+	):
 		var attack_data: Dictionary = {
 			"attack": chosen_attack,
 			"mobposition": mob.global_position,
