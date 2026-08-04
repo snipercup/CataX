@@ -1,7 +1,7 @@
 {
 	"id": "generated_furnished_clearing",
 	"name": "Generated Furnished Clearing",
-	"description": "A deterministic outdoor clearing with weighted, conflict-aware single-cell furniture distribution on logical ground level.",
+	"description": "A deterministic outdoor clearing with weighted, conflict-aware trees, rocks, and wild vegetation on logical ground level.",
 	"seed": 20260802,
 	"base_tile": {
 		"id": "grass_plain_01"
@@ -26,6 +26,18 @@
 			{
 				"id": "burned_tree_stump",
 				"weight": 2,
+				"rotation": "random"
+			}
+		],
+		"clearing_groundcover": [
+			{
+				"id": "rock_field_00",
+				"weight": 2,
+				"rotation": "random"
+			},
+			{
+				"id": "wild_vegetation_00",
+				"weight": 5,
 				"rotation": "random"
 			}
 		]
@@ -76,6 +88,18 @@
 			"z": 0,
 			"count": 24,
 			"palette": "clearing_trees"
+		},
+		{
+			"type": "furniture_scatter",
+			"region": {
+				"x": 8,
+				"y": 8,
+				"width": 16,
+				"height": 16
+			},
+			"z": 0,
+			"count": 16,
+			"palette": "clearing_groundcover"
 		}
 	]
 }

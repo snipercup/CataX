@@ -1855,5 +1855,43 @@
 			"transparent": true,
 			"width_scale": 90
 		}
+	},
+	{
+		"categories": [
+			"Nature",
+			"Outdoor"
+		],
+		"description": "A field rock. It currently uses the burned-stump sprite as a clearly named temporary placeholder until dedicated rock art is available.",
+		"edgesnapping": "None",
+		"id": "rock_field_00",
+		"moveable": false,
+		"name": "Field Rock",
+		"sprite": "rock_field_placeholder_burned_stump_64.png",
+		"support_shape": {
+			"color": "6d6d6dff",
+			"height": 0.25,
+			"radius_scale": 40,
+			"shape": "Cylinder",
+			"transparent": false
+		}
+	},
+	{
+		"categories": [
+			"Nature",
+			"Outdoor"
+		],
+		"description": "A patch of wild vegetation. It currently uses the potted-plant sprite as a clearly named temporary placeholder until dedicated vegetation art is available.",
+		"edgesnapping": "None",
+		"id": "wild_vegetation_00",
+		"moveable": false,
+		"name": "Wild Vegetation",
+		"sprite": "wild_vegetation_placeholder_potted_plant_32.png",
+		"support_shape": {
+			"color": "4f7d36ff",
+			"height": 0.1,
+			"radius_scale": 35,
+			"shape": "Cylinder",
+			"transparent": true
+		}
 	}
 ]

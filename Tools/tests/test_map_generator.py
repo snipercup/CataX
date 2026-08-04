@@ -1263,12 +1263,14 @@ class MapGeneratorTests(unittest.TestCase):
                 "PineTree_00",
                 "WillowTree_00",
                 "burned_tree_stump",
+                "rock_field_00",
+                "wild_vegetation_00",
                 "bench_garden",
                 "campfire_off",
                 "plant_pot_00",
             }
         )
-        self.assertEqual(len(furniture_tiles), 27)
+        self.assertEqual(len(furniture_tiles), 43)
         self.assertTrue(
             any(
                 tile["feature"]["id"] in {
@@ -1287,6 +1289,30 @@ class MapGeneratorTests(unittest.TestCase):
                 if tile.get("feature", {}).get("type") == "furniture"
             )
         )
+
+    def test_outdoor_rock_and_wild_vegetation_assets_are_known_and_referenced(self):
+        furniture_data = json.loads(FURNITURES_PATH.read_text(encoding="utf-8"))
+        furniture_by_id = {entry["id"]: entry for entry in furniture_data}
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_outdoor.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        for furniture_id, expected_sprite in {
+            "rock_field_00": "rock_field_placeholder_burned_stump_64.png",
+            "wild_vegetation_00": "wild_vegetation_placeholder_potted_plant_32.png",
+        }.items():
+            with self.subTest(furniture_id=furniture_id):
+                furniture = furniture_by_id[furniture_id]
+                self.assertEqual(furniture["sprite"], expected_sprite)
+                self.assertIn("Nature", furniture["categories"])
+                self.assertFalse(furniture["moveable"])
+                self.assertTrue(
+                    (ROOT / "Mods" / "Dimensionfall" / "Furniture" / expected_sprite).is_file()
+                )
+
+        palette_ids = {
+            entry["id"] for entry in recipe["furniture_palette"]["clearing_groundcover"]
+        }
+        self.assertEqual(palette_ids, {"rock_field_00", "wild_vegetation_00"})
 
     def test_multi_level_examples_have_supported_slope_endpoints(self):
         high_direction = {
