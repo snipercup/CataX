@@ -888,5 +888,15 @@
 			"survivor_gas_station",
 			"field_farmland"
 		]
+	},
+	"rock_field_00": {
+		"maps": [
+			"generated_furnished_clearing"
+		]
+	},
+	"wild_vegetation_00": {
+		"maps": [
+			"generated_furnished_clearing"
+		]
 	}
 }

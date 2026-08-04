@@ -296,7 +296,7 @@ The generator rejects unknown fields at every recipe level, root-level dimension
 
 The output uses 21 levels; logical `z: 0` is row-major grid index `10`. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator currently creates explicit, known, single-cell furniture features and deterministic weighted furniture scatter over eligible terrain. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, other feature types, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates.
+The generator currently creates explicit, known, single-cell furniture features and deterministic weighted furniture scatter over eligible terrain. The core mod currently defines `rock_field_00` and `wild_vegetation_00` for outdoor composition. Their sprite filenames deliberately state that they are temporary copies of existing furniture sprites; replace them with dedicated art before treating their visual design as final. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, other feature types, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates.
 
 The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
 
