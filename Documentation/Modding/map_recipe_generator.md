@@ -30,6 +30,7 @@ The root must be a JSON object with these fields:
 | `base_tile` | tile object | Legacy-mode tile initially placed in every cell at `z: 0`. Required unless `levels` is used. |
 | `palette` | object | Named weighted tile sets that tile objects can reference. Optional; defaults to `{}`. |
 | `furniture_palette` | object | Named weighted furniture sets used by `furniture_scatter`. Optional; defaults to `{}`. |
+| `areas` | array | Strict runtime area definitions referenced by `area_rectangle`. Optional; defaults to `[]`. |
 | `patterns` | object | Named arrays of relative tile placements used by `pattern` operations. Optional; defaults to `{}`. |
 | `regions` | array | Legacy filled rectangles. Optional; defaults to `[]`. |
 | `operations` | array | Ordered placement operations. Optional; defaults to `[]`. |
@@ -171,6 +172,51 @@ Definitions themselves consume no randomness. An invoked `furniture_scatter` fir
 
 Every operation requires a `type`. Unknown operation types and fields are errors. At the recipe root, every operation accepts optional logical `z` and defaults to `0`. Inside a grouped level, the operation inherits `z` and must omit the field.
 
+## Runtime areas and tile membership
+
+Dimensionfall's existing area system has two linked serialized forms:
+
+1. the map-level `areas` array defines a runtime spawn/transformation rule; and
+2. a terrain tile's `areas` array records membership as `{"id": "...", "rotation": 0}`.
+
+At runtime, `Helper.map_manager.process_areas_in_map()` selects definitions by `spawn_chance`, then applies each selected definition to connected clusters of matching tile memberships on every populated level. The editor displays these memberships and permits multiple *different* area IDs on one tile, so recipe generation preserves that supported overlay behavior. It rejects a duplicate membership of the same area ID on the same cell.
+
+Recipe area definitions require exactly `id`, `spawn_chance`, `rotate_random`, `pick_one`, `tiles`, and `entities`. Area IDs use letters, numbers, `_`, and `-`; `spawn_chance` is an integer from `0` through `100`; `rotate_random` and `pick_one` are booleans. `tiles` is a non-empty array of `{ "id", "count" }` entries whose IDs are known tiles or the runtime's `"null"` sentinel. `entities` is an array of `{ "id", "type", "count" }` entries. This slice preserves the established entity data contract rather than adding new entity placement semantics.
+
+```json
+{
+  "areas": [
+    {
+      "id": "meadow_clearing",
+      "spawn_chance": 100,
+      "rotate_random": false,
+      "pick_one": false,
+      "tiles": [{"id": "grass_dirt_00", "count": 1}],
+      "entities": []
+    }
+  ]
+}
+```
+
+### `area_rectangle`
+
+Adds one area membership to every terrain tile in a filled rectangle. Fields are `type`, `area`, `x`, `y`, positive `width`, positive `height`, optional root-level `z`, and optional editor-facing `rotation`. The rotation defaults to `0` and accepts `0`, `90`, `180`, or `270`.
+
+```json
+{
+  "type": "area_rectangle",
+  "area": "meadow_clearing",
+  "x": 10,
+  "y": 10,
+  "width": 12,
+  "height": 12,
+  "z": 0,
+  "rotation": 0
+}
+```
+
+The referenced top-level area must exist and every target cell must already contain terrain at the selected logical level. A membership operation does not replace terrain, features, or other distinct area memberships, and consumes no RNG. Coordinates are preflighted against the complete `32×32` map, so the operation cannot be clipped or partially applied.
+
 ### `set`
 
 Places one tile. Fields: `type`, `x`, `y`, `tile`, and optional root-level `z`.
@@ -292,13 +338,13 @@ Places a bounded number of single-cell furniture features selected from a named 
 
 ## Validation and limitations
 
-The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, logical levels outside `-10` through `10`, duplicate grouped levels, ambiguous root/grouped layouts, malformed tile or furniture databases, unknown tile and furniture IDs, malformed weights, unsupported furniture cells, feature conflicts, scatter requests that exceed eligible cells, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output. The validator independently requires exactly 21 level arrays and exactly 1024 entries in every populated level, and structurally validates embedded furniture fields, IDs, rotations, and itemgroup arrays.
+The generator rejects unknown fields at every recipe level, root-level dimension fields, malformed or out-of-bounds placements, logical levels outside `-10` through `10`, duplicate grouped levels, ambiguous root/grouped layouts, malformed tile or furniture databases, unknown tile and furniture IDs, malformed area definitions or memberships, duplicate area IDs or same-ID tile memberships, unsupported area cells, feature conflicts, scatter requests that exceed eligible cells, invalid rotations, invalid Unicode, and non-object recipes. It validates generated data with `Tools/map_validator.py` before publishing the output. The validator independently requires exactly 21 level arrays and exactly 1024 entries in every populated level, and structurally validates embedded furniture fields, IDs, rotations, itemgroup arrays, and area-reference arrays.
 
 The output uses 21 levels; logical `z: 0` is row-major grid index `10`. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator currently creates explicit, known, single-cell furniture features and deterministic weighted furniture scatter over eligible terrain. The core mod defines `rock_field_00` and `wild_vegetation_00` for outdoor composition, using the dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, other feature types, areas, roads as semantic objects, buildings, towns, nested or multi-level patterns, or shape-based templates.
+The generator currently creates explicit, known, single-cell furniture features, deterministic weighted furniture scatter over eligible terrain, and strict runtime-compatible rectangular area memberships at explicit logical levels. The core mod defines `rock_field_00` and `wild_vegetation_00` for outdoor composition, using the dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, polygonal areas, rooms, walls, doors, buildings, roads as semantic objects, towns, nested or multi-level patterns, or shape-based templates.
 
-The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
+The maintained area example is `Tools/examples/map_recipe_area_meadow.json`. The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
 
 Slope rotations in recipes use the same values shown by the map editor:
 

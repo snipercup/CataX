@@ -535,7 +535,7 @@ This success criterion is met. The maintained recipes generate valid two-level m
 
 ## Phase 5 — Features and furniture
 
-**Status: in progress; dedicated outdoor art delivered, final inspection remains**
+**Status: complete**
 
 This is where generated maps start becoming playable rather than merely visual.
 
@@ -583,11 +583,11 @@ Delivered:
 * two new core static Nature furniture definitions: `rock_field_00` and `wild_vegetation_00`, using dedicated AI-generated 32×32 sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png` in the core furniture sprite directory;
 * maintained-example reference entries and a weighted groundcover scatter pass containing the new rock and vegetation IDs, giving the clearing trees, rocks, vegetation, and simple decorative/interactable objects without changing the feature schema.
 
-Still required before Phase 5 is complete:
+Final verification:
 
-* visual and gameplay inspection of `rock_field_00` and `wild_vegetation_00` with their dedicated AI-generated sprites;
-* decisions about furniture itemgroup authoring, multi-tile footprints, tall features, and adjacent-level conflicts, each introduced only when supported by runtime evidence;
-* documented editor and `save and test` results for the dedicated rock and vegetation assets.
+* the temporary art was replaced with dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`;
+* the maintainer regenerated `generated_furnished_clearing`, inspected it in the editor with `save and test`, and confirmed that both rock and wild-vegetation furniture spawn without issues;
+* the generated clearing therefore meets this phase's outdoor-composition success criterion with trees, rocks, vegetation, and simple decorative/interactable objects.
 
 ### Success criterion
 
@@ -595,9 +595,25 @@ Generate an outdoor map with trees, rocks, vegetation, and simple interactable o
 
 ## Phase 6 — Areas, rooms, and buildings
 
-**Status: planned**
+**Status: in progress; level-aware runtime area foundation complete**
 
 The generator needs semantic areas before it can create convincing buildings.
+
+### Completed foundation
+
+The established map contract was inspected before extending the generator:
+
+* `DMap` serializes area definitions in the map-level `areas` array;
+* the map editor stores spatial membership in each terrain tile as an `areas` array of `{ "id", "rotation" }` references;
+* `Helper.map_manager.process_areas_in_map()` selects a definition by `spawn_chance` and applies it to connected tile-membership clusters on every populated level;
+* distinct area IDs may overlap on one tile, matching editor/runtime behavior; a duplicate reference to the same area ID is rejected by the recipe generator;
+* memberships do not introduce a new parallel map representation and do not replace terrain or features.
+
+The recipe generator now supports strict root `areas` definitions plus an `area_rectangle` operation. The operation uses existing logical-level rules: root operations default to `z: 0`, can target `-10` through `10`, and grouped operations inherit their containing level. It requires supporting terrain, validates its named area, uses only editor-facing quarter-turn rotations, and serializes the existing runtime/editor tile membership object.
+
+`Tools/examples/map_recipe_area_meadow.json` is the maintained evidence: a deterministic `12×12` `meadow_clearing` membership rectangle from `[10, 10]` through `[21, 21]` at `z: 0`, with a 100-percent runtime rule that applies `grass_dirt_00`. Python coverage verifies level placement, malformed references, duplicate memberships, unsupported cells, maintained-example bounds, and validator shape/rotation checks.
+
+This foundation intentionally does **not** yet define polygons, room boundaries, indoor/outdoor semantics, entity-placement behavior beyond preserving the existing area definition structure, walls, doors, roofs, building footprints, anchors, or generalized templates.
 
 Capabilities:
 
@@ -832,11 +848,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should finish the remaining dedicated-asset inspection evidence needed for **Phase 5**, without widening the generator schema.
+**Phase 6 is in progress.** Its first, runtime-compatible area foundation is complete. The next contribution should add the smallest evidenced room-boundary or indoor/outdoor semantic extension, only after confirming how the existing editor and runtime distinguish those concepts.
 
-The furnished clearing has been inspected in the map editor and with `save and test`; the maintainer verified all its prior features. Regenerate it and inspect `rock_field_00` and `wild_vegetation_00`, which now use `ai_rock_32_32.png` and `ai_vegetation_32_32.png`.
-
-Record the new editor and gameplay result, including sprite appearance, static spawning, collision, and local navigation behavior. Do not add multi-tile footprints, itemgroup generation, automatic support inference, rooms, buildings, roads, towns, nested patterns, or generalized feature templates.
+Do not yet add walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile membership representation, and validate any new semantics in the editor and runtime.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -868,8 +882,10 @@ Do not commit or push unless explicitly requested.
 [Complete] Furnished-clearing editor and runtime verification
 [Complete] Outdoor rock and wild-vegetation content definitions
 [Complete] Dedicated AI-generated outdoor sprite replacement
-[Next]     Final Phase 5 outdoor-asset inspection
-[Planned]  Level-aware areas and buildings
+[Complete] Final Phase 5 outdoor-asset inspection
+[Complete] Level-aware runtime area schema and maintained example
+[Next]     Room-boundary or indoor/outdoor semantics investigation
+[Planned]  Rooms and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition
 [Planned]  Semantic map planning
