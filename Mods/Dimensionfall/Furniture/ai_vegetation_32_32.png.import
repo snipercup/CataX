@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://14c08ty60axg"
-path="res://.godot/imported/wild_vegetation_placeholder_potted_plant_32.png-f2c751b7bcf0745fcdffb718ae45eaf5.ctex"
+uid="uid://w2bstc1ky6tm"
+path="res://.godot/imported/ai_vegetation_32_32.png-fd4409d4f1012185b8be6fc30392ae81.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Mods/Dimensionfall/Furniture/wild_vegetation_placeholder_potted_plant_32.png"
-dest_files=["res://.godot/imported/wild_vegetation_placeholder_potted_plant_32.png-f2c751b7bcf0745fcdffb718ae45eaf5.ctex"]
+source_file="res://Mods/Dimensionfall/Furniture/ai_vegetation_32_32.png"
+dest_files=["res://.godot/imported/ai_vegetation_32_32.png-fd4409d4f1012185b8be6fc30392ae81.ctex"]
 
 [params]
 

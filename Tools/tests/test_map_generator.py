@@ -1297,8 +1297,8 @@ class MapGeneratorTests(unittest.TestCase):
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
 
         for furniture_id, expected_sprite in {
-            "rock_field_00": "rock_field_placeholder_burned_stump_64.png",
-            "wild_vegetation_00": "wild_vegetation_placeholder_potted_plant_32.png",
+            "rock_field_00": "ai_rock_32_32.png",
+            "wild_vegetation_00": "ai_vegetation_32_32.png",
         }.items():
             with self.subTest(furniture_id=furniture_id):
                 furniture = furniture_by_id[furniture_id]

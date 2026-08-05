@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b32ukfvlvsknm"
-path="res://.godot/imported/rock_field_placeholder_burned_stump_64.png-922013cf9d329725afb6d26294be1055.ctex"
+uid="uid://50q361et5fp3"
+path="res://.godot/imported/ai_rock_32_32.png-218b9e9a42fb2bfcfa6aedef35f292b8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Mods/Dimensionfall/Furniture/rock_field_placeholder_burned_stump_64.png"
-dest_files=["res://.godot/imported/rock_field_placeholder_burned_stump_64.png-922013cf9d329725afb6d26294be1055.ctex"]
+source_file="res://Mods/Dimensionfall/Furniture/ai_rock_32_32.png"
+dest_files=["res://.godot/imported/ai_rock_32_32.png-218b9e9a42fb2bfcfa6aedef35f292b8.ctex"]
 
 [params]
 
