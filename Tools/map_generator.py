@@ -49,6 +49,17 @@ PATTERN_CELL_FIELDS = {"at", "tile"}
 PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "z", "rotation"}
 FURNITURE_OPERATION_FIELDS = {"type", "x", "y", "z", "id", "rotation"}
 FURNITURE_SCATTER_FIELDS = {"type", "region", "z", "palette", "count", "density"}
+AREA_RECTANGLE_FIELDS = {"type", "area", "x", "y", "z", "width", "height", "rotation"}
+AREA_DEFINITION_FIELDS = {
+    "id",
+    "spawn_chance",
+    "rotate_random",
+    "pick_one",
+    "tiles",
+    "entities",
+}
+AREA_TILE_FIELDS = {"id", "count"}
+AREA_ENTITY_FIELDS = {"id", "type", "count"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -59,6 +70,7 @@ RECIPE_FIELDS = {
     "base_tile",
     "palette",
     "furniture_palette",
+    "areas",
     "patterns",
     "regions",
     "operations",
@@ -825,6 +837,126 @@ def _apply_furniture_scatter(
         }
 
 
+def _validate_recipe_areas(
+    areas: Any, known_tiles: set[str]
+) -> list[dict[str, Any]]:
+    if not isinstance(areas, list):
+        raise RecipeError("areas must be an array")
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, area in enumerate(areas):
+        context = f"areas[{index}]"
+        if not isinstance(area, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(area) - AREA_DEFINITION_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        missing_fields = sorted(AREA_DEFINITION_FIELDS - set(area))
+        if missing_fields:
+            raise RecipeError(f"{context} is missing required field '{missing_fields[0]}'")
+        area_id = area["id"]
+        if not isinstance(area_id, str) or not area_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(area_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(area_id) is None:
+            raise RecipeError(
+                f"{context}.id may contain only letters, numbers, underscores, and hyphens"
+            )
+        if area_id in seen_ids:
+            raise RecipeError(f"duplicate area ID '{area_id}'")
+        seen_ids.add(area_id)
+        if type(area["spawn_chance"]) is not int or not 0 <= area["spawn_chance"] <= 100:
+            raise RecipeError(f"{context}.spawn_chance must be an integer between 0 and 100")
+        for field in ("rotate_random", "pick_one"):
+            if type(area[field]) is not bool:
+                raise RecipeError(f"{context}.{field} must be a boolean")
+        if not isinstance(area["tiles"], list) or not area["tiles"]:
+            raise RecipeError(f"{context}.tiles must be a non-empty array")
+        validated_tiles: list[dict[str, Any]] = []
+        for tile_index, tile in enumerate(area["tiles"]):
+            tile_context = f"{context}.tiles[{tile_index}]"
+            if not isinstance(tile, dict):
+                raise RecipeError(f"{tile_context} must be an object")
+            unknown_tile_fields = sorted(set(tile) - AREA_TILE_FIELDS)
+            if unknown_tile_fields:
+                raise RecipeError(f"unknown {tile_context} field '{unknown_tile_fields[0]}'")
+            if set(tile) != AREA_TILE_FIELDS:
+                raise RecipeError(f"{tile_context} must define id and count")
+            tile_id = tile["id"]
+            if not isinstance(tile_id, str) or not tile_id.strip():
+                raise RecipeError(f"{tile_context}.id must be a non-empty string")
+            if tile_id != "null" and tile_id not in known_tiles:
+                raise RecipeError(f"{tile_context}.id references unknown tile '{tile_id}'")
+            if type(tile["count"]) is not int or tile["count"] <= 0:
+                raise RecipeError(f"{tile_context}.count must be a positive integer")
+            validated_tiles.append({"id": tile_id, "count": tile["count"]})
+        if not isinstance(area["entities"], list):
+            raise RecipeError(f"{context}.entities must be an array")
+        validated_entities: list[dict[str, Any]] = []
+        for entity_index, entity in enumerate(area["entities"]):
+            entity_context = f"{context}.entities[{entity_index}]"
+            if not isinstance(entity, dict):
+                raise RecipeError(f"{entity_context} must be an object")
+            unknown_entity_fields = sorted(set(entity) - AREA_ENTITY_FIELDS)
+            if unknown_entity_fields:
+                raise RecipeError(f"unknown {entity_context} field '{unknown_entity_fields[0]}'")
+            if set(entity) != AREA_ENTITY_FIELDS:
+                raise RecipeError(f"{entity_context} must define id, type, and count")
+            if not isinstance(entity["id"], str) or not entity["id"].strip():
+                raise RecipeError(f"{entity_context}.id must be a non-empty string")
+            if not isinstance(entity["type"], str) or not entity["type"].strip():
+                raise RecipeError(f"{entity_context}.type must be a non-empty string")
+            if type(entity["count"]) is not int or entity["count"] <= 0:
+                raise RecipeError(f"{entity_context}.count must be a positive integer")
+            validated_entities.append(
+                {"id": entity["id"], "type": entity["type"], "count": entity["count"]}
+            )
+        validated.append(
+            {
+                "id": area_id,
+                "spawn_chance": area["spawn_chance"],
+                "rotate_random": area["rotate_random"],
+                "pick_one": area["pick_one"],
+                "tiles": validated_tiles,
+                "entities": validated_entities,
+            }
+        )
+    return validated
+
+
+def _apply_area_rectangle(
+    level: list[dict[str, Any]],
+    operation: dict[str, Any],
+    known_area_ids: set[str],
+    context: str,
+) -> None:
+    unknown_fields = sorted(set(operation) - AREA_RECTANGLE_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+    area_id = operation.get("area")
+    if not isinstance(area_id, str) or not area_id.strip():
+        raise RecipeError(f"{context}.area must be a non-empty string")
+    if area_id not in known_area_ids:
+        raise RecipeError(f"{context}.area references unknown area '{area_id}'")
+    dimensions = _rectangle_dimensions(operation, context)
+    rotation = operation.get("rotation", 0)
+    if type(rotation) is not int or rotation not in VALID_ROTATIONS:
+        raise RecipeError(f"{context}.rotation must be 0, 90, 180, or 270")
+    for y in range(dimensions["y"], dimensions["y"] + dimensions["height"]):
+        for x in range(dimensions["x"], dimensions["x"] + dimensions["width"]):
+            tile = level[y * MAP_WIDTH + x]
+            if not isinstance(tile.get("id"), str) or not tile["id"]:
+                raise RecipeError(f"{context} requires supporting terrain at [{x}, {y}]")
+            existing_areas = tile.get("areas", [])
+            if any(reference.get("id") == area_id for reference in existing_areas):
+                raise RecipeError(f"{context} duplicates area '{area_id}' at [{x}, {y}]")
+    for y in range(dimensions["y"], dimensions["y"] + dimensions["height"]):
+        for x in range(dimensions["x"], dimensions["x"] + dimensions["width"]):
+            level[y * MAP_WIDTH + x].setdefault("areas", []).append(
+                {"id": area_id, "rotation": rotation}
+            )
+
+
 def _target_z(
     spec: dict[str, Any], context: str, inherited_z: int | None
 ) -> int:
@@ -847,6 +979,7 @@ def _apply_layout(
     patterns: dict[str, list[dict[str, Any]]],
     known_furnitures: set[str],
     furniture_palette: dict[str, list[dict[str, Any]]],
+    known_area_ids: set[str],
     context_prefix: str = "",
     inherited_z: int | None = None,
 ) -> None:
@@ -899,6 +1032,8 @@ def _apply_layout(
             _apply_furniture_scatter(
                 level, operation, rng, furniture_palette, context
             )
+        elif operation_type == "area_rectangle":
+            _apply_area_rectangle(level, operation, known_area_ids, context)
         else:
             raise RecipeError(
                 f"{context}.type has unknown operation '{operation_type}'"
@@ -913,6 +1048,7 @@ def _generate_levels(
     patterns: dict[str, list[dict[str, Any]]],
     known_furnitures: set[str],
     furniture_palette: dict[str, list[dict[str, Any]]],
+    known_area_ids: set[str],
 ) -> list[list[dict[str, Any]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
     if "levels" not in recipe:
@@ -935,6 +1071,7 @@ def _generate_levels(
             patterns,
             known_furnitures,
             furniture_palette,
+            known_area_ids,
         )
         return levels
 
@@ -988,6 +1125,7 @@ def _generate_levels(
             patterns,
             known_furnitures,
             furniture_palette,
+            known_area_ids,
             context_prefix=f"{context}.",
             inherited_z=logical_z,
         )
@@ -1037,6 +1175,8 @@ def generate_map(
         recipe.get("furniture_palette", {}), known_furnitures
     )
     patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
+    areas = _validate_recipe_areas(recipe.get("areas", []), known_tiles)
+    known_area_ids = {area["id"] for area in areas}
     rng = random.Random(seed)
     levels = _generate_levels(
         recipe,
@@ -1046,9 +1186,10 @@ def generate_map(
         patterns,
         known_furnitures,
         furniture_palette,
+        known_area_ids,
     )
 
-    return {
+    generated = {
         "id": recipe["id"],
         "name": recipe["name"],
         "description": recipe["description"],
@@ -1059,6 +1200,9 @@ def generate_map(
         "levels": levels,
         "connections": DEFAULT_CONNECTIONS.copy(),
     }
+    if areas:
+        generated["areas"] = areas
+    return generated
 
 
 def main(argv: list[str] | None = None) -> int:

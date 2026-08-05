@@ -24,6 +24,7 @@ The maintained recipe examples are:
 |---|---|---|
 | `Tools/examples/map_recipe.json` | `Mods/Dimensionfall/Maps/generated_meadow_prototype.json` | Ground-level palettes, placement operations, scatter, and reusable patterns. |
 | `Tools/examples/map_recipe_furniture_outdoor.json` | `Mods/Dimensionfall/Maps/generated_furnished_clearing.json` | Explicit decor plus weighted, conflict-aware tree, rock, and wild-vegetation scatter on supported terrain at logical `z: 0`. |
+| `Tools/examples/map_recipe_area_meadow.json` | `Mods/Dimensionfall/Maps/generated_area_meadow.json` | One runtime area definition and a `12×12` terrain-backed `area_rectangle` membership boundary at logical `z: 0`. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 
@@ -52,6 +53,11 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_furniture_outdoor.json \
   Mods/Dimensionfall/Maps/generated_furnished_clearing.json
 
+# Ground-level runtime area meadow
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_area_meadow.json \
+  Mods/Dimensionfall/Maps/generated_area_meadow.json
+
 # Two-level hill
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_two_level_hill.json \
@@ -77,6 +83,7 @@ After generating a map, start or restart Godot and follow the content-editor ste
 ```bash
 rm Mods/Dimensionfall/Maps/generated_meadow_prototype.json
 rm Mods/Dimensionfall/Maps/generated_furnished_clearing.json
+rm Mods/Dimensionfall/Maps/generated_area_meadow.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
 rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
 ```
@@ -142,7 +149,9 @@ Content Manager
 
 If Godot was already running when files were generated, restart it so mod content is loaded again. The existing map-editor preview displays generated map JSON; the Python tool does not create a separate image or HTML preview.
 
-For the maintained furnished clearing, confirm that the editor shows a garden bench at `[16, 16]`, an unlit campfire at `[15, 16]`, and a potted plant at `[17, 16]`. It deterministically scatters 24 trees or burned stumps, then 16 rocks or wild-vegetation features, over the 16×16 clearing while leaving those three authored features untouched. The maintainer has inspected the prior tree/decor clearing in the editor with `save and test` and verified all its features. Re-run that inspection after generating this version and specifically check the new rock and vegetation entries. `rock_field_00` uses the dedicated AI-generated `ai_rock_32_32.png`, and `wild_vegetation_00` uses the dedicated AI-generated `ai_vegetation_32_32.png`. The recipe intentionally leaves `itemgroups` empty and does not exercise container contents, multi-cell occupancy, or cross-level support rules.
+For the maintained furnished clearing, confirm that the editor shows a garden bench at `[16, 16]`, an unlit campfire at `[15, 16]`, and a potted plant at `[17, 16]`. It deterministically scatters 24 trees or burned stumps, then 16 rocks or wild-vegetation features, over the 16×16 clearing while leaving those three authored features untouched. The maintainer inspected the clearing in the editor with `save and test` after the dedicated AI sprites were installed and confirmed that the rock and wild-vegetation furniture spawn without issues. `rock_field_00` uses `ai_rock_32_32.png`, and `wild_vegetation_00` uses `ai_vegetation_32_32.png`. The recipe intentionally leaves `itemgroups` empty and does not exercise container contents, multi-cell occupancy, or cross-level support rules.
+
+For the maintained area meadow, confirm that the area list contains `meadow_clearing` and the editor highlights exactly the `12×12` rectangle from `[10, 10]` through `[21, 21]` at logical `z: 0`. The definition has a `100` percent spawn chance and replaces that connected membership cluster with `grass_dirt_00`; use `save and test` to confirm the runtime applies the area without affecting outside terrain. The example deliberately contains no entities, rooms, walls, doors, or building semantics.
 
 Dimensionfall also looks for a same-named `.png` map sprite during startup. The runner intentionally generates map JSON only, so Godot currently logs a non-fatal missing-resource error for that sprite. This does not prevent the JSON map from loading or the map editor's tile-grid preview from rendering it.
 
@@ -276,6 +285,6 @@ PY
 ## Current limitations
 
 - Variants change the recipe seed; they do not synthesize new recipe operations.
-- Generated maps support terrain plus explicit known single-cell furniture and deterministic weighted furniture scatter over eligible terrain cells. The maintained clearing uses dedicated AI-generated rock and wild-vegetation sprites. Itemgroup contents, multi-tile or tall features, automatic support inference, areas, buildings, semantic roads, and multi-level templates are not supported yet.
+- Generated maps support terrain, explicit known single-cell furniture, deterministic weighted furniture scatter, and runtime-compatible rectangular area memberships at explicit logical levels. The maintained clearing uses dedicated AI-generated rock and wild-vegetation sprites. Itemgroup contents, multi-tile or tall features, automatic support inference, polygonal areas, rooms, buildings, semantic roads, and multi-level templates are not supported yet.
 - The maps can be inspected with the existing content-editor preview, but the runner does not launch Godot or inject maps into an already-running editor session.
 - Installing examples under `Mods/Dimensionfall/Maps` makes them available to the content editor, but does not automatically reference them from overmap-area generation.

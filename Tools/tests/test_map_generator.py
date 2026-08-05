@@ -1314,6 +1314,123 @@ class MapGeneratorTests(unittest.TestCase):
         }
         self.assertEqual(palette_ids, {"rock_field_00", "wild_vegetation_00"})
 
+    def test_area_rectangle_serializes_runtime_area_definition_at_explicit_level(self):
+        recipe = valid_recipe()
+        recipe["areas"] = [
+            {
+                "id": "meadow_clearing",
+                "spawn_chance": 100,
+                "rotate_random": False,
+                "pick_one": False,
+                "tiles": [{"id": "grass_dirt_00", "count": 1}],
+                "entities": [],
+            }
+        ]
+        recipe["operations"] = [
+            {
+                "type": "rectangle",
+                "x": 0,
+                "y": 0,
+                "width": 32,
+                "height": 32,
+                "z": 1,
+                "tile": {"id": "grass_plain_01"},
+            },
+            {
+                "type": "area_rectangle",
+                "area": "meadow_clearing",
+                "x": 4,
+                "y": 5,
+                "width": 3,
+                "height": 2,
+                "z": 1,
+                "rotation": 90,
+            }
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["areas"], recipe["areas"])
+        self.assertEqual(generated["levels"][10][5 * 32 + 4]["id"], "grass_plain_01")
+        self.assertNotIn("areas", generated["levels"][10][5 * 32 + 4])
+        for y in range(5, 7):
+            for x in range(4, 7):
+                self.assertEqual(
+                    generated["levels"][11][y * 32 + x]["areas"],
+                    [{"id": "meadow_clearing", "rotation": 90}],
+                )
+
+    def test_area_rectangle_rejects_unknown_area_duplicate_membership_and_empty_cells(self):
+        base_area = {
+            "id": "meadow_clearing",
+            "spawn_chance": 100,
+            "rotate_random": False,
+            "pick_one": False,
+            "tiles": [{"id": "grass_dirt_00", "count": 1}],
+            "entities": [],
+        }
+        cases = [
+            (
+                [{"type": "area_rectangle", "area": "unknown", "x": 0, "y": 0, "width": 1, "height": 1}],
+                "references unknown area 'unknown'",
+            ),
+            (
+                [
+                    {"type": "area_rectangle", "area": "meadow_clearing", "x": 0, "y": 0, "width": 1, "height": 1},
+                    {"type": "area_rectangle", "area": "meadow_clearing", "x": 0, "y": 0, "width": 1, "height": 1},
+                ],
+                r"duplicates area 'meadow_clearing' at \[0, 0\]",
+            ),
+        ]
+        for operations, expected_message in cases:
+            with self.subTest(operations=operations):
+                recipe = valid_recipe()
+                recipe["areas"] = [base_area]
+                recipe["operations"] = operations
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+        recipe = valid_recipe()
+        recipe["areas"] = [base_area]
+        recipe["operations"] = [
+            {"type": "set", "x": 0, "y": 0, "tile": None},
+            {"type": "area_rectangle", "area": "meadow_clearing", "x": 0, "y": 0, "width": 1, "height": 1},
+        ]
+        with self.assertRaisesRegex(RecipeError, r"requires supporting terrain at \[0, 0\]"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_area_meadow_example_matches_its_runtime_area_boundary(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_area_meadow.json"
+        generated = generate_map(
+            json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+        )
+
+        self.assertEqual(generated["areas"], [
+            {
+                "id": "meadow_clearing",
+                "spawn_chance": 100,
+                "rotate_random": False,
+                "pick_one": False,
+                "tiles": [{"id": "grass_dirt_00", "count": 1}],
+                "entities": [],
+            }
+        ])
+        memberships = [
+            (index % 32, index // 32)
+            for index, tile in enumerate(generated["levels"][10])
+            if tile.get("areas") == [{"id": "meadow_clearing", "rotation": 0}]
+        ]
+        self.assertEqual(len(memberships), 144)
+        self.assertEqual(set(memberships), {
+            (x, y) for y in range(10, 22) for x in range(10, 22)
+        })
+        self.assertTrue(
+            all(
+                generated["levels"][10][y * 32 + x]["id"] == "grass_dirt_00"
+                for x, y in memberships
+            )
+        )
+
     def test_multi_level_examples_have_supported_slope_endpoints(self):
         high_direction = {
             0: (0, -1),
@@ -1503,6 +1620,26 @@ class MapValidatorDimensionTests(unittest.TestCase):
                 errors = self.validate(map_data)
 
                 self.assertTrue(any(expected_message in error for error in errors))
+
+    def test_validates_area_reference_structure(self):
+        map_data = generate_map(valid_recipe(), TILES_PATH)
+        map_data["areas"] = "not-an-array"
+        errors = self.validate(map_data)
+        self.assertTrue(any("top-level areas must be an array" in error for error in errors))
+
+        map_data = generate_map(valid_recipe(), TILES_PATH)
+        map_data["areas"] = [{"id": "meadow_clearing"}]
+        map_data["levels"][10][0]["areas"] = "not-an-array"
+
+        errors = self.validate(map_data)
+
+        self.assertTrue(any("areas must be an array" in error for error in errors))
+
+        map_data["levels"][10][0]["areas"] = [
+            {"id": "meadow_clearing", "rotation": 45}
+        ]
+        errors = self.validate(map_data)
+        self.assertTrue(any("invalid area rotation" in error for error in errors))
 
 
 if __name__ == "__main__":

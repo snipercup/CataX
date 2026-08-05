@@ -57,6 +57,9 @@ class MapValidator:
         map_id = data['id']
         levels = data['levels']
         areas = data.get('areas', [])
+        if not isinstance(areas, list):
+            self.add_error(file_path, "top-level areas must be an array.")
+            areas = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -197,18 +200,41 @@ class MapValidator:
                                     f"Level {level_idx}, Furniture ID '{furniture_id}' itemgroups must be an array of strings"
                                 )
 
-                    # Area References Check
-                    if 'areas' in tile and isinstance(tile['areas'], list):
-                        for area_ref in tile['areas']:
+                    # Area references use the editor/runtime contract: an array of
+                    # {id, rotation?} dictionaries embedded in a terrain tile.
+                    if 'areas' in tile:
+                        area_references = tile['areas']
+                        if not isinstance(area_references, list):
+                            self.add_error(
+                                file_path,
+                                f"Level {level_idx}, Tile '{tile['id']}' areas must be an array."
+                            )
+                            continue
+                        for area_ref in area_references:
                             if not isinstance(area_ref, dict):
                                 self.add_error(file_path, f"Level {level_idx}, Tile '{tile['id']}' has malformed area reference.")
                                 continue
                             
                             ref_id = area_ref.get('id')
-                            if not ref_id:
+                            if not isinstance(ref_id, str) or not ref_id:
                                 self.add_error(file_path, f"Level {level_idx}, Tile '{tile['id']}' references an area without an ID.")
                             elif ref_id not in area_ids:
                                 self.add_error(file_path, f"Level {level_idx}, Tile '{tile['id']}' references non-existent area '{ref_id}'")
+                            if 'rotation' in area_ref:
+                                rotation = area_ref['rotation']
+                                valid_area_rotations = {0, 90, 180, 270}
+                                try:
+                                    float_rotation = float(rotation) % 360
+                                    if float_rotation not in valid_area_rotations:
+                                        self.add_error(
+                                            file_path,
+                                            f"Level {level_idx}, Tile '{tile['id']}' has invalid area rotation: {rotation}"
+                                        )
+                                except (ValueError, TypeError):
+                                    self.add_error(
+                                        file_path,
+                                        f"Level {level_idx}, Tile '{tile['id']}' has non-numeric area rotation: {rotation}"
+                                    )
 
     def run(self, path: str):
         if os.path.isdir(path):

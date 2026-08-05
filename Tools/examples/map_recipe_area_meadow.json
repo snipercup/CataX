@@ -1,0 +1,46 @@
+{
+	"id": "generated_area_meadow",
+	"name": "Generated Area Meadow",
+	"description": "A deterministic meadow with one runtime area rule and a level-aware rectangular membership boundary.",
+	"seed": 20260805,
+	"base_tile": {
+		"id": "grass_plain_01"
+	},
+	"areas": [
+		{
+			"id": "meadow_clearing",
+			"spawn_chance": 100,
+			"rotate_random": false,
+			"pick_one": false,
+			"tiles": [
+				{
+					"id": "grass_dirt_00",
+					"count": 1
+				}
+			],
+			"entities": []
+		}
+	],
+	"operations": [
+		{
+			"type": "rectangle",
+			"x": 10,
+			"y": 10,
+			"width": 12,
+			"height": 12,
+			"tile": {
+				"id": "grass_dirt_00"
+			}
+		},
+		{
+			"type": "area_rectangle",
+			"area": "meadow_clearing",
+			"x": 10,
+			"y": 10,
+			"width": 12,
+			"height": 12,
+			"z": 0,
+			"rotation": 0
+		}
+	]
+}
