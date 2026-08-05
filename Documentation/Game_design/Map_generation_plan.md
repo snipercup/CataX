@@ -613,6 +613,8 @@ The recipe generator now supports strict root `areas` definitions plus an `area_
 
 `Tools/examples/map_recipe_area_meadow.json` is the maintained evidence: a deterministic `12×12` `meadow_clearing` membership rectangle from `[10, 10]` through `[21, 21]` at `z: 0`, with a 100-percent runtime rule that applies `grass_dirt_00`. Python coverage verifies level placement, malformed references, duplicate memberships, unsupported cells, maintained-example bounds, and validator shape/rotation checks.
 
+The area entity contract is now strict and catalog-aware. Recipes may use the existing runtime entity types `furniture`, `mob`, `mobgroup`, and `itemgroup`; each record must have a known catalog ID and a positive integer weight. Entity selection deliberately remains runtime-owned: `map_manager` appends its implicit no-spawn weight and selects a new outcome for every membership tile when the map is instanced. This keeps area fields unique between runs, unlike deterministic `furniture_scatter`, which pre-writes the same seeded feature positions into generated JSON. `Tools/examples/map_recipe_area_entity_clearing.json` is the maintained evidence: its 12×12 `stump_clearing` boundary has no pre-baked features, then independently rolls `burned_tree_stump` features at runtime. Focused GUT coverage proves membership rotation is retained for the spawned furniture structure and runtime processing reaches serialized level `11` (logical `z: +1`).
+
 This foundation intentionally does **not** yet define polygons, room boundaries, indoor/outdoor semantics, entity-placement behavior beyond preserving the existing area definition structure, walls, doors, roofs, building footprints, anchors, or generalized templates.
 
 Capabilities:
@@ -848,7 +850,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its first, runtime-compatible area foundation is complete. The next contribution should add the smallest evidenced room-boundary or indoor/outdoor semantic extension, only after confirming how the existing editor and runtime distinguish those concepts.
+**Phase 6 is in progress.** Its runtime-compatible area foundation—including catalog-validated, per-instance runtime entity variation—is complete. The next contribution should add the smallest evidenced room-boundary or indoor/outdoor semantic extension, only after confirming how the existing editor and runtime distinguish those concepts.
 
 Do not yet add walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile membership representation, and validate any new semantics in the editor and runtime.
 
@@ -884,6 +886,7 @@ Do not commit or push unless explicitly requested.
 [Complete] Dedicated AI-generated outdoor sprite replacement
 [Complete] Final Phase 5 outdoor-asset inspection
 [Complete] Level-aware runtime area schema and maintained example
+[Complete] Catalog-validated runtime area entity variation
 [Next]     Room-boundary or indoor/outdoor semantics investigation
 [Planned]  Rooms and buildings
 [Planned]  Roads and map connections
