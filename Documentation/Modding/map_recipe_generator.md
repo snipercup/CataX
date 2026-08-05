@@ -181,7 +181,7 @@ Dimensionfall's existing area system has two linked serialized forms:
 
 At runtime, `Helper.map_manager.process_areas_in_map()` selects definitions by `spawn_chance`, then applies each selected definition to connected clusters of matching tile memberships on every populated level. The editor displays these memberships and permits multiple *different* area IDs on one tile, so recipe generation preserves that supported overlay behavior. It rejects a duplicate membership of the same area ID on the same cell.
 
-Recipe area definitions require exactly `id`, `spawn_chance`, `rotate_random`, `pick_one`, `tiles`, and `entities`. Area IDs use letters, numbers, `_`, and `-`; `spawn_chance` is an integer from `0` through `100`; `rotate_random` and `pick_one` are booleans. `tiles` is a non-empty array of `{ "id", "count" }` entries whose IDs are known tiles or the runtime's `"null"` sentinel. `entities` is an array of `{ "id", "type", "count" }` entries. This slice preserves the established entity data contract rather than adding new entity placement semantics.
+Recipe area definitions require exactly `id`, `spawn_chance`, `rotate_random`, `pick_one`, `tiles`, and `entities`. Area IDs use letters, numbers, `_`, and `-`; `spawn_chance` is an integer from `0` through `100`; `rotate_random` and `pick_one` are booleans. `tiles` is a non-empty array of `{ "id", "count" }` entries whose IDs are known tiles or the runtime's `"null"` sentinel. `entities` is an array of `{ "id", "type", "count" }` entries. The generator accepts only the existing runtime entity types—`furniture`, `mob`, `mobgroup`, and `itemgroup`—and validates each ID against its core catalog before publishing a map.
 
 ```json
 {
@@ -195,6 +195,32 @@ Recipe area definitions require exactly `id`, `spawn_chance`, `rotate_random`, `
       "entities": []
     }
   ]
+}
+```
+
+### Runtime entity variation
+
+An area entity is a runtime rule, not a pre-generated feature. For every processed membership tile, `map_manager` adds an implicit no-spawn entry weighted by the total `tiles` weight, then selects one declared entity by `count`. As a result, the generated JSON boundary is deterministic, but an entity-bearing field can differ each time the map is instanced. Do not replace this with `furniture_scatter` when per-instance variation is desired: scatter intentionally writes the same seeded features into every generated map.
+
+Entity `count` values must be positive integers in recipes. The generator enforces that stricter authoring rule; the standalone validator accepts positive numeric legacy weights so existing authored maps continue to match the runtime's weighted-picker contract. The supported types and ID catalogs are:
+
+| Type | Catalog | Runtime feature result |
+|---|---|---|
+| `furniture` | `Furniture/Furniture.json` | `{ "type", "id", "rotation" }` |
+| `mob` | `Mobs/Mobs.json` | `{ "type", "id", "rotation" }` |
+| `mobgroup` | `Mobgroups/Mobgroups.json` | `{ "type", "id", "rotation" }` |
+| `itemgroup` | `Itemgroups/Itemgroups.json` | `{ "type": "itemgroup", "itemgroups": ["id"], "rotation" }` |
+
+When `rotate_random` is false, a selected entity uses the membership's editor-facing rotation. When it is true, runtime chooses a quarter turn. Entity selection remains runtime-owned and is never pre-baked by the Python generator.
+
+```json
+{
+  "id": "stump_clearing",
+  "spawn_chance": 100,
+  "rotate_random": false,
+  "pick_one": false,
+  "tiles": [{"id": "grass_dirt_00", "count": 100}],
+  "entities": [{"id": "burned_tree_stump", "type": "furniture", "count": 1}]
 }
 ```
 
@@ -342,9 +368,9 @@ The generator rejects unknown fields at every recipe level, root-level dimension
 
 The output uses 21 levels; logical `z: 0` is row-major grid index `10`. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator currently creates explicit, known, single-cell furniture features, deterministic weighted furniture scatter over eligible terrain, and strict runtime-compatible rectangular area memberships at explicit logical levels. The core mod defines `rock_field_00` and `wild_vegetation_00` for outdoor composition, using the dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, polygonal areas, rooms, walls, doors, buildings, roads as semantic objects, towns, nested or multi-level patterns, or shape-based templates.
+The generator currently creates explicit, known, single-cell furniture features, deterministic weighted furniture scatter over eligible terrain, and strict runtime-compatible rectangular area memberships at explicit logical levels. Areas can additionally declare catalog-validated weighted runtime `furniture`, `mob`, `mobgroup`, and `itemgroup` entities; selection occurs when the map is instanced rather than during Python generation. The core mod defines `rock_field_00` and `wild_vegetation_00` for outdoor composition, using the dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, polygonal areas, rooms, walls, doors, buildings, roads as semantic objects, towns, nested or multi-level patterns, or shape-based templates.
 
-The maintained area example is `Tools/examples/map_recipe_area_meadow.json`. The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
+The maintained area examples are `Tools/examples/map_recipe_area_meadow.json` and `Tools/examples/map_recipe_area_entity_clearing.json`. The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
 
 Slope rotations in recipes use the same values shown by the map editor:
 

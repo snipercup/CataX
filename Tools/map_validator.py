@@ -107,6 +107,34 @@ class MapValidator:
             else:
                 area_ids.add(a_id)
 
+            if 'entities' not in area:
+                continue
+            entities = area['entities']
+            if not isinstance(entities, list):
+                self.add_error(file_path, f"Area at index {idx} entities must be an array.")
+                continue
+            for entity_idx, entity in enumerate(entities):
+                entity_context = f"Area at index {idx} entity at index {entity_idx}"
+                if not isinstance(entity, dict):
+                    self.add_error(file_path, f"{entity_context} is not an object.")
+                    continue
+                for field in ('id', 'type', 'count'):
+                    if field not in entity:
+                        self.add_error(file_path, f"{entity_context} is missing required field '{field}'.")
+                entity_type = entity.get('type')
+                if entity_type not in {'furniture', 'mob', 'mobgroup', 'itemgroup'}:
+                    self.add_error(file_path, f"{entity_context} has unsupported entity type '{entity_type}'.")
+                entity_id = entity.get('id')
+                if not isinstance(entity_id, str) or not entity_id:
+                    self.add_error(file_path, f"{entity_context} has invalid or missing ID.")
+                count = entity.get('count')
+                if (
+                    isinstance(count, bool)
+                    or not isinstance(count, (int, float))
+                    or count <= 0
+                ):
+                    self.add_error(file_path, f"{entity_context} count must be a positive number.")
+
         # 5. Validate Levels (Tiles)
         if not isinstance(levels, list):
              self.add_error(file_path, "'levels' must be an array.")

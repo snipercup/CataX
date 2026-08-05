@@ -9,6 +9,9 @@ from Tools.map_validator import MapValidator
 ROOT = Path(__file__).resolve().parents[2]
 TILES_PATH = ROOT / "Mods" / "Dimensionfall" / "Tiles" / "Tiles.json"
 FURNITURES_PATH = ROOT / "Mods" / "Dimensionfall" / "Furniture" / "Furniture.json"
+MOBS_PATH = ROOT / "Mods" / "Dimensionfall" / "Mobs" / "Mobs.json"
+MOBGROUPS_PATH = ROOT / "Mods" / "Dimensionfall" / "Mobgroups" / "Mobgroups.json"
+ITEMGROUPS_PATH = ROOT / "Mods" / "Dimensionfall" / "Itemgroups" / "Itemgroups.json"
 
 
 def valid_recipe():
@@ -1399,6 +1402,52 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, r"requires supporting terrain at \[0, 0\]"):
             generate_map(recipe, TILES_PATH)
 
+    def test_area_entities_require_known_runtime_type_catalog_ids_and_positive_counts(self):
+        known_entity_ids = {
+            "furniture": json.loads(FURNITURES_PATH.read_text(encoding="utf-8"))[0]["id"],
+            "mob": json.loads(MOBS_PATH.read_text(encoding="utf-8"))[0]["id"],
+            "mobgroup": json.loads(MOBGROUPS_PATH.read_text(encoding="utf-8"))[0]["id"],
+            "itemgroup": json.loads(ITEMGROUPS_PATH.read_text(encoding="utf-8"))[0]["id"],
+        }
+
+        for entity_type, entity_id in known_entity_ids.items():
+            with self.subTest(entity_type=entity_type):
+                recipe = valid_recipe()
+                recipe["areas"] = [{
+                    "id": "runtime_entities",
+                    "spawn_chance": 100,
+                    "rotate_random": False,
+                    "pick_one": False,
+                    "tiles": [{"id": "grass_dirt_00", "count": 1}],
+                    "entities": [{"id": entity_id, "type": entity_type, "count": 1}],
+                }]
+                generated = generate_map(recipe, TILES_PATH)
+                self.assertEqual(generated["areas"][0]["entities"], recipe["areas"][0]["entities"])
+
+        invalid_entities = [
+            ({"id": "table_round_wood", "type": "unsupported", "count": 1}, "unsupported type"),
+            ({"id": "missing", "type": "furniture", "count": 1}, "unknown furniture"),
+            ({"id": "missing", "type": "mob", "count": 1}, "unknown mob"),
+            ({"id": "missing", "type": "mobgroup", "count": 1}, "unknown mobgroup"),
+            ({"id": "missing", "type": "itemgroup", "count": 1}, "unknown itemgroup"),
+            ({"id": "table_round_wood", "type": "furniture", "count": 0}, "positive integer"),
+            ({"id": "table_round_wood", "type": "furniture", "count": True}, "positive integer"),
+            ({"id": "table_round_wood", "type": "furniture", "count": 1.5}, "positive integer"),
+        ]
+        for entity, expected_message in invalid_entities:
+            with self.subTest(entity=entity):
+                recipe = valid_recipe()
+                recipe["areas"] = [{
+                    "id": "runtime_entities",
+                    "spawn_chance": 100,
+                    "rotate_random": False,
+                    "pick_one": False,
+                    "tiles": [{"id": "grass_dirt_00", "count": 1}],
+                    "entities": [entity],
+                }]
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
     def test_area_meadow_example_matches_its_runtime_area_boundary(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_area_meadow.json"
         generated = generate_map(
@@ -1430,6 +1479,37 @@ class MapGeneratorTests(unittest.TestCase):
                 for x, y in memberships
             )
         )
+
+    def test_area_entity_clearing_example_preserves_runtime_entity_selection(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_area_entity_clearing.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generate_map(recipe, TILES_PATH), generated)
+        self.assertEqual(generated["areas"], [{
+            "id": "stump_clearing",
+            "spawn_chance": 100,
+            "rotate_random": False,
+            "pick_one": False,
+            "tiles": [{"id": "grass_dirt_00", "count": 100}],
+            "entities": [{
+                "id": "burned_tree_stump",
+                "type": "furniture",
+                "count": 1,
+            }],
+        }])
+        memberships = [
+            (index % 32, index // 32, tile)
+            for index, tile in enumerate(generated["levels"][10])
+            if tile.get("areas") == [{"id": "stump_clearing", "rotation": 0}]
+        ]
+        self.assertEqual(len(memberships), 144)
+        self.assertEqual(
+            {(x, y) for x, y, _ in memberships},
+            {(x, y) for y in range(10, 22) for x in range(10, 22)},
+        )
+        self.assertTrue(all(tile["id"] == "grass_dirt_00" for _, _, tile in memberships))
+        self.assertTrue(all("feature" not in tile for _, _, tile in memberships))
 
     def test_multi_level_examples_have_supported_slope_endpoints(self):
         high_direction = {
@@ -1640,6 +1720,27 @@ class MapValidatorDimensionTests(unittest.TestCase):
         ]
         errors = self.validate(map_data)
         self.assertTrue(any("invalid area rotation" in error for error in errors))
+
+    def test_validates_area_entity_definition_structure(self):
+        invalid_entities = [
+            ("not-an-array", "entities must be an array"),
+            (["not-an-object"], "entity at index 0 is not an object"),
+            ([{"id": "burned_tree_stump", "type": "furniture"}], "missing required field 'count'"),
+            ([{"id": "burned_tree_stump", "type": "unsupported", "count": 1}], "unsupported entity type"),
+            ([{"id": "burned_tree_stump", "type": "furniture", "count": 0}], "count must be a positive number"),
+            ([{"id": "burned_tree_stump", "type": "furniture", "count": "one"}], "count must be a positive number"),
+        ]
+        for entities, expected_message in invalid_entities:
+            with self.subTest(entities=entities):
+                map_data = generate_map(valid_recipe(), TILES_PATH)
+                map_data["areas"] = [{
+                    "id": "stump_clearing",
+                    "entities": entities,
+                }]
+
+                errors = self.validate(map_data)
+
+                self.assertTrue(any(expected_message in error for error in errors))
 
 
 if __name__ == "__main__":

@@ -60,6 +60,7 @@ AREA_DEFINITION_FIELDS = {
 }
 AREA_TILE_FIELDS = {"id", "count"}
 AREA_ENTITY_FIELDS = {"id", "type", "count"}
+AREA_ENTITY_TYPES = {"furniture", "mob", "mobgroup", "itemgroup"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -170,14 +171,18 @@ def _tile_ids(tiles_path: Path) -> set[str]:
 
 
 def _furniture_ids(furnitures_path: Path) -> set[str]:
-    with furnitures_path.open(encoding="utf-8") as handle:
-        furniture_data = json.load(handle)
-    if not isinstance(furniture_data, list):
-        raise RecipeError("furniture database must be a JSON array")
+    return _content_ids(furnitures_path, "furniture")
+
+
+def _content_ids(content_path: Path, content_name: str) -> set[str]:
+    with content_path.open(encoding="utf-8") as handle:
+        content_data = json.load(handle)
+    if not isinstance(content_data, list):
+        raise RecipeError(f"{content_name} database must be a JSON array")
     return {
-        furniture["id"]
-        for furniture in furniture_data
-        if isinstance(furniture, dict) and isinstance(furniture.get("id"), str)
+        entry["id"]
+        for entry in content_data
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str)
     }
 
 
@@ -198,6 +203,14 @@ def _contains_furniture_operations(recipe: dict[str, Any]) -> bool:
         for operations in operation_groups
         if isinstance(operations, list)
         for operation in operations
+    )
+
+
+def _contains_area_entities(recipe: dict[str, Any]) -> bool:
+    areas = recipe.get("areas")
+    return isinstance(areas, list) and any(
+        isinstance(area, dict) and area.get("entities")
+        for area in areas
     )
 
 
@@ -838,7 +851,9 @@ def _apply_furniture_scatter(
 
 
 def _validate_recipe_areas(
-    areas: Any, known_tiles: set[str]
+    areas: Any,
+    known_tiles: set[str],
+    known_area_entity_ids: dict[str, set[str]],
 ) -> list[dict[str, Any]]:
     if not isinstance(areas, list):
         raise RecipeError("areas must be an array")
@@ -906,10 +921,18 @@ def _validate_recipe_areas(
                 raise RecipeError(f"{entity_context}.id must be a non-empty string")
             if not isinstance(entity["type"], str) or not entity["type"].strip():
                 raise RecipeError(f"{entity_context}.type must be a non-empty string")
+            entity_type = entity["type"]
+            if entity_type not in AREA_ENTITY_TYPES:
+                raise RecipeError(f"{entity_context}.type has unsupported type '{entity_type}'")
+            entity_id = entity["id"]
+            if entity_id not in known_area_entity_ids[entity_type]:
+                raise RecipeError(
+                    f"{entity_context}.id references unknown {entity_type} '{entity_id}'"
+                )
             if type(entity["count"]) is not int or entity["count"] <= 0:
                 raise RecipeError(f"{entity_context}.count must be a positive integer")
             validated_entities.append(
-                {"id": entity["id"], "type": entity["type"], "count": entity["count"]}
+                {"id": entity_id, "type": entity_type, "count": entity["count"]}
             )
         validated.append(
             {
@@ -1163,19 +1186,41 @@ def generate_map(
     if type(seed) is not int:
         raise RecipeError("seed must be an integer")
     known_tiles = _tile_ids(Path(tiles_path))
+    content_root = Path(tiles_path).parent.parent
     known_furnitures: set[str] = set()
-    if _contains_furniture_operations(recipe):
+    requires_furniture_catalog = (
+        _contains_furniture_operations(recipe) or _contains_area_entities(recipe)
+    )
+    if requires_furniture_catalog:
         if furnitures_path is None:
-            furnitures_path = (
-                Path(tiles_path).parent.parent / "Furniture" / "Furniture.json"
-            )
+            furnitures_path = content_root / "Furniture" / "Furniture.json"
         known_furnitures = _furniture_ids(Path(furnitures_path))
+    known_area_entity_ids: dict[str, set[str]] = {
+        "furniture": known_furnitures,
+        "mob": set(),
+        "mobgroup": set(),
+        "itemgroup": set(),
+    }
+    if _contains_area_entities(recipe):
+        known_area_entity_ids.update(
+            {
+                "mob": _content_ids(content_root / "Mobs" / "Mobs.json", "mob"),
+                "mobgroup": _content_ids(
+                    content_root / "Mobgroups" / "Mobgroups.json", "mobgroup"
+                ),
+                "itemgroup": _content_ids(
+                    content_root / "Itemgroups" / "Itemgroups.json", "itemgroup"
+                ),
+            }
+        )
     palette = _validate_palette(recipe.get("palette", {}), known_tiles)
     furniture_palette = _validate_furniture_palette(
         recipe.get("furniture_palette", {}), known_furnitures
     )
     patterns = _validate_patterns(recipe.get("patterns", {}), known_tiles, palette)
-    areas = _validate_recipe_areas(recipe.get("areas", []), known_tiles)
+    areas = _validate_recipe_areas(
+        recipe.get("areas", []), known_tiles, known_area_entity_ids
+    )
     known_area_ids = {area["id"] for area in areas}
     rng = random.Random(seed)
     levels = _generate_levels(

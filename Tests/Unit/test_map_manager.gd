@@ -153,3 +153,47 @@ func test_process_entities_data():
 		assert_does_not_have(result, "mob", "Unexpected mob key")
 		assert_does_not_have(result, "mobgroup", "Unexpected mobgroup key")
 		assert_does_not_have(result, "itemgroup", "Unexpected itemgroup key")
+
+
+func test_area_entity_uses_membership_rotation_and_processes_non_default_level():
+	var area_data: Dictionary = {
+		"id": "stump_clearing",
+		"spawn_chance": 100,
+		"rotate_random": false,
+		"pick_one": false,
+		"tiles": [{"id": "grass_dirt_00", "count": 1}],
+		"entities": [{"id": "burned_tree_stump", "type": "furniture", "count": 1}],
+	}
+	var membership_tile: Dictionary = {
+		"id": "grass_plain_01",
+		"areas": [{"id": "stump_clearing", "rotation": 90}],
+	}
+	var entity_result: Dictionary = {}
+	map_manager._process_entities_data(
+		{
+			"id": "stump_clearing",
+			"rotate_random": false,
+			"tiles": [],
+			"entities": area_data["entities"],
+		},
+		entity_result,
+		membership_tile
+	)
+	assert_eq(entity_result.feature, {
+		"type": "furniture",
+		"id": "burned_tree_stump",
+		"rotation": 90,
+	})
+
+	var levels: Array = []
+	for level_index in range(21):
+		levels.append([])
+	var upper_level: Array = []
+	for tile_index in range(32 * 32):
+		upper_level.append({"id": "grass_plain_01"})
+	upper_level[3 * 32 + 2] = membership_tile.duplicate(true)
+	levels[11] = upper_level
+	var map_data: Dictionary = {"areas": [area_data], "levels": levels}
+	map_manager.process_areas_in_map(map_data)
+	assert_eq(map_data["levels"][11][3 * 32 + 2]["id"], "grass_dirt_00")
+	assert_eq(map_data["levels"][11][3 * 32 + 2]["areas"], membership_tile["areas"])

@@ -1,0 +1,52 @@
+{
+	"id": "generated_area_entity_clearing",
+	"name": "Generated Area Entity Clearing",
+	"description": "A deterministic area boundary whose stump feature selection occurs at runtime each time the map is instanced.",
+	"seed": 20260805,
+	"base_tile": {
+		"id": "grass_plain_01"
+	},
+	"areas": [
+		{
+			"id": "stump_clearing",
+			"spawn_chance": 100,
+			"rotate_random": false,
+			"pick_one": false,
+			"tiles": [
+				{
+					"id": "grass_dirt_00",
+					"count": 100
+				}
+			],
+			"entities": [
+				{
+					"id": "burned_tree_stump",
+					"type": "furniture",
+					"count": 1
+				}
+			]
+		}
+	],
+	"operations": [
+		{
+			"type": "rectangle",
+			"x": 10,
+			"y": 10,
+			"width": 12,
+			"height": 12,
+			"tile": {
+				"id": "grass_dirt_00"
+			}
+		},
+		{
+			"type": "area_rectangle",
+			"area": "stump_clearing",
+			"x": 10,
+			"y": 10,
+			"width": 12,
+			"height": 12,
+			"z": 0,
+			"rotation": 0
+		}
+	]
+}
