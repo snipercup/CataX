@@ -535,7 +535,7 @@ This success criterion is met. The maintained recipes generate valid two-level m
 
 ## Phase 5 — Features and furniture
 
-**Status: in progress; outdoor composition delivered, final asset inspection remains**
+**Status: in progress; dedicated outdoor art delivered, final inspection remains**
 
 This is where generated maps start becoming playable rather than merely visual.
 
@@ -580,14 +580,14 @@ Delivered:
 * bounded `furniture_scatter` operations that enumerate terrain-without-feature candidates in row-major order, sample them without replacement, select weighted furniture deterministically, and fail before placement when count exceeds eligibility;
 * an expanded furnished clearing with explicit garden bench, unlit campfire, and potted plant plus 24 conflict-aware tree, pine, willow, or burned-stump placements;
 * manual editor and `save and test` verification by the maintainer that all clearing features behave correctly, including the seeded placements and explicit features;
-* two new core static Nature furniture definitions: `rock_field_00` and `wild_vegetation_00`, each with an explicit temporary placeholder-sprite filename copied from existing core furniture art because dedicated generated sprites are not available in this contribution;
+* two new core static Nature furniture definitions: `rock_field_00` and `wild_vegetation_00`, using dedicated AI-generated 32×32 sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png` in the core furniture sprite directory;
 * maintained-example reference entries and a weighted groundcover scatter pass containing the new rock and vegetation IDs, giving the clearing trees, rocks, vegetation, and simple decorative/interactable objects without changing the feature schema.
 
 Still required before Phase 5 is complete:
 
-* visual and gameplay inspection of `rock_field_00` and `wild_vegetation_00` after their temporary placeholder sprites are replaced with dedicated art;
+* visual and gameplay inspection of `rock_field_00` and `wild_vegetation_00` with their dedicated AI-generated sprites;
 * decisions about furniture itemgroup authoring, multi-tile footprints, tall features, and adjacent-level conflicts, each introduced only when supported by runtime evidence;
-* documented replacement of the temporary placeholder sprites with dedicated rock and vegetation assets.
+* documented editor and `save and test` results for the dedicated rock and vegetation assets.
 
 ### Success criterion
 
@@ -832,11 +832,11 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-The next contribution should finish the remaining asset-inspection evidence needed for **Phase 5**, without widening the generator schema.
+The next contribution should finish the remaining dedicated-asset inspection evidence needed for **Phase 5**, without widening the generator schema.
 
-The furnished clearing has been inspected in the map editor and with `save and test`; the maintainer verified all its features. Keep that verified runtime result recorded while inspecting the two new placeholder-backed entries after fresh generation.
+The furnished clearing has been inspected in the map editor and with `save and test`; the maintainer verified all its prior features. Regenerate it and inspect `rock_field_00` and `wild_vegetation_00`, which now use `ai_rock_32_32.png` and `ai_vegetation_32_32.png`.
 
-Replace `rock_field_placeholder_burned_stump_64.png` and `wild_vegetation_placeholder_potted_plant_32.png` with dedicated art while retaining their filenames or updating the matching furniture definitions. Re-run content, generator, and runtime inspection afterward. Do not add multi-tile footprints, itemgroup generation, automatic support inference, rooms, buildings, roads, towns, nested patterns, or generalized feature templates.
+Record the new editor and gameplay result, including sprite appearance, static spawning, collision, and local navigation behavior. Do not add multi-tile footprints, itemgroup generation, automatic support inference, rooms, buildings, roads, towns, nested patterns, or generalized feature templates.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -867,7 +867,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Deterministic conflict-aware outdoor furniture distribution
 [Complete] Furnished-clearing editor and runtime verification
 [Complete] Outdoor rock and wild-vegetation content definitions
-[Next]     Dedicated outdoor sprite replacement and final Phase 5 inspection
+[Complete] Dedicated AI-generated outdoor sprite replacement
+[Next]     Final Phase 5 outdoor-asset inspection
 [Planned]  Level-aware areas and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

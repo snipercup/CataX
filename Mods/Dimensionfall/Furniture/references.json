@@ -106,7 +106,8 @@
 			"military_bunker",
 			"survivor_gas_station",
 			"forest_clearing",
-			"forest_ruins"
+			"forest_ruins",
+			"generated_furnished_clearing"
 		]
 	},
 	"barrel_radioactive_black": {
@@ -211,7 +212,8 @@
 	},
 	"burned_tree_stump": {
 		"maps": [
-			"forest_burned_00"
+			"forest_burned_00",
+			"generated_furnished_clearing"
 		]
 	},
 	"cabinet_wood_00": {
@@ -235,7 +237,8 @@
 	"campfire_off": {
 		"maps": [
 			"forest_camp_00",
-			"survivor_gas_station"
+			"survivor_gas_station",
+			"generated_furnished_clearing"
 		]
 	},
 	"campfire_on": {
@@ -562,7 +565,8 @@
 			"factory_hall",
 			"military_bunker",
 			"underground_lab",
-			"field_farmland"
+			"field_farmland",
+			"generated_furnished_clearing"
 		]
 	},
 	"railroad_midsection": {
@@ -593,6 +597,11 @@
 			"military_bunker",
 			"underground_lab",
 			"field_farmland"
+		]
+	},
+	"rock_field_00": {
+		"maps": [
+			"generated_furnished_clearing"
 		]
 	},
 	"rusted_fridge": {
@@ -867,6 +876,11 @@
 			"industrial_control_center"
 		]
 	},
+	"wild_vegetation_00": {
+		"maps": [
+			"generated_furnished_clearing"
+		]
+	},
 	"window_glass": {
 		"maps": [
 			"store_groceries",
@@ -887,16 +901,6 @@
 			"military_bunker",
 			"survivor_gas_station",
 			"field_farmland"
-		]
-	},
-	"rock_field_00": {
-		"maps": [
-			"generated_furnished_clearing"
-		]
-	},
-	"wild_vegetation_00": {
-		"maps": [
-			"generated_furnished_clearing"
 		]
 	}
 }
