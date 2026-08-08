@@ -139,3 +139,44 @@ func test_dmap_room_connections_roundtrip_and_sanitization():
 		"from": {"kind": "room", "id": "office"},
 		"to": {"kind": "exterior"},
 	}])
+
+
+func test_dmap_room_boundaries_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_room_boundaries", "/tmp/", null)
+	map.set_data({
+		"name": "Room boundaries",
+		"description": "Preserve authored physical references.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed"},
+		],
+		"room_boundaries": [
+			{
+				"id": "office_north_wall",
+				"room": "office",
+				"at": [8, 7],
+				"z": 0,
+				"element": "wall_tile",
+			},
+			{
+				"id": "stale_boundary",
+				"room": "missing_room",
+				"at": [12, 10],
+				"z": 0,
+				"element": "door_furniture",
+			},
+		],
+		"levels": [[
+			{"id": "concrete_00"},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["room_boundaries"], [{
+		"id": "office_north_wall",
+		"room": "office",
+		"at": [8, 7],
+		"z": 0,
+		"element": "wall_tile",
+	}])

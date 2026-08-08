@@ -1,0 +1,193 @@
+{
+	"id": "generated_room_boundaries",
+	"name": "Generated Room Boundaries",
+	"description": "Authored room boundary references to existing wall tiles and connected door furniture without generated building geometry.",
+	"seed": 20260808,
+	"base_tile": {
+		"id": "grass_plain_01"
+	},
+	"rooms": [
+		{
+			"id": "office",
+			"kind": "enclosed"
+		},
+		{
+			"id": "garage_bay",
+			"kind": "covered_open"
+		},
+		{
+			"id": "ruined_store",
+			"kind": "ruin"
+		}
+	],
+	"room_connections": [
+		{
+			"id": "office_front_door",
+			"at": [11, 10],
+			"z": 0,
+			"from": {
+				"kind": "room",
+				"id": "office"
+			},
+			"to": {
+				"kind": "exterior"
+			}
+		},
+		{
+			"id": "office_to_garage",
+			"at": [12, 10],
+			"z": 0,
+			"from": {
+				"kind": "room",
+				"id": "office"
+			},
+			"to": {
+				"kind": "room",
+				"id": "garage_bay"
+			}
+		}
+	],
+	"room_boundaries": [
+		{
+			"id": "office_north_wall",
+			"room": "office",
+			"at": [8, 7],
+			"z": 0,
+			"element": "wall_tile"
+		},
+		{
+			"id": "office_west_wall",
+			"room": "office",
+			"at": [7, 8],
+			"z": 0,
+			"element": "wall_tile"
+		},
+		{
+			"id": "garage_east_wall",
+			"room": "garage_bay",
+			"at": [16, 8],
+			"z": 0,
+			"element": "wall_tile"
+		},
+		{
+			"id": "ruin_north_wall",
+			"room": "ruined_store",
+			"at": [8, 16],
+			"z": 0,
+			"element": "wall_tile"
+		},
+		{
+			"id": "office_front_opening",
+			"room": "office",
+			"at": [11, 10],
+			"z": 0,
+			"element": "door_furniture"
+		},
+		{
+			"id": "office_garage_opening",
+			"room": "office",
+			"at": [12, 10],
+			"z": 0,
+			"element": "door_furniture"
+		},
+		{
+			"id": "garage_office_opening",
+			"room": "garage_bay",
+			"at": [12, 10],
+			"z": 0,
+			"element": "door_furniture"
+		}
+	],
+	"operations": [
+		{
+			"type": "rectangle",
+			"x": 8,
+			"y": 8,
+			"width": 8,
+			"height": 4,
+			"tile": {
+				"id": "concrete_00"
+			}
+		},
+		{
+			"type": "rectangle",
+			"x": 8,
+			"y": 17,
+			"width": 8,
+			"height": 4,
+			"tile": {
+				"id": "concrete__cracked_01"
+			}
+		},
+		{
+			"type": "room_rectangle",
+			"room": "office",
+			"x": 8,
+			"y": 8,
+			"width": 4,
+			"height": 4
+		},
+		{
+			"type": "room_rectangle",
+			"room": "garage_bay",
+			"x": 12,
+			"y": 8,
+			"width": 4,
+			"height": 4
+		},
+		{
+			"type": "room_rectangle",
+			"room": "ruined_store",
+			"x": 8,
+			"y": 17,
+			"width": 8,
+			"height": 4
+		},
+		{
+			"type": "set",
+			"x": 8,
+			"y": 7,
+			"tile": {
+				"id": "brick_wall_00"
+			}
+		},
+		{
+			"type": "set",
+			"x": 7,
+			"y": 8,
+			"tile": {
+				"id": "brick_wall_00"
+			}
+		},
+		{
+			"type": "set",
+			"x": 16,
+			"y": 8,
+			"tile": {
+				"id": "brick_wall_00"
+			}
+		},
+		{
+			"type": "set",
+			"x": 8,
+			"y": 16,
+			"tile": {
+				"id": "brick_wall_00"
+			}
+		},
+		{
+			"type": "furniture",
+			"id": "door_wood",
+			"x": 11,
+			"y": 10,
+			"rotation": 0
+		},
+		{
+			"type": "furniture",
+			"id": "door_wood",
+			"x": 12,
+			"y": 10,
+			"rotation": 90
+		}
+	]
+}

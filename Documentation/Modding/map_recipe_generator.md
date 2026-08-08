@@ -323,6 +323,42 @@ Room IDs must exist in root `rooms`; the two endpoints must be distinct; and one
 
 Connections are semantic metadata only. They preserve their authored `from`/`to` order but do not create a new door feature, alter existing door behavior, infer enclosure, generate geometry, or introduce an indoor/outdoor runtime state. `DMap` preserves valid links through content-editor save/load and removes links that name deleted rooms.
 
+### `room_boundaries`
+
+`room_boundaries` explicitly attaches an existing physical wall tile or connected door opening to one authored room. It does not derive a perimeter from rooms, floor material, wall rotation, or neighboring geometry. Each root record contains exactly `id`, `room`, `at`, `z`, and `element`:
+
+```json
+{
+  "room_boundaries": [
+    {
+      "id": "office_north_wall",
+      "room": "office",
+      "at": [8, 7],
+      "z": 0,
+      "element": "wall_tile"
+    },
+    {
+      "id": "office_front_opening",
+      "room": "office",
+      "at": [11, 10],
+      "z": 0,
+      "element": "door_furniture"
+    }
+  ]
+}
+```
+
+`id` is unique and uses normal definition-name characters. `room` must name a root room, `at` is an in-bounds `[x, y]`, and `z` is a required logical level from `-10` through `10`. `element` is exactly one of:
+
+| Element | Existing target requirement |
+|---|---|
+| `wall_tile` | The target terrain ID is in the tile catalog and has the `Wall` category; it must be cardinally adjacent to a tile labelled with the named room. |
+| `door_furniture` | The target terrain tile contains catalog-recognized door-capable furniture and a `room_connections` entry at the same `[x, y, z]` names the room. |
+
+A room cannot name the same target coordinate twice, but one wall tile may deliberately bound different rooms through separate records. This remains partial authored evidence: `enclosed`, `covered_open`, and `ruin` rooms may declare only the segments that matter to the current recipe. No perimeter-completeness or enclosure rule exists yet.
+
+Boundary metadata preserves existing terrain, furniture, rotation, collision, and runtime door behavior. `DMap` preserves it through content-editor save/load and removes records naming deleted rooms. It does not create walls or openings, infer a door from rotation, change navigation, or add indoor/outdoor effects.
+
 ### `set`
 
 Places one tile. Fields: `type`, `x`, `y`, `tile`, and optional root-level `z`.
