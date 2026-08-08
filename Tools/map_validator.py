@@ -8,6 +8,7 @@ MAP_WIDTH = 32
 MAP_HEIGHT = 32
 LEVEL_COUNT = 21
 POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
+ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -60,6 +61,10 @@ class MapValidator:
         if not isinstance(areas, list):
             self.add_error(file_path, "top-level areas must be an array.")
             areas = []
+        rooms = data.get('rooms', [])
+        if not isinstance(rooms, list):
+            self.add_error(file_path, "top-level rooms must be an array.")
+            rooms = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -135,6 +140,28 @@ class MapValidator:
                 ):
                     self.add_error(file_path, f"{entity_context} count must be a positive number.")
 
+        room_ids: Set[str] = set()
+        for idx, room in enumerate(rooms):
+            if not isinstance(room, dict):
+                self.add_error(file_path, f"Room at index {idx} is not an object.")
+                continue
+            unknown_fields = sorted(set(room) - {'id', 'kind'})
+            if unknown_fields:
+                self.add_error(file_path, f"Room at index {idx} has unknown field '{unknown_fields[0]}'.")
+            for field in ('id', 'kind'):
+                if field not in room:
+                    self.add_error(file_path, f"Room at index {idx} is missing required field '{field}'.")
+            room_id = room.get('id')
+            if not isinstance(room_id, str) or not room_id:
+                self.add_error(file_path, f"Room at index {idx} has invalid or missing ID.")
+            elif room_id in room_ids:
+                self.add_error(file_path, f"Duplicate room ID detected: '{room_id}'")
+            else:
+                room_ids.add(room_id)
+            kind = room.get('kind')
+            if kind not in ROOM_KINDS:
+                self.add_error(file_path, f"Room at index {idx} has unsupported room kind '{kind}'.")
+
         # 5. Validate Levels (Tiles)
         if not isinstance(levels, list):
              self.add_error(file_path, "'levels' must be an array.")
@@ -170,6 +197,33 @@ class MapValidator:
                     if 'id' not in tile:
                         self.add_error(file_path, f"Level {level_idx}, Tile index {tile_idx} missing required 'id'")
                         continue
+
+                    if 'rooms' in tile:
+                        room_memberships = tile['rooms']
+                        if not isinstance(tile['id'], str) or not tile['id']:
+                            self.add_error(
+                                file_path,
+                                f"Level {level_idx}, Tile index {tile_idx} room membership requires terrain."
+                            )
+                        elif not isinstance(room_memberships, list):
+                            self.add_error(
+                                file_path,
+                                f"Level {level_idx}, Tile '{tile['id']}' rooms must be an array."
+                            )
+                        elif (
+                            len(room_memberships) != 1
+                            or not isinstance(room_memberships[0], str)
+                            or not room_memberships[0]
+                        ):
+                            self.add_error(
+                                file_path,
+                                f"Level {level_idx}, Tile '{tile['id']}' rooms must contain exactly one room ID."
+                            )
+                        elif room_memberships[0] not in room_ids:
+                            self.add_error(
+                                file_path,
+                                f"Level {level_idx}, Tile '{tile['id']}' references non-existent room '{room_memberships[0]}'"
+                            )
 
                     if 'rotation' in tile:
                         rot = tile['rotation']

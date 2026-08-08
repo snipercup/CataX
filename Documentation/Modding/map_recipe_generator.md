@@ -243,6 +243,50 @@ Adds one area membership to every terrain tile in a filled rectangle. Fields are
 
 The referenced top-level area must exist and every target cell must already contain terrain at the selected logical level. A membership operation does not replace terrain, features, or other distinct area memberships, and consumes no RNG. Coordinates are preflighted against the complete `32×32` map, so the operation cannot be clipped or partially applied.
 
+## Authored room semantics
+
+Rooms are authored semantic labels; they are not inferred from floor material, wall topology, door placement, or roof coverage. A recipe may define a root `rooms` array whose entries contain exactly an `id` and `kind`:
+
+```json
+{
+  "rooms": [
+    {"id": "office", "kind": "enclosed"},
+    {"id": "garage_bay", "kind": "covered_open"},
+    {"id": "ruined_store", "kind": "ruin"}
+  ]
+}
+```
+
+Supported kinds are:
+
+| Kind | Authored meaning |
+|---|---|
+| `enclosed` | A conventional room intended to be physically enclosed once geometry generation is added. |
+| `covered_open` | A roofed but intentionally open space, such as a garage without a garage door. |
+| `ruin` | A semantic room that may deliberately have holes or open wall sections. |
+
+Tile membership uses `rooms` as a one-element string array, for example `{"id": "concrete_00", "rooms": ["garage_bay"]}`. A terrain tile may have exactly one room label, while it may still carry multiple runtime `areas` memberships. This makes floor material and area behavior independent from room semantics: adjacent rooms may share one floor material, and one floor-like area can span several rooms.
+
+### `room_rectangle`
+
+Adds one authored room label to every terrain tile in a filled rectangle. Fields are `type`, `room`, `x`, `y`, positive `width`, positive `height`, and optional root-level `z`. It has no rotation because it is semantic metadata, not a spatial transform.
+
+```json
+{
+  "type": "room_rectangle",
+  "room": "garage_bay",
+  "x": 12,
+  "y": 7,
+  "width": 10,
+  "height": 8,
+  "z": 0
+}
+```
+
+The referenced root room must exist. Every target cell must already contain terrain, and room membership is exclusive: an operation cannot overlap another room label or partially apply. Room definitions and membership consume no RNG.
+
+This slice preserves `rooms` through `DMap`/content-editor save-load paths and validates them independently, but does **not** yet infer or validate walls, roofs, door adjacency, enclosure, weather, lighting, or indoor gameplay. A door feature may eventually connect indoor-to-outdoor or indoor-to-indoor spaces; this semantic slice intentionally does not encode those links yet.
+
 ### `set`
 
 Places one tile. Fields: `type`, `x`, `y`, `tile`, and optional root-level `z`.
@@ -368,9 +412,9 @@ The generator rejects unknown fields at every recipe level, root-level dimension
 
 The output uses 21 levels; logical `z: 0` is row-major grid index `10`. It sets `categories` to `[]`, `weight` to `1000`, and all four connections to `"ground"`. It omits `areas`, matching `DMap.get_data()` when the area list is empty.
 
-The generator currently creates explicit, known, single-cell furniture features, deterministic weighted furniture scatter over eligible terrain, and strict runtime-compatible rectangular area memberships at explicit logical levels. Areas can additionally declare catalog-validated weighted runtime `furniture`, `mob`, `mobgroup`, and `itemgroup` entities; selection occurs when the map is instanced rather than during Python generation. The core mod defines `rock_field_00` and `wild_vegetation_00` for outdoor composition, using the dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, polygonal areas, rooms, walls, doors, buildings, roads as semantic objects, towns, nested or multi-level patterns, or shape-based templates.
+The generator currently creates explicit, known, single-cell furniture features, deterministic weighted furniture scatter over eligible terrain, strict runtime-compatible rectangular area memberships at explicit logical levels, and authored room labels through terrain-backed `room_rectangle` operations. Areas can additionally declare catalog-validated weighted runtime `furniture`, `mob`, `mobgroup`, and `itemgroup` entities; selection occurs when the map is instanced rather than during Python generation. Room labels are semantic only and do not yet create or infer geometry. The core mod defines `rock_field_00` and `wild_vegetation_00` for outdoor composition, using the dedicated AI-generated sprites `ai_rock_32_32.png` and `ai_vegetation_32_32.png`. It does not yet support furniture itemgroup contents, multiple features per cell, multi-tile or tall-object occupancy, automatic support inference, polygonal areas, walls, doors, buildings, roads as semantic objects, towns, nested or multi-level patterns, or shape-based templates.
 
-The maintained area examples are `Tools/examples/map_recipe_area_meadow.json` and `Tools/examples/map_recipe_area_entity_clearing.json`. The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
+The maintained area examples are `Tools/examples/map_recipe_area_meadow.json` and `Tools/examples/map_recipe_area_entity_clearing.json`; the maintained room example is `Tools/examples/map_recipe_room_semantics.json`. The maintained furniture example is `Tools/examples/map_recipe_furniture_outdoor.json`. Maintained structural examples are available at `Tools/examples/map_recipe_two_level_hill.json` and `Tools/examples/map_recipe_two_level_depression.json`. They use `grass_ramp_00`, whose tile definition has `shape: "slope"`.
 
 Slope rotations in recipes use the same values shown by the map editor:
 

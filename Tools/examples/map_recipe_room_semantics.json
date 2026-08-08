@@ -1,0 +1,69 @@
+{
+	"id": "generated_room_semantics",
+	"name": "Generated Room Semantics",
+	"description": "Authored semantic room labels for enclosed, covered-open, and ruined spaces without generated building geometry.",
+	"seed": 20260807,
+	"base_tile": {
+		"id": "grass_plain_01"
+	},
+	"rooms": [
+		{
+			"id": "office",
+			"kind": "enclosed"
+		},
+		{
+			"id": "garage_bay",
+			"kind": "covered_open"
+		},
+		{
+			"id": "ruined_store",
+			"kind": "ruin"
+		}
+	],
+	"operations": [
+		{
+			"type": "rectangle",
+			"x": 4,
+			"y": 7,
+			"width": 18,
+			"height": 8,
+			"tile": {
+				"id": "concrete_00"
+			}
+		},
+		{
+			"type": "rectangle",
+			"x": 7,
+			"y": 17,
+			"width": 12,
+			"height": 8,
+			"tile": {
+				"id": "concrete__cracked_01"
+			}
+		},
+		{
+			"type": "room_rectangle",
+			"room": "office",
+			"x": 4,
+			"y": 7,
+			"width": 8,
+			"height": 8
+		},
+		{
+			"type": "room_rectangle",
+			"room": "garage_bay",
+			"x": 12,
+			"y": 7,
+			"width": 10,
+			"height": 8
+		},
+		{
+			"type": "room_rectangle",
+			"room": "ruined_store",
+			"x": 7,
+			"y": 17,
+			"width": 12,
+			"height": 8
+		}
+	]
+}

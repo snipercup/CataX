@@ -26,6 +26,7 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_furniture_outdoor.json` | `Mods/Dimensionfall/Maps/generated_furnished_clearing.json` | Explicit decor plus weighted, conflict-aware tree, rock, and wild-vegetation scatter on supported terrain at logical `z: 0`. |
 | `Tools/examples/map_recipe_area_meadow.json` | `Mods/Dimensionfall/Maps/generated_area_meadow.json` | One runtime area definition and a `12×12` terrain-backed `area_rectangle` membership boundary at logical `z: 0`. |
 | `Tools/examples/map_recipe_area_entity_clearing.json` | `Mods/Dimensionfall/Maps/generated_area_entity_clearing.json` | A `12×12` terrain-backed area whose weighted stump entity is selected anew by the runtime each time the map is instanced. |
+| `Tools/examples/map_recipe_room_semantics.json` | `Mods/Dimensionfall/Maps/generated_room_semantics.json` | Authored `enclosed`, `covered_open`, and `ruin` room labels on terrain without generated walls, doors, roofs, or indoor runtime behavior. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 
@@ -64,6 +65,11 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_area_entity_clearing.json \
   Mods/Dimensionfall/Maps/generated_area_entity_clearing.json
 
+# Ground-level authored room semantics
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_room_semantics.json \
+  Mods/Dimensionfall/Maps/generated_room_semantics.json
+
 # Two-level hill
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_two_level_hill.json \
@@ -91,6 +97,7 @@ rm Mods/Dimensionfall/Maps/generated_meadow_prototype.json
 rm Mods/Dimensionfall/Maps/generated_furnished_clearing.json
 rm Mods/Dimensionfall/Maps/generated_area_meadow.json
 rm Mods/Dimensionfall/Maps/generated_area_entity_clearing.json
+rm Mods/Dimensionfall/Maps/generated_room_semantics.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
 rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
 ```
@@ -161,6 +168,8 @@ For the maintained furnished clearing, confirm that the editor shows a garden be
 For the maintained area meadow, confirm that the area list contains `meadow_clearing` and the editor highlights exactly the `12×12` rectangle from `[10, 10]` through `[21, 21]` at logical `z: 0`. The definition has a `100` percent spawn chance and replaces that connected membership cluster with `grass_dirt_00`; use `save and test` to confirm the runtime applies the area without affecting outside terrain. The example deliberately contains no entities, rooms, walls, doors, or building semantics.
 
 For the maintained area entity clearing, confirm the same `[10, 10]` through `[21, 21]` membership boundary for `stump_clearing`. The JSON deliberately contains no pre-baked furniture features: every instancing uses the established area rule to make a fresh weighted selection between its `burned_tree_stump` entry and the implicit no-spawn weight. Restart and instance the map multiple times with **save and test**; confirm stump positions can vary between runs, remain inside the membership boundary, preserve the membership rotation when spawned, and never alter outside terrain. Do not commit the generated inspection map unless it is explicitly promoted to project content.
+
+For the maintained room-semantics map, inspect `generated_room_semantics` in the content editor, save it, close it, and re-open it. Confirm that `office` (`enclosed`), `garage_bay` (`covered_open`), and `ruined_store` (`ruin`) labels persist without load errors. The office and garage intentionally share adjacent `concrete_00` terrain, so do not infer room boundaries from floor material. Map preview and **save and test** should only be used to confirm persistence and normal loading in this slice: it does not yet create walls, roofs, doors, lighting, weather, or indoor gameplay behavior.
 
 Dimensionfall also looks for a same-named `.png` map sprite during startup. The runner intentionally generates map JSON only, so Godot currently logs a non-fatal missing-resource error for that sprite. This does not prevent the JSON map from loading or the map editor's tile-grid preview from rendering it.
 

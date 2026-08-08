@@ -69,3 +69,31 @@ func test_dmap_tile_sanitization():
 	# 6. Verify a standard filled tile in the remainder works
 	var result_filler = retrieved_level[4]
 	assert_eq(result_filler["id"], "grass_plain_01", "Filler tile should remain unchanged")
+
+
+func test_dmap_room_semantics_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_room_semantics", "/tmp/", null)
+	map.set_data({
+		"name": "Room semantics",
+		"description": "Preserve authored rooms.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed"},
+			{"id": "garage_bay", "kind": "covered_open"},
+			{"id": "damaged_store", "kind": "ruin"},
+		],
+		"levels": [[
+			{"id": "concrete_00", "rooms": ["garage_bay"]},
+			{"id": "concrete_00", "rooms": ["missing_room"]},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["rooms"], [
+		{"id": "office", "kind": "enclosed"},
+		{"id": "garage_bay", "kind": "covered_open"},
+		{"id": "damaged_store", "kind": "ruin"},
+	])
+	assert_eq(data["levels"][0][0]["rooms"], ["garage_bay"])
+	assert_false(data["levels"][0][1].has("rooms"), "Stale room references should be removed")
