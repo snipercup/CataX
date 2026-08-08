@@ -95,6 +95,7 @@ var levels: Array = [
 var areas: Array = []
 var rooms: Array = []
 var room_connections: Array = []
+var room_boundaries: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -149,6 +150,7 @@ func set_data(newdata: Dictionary) -> void:
 	areas = newdata.get("areas", [])
 	rooms = newdata.get("rooms", [])
 	room_connections = newdata.get("room_connections", [])
+	room_boundaries = newdata.get("room_boundaries", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -170,6 +172,8 @@ func get_data() -> Dictionary:
 		mydata["rooms"] = rooms
 	if not room_connections.is_empty():
 		mydata["room_connections"] = room_connections
+	if not room_boundaries.is_empty():
+		mydata["room_boundaries"] = room_boundaries
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
@@ -177,6 +181,7 @@ func get_data() -> Dictionary:
 	_sanitize_area_references(mydata)
 	_sanitize_room_references(mydata)
 	_sanitize_room_connections(mydata)
+	_sanitize_room_boundaries(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -275,6 +280,26 @@ func _sanitize_room_connections(data: Dictionary) -> void:
 	)
 	if data["room_connections"].is_empty():
 		data.erase("room_connections")
+
+
+func _sanitize_room_boundaries(data: Dictionary) -> void:
+	if not data.has("room_boundaries") or not data["room_boundaries"] is Array:
+		return
+
+	var valid_room_ids: Array[String] = []
+	if data.has("rooms") and data["rooms"] is Array:
+		for room in data["rooms"]:
+			if room is Dictionary and room.has("id") and room["id"] is String:
+				valid_room_ids.append(room["id"])
+
+	data["room_boundaries"] = data["room_boundaries"].filter(func(boundary):
+		return boundary is Dictionary \
+			and boundary.has("room") \
+			and boundary["room"] is String \
+			and boundary["room"] in valid_room_ids
+	)
+	if data["room_boundaries"].is_empty():
+		data.erase("room_boundaries")
 
 
 func load_data_from_disk():

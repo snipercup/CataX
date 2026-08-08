@@ -67,6 +67,8 @@ ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
 ROOM_CONNECTION_FIELDS = {"id", "at", "z", "from", "to"}
 ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
+ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element"}
+ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -80,6 +82,7 @@ RECIPE_FIELDS = {
     "areas",
     "rooms",
     "room_connections",
+    "room_boundaries",
     "patterns",
     "regions",
     "operations",
@@ -175,6 +178,23 @@ def _tile_ids(tiles_path: Path) -> set[str]:
         tile["id"]
         for tile in tile_data
         if isinstance(tile, dict) and isinstance(tile.get("id"), str)
+    }
+
+
+def _wall_tile_ids(tiles_path: Path) -> set[str]:
+    with tiles_path.open(encoding="utf-8") as handle:
+        tile_data = json.load(handle)
+    if not isinstance(tile_data, list):
+        raise RecipeError("tile database must be a JSON array")
+    return {
+        entry["id"]
+        for entry in tile_data
+        if (
+            isinstance(entry, dict)
+            and isinstance(entry.get("id"), str)
+            and isinstance(entry.get("categories"), list)
+            and "Wall" in entry["categories"]
+        )
     }
 
 
@@ -1111,6 +1131,123 @@ def _validate_room_connection_targets(
             raise RecipeError(f"{context} must reference door-capable furniture at z {z} [{x}, {y}]")
 
 
+def _validate_recipe_room_boundaries(
+    boundaries: Any, known_room_ids: set[str]
+) -> list[dict[str, Any]]:
+    if not isinstance(boundaries, list):
+        raise RecipeError("room_boundaries must be an array")
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, boundary in enumerate(boundaries):
+        context = f"room_boundaries[{index}]"
+        if not isinstance(boundary, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(boundary) - ROOM_BOUNDARY_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(boundary) != ROOM_BOUNDARY_FIELDS:
+            raise RecipeError(f"{context} must define id, room, at, z, and element")
+        boundary_id = boundary["id"]
+        if not isinstance(boundary_id, str) or not boundary_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(boundary_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(boundary_id) is None:
+            raise RecipeError(f"{context}.id may contain only letters, numbers, underscores, and hyphens")
+        if boundary_id in seen_ids:
+            raise RecipeError(f"duplicate room boundary ID '{boundary_id}'")
+        seen_ids.add(boundary_id)
+        room_id = boundary["room"]
+        if not isinstance(room_id, str) or not room_id.strip():
+            raise RecipeError(f"{context}.room must be a non-empty string")
+        if room_id not in known_room_ids:
+            raise RecipeError(f"{context}.room references unknown room '{room_id}'")
+        at = boundary["at"]
+        if (
+            not isinstance(at, list)
+            or len(at) != 2
+            or any(type(value) is not int for value in at)
+            or not 0 <= at[0] < MAP_WIDTH
+            or not 0 <= at[1] < MAP_HEIGHT
+        ):
+            raise RecipeError(f"{context}.at must be within map bounds as a two-integer array")
+        z = boundary["z"]
+        if type(z) is not int or not MIN_LOGICAL_Z <= z <= MAX_LOGICAL_Z:
+            raise RecipeError(f"{context}.z must be an integer from -10 through 10")
+        element = boundary["element"]
+        if element not in ROOM_BOUNDARY_ELEMENTS:
+            raise RecipeError(f"{context}.element has unsupported element '{element}'")
+        validated.append({
+            "id": boundary_id,
+            "room": room_id,
+            "at": at,
+            "z": z,
+            "element": element,
+        })
+    return validated
+
+
+def _room_connection_names_room(connection: dict[str, Any], room_id: str) -> bool:
+    return any(
+        endpoint.get("kind") == "room" and endpoint.get("id") == room_id
+        for endpoint in (connection["from"], connection["to"])
+    )
+
+
+def _wall_tile_bounds_room(x: int, y: int, room_id: str, level: list[dict[str, Any]]) -> bool:
+    for delta_x, delta_y in ((0, -1), (1, 0), (0, 1), (-1, 0)):
+        neighbor_x = x + delta_x
+        neighbor_y = y + delta_y
+        if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
+            continue
+        neighbor = level[neighbor_y * MAP_WIDTH + neighbor_x]
+        if isinstance(neighbor, dict) and neighbor.get("rooms") == [room_id]:
+            return True
+    return False
+
+
+def _validate_room_boundary_targets(
+    boundaries: list[dict[str, Any]],
+    levels: list[list[dict[str, Any]]],
+    wall_tile_ids: set[str],
+    door_furniture_ids: set[str],
+    room_connections: list[dict[str, Any]],
+) -> None:
+    seen_room_targets: set[tuple[str, int, int, int]] = set()
+    for index, boundary in enumerate(boundaries):
+        context = f"room_boundaries[{index}]"
+        room_id = boundary["room"]
+        x, y = boundary["at"]
+        z = boundary["z"]
+        target = (room_id, z, x, y)
+        if target in seen_room_targets:
+            raise RecipeError(f"{context} duplicates boundary target for room '{room_id}' at z {z} [{x}, {y}]")
+        seen_room_targets.add(target)
+        level = levels[_level_index(z)]
+        tile = level[y * MAP_WIDTH + x] if level else {}
+        if not isinstance(tile, dict) or not isinstance(tile.get("id"), str) or not tile["id"]:
+            raise RecipeError(f"{context} requires existing terrain at z {z} [{x}, {y}]")
+        if boundary["element"] == "wall_tile":
+            if tile["id"] not in wall_tile_ids:
+                raise RecipeError(f"{context} must reference a Wall-category tile at z {z} [{x}, {y}]")
+            if not _wall_tile_bounds_room(x, y, room_id, level):
+                raise RecipeError(f"{context} wall tile must be cardinally adjacent to room '{room_id}'")
+            continue
+        feature = tile.get("feature")
+        if (
+            not isinstance(feature, dict)
+            or feature.get("type") != "furniture"
+            or feature.get("id") not in door_furniture_ids
+        ):
+            raise RecipeError(f"{context} must reference door-capable furniture at z {z} [{x}, {y}]")
+        if not any(
+            connection["at"] == [x, y]
+            and connection["z"] == z
+            and _room_connection_names_room(connection, room_id)
+            for connection in room_connections
+        ):
+            raise RecipeError(f"{context} must match a room connection for room '{room_id}'")
+
+
 def _apply_area_rectangle(
     level: list[dict[str, Any]],
     operation: dict[str, Any],
@@ -1389,16 +1526,18 @@ def generate_map(
         _contains_furniture_operations(recipe)
         or _contains_area_entities(recipe)
         or "room_connections" in recipe
+        or "room_boundaries" in recipe
     )
     if requires_furniture_catalog:
         if furnitures_path is None:
             furnitures_path = content_root / "Furniture" / "Furniture.json"
         known_furnitures = _furniture_ids(Path(furnitures_path))
     door_furniture_ids: set[str] = set()
-    if "room_connections" in recipe:
+    if "room_connections" in recipe or "room_boundaries" in recipe:
         if furnitures_path is None:
-            raise RecipeError("room_connections requires a furniture database")
+            raise RecipeError("room connections or boundaries require a furniture database")
         door_furniture_ids = _door_furniture_ids(Path(furnitures_path))
+    wall_tile_ids = _wall_tile_ids(Path(tiles_path)) if "room_boundaries" in recipe else set()
     known_area_entity_ids: dict[str, set[str]] = {
         "furniture": known_furnitures,
         "mob": set(),
@@ -1431,6 +1570,9 @@ def generate_map(
     room_connections = _validate_recipe_room_connections(
         recipe.get("room_connections", []), known_room_ids
     )
+    room_boundaries = _validate_recipe_room_boundaries(
+        recipe.get("room_boundaries", []), known_room_ids
+    )
     rng = random.Random(seed)
     levels = _generate_levels(
         recipe,
@@ -1444,6 +1586,13 @@ def generate_map(
         known_room_ids,
     )
     _validate_room_connection_targets(room_connections, levels, door_furniture_ids)
+    _validate_room_boundary_targets(
+        room_boundaries,
+        levels,
+        wall_tile_ids,
+        door_furniture_ids,
+        room_connections,
+    )
 
     generated = {
         "id": recipe["id"],
@@ -1462,6 +1611,8 @@ def generate_map(
         generated["rooms"] = rooms
     if room_connections:
         generated["room_connections"] = room_connections
+    if room_boundaries:
+        generated["room_boundaries"] = room_boundaries
     return generated
 
 

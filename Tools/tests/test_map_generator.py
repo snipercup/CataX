@@ -1524,6 +1524,92 @@ class MapGeneratorTests(unittest.TestCase):
             "itemgroups": [],
         })
 
+    def test_room_boundaries_preserve_existing_wall_tiles_and_connected_doors(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "concrete_00"}
+        recipe["rooms"] = [{"id": "office", "kind": "enclosed"}]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 4, "height": 4},
+            {"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
+            {"type": "furniture", "id": "door_wood", "x": 11, "y": 10, "rotation": 0},
+        ]
+        recipe["room_connections"] = [{
+            "id": "office_front_door",
+            "at": [11, 10],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+        }]
+        recipe["room_boundaries"] = [
+            {
+                "id": "office_north_wall",
+                "room": "office",
+                "at": [8, 7],
+                "z": 0,
+                "element": "wall_tile",
+            },
+            {
+                "id": "office_front_opening",
+                "room": "office",
+                "at": [11, 10],
+                "z": 0,
+                "element": "door_furniture",
+            },
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["room_boundaries"], recipe["room_boundaries"])
+        level = generated["levels"][10]
+        self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
+        self.assertEqual(level[10 * 32 + 11]["feature"]["id"], "door_wood")
+
+    def test_room_boundaries_reject_invalid_schema_and_physical_targets(self):
+        valid_boundary = {
+            "id": "office_north_wall",
+            "room": "office",
+            "at": [8, 7],
+            "z": 0,
+            "element": "wall_tile",
+        }
+        valid_connection = {
+            "id": "office_front_door",
+            "at": [11, 10],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+        }
+        cases = [
+            ("not-an-array", "room_boundaries must be an array"),
+            ([{**valid_boundary, "extra": True}], "unknown room_boundaries\\[0\\] field 'extra'"),
+            ([{**valid_boundary, "room": "missing"}], "references unknown room 'missing'"),
+            ([{**valid_boundary, "at": [32, 7]}], "must be within map bounds"),
+            ([{**valid_boundary, "z": -11}], "must be an integer from -10 through 10"),
+            ([{**valid_boundary, "element": "wall_furniture"}], "unsupported element 'wall_furniture'"),
+            ([{**valid_boundary, "at": [0, 0]}], "Wall-category tile"),
+            ([{**valid_boundary, "at": [8, 6]}], "must be cardinally adjacent"),
+            ([{**valid_boundary, "element": "door_furniture", "at": [11, 10]}], "must match a room connection"),
+            ([valid_boundary, {**valid_boundary, "id": "duplicate_target"}], r"duplicates boundary target for room 'office' at z 0 \[8, 7\]"),
+        ]
+        for boundaries, expected_message in cases:
+            with self.subTest(boundaries=boundaries):
+                recipe = valid_recipe()
+                recipe["base_tile"] = {"id": "concrete_00"}
+                recipe["rooms"] = [{"id": "office", "kind": "enclosed"}]
+                recipe["operations"] = [
+                    {"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 4, "height": 4},
+                    {"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
+                    {"type": "set", "x": 8, "y": 6, "tile": {"id": "brick_wall_00"}},
+                    {"type": "furniture", "id": "door_wood", "x": 11, "y": 10, "rotation": 0},
+                ]
+                recipe["room_boundaries"] = boundaries
+                if boundaries == [{**valid_boundary, "element": "door_furniture", "at": [11, 10]}]:
+                    recipe["room_connections"] = []
+                else:
+                    recipe["room_connections"] = [valid_connection]
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
     def test_room_connections_reject_invalid_schema_and_targets(self):
         base_connection = {
             "id": "office_front_door",
@@ -2042,6 +2128,81 @@ class MapValidatorDimensionTests(unittest.TestCase):
             with self.subTest(expected_message=expected_message):
                 errors = self.validate(map_data)
                 self.assertTrue(any(expected_message in error for error in errors))
+    def test_validates_room_boundary_structure_and_existing_sources(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "concrete_00"}
+        recipe["rooms"] = [{"id": "office", "kind": "enclosed"}]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 4, "height": 4},
+            {"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 8, "y": 6, "tile": {"id": "brick_wall_00"}},
+            {"type": "furniture", "id": "door_wood", "x": 11, "y": 10, "rotation": 0},
+        ]
+        recipe["room_connections"] = [{
+            "id": "office_front_door",
+            "at": [11, 10],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+        }]
+        recipe["room_boundaries"] = [
+            {"id": "office_north_wall", "room": "office", "at": [8, 7], "z": 0, "element": "wall_tile"},
+            {"id": "office_front_opening", "room": "office", "at": [11, 10], "z": 0, "element": "door_furniture"},
+        ]
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        invalid_maps = []
+        malformed_root = json.loads(json.dumps(valid_map))
+        malformed_root["room_boundaries"] = "not-an-array"
+        invalid_maps.append((malformed_root, "top-level room_boundaries must be an array"))
+
+        missing_room = json.loads(json.dumps(valid_map))
+        missing_room["room_boundaries"][0]["room"] = "missing"
+        invalid_maps.append((missing_room, "references non-existent room 'missing'"))
+
+        non_wall = json.loads(json.dumps(valid_map))
+        non_wall["room_boundaries"][0]["at"] = [0, 0]
+        invalid_maps.append((non_wall, "must reference a Wall-category tile"))
+
+        non_adjacent_wall = json.loads(json.dumps(valid_map))
+        non_adjacent_wall["room_boundaries"][0]["at"] = [8, 6]
+        invalid_maps.append((non_adjacent_wall, "must be cardinally adjacent"))
+
+        unmatched_door = json.loads(json.dumps(valid_map))
+        unmatched_door["room_connections"] = []
+        invalid_maps.append((unmatched_door, "must match a room connection"))
+
+        duplicate_target = json.loads(json.dumps(valid_map))
+        duplicate_target["room_boundaries"].append({
+            **duplicate_target["room_boundaries"][0], "id": "duplicate_target"
+        })
+        invalid_maps.append((duplicate_target, "duplicates boundary target"))
+
+        for map_data, expected_message in invalid_maps:
+            with self.subTest(expected_message=expected_message):
+                errors = self.validate(map_data)
+                self.assertTrue(any(expected_message in error for error in errors))
+    def test_room_boundaries_example_preserves_existing_physical_sources(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
+        generated = generate_map(
+            json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+        )
+
+        self.assertEqual([boundary["id"] for boundary in generated["room_boundaries"]], [
+            "office_north_wall",
+            "office_west_wall",
+            "garage_east_wall",
+            "ruin_north_wall",
+            "office_front_opening",
+            "office_garage_opening",
+            "garage_office_opening",
+        ])
+        level = generated["levels"][10]
+        for x, y in ((8, 7), (7, 8), (16, 8), (8, 16)):
+            self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
+        self.assertEqual(level[10 * 32 + 11]["feature"]["id"], "door_wood")
+        self.assertEqual(level[10 * 32 + 12]["feature"]["id"], "door_wood")
 
 
 if __name__ == "__main__":

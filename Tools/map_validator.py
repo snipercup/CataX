@@ -11,6 +11,8 @@ POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
+ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element'}
+ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -49,6 +51,29 @@ class MapValidator:
                 and isinstance(entry.get('Function'), dict)
                 and isinstance(entry['Function'].get('door'), str)
                 and entry['Function']['door'] != 'None'
+            )
+        }
+
+    def _wall_tile_ids(self):
+        tile_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'Mods', 'Dimensionfall', 'Tiles', 'Tiles.json'
+        )
+        try:
+            with open(tile_path, 'r', encoding='utf-8') as handle:
+                tile_data = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            return set()
+        if not isinstance(tile_data, list):
+            return set()
+        return {
+            entry['id']
+            for entry in tile_data
+            if (
+                isinstance(entry, dict)
+                and isinstance(entry.get('id'), str)
+                and isinstance(entry.get('categories'), list)
+                and 'Wall' in entry['categories']
             )
         }
 
@@ -95,6 +120,10 @@ class MapValidator:
         if not isinstance(room_connections, list):
             self.add_error(file_path, "top-level room_connections must be an array.")
             room_connections = []
+        room_boundaries = data.get('room_boundaries', [])
+        if not isinstance(room_boundaries, list):
+            self.add_error(file_path, "top-level room_boundaries must be an array.")
+            room_boundaries = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -263,6 +292,55 @@ class MapValidator:
             ):
                 validated_room_connections.append(connection)
 
+        validated_room_boundaries = []
+        seen_boundary_ids: Set[str] = set()
+        for idx, boundary in enumerate(room_boundaries):
+            context = f"Room boundary at index {idx}"
+            if not isinstance(boundary, dict):
+                self.add_error(file_path, f"{context} is not an object.")
+                continue
+            unknown_fields = sorted(set(boundary) - ROOM_BOUNDARY_FIELDS)
+            if unknown_fields:
+                self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
+            for field in ROOM_BOUNDARY_FIELDS:
+                if field not in boundary:
+                    self.add_error(file_path, f"{context} is missing required field '{field}'.")
+            boundary_id = boundary.get('id')
+            if not isinstance(boundary_id, str) or not boundary_id:
+                self.add_error(file_path, f"{context} has invalid or missing ID.")
+            elif boundary_id in seen_boundary_ids:
+                self.add_error(file_path, f"Duplicate room boundary ID detected: '{boundary_id}'")
+            else:
+                seen_boundary_ids.add(boundary_id)
+            room_id = boundary.get('room')
+            if not isinstance(room_id, str) or not room_id:
+                self.add_error(file_path, f"{context} has invalid or missing room ID.")
+            elif room_id not in room_ids:
+                self.add_error(file_path, f"{context} references non-existent room '{room_id}'.")
+            at = boundary.get('at')
+            valid_at = (
+                isinstance(at, list)
+                and len(at) == 2
+                and all(type(value) is int for value in at)
+                and 0 <= at[0] < MAP_WIDTH
+                and 0 <= at[1] < MAP_HEIGHT
+            )
+            if not valid_at:
+                self.add_error(file_path, f"{context} at must be a two-integer coordinate within map bounds.")
+            z = boundary.get('z')
+            valid_z = type(z) is int and -10 <= z <= 10
+            if not valid_z:
+                self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
+            element = boundary.get('element')
+            if element not in ROOM_BOUNDARY_ELEMENTS:
+                self.add_error(file_path, f"{context} has unsupported element '{element}'.")
+            if (
+                isinstance(boundary_id, str) and boundary_id
+                and isinstance(room_id, str) and room_id in room_ids
+                and valid_at and valid_z and element in ROOM_BOUNDARY_ELEMENTS
+            ):
+                validated_room_boundaries.append(boundary)
+
         # 5. Validate Levels (Tiles)
         if not isinstance(levels, list):
              self.add_error(file_path, "'levels' must be an array.")
@@ -419,7 +497,7 @@ class MapValidator:
                                         f"Level {level_idx}, Tile '{tile['id']}' has non-numeric area rotation: {rotation}"
                                     )
 
-        door_furniture_ids = self._door_furniture_ids() if validated_room_connections else set()
+        door_furniture_ids = self._door_furniture_ids() if (validated_room_connections or validated_room_boundaries) else set()
         seen_door_targets: Set[tuple] = set()
         for connection in validated_room_connections:
             x, y = connection['at']
@@ -442,6 +520,60 @@ class MapValidator:
                 or feature.get('id') not in door_furniture_ids
             ):
                 self.add_error(file_path, f"Room connection '{connection['id']}' must reference door-capable furniture at z {z} [{x}, {y}].")
+
+        wall_tile_ids = self._wall_tile_ids() if validated_room_boundaries else set()
+        seen_boundary_targets: Set[tuple] = set()
+        for boundary in validated_room_boundaries:
+            room_id = boundary['room']
+            x, y = boundary['at']
+            z = boundary['z']
+            target = (room_id, z, x, y)
+            if target in seen_boundary_targets:
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' duplicates boundary target for room '{room_id}' at z {z} [{x}, {y}].")
+                continue
+            seen_boundary_targets.add(target)
+            level_index = z + 10
+            level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+            tile = level[y * MAP_WIDTH + x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+            if not isinstance(tile, dict) or not isinstance(tile.get('id'), str) or not tile['id']:
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' requires existing terrain at z {z} [{x}, {y}].")
+                continue
+            if boundary['element'] == 'wall_tile':
+                if tile['id'] not in wall_tile_ids:
+                    self.add_error(file_path, f"Room boundary '{boundary['id']}' must reference a Wall-category tile at z {z} [{x}, {y}].")
+                    continue
+                adjacent_to_room = False
+                for delta_x, delta_y in ((0, -1), (1, 0), (0, 1), (-1, 0)):
+                    neighbor_x = x + delta_x
+                    neighbor_y = y + delta_y
+                    if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
+                        continue
+                    neighbor = level[neighbor_y * MAP_WIDTH + neighbor_x]
+                    if isinstance(neighbor, dict) and neighbor.get('rooms') == [room_id]:
+                        adjacent_to_room = True
+                        break
+                if not adjacent_to_room:
+                    self.add_error(file_path, f"Room boundary '{boundary['id']}' wall tile must be cardinally adjacent to room '{room_id}'.")
+                continue
+            feature = tile.get('feature')
+            if (
+                not isinstance(feature, dict)
+                or feature.get('type') != 'furniture'
+                or feature.get('id') not in door_furniture_ids
+            ):
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' must reference door-capable furniture at z {z} [{x}, {y}].")
+                continue
+            matches_connection = any(
+                connection['at'] == [x, y]
+                and connection['z'] == z
+                and any(
+                    endpoint.get('kind') == 'room' and endpoint.get('id') == room_id
+                    for endpoint in (connection['from'], connection['to'])
+                )
+                for connection in validated_room_connections
+            )
+            if not matches_connection:
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' must match a room connection for room '{room_id}'.")
 
     def run(self, path: str):
         if os.path.isdir(path):
