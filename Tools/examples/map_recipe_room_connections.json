@@ -1,0 +1,110 @@
+{
+	"id": "generated_room_connections",
+	"name": "Generated Room Connections",
+	"description": "Authored semantic door links for exterior and adjacent-room access without generated building geometry.",
+	"seed": 20260808,
+	"base_tile": {
+		"id": "grass_plain_01"
+	},
+	"rooms": [
+		{
+			"id": "office",
+			"kind": "enclosed"
+		},
+		{
+			"id": "garage_bay",
+			"kind": "covered_open"
+		},
+		{
+			"id": "ruined_store",
+			"kind": "ruin"
+		}
+	],
+	"room_connections": [
+		{
+			"id": "office_front_door",
+			"at": [11, 10],
+			"z": 0,
+			"from": {
+				"kind": "room",
+				"id": "office"
+			},
+			"to": {
+				"kind": "exterior"
+			}
+		},
+		{
+			"id": "office_to_garage",
+			"at": [12, 10],
+			"z": 0,
+			"from": {
+				"kind": "room",
+				"id": "office"
+			},
+			"to": {
+				"kind": "room",
+				"id": "garage_bay"
+			}
+		}
+	],
+	"operations": [
+		{
+			"type": "rectangle",
+			"x": 8,
+			"y": 8,
+			"width": 8,
+			"height": 4,
+			"tile": {
+				"id": "concrete_00"
+			}
+		},
+		{
+			"type": "rectangle",
+			"x": 8,
+			"y": 17,
+			"width": 8,
+			"height": 4,
+			"tile": {
+				"id": "concrete__cracked_01"
+			}
+		},
+		{
+			"type": "room_rectangle",
+			"room": "office",
+			"x": 8,
+			"y": 8,
+			"width": 4,
+			"height": 4
+		},
+		{
+			"type": "room_rectangle",
+			"room": "garage_bay",
+			"x": 12,
+			"y": 8,
+			"width": 4,
+			"height": 4
+		},
+		{
+			"type": "room_rectangle",
+			"room": "ruined_store",
+			"x": 8,
+			"y": 17,
+			"width": 8,
+			"height": 4
+		},
+		{
+			"type": "furniture",
+			"id": "door_wood",
+			"x": 11,
+			"y": 10,
+			"rotation": 0
+		},
+		{
+			"type": "furniture",
+			"id": "door_wood",
+			"x": 12,
+			"y": 10,
+			"rotation": 90
+		}
+	]
+}

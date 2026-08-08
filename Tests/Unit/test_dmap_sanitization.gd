@@ -97,3 +97,45 @@ func test_dmap_room_semantics_roundtrip_and_sanitization():
 	])
 	assert_eq(data["levels"][0][0]["rooms"], ["garage_bay"])
 	assert_false(data["levels"][0][1].has("rooms"), "Stale room references should be removed")
+
+
+func test_dmap_room_connections_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_room_connections", "/tmp/", null)
+	map.set_data({
+		"name": "Room connections",
+		"description": "Preserve authored door links.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed"},
+			{"id": "garage_bay", "kind": "covered_open"},
+		],
+		"room_connections": [
+			{
+				"id": "office_front_door",
+				"at": [11, 10],
+				"z": 0,
+				"from": {"kind": "room", "id": "office"},
+				"to": {"kind": "exterior"},
+			},
+			{
+				"id": "stale_link",
+				"at": [12, 10],
+				"z": 0,
+				"from": {"kind": "room", "id": "missing_room"},
+				"to": {"kind": "exterior"},
+			},
+		],
+		"levels": [[
+			{"id": "concrete_00"},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["room_connections"], [{
+		"id": "office_front_door",
+		"at": [11, 10],
+		"z": 0,
+		"from": {"kind": "room", "id": "office"},
+		"to": {"kind": "exterior"},
+	}])

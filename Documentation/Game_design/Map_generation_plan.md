@@ -615,9 +615,13 @@ The recipe generator now supports strict root `areas` definitions plus an `area_
 
 The area entity contract is now strict and catalog-aware. Recipes may use the existing runtime entity types `furniture`, `mob`, `mobgroup`, and `itemgroup`; each record must have a known catalog ID and a positive integer weight. Entity selection deliberately remains runtime-owned: `map_manager` appends its implicit no-spawn weight and selects a new outcome for every membership tile when the map is instanced. This keeps area fields unique between runs, unlike deterministic `furniture_scatter`, which pre-writes the same seeded feature positions into generated JSON. `Tools/examples/map_recipe_area_entity_clearing.json` is the maintained evidence: its 12×12 `stump_clearing` boundary has no pre-baked features, then independently rolls `burned_tree_stump` features at runtime. Focused GUT coverage proves membership rotation is retained for the spawned furniture structure and runtime processing reaches serialized level `11` (logical `z: +1`).
 
-Authored room semantics now use a separate map-level `rooms` array plus exclusive tile-local `rooms: ["id"]` membership. Each definition has a stable authored ID and exactly one semantic kind: `enclosed`, `covered_open`, or `ruin`. These labels are deliberately independent from floor material and runtime `areas`: one wood or concrete floor can span several rooms, a roofed garage can be `covered_open`, and a ruined room remains a room despite intended wall gaps. `Tools/examples/map_recipe_room_semantics.json` is the maintained evidence and puts adjacent `office` and `garage_bay` labels on the same `concrete_00` material. The generator, standalone map validator, and `DMap` save/load path validate or preserve definitions and references; no topology inference, door links, wall/roof checks, indoor weather/lighting, or geometry generation is introduced yet.
+Authored room semantics use a separate map-level `rooms` array plus exclusive tile-local `rooms: ["id"]` membership. Each definition has a stable authored ID and exactly one semantic kind: `enclosed`, `covered_open`, or `ruin`. These labels are deliberately independent from floor material and runtime `areas`: one wood or concrete floor can span several rooms, a roofed garage can be `covered_open`, and a ruined room remains a room despite intended wall gaps. `Tools/examples/map_recipe_room_semantics.json` is the maintained evidence and puts adjacent `office` and `garage_bay` labels on the same `concrete_00` material.
 
-This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof enclosure validation, door links, building footprints, anchors, or generalized templates.
+`room_connections` now adds explicit authored door intent without topology inference. Each root connection names a unique `id`, an `[x, y]` coordinate, required logical `z`, and two distinct endpoints: a known room or `exterior`. The target must be an existing terrain tile with catalog-recognized door-capable furniture; current evidence uses the runtime-native `door_wood` feature. This covers both room-to-exterior and room-to-room doors while preserving existing door opening, collision, and rotation behavior. `Tools/examples/map_recipe_room_connections.json` carries both cases. The generator and independent validator reject malformed endpoints, unknown rooms, duplicate door targets, or non-door targets; `DMap` preserves valid connections and removes links that name deleted rooms.
+
+The generator, standalone map validator, and `DMap` save/load path validate or preserve definitions and references. No topology inference, wall/roof checks, indoor weather/lighting, or geometry generation is introduced yet.
+
+This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof enclosure validation, building footprints, anchors, or generalized templates.
 
 Capabilities:
 
@@ -852,9 +856,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, and authored room semantics are complete. The next contribution should add the smallest evidenced physical room contract—likely explicit boundary/door-link data or validation—without inferring topology from floor materials.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, and explicit door-link metadata are complete. The next contribution should add the smallest evidenced physical boundary representation or validation without inferring it from floor materials.
 
-Do not yet generate walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from those runtime areas, and validate any new physical semantics in the editor and runtime.
+Do not yet generate walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -890,7 +894,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Level-aware runtime area schema and maintained example
 [Complete] Catalog-validated runtime area entity variation
 [Complete] Authored room semantics (`enclosed`, `covered_open`, `ruin`)
-[Next]     Physical room boundary or door-link contract
+[Complete] Explicit room-to-exterior and room-to-room door-link metadata
+[Next]     Physical room boundary representation or validation
 [Planned]  Rooms and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

@@ -94,6 +94,7 @@ var levels: Array = [
 ]
 var areas: Array = []
 var rooms: Array = []
+var room_connections: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -147,6 +148,7 @@ func set_data(newdata: Dictionary) -> void:
 	)
 	areas = newdata.get("areas", [])
 	rooms = newdata.get("rooms", [])
+	room_connections = newdata.get("room_connections", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -166,12 +168,15 @@ func get_data() -> Dictionary:
 		mydata["areas"] = areas
 	if not rooms.is_empty():
 		mydata["rooms"] = rooms
+	if not room_connections.is_empty():
+		mydata["room_connections"] = room_connections
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
 	# Sanitize tile-level area references to remove stale editor artifacts
 	_sanitize_area_references(mydata)
 	_sanitize_room_references(mydata)
+	_sanitize_room_connections(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -243,6 +248,33 @@ func _sanitize_room_references(data: Dictionary) -> void:
 				)
 				if tile["rooms"].is_empty():
 					tile.erase("rooms")
+
+
+func _sanitize_room_connections(data: Dictionary) -> void:
+	if not data.has("room_connections") or not data["room_connections"] is Array:
+		return
+
+	var valid_room_ids: Array[String] = []
+	if data.has("rooms") and data["rooms"] is Array:
+		for room in data["rooms"]:
+			if room is Dictionary and room.has("id") and room["id"] is String:
+				valid_room_ids.append(room["id"])
+
+	data["room_connections"] = data["room_connections"].filter(func(connection):
+		if not connection is Dictionary or not connection.has("from") or not connection.has("to"):
+			return false
+		for endpoint in [connection["from"], connection["to"]]:
+			if not endpoint is Dictionary or not endpoint.has("kind"):
+				return false
+			if endpoint["kind"] == "room":
+				if not endpoint.has("id") or not endpoint["id"] is String or endpoint["id"] not in valid_room_ids:
+					return false
+			elif endpoint["kind"] != "exterior":
+				return false
+		return true
+	)
+	if data["room_connections"].is_empty():
+		data.erase("room_connections")
 
 
 func load_data_from_disk():
