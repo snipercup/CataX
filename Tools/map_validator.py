@@ -9,6 +9,8 @@ MAP_HEIGHT = 32
 LEVEL_COUNT = 21
 POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
+ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
+ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -25,6 +27,30 @@ class MapValidator:
 
     def add_warning(self, file_path: str, message: str):
         self.warnings.append(f"[{file_path}] WARNING: {message}")
+
+    def _door_furniture_ids(self):
+        furniture_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'Mods', 'Dimensionfall', 'Furniture', 'Furniture.json'
+        )
+        try:
+            with open(furniture_path, 'r', encoding='utf-8') as handle:
+                furniture_data = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            return set()
+        if not isinstance(furniture_data, list):
+            return set()
+        return {
+            entry['id']
+            for entry in furniture_data
+            if (
+                isinstance(entry, dict)
+                and isinstance(entry.get('id'), str)
+                and isinstance(entry.get('Function'), dict)
+                and isinstance(entry['Function'].get('door'), str)
+                and entry['Function']['door'] != 'None'
+            )
+        }
 
     def validate_map(self, file_path: str):
         """Validates a single map JSON file."""
@@ -65,6 +91,10 @@ class MapValidator:
         if not isinstance(rooms, list):
             self.add_error(file_path, "top-level rooms must be an array.")
             rooms = []
+        room_connections = data.get('room_connections', [])
+        if not isinstance(room_connections, list):
+            self.add_error(file_path, "top-level room_connections must be an array.")
+            room_connections = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -161,6 +191,77 @@ class MapValidator:
             kind = room.get('kind')
             if kind not in ROOM_KINDS:
                 self.add_error(file_path, f"Room at index {idx} has unsupported room kind '{kind}'.")
+
+        validated_room_connections = []
+        seen_connection_ids: Set[str] = set()
+        for idx, connection in enumerate(room_connections):
+            context = f"Room connection at index {idx}"
+            if not isinstance(connection, dict):
+                self.add_error(file_path, f"{context} is not an object.")
+                continue
+            unknown_fields = sorted(set(connection) - ROOM_CONNECTION_FIELDS)
+            if unknown_fields:
+                self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
+            for field in ROOM_CONNECTION_FIELDS:
+                if field not in connection:
+                    self.add_error(file_path, f"{context} is missing required field '{field}'.")
+            connection_id = connection.get('id')
+            if not isinstance(connection_id, str) or not connection_id:
+                self.add_error(file_path, f"{context} has invalid or missing ID.")
+            elif connection_id in seen_connection_ids:
+                self.add_error(file_path, f"Duplicate room connection ID detected: '{connection_id}'")
+            else:
+                seen_connection_ids.add(connection_id)
+            at = connection.get('at')
+            if (
+                not isinstance(at, list)
+                or len(at) != 2
+                or any(type(value) is not int for value in at)
+                or not 0 <= at[0] < MAP_WIDTH
+                or not 0 <= at[1] < MAP_HEIGHT
+            ):
+                self.add_error(file_path, f"{context} at must be a two-integer coordinate within map bounds.")
+            z = connection.get('z')
+            if type(z) is not int or not -10 <= z <= 10:
+                self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
+            endpoints = []
+            endpoints_valid = True
+            for field in ('from', 'to'):
+                endpoint = connection.get(field)
+                endpoint_context = f"{context} {field} endpoint"
+                if not isinstance(endpoint, dict):
+                    self.add_error(file_path, f"{endpoint_context} is not an object.")
+                    endpoints_valid = False
+                    continue
+                kind = endpoint.get('kind')
+                if kind not in ROOM_CONNECTION_ENDPOINT_KINDS:
+                    self.add_error(file_path, f"{endpoint_context} has unsupported kind '{kind}'.")
+                    endpoints_valid = False
+                    continue
+                expected_fields = {'kind', 'id'} if kind == 'room' else {'kind'}
+                if set(endpoint) != expected_fields:
+                    self.add_error(file_path, f"{endpoint_context} has invalid fields.")
+                    endpoints_valid = False
+                    continue
+                if kind == 'room':
+                    room_id = endpoint.get('id')
+                    if not isinstance(room_id, str) or not room_id:
+                        self.add_error(file_path, f"{endpoint_context} has invalid or missing room ID.")
+                        endpoints_valid = False
+                    elif room_id not in room_ids:
+                        self.add_error(file_path, f"{endpoint_context} references non-existent room '{room_id}'.")
+                        endpoints_valid = False
+                endpoints.append(endpoint)
+            if endpoints_valid and len(endpoints) == 2 and endpoints[0] == endpoints[1]:
+                self.add_error(file_path, f"{context} must connect distinct endpoints.")
+            if (
+                isinstance(connection_id, str) and connection_id
+                and isinstance(at, list) and len(at) == 2
+                and all(type(value) is int for value in at)
+                and 0 <= at[0] < MAP_WIDTH and 0 <= at[1] < MAP_HEIGHT
+                and type(z) is int and -10 <= z <= 10
+            ):
+                validated_room_connections.append(connection)
 
         # 5. Validate Levels (Tiles)
         if not isinstance(levels, list):
@@ -317,6 +418,30 @@ class MapValidator:
                                         file_path,
                                         f"Level {level_idx}, Tile '{tile['id']}' has non-numeric area rotation: {rotation}"
                                     )
+
+        door_furniture_ids = self._door_furniture_ids() if validated_room_connections else set()
+        seen_door_targets: Set[tuple] = set()
+        for connection in validated_room_connections:
+            x, y = connection['at']
+            z = connection['z']
+            target = (z, x, y)
+            if target in seen_door_targets:
+                self.add_error(file_path, f"Room connection '{connection['id']}' duplicates door target at z {z} [{x}, {y}].")
+                continue
+            seen_door_targets.add(target)
+            level_index = z + 10
+            level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+            tile = level[y * MAP_WIDTH + x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+            feature = tile.get('feature') if isinstance(tile, dict) else None
+            if (
+                not isinstance(tile, dict)
+                or not isinstance(tile.get('id'), str)
+                or not tile['id']
+                or not isinstance(feature, dict)
+                or feature.get('type') != 'furniture'
+                or feature.get('id') not in door_furniture_ids
+            ):
+                self.add_error(file_path, f"Room connection '{connection['id']}' must reference door-capable furniture at z {z} [{x}, {y}].")
 
     def run(self, path: str):
         if os.path.isdir(path):

@@ -1477,6 +1477,84 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, r"requires supporting terrain at \[0, 0\]"):
             generate_map(recipe, TILES_PATH)
 
+    def test_room_connections_preserve_existing_door_features(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "concrete_00"}
+        recipe["rooms"] = [
+            {"id": "office", "kind": "enclosed"},
+            {"id": "garage_bay", "kind": "covered_open"},
+        ]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 4, "height": 4},
+            {"type": "room_rectangle", "room": "garage_bay", "x": 12, "y": 8, "width": 4, "height": 4},
+            {"type": "furniture", "id": "door_wood", "x": 11, "y": 10, "rotation": 0},
+            {"type": "furniture", "id": "door_wood", "x": 12, "y": 10, "rotation": 90},
+        ]
+        recipe["room_connections"] = [
+            {
+                "id": "office_front_door",
+                "at": [11, 10],
+                "z": 0,
+                "from": {"kind": "room", "id": "office"},
+                "to": {"kind": "exterior"},
+            },
+            {
+                "id": "office_to_garage",
+                "at": [12, 10],
+                "z": 0,
+                "from": {"kind": "room", "id": "office"},
+                "to": {"kind": "room", "id": "garage_bay"},
+            },
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["room_connections"], recipe["room_connections"])
+        level = generated["levels"][10]
+        self.assertEqual(level[10 * 32 + 11]["feature"], {
+            "type": "furniture",
+            "id": "door_wood",
+            "rotation": 0,
+            "itemgroups": [],
+        })
+        self.assertEqual(level[10 * 32 + 12]["feature"], {
+            "type": "furniture",
+            "id": "door_wood",
+            "rotation": 90,
+            "itemgroups": [],
+        })
+
+    def test_room_connections_reject_invalid_schema_and_targets(self):
+        base_connection = {
+            "id": "office_front_door",
+            "at": [11, 10],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+        }
+        invalid_connections = [
+            ("not-an-array", "room_connections must be an array"),
+            ([{"id": "office_front_door", "at": [11, 10], "z": 0, "from": {"kind": "room", "id": "office"}, "to": {"kind": "exterior"}, "extra": True}], "unknown room_connections\\[0\\] field 'extra'"),
+            ([{**base_connection, "from": {"kind": "room", "id": "missing"}}], "references unknown room 'missing'"),
+            ([{**base_connection, "to": {"kind": "exterior", "id": "forbidden"}}], "must define only kind"),
+            ([{**base_connection, "to": {"kind": "room", "id": "office"}}], "must connect distinct endpoints"),
+            ([{**base_connection, "at": [32, 10]}], "must be within map bounds"),
+            ([{**base_connection, "z": 11}], "must be an integer from -10 through 10"),
+            ([{**base_connection, "at": [0, 0]}], "must reference door-capable furniture"),
+            ([base_connection, {**base_connection, "id": "another_door"}], r"duplicates door target at z 0 \[11, 10\]"),
+        ]
+        for connections, expected_message in invalid_connections:
+            with self.subTest(connections=connections):
+                recipe = valid_recipe()
+                recipe["base_tile"] = {"id": "concrete_00"}
+                recipe["rooms"] = [{"id": "office", "kind": "enclosed"}]
+                recipe["operations"] = [
+                    {"type": "furniture", "id": "door_wood", "x": 11, "y": 10, "rotation": 0},
+                ]
+                recipe["room_connections"] = connections
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
     def test_area_entities_require_known_runtime_type_catalog_ids_and_positive_counts(self):
         known_entity_ids = {
             "furniture": json.loads(FURNITURES_PATH.read_text(encoding="utf-8"))[0]["id"],
@@ -1550,6 +1628,44 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(level[7 * 32 + 11]["id"], "concrete_00")
         self.assertEqual(level[7 * 32 + 12]["id"], "concrete_00")
         self.assertNotIn("rooms", level[0])
+
+    def test_room_connections_example_preserves_semantic_door_links(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_connections.json"
+        generated = generate_map(
+            json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+        )
+
+        self.assertEqual([room["id"] for room in generated["rooms"]], [
+            "office", "garage_bay", "ruined_store"
+        ])
+        self.assertEqual(generated["room_connections"], [
+            {
+                "id": "office_front_door",
+                "at": [11, 10],
+                "z": 0,
+                "from": {"kind": "room", "id": "office"},
+                "to": {"kind": "exterior"},
+            },
+            {
+                "id": "office_to_garage",
+                "at": [12, 10],
+                "z": 0,
+                "from": {"kind": "room", "id": "office"},
+                "to": {"kind": "room", "id": "garage_bay"},
+            },
+        ])
+        level = generated["levels"][10]
+        for x, rotation in ((11, 0), (12, 90)):
+            self.assertEqual(level[10 * 32 + x]["feature"], {
+                "type": "furniture",
+                "id": "door_wood",
+                "rotation": rotation,
+                "itemgroups": [],
+            })
+        self.assertEqual(
+            generated,
+            generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH),
+        )
 
     def test_area_meadow_example_matches_its_runtime_area_boundary(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_area_meadow.json"
@@ -1885,6 +2001,47 @@ class MapValidatorDimensionTests(unittest.TestCase):
         map_data["levels"][10][0] = {"id": "", "rooms": ["office"]}
         errors = self.validate(map_data)
         self.assertTrue(any("room membership requires terrain" in error for error in errors))
+
+    def test_validates_room_connection_structure_and_door_targets(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "concrete_00"}
+        recipe["rooms"] = [{"id": "office", "kind": "enclosed"}]
+        recipe["operations"] = [
+            {"type": "furniture", "id": "door_wood", "x": 11, "y": 10, "rotation": 0},
+        ]
+        recipe["room_connections"] = [{
+            "id": "office_front_door",
+            "at": [11, 10],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+        }]
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        invalid_maps = []
+        malformed_root = valid_map.copy()
+        malformed_root["room_connections"] = "not-an-array"
+        invalid_maps.append((malformed_root, "top-level room_connections must be an array"))
+
+        missing_room = json.loads(json.dumps(valid_map))
+        missing_room["room_connections"][0]["from"]["id"] = "missing"
+        invalid_maps.append((missing_room, "references non-existent room 'missing'"))
+
+        missing_feature = json.loads(json.dumps(valid_map))
+        missing_feature["levels"][10][10 * 32 + 11].pop("feature")
+        invalid_maps.append((missing_feature, "must reference door-capable furniture"))
+
+        duplicate_target = json.loads(json.dumps(valid_map))
+        duplicate_target["room_connections"].append({
+            **duplicate_target["room_connections"][0], "id": "another_door"
+        })
+        invalid_maps.append((duplicate_target, "duplicates door target"))
+
+        for map_data, expected_message in invalid_maps:
+            with self.subTest(expected_message=expected_message):
+                errors = self.validate(map_data)
+                self.assertTrue(any(expected_message in error for error in errors))
 
 
 if __name__ == "__main__":

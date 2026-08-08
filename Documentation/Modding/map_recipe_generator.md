@@ -285,7 +285,43 @@ Adds one authored room label to every terrain tile in a filled rectangle. Fields
 
 The referenced root room must exist. Every target cell must already contain terrain, and room membership is exclusive: an operation cannot overlap another room label or partially apply. Room definitions and membership consume no RNG.
 
-This slice preserves `rooms` through `DMap`/content-editor save-load paths and validates them independently, but does **not** yet infer or validate walls, roofs, door adjacency, enclosure, weather, lighting, or indoor gameplay. A door feature may eventually connect indoor-to-outdoor or indoor-to-indoor spaces; this semantic slice intentionally does not encode those links yet.
+This slice preserves `rooms` through `DMap`/content-editor save-load paths and validates them independently. It does **not** infer walls, roofs, enclosure, weather, lighting, or indoor gameplay.
+
+### `room_connections`
+
+`room_connections` explicitly records what existing door furniture connects; the generator never infers it from adjacent floor material, area membership, walls, roofs, or door rotation. Each root entry contains exactly `id`, `at`, `z`, `from`, and `to`:
+
+```json
+{
+  "room_connections": [
+    {
+      "id": "office_front_door",
+      "at": [11, 10],
+      "z": 0,
+      "from": {"kind": "room", "id": "office"},
+      "to": {"kind": "exterior"}
+    },
+    {
+      "id": "office_to_garage",
+      "at": [12, 10],
+      "z": 0,
+      "from": {"kind": "room", "id": "office"},
+      "to": {"kind": "room", "id": "garage_bay"}
+    }
+  ]
+}
+```
+
+`id` must be unique and use the normal definition-name characters. `at` is exactly `[x, y]` within the `32×32` map and `z` is a required logical level from `-10` through `10`. Endpoints use one of two exact forms:
+
+```json
+{"kind": "room", "id": "office"}
+{"kind": "exterior"}
+```
+
+Room IDs must exist in root `rooms`; the two endpoints must be distinct; and one door coordinate may have only one connection. The target tile must already exist at the declared level and contain a catalog-recognized door-capable furniture feature—for example, `door_wood`, whose existing runtime implementation owns open/closed state and collision behavior.
+
+Connections are semantic metadata only. They preserve their authored `from`/`to` order but do not create a new door feature, alter existing door behavior, infer enclosure, generate geometry, or introduce an indoor/outdoor runtime state. `DMap` preserves valid links through content-editor save/load and removes links that name deleted rooms.
 
 ### `set`
 

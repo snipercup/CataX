@@ -64,6 +64,9 @@ AREA_ENTITY_TYPES = {"furniture", "mob", "mobgroup", "itemgroup"}
 ROOM_DEFINITION_FIELDS = {"id", "kind"}
 ROOM_KINDS = {"enclosed", "covered_open", "ruin"}
 ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
+ROOM_CONNECTION_FIELDS = {"id", "at", "z", "from", "to"}
+ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
+ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -76,6 +79,7 @@ RECIPE_FIELDS = {
     "furniture_palette",
     "areas",
     "rooms",
+    "room_connections",
     "patterns",
     "regions",
     "operations",
@@ -176,6 +180,24 @@ def _tile_ids(tiles_path: Path) -> set[str]:
 
 def _furniture_ids(furnitures_path: Path) -> set[str]:
     return _content_ids(furnitures_path, "furniture")
+
+
+def _door_furniture_ids(furnitures_path: Path) -> set[str]:
+    with furnitures_path.open(encoding="utf-8") as handle:
+        furniture_data = json.load(handle)
+    if not isinstance(furniture_data, list):
+        raise RecipeError("furniture database must be a JSON array")
+    return {
+        entry["id"]
+        for entry in furniture_data
+        if (
+            isinstance(entry, dict)
+            and isinstance(entry.get("id"), str)
+            and isinstance(entry.get("Function"), dict)
+            and isinstance(entry["Function"].get("door"), str)
+            and entry["Function"]["door"] != "None"
+        )
+    }
 
 
 def _content_ids(content_path: Path, content_name: str) -> set[str]:
@@ -983,6 +1005,112 @@ def _validate_recipe_rooms(rooms: Any) -> list[dict[str, str]]:
     return validated
 
 
+def _validate_room_connection_endpoint(
+    endpoint: Any, context: str, known_room_ids: set[str]
+) -> dict[str, str]:
+    if not isinstance(endpoint, dict):
+        raise RecipeError(f"{context} must be an object")
+    kind = endpoint.get("kind")
+    if kind not in ROOM_CONNECTION_ENDPOINT_KINDS:
+        raise RecipeError(f"{context}.kind has unsupported kind '{kind}'")
+    expected_fields = {"kind", "id"} if kind == "room" else {"kind"}
+    unknown_fields = sorted(set(endpoint) - expected_fields)
+    if unknown_fields:
+        raise RecipeError(f"{context} must define only kind")
+    if set(endpoint) != expected_fields:
+        raise RecipeError(f"{context} must define {'kind and id' if kind == 'room' else 'only kind'}")
+    if kind == "exterior":
+        return {"kind": "exterior"}
+    room_id = endpoint["id"]
+    if not isinstance(room_id, str) or not room_id.strip():
+        raise RecipeError(f"{context}.id must be a non-empty string")
+    if room_id not in known_room_ids:
+        raise RecipeError(f"{context}.id references unknown room '{room_id}'")
+    return {"kind": "room", "id": room_id}
+
+
+def _validate_recipe_room_connections(
+    connections: Any, known_room_ids: set[str]
+) -> list[dict[str, Any]]:
+    if not isinstance(connections, list):
+        raise RecipeError("room_connections must be an array")
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, connection in enumerate(connections):
+        context = f"room_connections[{index}]"
+        if not isinstance(connection, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(connection) - ROOM_CONNECTION_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(connection) != ROOM_CONNECTION_FIELDS:
+            raise RecipeError(f"{context} must define id, at, z, from, and to")
+        connection_id = connection["id"]
+        if not isinstance(connection_id, str) or not connection_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(connection_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(connection_id) is None:
+            raise RecipeError(f"{context}.id may contain only letters, numbers, underscores, and hyphens")
+        if connection_id in seen_ids:
+            raise RecipeError(f"duplicate room connection ID '{connection_id}'")
+        seen_ids.add(connection_id)
+        at = connection["at"]
+        if (
+            not isinstance(at, list)
+            or len(at) != 2
+            or any(type(value) is not int for value in at)
+            or not 0 <= at[0] < MAP_WIDTH
+            or not 0 <= at[1] < MAP_HEIGHT
+        ):
+            raise RecipeError(f"{context}.at must be within map bounds as a two-integer array")
+        z = connection["z"]
+        if type(z) is not int or not MIN_LOGICAL_Z <= z <= MAX_LOGICAL_Z:
+            raise RecipeError(f"{context}.z must be an integer from -10 through 10")
+        from_endpoint = _validate_room_connection_endpoint(
+            connection["from"], f"{context}.from", known_room_ids
+        )
+        to_endpoint = _validate_room_connection_endpoint(
+            connection["to"], f"{context}.to", known_room_ids
+        )
+        if from_endpoint == to_endpoint:
+            raise RecipeError(f"{context} must connect distinct endpoints")
+        validated.append({
+            "id": connection_id,
+            "at": at,
+            "z": z,
+            "from": from_endpoint,
+            "to": to_endpoint,
+        })
+    return validated
+
+
+def _validate_room_connection_targets(
+    connections: list[dict[str, Any]],
+    levels: list[list[dict[str, Any]]],
+    door_furniture_ids: set[str],
+) -> None:
+    seen_targets: set[tuple[int, int, int]] = set()
+    for index, connection in enumerate(connections):
+        context = f"room_connections[{index}]"
+        x, y = connection["at"]
+        z = connection["z"]
+        target = (z, x, y)
+        if target in seen_targets:
+            raise RecipeError(f"{context} duplicates door target at z {z} [{x}, {y}]")
+        seen_targets.add(target)
+        level = levels[_level_index(z)]
+        tile = level[y * MAP_WIDTH + x] if level else {}
+        feature = tile.get("feature") if isinstance(tile, dict) else None
+        if (
+            not isinstance(tile.get("id"), str)
+            or not tile["id"]
+            or not isinstance(feature, dict)
+            or feature.get("type") != "furniture"
+            or feature.get("id") not in door_furniture_ids
+        ):
+            raise RecipeError(f"{context} must reference door-capable furniture at z {z} [{x}, {y}]")
+
+
 def _apply_area_rectangle(
     level: list[dict[str, Any]],
     operation: dict[str, Any],
@@ -1258,12 +1386,19 @@ def generate_map(
     content_root = Path(tiles_path).parent.parent
     known_furnitures: set[str] = set()
     requires_furniture_catalog = (
-        _contains_furniture_operations(recipe) or _contains_area_entities(recipe)
+        _contains_furniture_operations(recipe)
+        or _contains_area_entities(recipe)
+        or "room_connections" in recipe
     )
     if requires_furniture_catalog:
         if furnitures_path is None:
             furnitures_path = content_root / "Furniture" / "Furniture.json"
         known_furnitures = _furniture_ids(Path(furnitures_path))
+    door_furniture_ids: set[str] = set()
+    if "room_connections" in recipe:
+        if furnitures_path is None:
+            raise RecipeError("room_connections requires a furniture database")
+        door_furniture_ids = _door_furniture_ids(Path(furnitures_path))
     known_area_entity_ids: dict[str, set[str]] = {
         "furniture": known_furnitures,
         "mob": set(),
@@ -1293,6 +1428,9 @@ def generate_map(
     known_area_ids = {area["id"] for area in areas}
     rooms = _validate_recipe_rooms(recipe.get("rooms", []))
     known_room_ids = {room["id"] for room in rooms}
+    room_connections = _validate_recipe_room_connections(
+        recipe.get("room_connections", []), known_room_ids
+    )
     rng = random.Random(seed)
     levels = _generate_levels(
         recipe,
@@ -1305,6 +1443,7 @@ def generate_map(
         known_area_ids,
         known_room_ids,
     )
+    _validate_room_connection_targets(room_connections, levels, door_furniture_ids)
 
     generated = {
         "id": recipe["id"],
@@ -1321,6 +1460,8 @@ def generate_map(
         generated["areas"] = areas
     if rooms:
         generated["rooms"] = rooms
+    if room_connections:
+        generated["room_connections"] = room_connections
     return generated
 
 
