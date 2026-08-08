@@ -1402,6 +1402,81 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, r"requires supporting terrain at \[0, 0\]"):
             generate_map(recipe, TILES_PATH)
 
+    def test_room_rectangle_serializes_authored_semantic_membership(self):
+        recipe = valid_recipe()
+        recipe["rooms"] = [
+            {"id": "office", "kind": "enclosed"},
+            {"id": "garage_bay", "kind": "covered_open"},
+            {"id": "damaged_store", "kind": "ruin"},
+        ]
+        recipe["operations"] = [
+            {
+                "type": "rectangle",
+                "x": 0,
+                "y": 0,
+                "width": 32,
+                "height": 32,
+                "z": 1,
+                "tile": {"id": "concrete_00"},
+            },
+            {
+                "type": "room_rectangle",
+                "room": "garage_bay",
+                "x": 4,
+                "y": 3,
+                "width": 3,
+                "height": 2,
+                "z": 1,
+            },
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["rooms"], recipe["rooms"])
+        self.assertNotIn("rooms", generated["levels"][10][3 * 32 + 4])
+        for y in range(3, 5):
+            for x in range(4, 7):
+                self.assertEqual(generated["levels"][11][y * 32 + x]["rooms"], ["garage_bay"])
+
+    def test_room_rectangle_rejects_invalid_definitions_and_ambiguous_membership(self):
+        valid_rooms = [{"id": "office", "kind": "enclosed"}]
+        invalid_rooms = [
+            ([{"id": "office", "kind": "unknown"}], "unsupported kind 'unknown'"),
+            ([{"id": "office", "kind": "enclosed"}, {"id": "office", "kind": "ruin"}], "duplicate room ID 'office'"),
+            ([{"id": "office", "kind": "enclosed", "extra": True}], "unknown rooms\\[0\\] field 'extra'"),
+        ]
+        for rooms, expected_message in invalid_rooms:
+            with self.subTest(rooms=rooms):
+                recipe = valid_recipe()
+                recipe["rooms"] = rooms
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+        invalid_operations = [
+            ([{"type": "room_rectangle", "room": "unknown", "x": 0, "y": 0, "width": 1, "height": 1}], "references unknown room 'unknown'"),
+            ([
+                {"type": "room_rectangle", "room": "office", "x": 0, "y": 0, "width": 1, "height": 1},
+                {"type": "room_rectangle", "room": "office", "x": 0, "y": 0, "width": 1, "height": 1},
+            ], r"duplicates room membership at \[0, 0\]"),
+            ([{"type": "room_rectangle", "room": "office", "x": 0, "y": 0, "width": 1, "height": 1, "rotation": 90}], "unknown operations\\[0\\] field 'rotation'"),
+        ]
+        for operations, expected_message in invalid_operations:
+            with self.subTest(operations=operations):
+                recipe = valid_recipe()
+                recipe["rooms"] = valid_rooms
+                recipe["operations"] = operations
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+        recipe = valid_recipe()
+        recipe["rooms"] = valid_rooms
+        recipe["operations"] = [
+            {"type": "set", "x": 0, "y": 0, "tile": None},
+            {"type": "room_rectangle", "room": "office", "x": 0, "y": 0, "width": 1, "height": 1},
+        ]
+        with self.assertRaisesRegex(RecipeError, r"requires supporting terrain at \[0, 0\]"):
+            generate_map(recipe, TILES_PATH)
+
     def test_area_entities_require_known_runtime_type_catalog_ids_and_positive_counts(self):
         known_entity_ids = {
             "furniture": json.loads(FURNITURES_PATH.read_text(encoding="utf-8"))[0]["id"],
@@ -1447,6 +1522,34 @@ class MapGeneratorTests(unittest.TestCase):
                 }]
                 with self.assertRaisesRegex(RecipeError, expected_message):
                     generate_map(recipe, TILES_PATH)
+
+    def test_room_semantics_example_preserves_authored_labels(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_semantics.json"
+        generated = generate_map(
+            json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
+        )
+
+        self.assertEqual(generated["rooms"], [
+            {"id": "office", "kind": "enclosed"},
+            {"id": "garage_bay", "kind": "covered_open"},
+            {"id": "ruined_store", "kind": "ruin"},
+        ])
+        level = generated["levels"][10]
+        expected_memberships = {
+            "office": {(x, y) for y in range(7, 15) for x in range(4, 12)},
+            "garage_bay": {(x, y) for y in range(7, 15) for x in range(12, 22)},
+            "ruined_store": {(x, y) for y in range(17, 25) for x in range(7, 19)},
+        }
+        for room_id, expected_cells in expected_memberships.items():
+            actual_cells = {
+                (index % 32, index // 32)
+                for index, tile in enumerate(level)
+                if tile.get("rooms") == [room_id]
+            }
+            self.assertEqual(actual_cells, expected_cells)
+        self.assertEqual(level[7 * 32 + 11]["id"], "concrete_00")
+        self.assertEqual(level[7 * 32 + 12]["id"], "concrete_00")
+        self.assertNotIn("rooms", level[0])
 
     def test_area_meadow_example_matches_its_runtime_area_boundary(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_area_meadow.json"
@@ -1741,6 +1844,47 @@ class MapValidatorDimensionTests(unittest.TestCase):
                 errors = self.validate(map_data)
 
                 self.assertTrue(any(expected_message in error for error in errors))
+
+    def test_validates_room_definition_and_membership_structure(self):
+        map_data = generate_map(valid_recipe(), TILES_PATH)
+        map_data["rooms"] = "not-an-array"
+        errors = self.validate(map_data)
+        self.assertTrue(any("top-level rooms must be an array" in error for error in errors))
+
+        invalid_rooms = [
+            (["not-an-object"], "Room at index 0 is not an object"),
+            ([{"kind": "enclosed"}], "missing required field 'id'"),
+            ([{"id": "office", "kind": "unknown"}], "unsupported room kind 'unknown'"),
+            ([{"id": "office", "kind": "enclosed", "extra": True}], "unknown field 'extra'"),
+            ([{"id": "office", "kind": "enclosed"}, {"id": "office", "kind": "ruin"}], "Duplicate room ID"),
+        ]
+        for rooms, expected_message in invalid_rooms:
+            with self.subTest(rooms=rooms):
+                map_data = generate_map(valid_recipe(), TILES_PATH)
+                map_data["rooms"] = rooms
+                errors = self.validate(map_data)
+                self.assertTrue(any(expected_message in error for error in errors))
+
+        map_data = generate_map(valid_recipe(), TILES_PATH)
+        map_data["rooms"] = [{"id": "office", "kind": "enclosed"}]
+        invalid_memberships = [
+            ("not-an-array", "rooms must be an array"),
+            (["missing"], "references non-existent room 'missing'"),
+            (["office", "office"], "must contain exactly one room ID"),
+        ]
+        for membership, expected_message in invalid_memberships:
+            with self.subTest(membership=membership):
+                map_data["levels"][10][0]["rooms"] = membership
+                errors = self.validate(map_data)
+                self.assertTrue(any(expected_message in error for error in errors))
+
+        map_data["levels"][10][0] = {"rooms": ["office"]}
+        errors = self.validate(map_data)
+        self.assertTrue(any("missing required 'id'" in error for error in errors))
+
+        map_data["levels"][10][0] = {"id": "", "rooms": ["office"]}
+        errors = self.validate(map_data)
+        self.assertTrue(any("room membership requires terrain" in error for error in errors))
 
 
 if __name__ == "__main__":

@@ -93,6 +93,7 @@ var levels: Array = [
 	[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
 ]
 var areas: Array = []
+var rooms: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -145,6 +146,7 @@ func set_data(newdata: Dictionary) -> void:
 		)
 	)
 	areas = newdata.get("areas", [])
+	rooms = newdata.get("rooms", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -162,11 +164,14 @@ func get_data() -> Dictionary:
 	mydata["levels"] = _convert_levels_feature_for_save(levels)
 	if not areas.is_empty():
 		mydata["areas"] = areas
+	if not rooms.is_empty():
+		mydata["rooms"] = rooms
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
 	# Sanitize tile-level area references to remove stale editor artifacts
 	_sanitize_area_references(mydata)
+	_sanitize_room_references(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -217,6 +222,27 @@ func _sanitize_area_references(data: Dictionary) -> void:
 	if removed_count > 0:
 		print("[DMap] Sanitized %d stale area references during data retrieval" % removed_count)
 
+
+func _sanitize_room_references(data: Dictionary) -> void:
+	var valid_room_ids: Array[String] = []
+	if data.has("rooms") and data["rooms"] is Array:
+		for room in data["rooms"]:
+			if room is Dictionary and room.has("id"):
+				valid_room_ids.append(room["id"])
+
+	if not data.has("levels") or not data["levels"] is Array:
+		return
+
+	for level in data["levels"]:
+		if not level is Array:
+			continue
+		for tile in level:
+			if tile is Dictionary and tile.has("rooms") and tile["rooms"] is Array:
+				tile["rooms"] = tile["rooms"].filter(func(room_id):
+					return room_id is String and room_id in valid_room_ids
+				)
+				if tile["rooms"].is_empty():
+					tile.erase("rooms")
 
 
 func load_data_from_disk():

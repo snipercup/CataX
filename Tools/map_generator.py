@@ -61,6 +61,9 @@ AREA_DEFINITION_FIELDS = {
 AREA_TILE_FIELDS = {"id", "count"}
 AREA_ENTITY_FIELDS = {"id", "type", "count"}
 AREA_ENTITY_TYPES = {"furniture", "mob", "mobgroup", "itemgroup"}
+ROOM_DEFINITION_FIELDS = {"id", "kind"}
+ROOM_KINDS = {"enclosed", "covered_open", "ruin"}
+ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -72,6 +75,7 @@ RECIPE_FIELDS = {
     "palette",
     "furniture_palette",
     "areas",
+    "rooms",
     "patterns",
     "regions",
     "operations",
@@ -947,6 +951,38 @@ def _validate_recipe_areas(
     return validated
 
 
+def _validate_recipe_rooms(rooms: Any) -> list[dict[str, str]]:
+    if not isinstance(rooms, list):
+        raise RecipeError("rooms must be an array")
+    validated: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
+    for index, room in enumerate(rooms):
+        context = f"rooms[{index}]"
+        if not isinstance(room, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(room) - ROOM_DEFINITION_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(room) != ROOM_DEFINITION_FIELDS:
+            raise RecipeError(f"{context} must define id and kind")
+        room_id = room["id"]
+        if not isinstance(room_id, str) or not room_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(room_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(room_id) is None:
+            raise RecipeError(
+                f"{context}.id may contain only letters, numbers, underscores, and hyphens"
+            )
+        if room_id in seen_ids:
+            raise RecipeError(f"duplicate room ID '{room_id}'")
+        seen_ids.add(room_id)
+        kind = room["kind"]
+        if not isinstance(kind, str) or kind not in ROOM_KINDS:
+            raise RecipeError(f"{context}.kind has unsupported kind '{kind}'")
+        validated.append({"id": room_id, "kind": kind})
+    return validated
+
+
 def _apply_area_rectangle(
     level: list[dict[str, Any]],
     operation: dict[str, Any],
@@ -980,6 +1016,33 @@ def _apply_area_rectangle(
             )
 
 
+def _apply_room_rectangle(
+    level: list[dict[str, Any]],
+    operation: dict[str, Any],
+    known_room_ids: set[str],
+    context: str,
+) -> None:
+    unknown_fields = sorted(set(operation) - ROOM_RECTANGLE_FIELDS)
+    if unknown_fields:
+        raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+    room_id = operation.get("room")
+    if not isinstance(room_id, str) or not room_id.strip():
+        raise RecipeError(f"{context}.room must be a non-empty string")
+    if room_id not in known_room_ids:
+        raise RecipeError(f"{context}.room references unknown room '{room_id}'")
+    dimensions = _rectangle_dimensions(operation, context)
+    for y in range(dimensions["y"], dimensions["y"] + dimensions["height"]):
+        for x in range(dimensions["x"], dimensions["x"] + dimensions["width"]):
+            tile = level[y * MAP_WIDTH + x]
+            if not isinstance(tile.get("id"), str) or not tile["id"]:
+                raise RecipeError(f"{context} requires supporting terrain at [{x}, {y}]")
+            if tile.get("rooms"):
+                raise RecipeError(f"{context} duplicates room membership at [{x}, {y}]")
+    for y in range(dimensions["y"], dimensions["y"] + dimensions["height"]):
+        for x in range(dimensions["x"], dimensions["x"] + dimensions["width"]):
+            level[y * MAP_WIDTH + x]["rooms"] = [room_id]
+
+
 def _target_z(
     spec: dict[str, Any], context: str, inherited_z: int | None
 ) -> int:
@@ -1003,6 +1066,7 @@ def _apply_layout(
     known_furnitures: set[str],
     furniture_palette: dict[str, list[dict[str, Any]]],
     known_area_ids: set[str],
+    known_room_ids: set[str],
     context_prefix: str = "",
     inherited_z: int | None = None,
 ) -> None:
@@ -1057,6 +1121,8 @@ def _apply_layout(
             )
         elif operation_type == "area_rectangle":
             _apply_area_rectangle(level, operation, known_area_ids, context)
+        elif operation_type == "room_rectangle":
+            _apply_room_rectangle(level, operation, known_room_ids, context)
         else:
             raise RecipeError(
                 f"{context}.type has unknown operation '{operation_type}'"
@@ -1072,6 +1138,7 @@ def _generate_levels(
     known_furnitures: set[str],
     furniture_palette: dict[str, list[dict[str, Any]]],
     known_area_ids: set[str],
+    known_room_ids: set[str],
 ) -> list[list[dict[str, Any]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
     if "levels" not in recipe:
@@ -1095,6 +1162,7 @@ def _generate_levels(
             known_furnitures,
             furniture_palette,
             known_area_ids,
+            known_room_ids,
         )
         return levels
 
@@ -1149,6 +1217,7 @@ def _generate_levels(
             known_furnitures,
             furniture_palette,
             known_area_ids,
+            known_room_ids,
             context_prefix=f"{context}.",
             inherited_z=logical_z,
         )
@@ -1222,6 +1291,8 @@ def generate_map(
         recipe.get("areas", []), known_tiles, known_area_entity_ids
     )
     known_area_ids = {area["id"] for area in areas}
+    rooms = _validate_recipe_rooms(recipe.get("rooms", []))
+    known_room_ids = {room["id"] for room in rooms}
     rng = random.Random(seed)
     levels = _generate_levels(
         recipe,
@@ -1232,6 +1303,7 @@ def generate_map(
         known_furnitures,
         furniture_palette,
         known_area_ids,
+        known_room_ids,
     )
 
     generated = {
@@ -1247,6 +1319,8 @@ def generate_map(
     }
     if areas:
         generated["areas"] = areas
+    if rooms:
+        generated["rooms"] = rooms
     return generated
 
 
