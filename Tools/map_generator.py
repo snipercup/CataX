@@ -61,13 +61,22 @@ AREA_DEFINITION_FIELDS = {
 AREA_TILE_FIELDS = {"id", "count"}
 AREA_ENTITY_FIELDS = {"id", "type", "count"}
 AREA_ENTITY_TYPES = {"furniture", "mob", "mobgroup", "itemgroup"}
-ROOM_DEFINITION_FIELDS = {"id", "kind"}
+ROOM_DEFINITION_REQUIRED_FIELDS = {"id", "kind"}
+ROOM_DEFINITION_FIELDS = ROOM_DEFINITION_REQUIRED_FIELDS | {"boundary_validation"}
+ROOM_BOUNDARY_VALIDATIONS = {"complete"}
+CARDINAL_SIDES = {
+    "north": (0, -1),
+    "east": (1, 0),
+    "south": (0, 1),
+    "west": (-1, 0),
+}
+OPPOSITE_SIDES = {"north": "south", "east": "west", "south": "north", "west": "east"}
 ROOM_KINDS = {"enclosed", "covered_open", "ruin"}
 ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
 ROOM_CONNECTION_FIELDS = {"id", "at", "z", "from", "to"}
 ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
-ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element"}
+ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
@@ -1005,7 +1014,7 @@ def _validate_recipe_rooms(rooms: Any) -> list[dict[str, str]]:
         unknown_fields = sorted(set(room) - ROOM_DEFINITION_FIELDS)
         if unknown_fields:
             raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
-        if set(room) != ROOM_DEFINITION_FIELDS:
+        if not ROOM_DEFINITION_REQUIRED_FIELDS <= set(room):
             raise RecipeError(f"{context} must define id and kind")
         room_id = room["id"]
         if not isinstance(room_id, str) or not room_id.strip():
@@ -1021,7 +1030,16 @@ def _validate_recipe_rooms(rooms: Any) -> list[dict[str, str]]:
         kind = room["kind"]
         if not isinstance(kind, str) or kind not in ROOM_KINDS:
             raise RecipeError(f"{context}.kind has unsupported kind '{kind}'")
-        validated.append({"id": room_id, "kind": kind})
+        boundary_validation = room.get("boundary_validation")
+        if boundary_validation is not None:
+            if boundary_validation not in ROOM_BOUNDARY_VALIDATIONS:
+                raise RecipeError(f"{context}.boundary_validation has unsupported value '{boundary_validation}'")
+            if kind != "enclosed":
+                raise RecipeError(f"{context}.boundary_validation is only supported for enclosed rooms")
+        validated_room = {"id": room_id, "kind": kind}
+        if boundary_validation is not None:
+            validated_room["boundary_validation"] = boundary_validation
+        validated.append(validated_room)
     return validated
 
 
@@ -1145,7 +1163,7 @@ def _validate_recipe_room_boundaries(
         unknown_fields = sorted(set(boundary) - ROOM_BOUNDARY_FIELDS)
         if unknown_fields:
             raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
-        if set(boundary) != ROOM_BOUNDARY_FIELDS:
+        if not {"id", "room", "at", "z", "element"} <= set(boundary):
             raise RecipeError(f"{context} must define id, room, at, z, and element")
         boundary_id = boundary["id"]
         if not isinstance(boundary_id, str) or not boundary_id.strip():
@@ -1176,13 +1194,19 @@ def _validate_recipe_room_boundaries(
         element = boundary["element"]
         if element not in ROOM_BOUNDARY_ELEMENTS:
             raise RecipeError(f"{context}.element has unsupported element '{element}'")
-        validated.append({
+        side = boundary.get("side")
+        if side is not None and side not in CARDINAL_SIDES:
+            raise RecipeError(f"{context}.side must be north, east, south, or west")
+        validated_boundary = {
             "id": boundary_id,
             "room": room_id,
             "at": at,
             "z": z,
             "element": element,
-        })
+        }
+        if side is not None:
+            validated_boundary["side"] = side
+        validated.append(validated_boundary)
     return validated
 
 
@@ -1205,13 +1229,75 @@ def _wall_tile_bounds_room(x: int, y: int, room_id: str, level: list[dict[str, A
     return False
 
 
+def _room_boundary_edge(
+    boundary: dict[str, Any], level: list[dict[str, Any]]
+) -> tuple[int, int, str] | None:
+    side = boundary.get("side")
+    if side is None:
+        return None
+    x, y = boundary["at"]
+    room_id = boundary["room"]
+    if boundary["element"] == "wall_tile":
+        delta_x, delta_y = CARDINAL_SIDES[side]
+        room_x, room_y = x + delta_x, y + delta_y
+        if not 0 <= room_x < MAP_WIDTH or not 0 <= room_y < MAP_HEIGHT:
+            return None
+        room_tile = level[room_y * MAP_WIDTH + room_x]
+        if not isinstance(room_tile, dict) or room_tile.get("rooms") != [room_id]:
+            return None
+        return room_x, room_y, OPPOSITE_SIDES[side]
+    tile = level[y * MAP_WIDTH + x]
+    if not isinstance(tile, dict) or tile.get("rooms") != [room_id]:
+        return None
+    return x, y, side
+
+
+def _required_room_edges(room_id: str, level: list[dict[str, Any]]) -> set[tuple[int, int, str]]:
+    required: set[tuple[int, int, str]] = set()
+    for y in range(MAP_HEIGHT):
+        for x in range(MAP_WIDTH):
+            tile = level[y * MAP_WIDTH + x]
+            if not isinstance(tile, dict) or tile.get("rooms") != [room_id]:
+                continue
+            for side, (delta_x, delta_y) in CARDINAL_SIDES.items():
+                neighbor_x, neighbor_y = x + delta_x, y + delta_y
+                if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
+                    required.add((x, y, side))
+                    continue
+                neighbor = level[neighbor_y * MAP_WIDTH + neighbor_x]
+                if not isinstance(neighbor, dict) or neighbor.get("rooms") != [room_id]:
+                    required.add((x, y, side))
+    return required
+
+
 def _validate_room_boundary_targets(
     boundaries: list[dict[str, Any]],
     levels: list[list[dict[str, Any]]],
     wall_tile_ids: set[str],
     door_furniture_ids: set[str],
     room_connections: list[dict[str, Any]],
+    rooms: list[dict[str, Any]],
 ) -> None:
+    complete_room_ids = {
+        room["id"] for room in rooms if room.get("boundary_validation") == "complete"
+    }
+    directed_edges: dict[tuple[str, int], set[tuple[int, int, str]]] = {}
+
+    def record_complete_edge(boundary: dict[str, Any], level: list[dict[str, Any]], context: str) -> None:
+        room_id = boundary["room"]
+        if room_id not in complete_room_ids:
+            return
+        if boundary.get("side") is None:
+            raise RecipeError(f"{context}.side is required for complete boundary validation")
+        edge = _room_boundary_edge(boundary, level)
+        if edge is None:
+            raise RecipeError(f"{context}.side does not point to an edge of room '{room_id}'")
+        key = (room_id, boundary["z"])
+        edges = directed_edges.setdefault(key, set())
+        if edge in edges:
+            raise RecipeError(f"{context} duplicates directed boundary edge for room '{room_id}'")
+        edges.add(edge)
+
     seen_room_targets: set[tuple[str, int, int, int]] = set()
     for index, boundary in enumerate(boundaries):
         context = f"room_boundaries[{index}]"
@@ -1231,6 +1317,7 @@ def _validate_room_boundary_targets(
                 raise RecipeError(f"{context} must reference a Wall-category tile at z {z} [{x}, {y}]")
             if not _wall_tile_bounds_room(x, y, room_id, level):
                 raise RecipeError(f"{context} wall tile must be cardinally adjacent to room '{room_id}'")
+            record_complete_edge(boundary, level, context)
             continue
         feature = tile.get("feature")
         if (
@@ -1246,6 +1333,27 @@ def _validate_room_boundary_targets(
             for connection in room_connections
         ):
             raise RecipeError(f"{context} must match a room connection for room '{room_id}'")
+        record_complete_edge(boundary, level, context)
+
+    for room_id in complete_room_ids:
+        for level_index, level in enumerate(levels):
+            if not level:
+                continue
+            z = level_index - 10
+            required = _required_room_edges(room_id, level)
+            declared = directed_edges.get((room_id, z), set())
+            missing = required - declared
+            extra = declared - required
+            if missing:
+                x, y, side = sorted(missing)[0]
+                raise RecipeError(
+                    f"complete room '{room_id}' is missing boundary evidence for {side} edge at z {z} [{x}, {y}]"
+                )
+            if extra:
+                x, y, side = sorted(extra)[0]
+                raise RecipeError(
+                    f"complete room '{room_id}' declares non-exposed {side} boundary edge at z {z} [{x}, {y}]"
+                )
 
 
 def _apply_area_rectangle(
@@ -1592,6 +1700,7 @@ def generate_map(
         wall_tile_ids,
         door_furniture_ids,
         room_connections,
+        rooms,
     )
 
     generated = {

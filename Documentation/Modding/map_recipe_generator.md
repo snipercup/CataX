@@ -325,7 +325,7 @@ Connections are semantic metadata only. They preserve their authored `from`/`to`
 
 ### `room_boundaries`
 
-`room_boundaries` explicitly attaches an existing physical wall tile or connected door opening to one authored room. It does not derive a perimeter from rooms, floor material, wall rotation, or neighboring geometry. Each root record contains exactly `id`, `room`, `at`, `z`, and `element`:
+`room_boundaries` explicitly attaches an existing physical wall tile or connected door opening to one authored room. It does not derive a perimeter from rooms, floor material, wall rotation, or neighboring geometry. A legacy/partial record contains `id`, `room`, `at`, `z`, and `element`; it may add `side` when directional evidence is needed:
 
 ```json
 {
@@ -335,7 +335,8 @@ Connections are semantic metadata only. They preserve their authored `from`/`to`
       "room": "office",
       "at": [8, 7],
       "z": 0,
-      "element": "wall_tile"
+      "element": "wall_tile",
+      "side": "south"
     },
     {
       "id": "office_front_opening",
@@ -355,7 +356,9 @@ Connections are semantic metadata only. They preserve their authored `from`/`to`
 | `wall_tile` | The target terrain ID is in the tile catalog and has the `Wall` category; it must be cardinally adjacent to a tile labelled with the named room. |
 | `door_furniture` | The target terrain tile contains catalog-recognized door-capable furniture and a `room_connections` entry at the same `[x, y, z]` names the room. |
 
-A room cannot name the same target coordinate twice, but one wall tile may deliberately bound different rooms through separate records. This remains partial authored evidence: `enclosed`, `covered_open`, and `ruin` rooms may declare only the segments that matter to the current recipe. No perimeter-completeness or enclosure rule exists yet.
+A room cannot name the same target coordinate twice, but one wall tile may deliberately bound different rooms through separate records. `side`, when present, is `north`, `east`, `south`, or `west`. For `wall_tile`, it points from the wall tile toward its room; for `door_furniture`, it points outward from the room tile through that door.
+
+An `enclosed` room may opt in to strict completeness by adding `"boundary_validation": "complete"` to its root definition. For such a room, every exposed cardinal edge of every labelled room tile must have exactly one directed boundary record. Its records therefore require `side`: a wall must point to the matching room edge, and a door must start on the matching room tile and retain its required `room_connections` endpoint. Missing, wrongly oriented, duplicate, or non-exposed records are rejected. `covered_open` and `ruin` rooms cannot opt in and continue to allow partial boundary evidence.
 
 Boundary metadata preserves existing terrain, furniture, rotation, collision, and runtime door behavior. `DMap` preserves it through content-editor save/load and removes records naming deleted rooms. It does not create walls or openings, infer a door from rotation, change navigation, or add indoor/outdoor effects.
 

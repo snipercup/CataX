@@ -1564,6 +1564,71 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(level[10 * 32 + 11]["feature"]["id"], "door_wood")
 
+    def test_enclosed_room_can_opt_into_complete_directional_boundaries(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "concrete_00"}
+        recipe["rooms"] = [{
+            "id": "office",
+            "kind": "enclosed",
+            "boundary_validation": "complete",
+        }]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 2, "height": 2},
+            {"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 9, "y": 7, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 8, "y": 10, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 9, "y": 10, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 7, "y": 8, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 10, "y": 8, "tile": {"id": "brick_wall_00"}},
+            {"type": "set", "x": 10, "y": 9, "tile": {"id": "brick_wall_00"}},
+            {"type": "furniture", "id": "door_wood", "x": 8, "y": 9, "rotation": 0},
+        ]
+        recipe["room_connections"] = [{
+            "id": "office_front_door",
+            "at": [8, 9],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+        }]
+        recipe["room_boundaries"] = [
+            {"id": "northwest_north", "room": "office", "at": [8, 7], "z": 0, "element": "wall_tile", "side": "south"},
+            {"id": "northeast_north", "room": "office", "at": [9, 7], "z": 0, "element": "wall_tile", "side": "south"},
+            {"id": "southwest_south", "room": "office", "at": [8, 10], "z": 0, "element": "wall_tile", "side": "north"},
+            {"id": "southeast_south", "room": "office", "at": [9, 10], "z": 0, "element": "wall_tile", "side": "north"},
+            {"id": "northwest_west", "room": "office", "at": [7, 8], "z": 0, "element": "wall_tile", "side": "east"},
+            {"id": "northeast_east", "room": "office", "at": [10, 8], "z": 0, "element": "wall_tile", "side": "west"},
+            {"id": "southeast_east", "room": "office", "at": [10, 9], "z": 0, "element": "wall_tile", "side": "west"},
+            {"id": "southwest_door", "room": "office", "at": [8, 9], "z": 0, "element": "door_furniture", "side": "west"},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["rooms"], recipe["rooms"])
+        self.assertEqual(generated["room_boundaries"], recipe["room_boundaries"])
+
+    def test_complete_enclosed_room_rejects_missing_or_wrong_directional_boundaries(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
+
+        missing_side = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_side["room_boundaries"][0].pop("side")
+        with self.assertRaisesRegex(RecipeError, "side is required for complete boundary validation"):
+            generate_map(missing_side, TILES_PATH)
+
+        incomplete = json.loads(recipe_path.read_text(encoding="utf-8"))
+        incomplete["room_boundaries"].pop(0)
+        with self.assertRaisesRegex(RecipeError, "is missing boundary evidence"):
+            generate_map(incomplete, TILES_PATH)
+
+        wrong_side = json.loads(recipe_path.read_text(encoding="utf-8"))
+        wrong_side["room_boundaries"][0]["side"] = "north"
+        with self.assertRaisesRegex(RecipeError, "side does not point to an edge"):
+            generate_map(wrong_side, TILES_PATH)
+
+        non_enclosed = json.loads(recipe_path.read_text(encoding="utf-8"))
+        non_enclosed["rooms"][0]["kind"] = "covered_open"
+        with self.assertRaisesRegex(RecipeError, "only supported for enclosed rooms"):
+            generate_map(non_enclosed, TILES_PATH)
+
     def test_room_boundaries_reject_invalid_schema_and_physical_targets(self):
         valid_boundary = {
             "id": "office_north_wall",
@@ -2189,20 +2254,42 @@ class MapValidatorDimensionTests(unittest.TestCase):
             json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH
         )
 
-        self.assertEqual([boundary["id"] for boundary in generated["room_boundaries"]], [
-            "office_north_wall",
-            "office_west_wall",
-            "garage_east_wall",
-            "ruin_north_wall",
-            "office_front_opening",
-            "office_garage_opening",
-            "garage_office_opening",
-        ])
+        self.assertEqual(generated["rooms"][0]["boundary_validation"], "complete")
+        self.assertEqual(len(generated["room_boundaries"]), 10)
+        self.assertEqual(
+            sum(boundary["element"] == "wall_tile" for boundary in generated["room_boundaries"]), 9
+        )
+        self.assertEqual(
+            sum(boundary["element"] == "door_furniture" for boundary in generated["room_boundaries"]), 1
+        )
         level = generated["levels"][10]
-        for x, y in ((8, 7), (7, 8), (16, 8), (8, 16)):
+        for x, y in ((8, 7), (9, 7), (8, 10), (9, 10), (7, 8), (10, 8), (10, 9)):
             self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
-        self.assertEqual(level[10 * 32 + 11]["feature"]["id"], "door_wood")
-        self.assertEqual(level[10 * 32 + 12]["feature"]["id"], "door_wood")
+        self.assertEqual(level[9 * 32 + 8]["feature"]["id"], "door_wood")
+    def test_validates_opt_in_enclosed_room_boundary_completeness(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
+        complete_map = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+        self.assertEqual(self.validate(complete_map), [])
+
+        missing_side = json.loads(json.dumps(complete_map))
+        missing_side["room_boundaries"][0].pop("side")
+        errors = self.validate(missing_side)
+        self.assertTrue(any("side is required for complete boundary validation" in error for error in errors))
+
+        incomplete = json.loads(json.dumps(complete_map))
+        incomplete["room_boundaries"].pop(0)
+        errors = self.validate(incomplete)
+        self.assertTrue(any("is missing boundary evidence" in error for error in errors))
+
+        wrong_side = json.loads(json.dumps(complete_map))
+        wrong_side["room_boundaries"][0]["side"] = "north"
+        errors = self.validate(wrong_side)
+        self.assertTrue(any("side does not point to room 'office'" in error for error in errors))
+
+        non_enclosed = json.loads(json.dumps(complete_map))
+        non_enclosed["rooms"][0]["kind"] = "covered_open"
+        errors = self.validate(non_enclosed)
+        self.assertTrue(any("only supported for enclosed rooms" in error for error in errors))
 
 
 if __name__ == "__main__":

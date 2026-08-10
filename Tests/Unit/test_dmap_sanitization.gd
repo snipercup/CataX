@@ -148,7 +148,7 @@ func test_dmap_room_boundaries_roundtrip_and_sanitization():
 		"name": "Room boundaries",
 		"description": "Preserve authored physical references.",
 		"rooms": [
-			{"id": "office", "kind": "enclosed"},
+			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
 		],
 		"room_boundaries": [
 			{
@@ -157,6 +157,7 @@ func test_dmap_room_boundaries_roundtrip_and_sanitization():
 				"at": [8, 7],
 				"z": 0,
 				"element": "wall_tile",
+				"side": "south",
 			},
 			{
 				"id": "stale_boundary",
@@ -179,4 +180,6 @@ func test_dmap_room_boundaries_roundtrip_and_sanitization():
 		"at": [8, 7],
 		"z": 0,
 		"element": "wall_tile",
+		"side": "south",
 	}])
+	assert_eq(data["rooms"], [{"id": "office", "kind": "enclosed", "boundary_validation": "complete"}])
