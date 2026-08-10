@@ -9,9 +9,17 @@ MAP_HEIGHT = 32
 LEVEL_COUNT = 21
 POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
+ROOM_BOUNDARY_VALIDATIONS = {'complete'}
+CARDINAL_SIDES = {
+    'north': (0, -1),
+    'east': (1, 0),
+    'south': (0, 1),
+    'west': (-1, 0),
+}
+OPPOSITE_SIDES = {'north': 'south', 'east': 'west', 'south': 'north', 'west': 'east'}
 ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
-ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element'}
+ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 
 class MapValidationError(Exception):
@@ -204,7 +212,7 @@ class MapValidator:
             if not isinstance(room, dict):
                 self.add_error(file_path, f"Room at index {idx} is not an object.")
                 continue
-            unknown_fields = sorted(set(room) - {'id', 'kind'})
+            unknown_fields = sorted(set(room) - {'id', 'kind', 'boundary_validation'})
             if unknown_fields:
                 self.add_error(file_path, f"Room at index {idx} has unknown field '{unknown_fields[0]}'.")
             for field in ('id', 'kind'):
@@ -220,6 +228,12 @@ class MapValidator:
             kind = room.get('kind')
             if kind not in ROOM_KINDS:
                 self.add_error(file_path, f"Room at index {idx} has unsupported room kind '{kind}'.")
+            boundary_validation = room.get('boundary_validation')
+            if boundary_validation is not None:
+                if boundary_validation not in ROOM_BOUNDARY_VALIDATIONS:
+                    self.add_error(file_path, f"Room at index {idx} has unsupported boundary validation '{boundary_validation}'.")
+                elif kind != 'enclosed':
+                    self.add_error(file_path, f"Room at index {idx} boundary validation is only supported for enclosed rooms.")
 
         validated_room_connections = []
         seen_connection_ids: Set[str] = set()
@@ -302,7 +316,7 @@ class MapValidator:
             unknown_fields = sorted(set(boundary) - ROOM_BOUNDARY_FIELDS)
             if unknown_fields:
                 self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
-            for field in ROOM_BOUNDARY_FIELDS:
+            for field in ('id', 'room', 'at', 'z', 'element'):
                 if field not in boundary:
                     self.add_error(file_path, f"{context} is missing required field '{field}'.")
             boundary_id = boundary.get('id')
@@ -334,10 +348,14 @@ class MapValidator:
             element = boundary.get('element')
             if element not in ROOM_BOUNDARY_ELEMENTS:
                 self.add_error(file_path, f"{context} has unsupported element '{element}'.")
+            side = boundary.get('side')
+            if side is not None and side not in CARDINAL_SIDES:
+                self.add_error(file_path, f"{context} side must be north, east, south, or west.")
             if (
                 isinstance(boundary_id, str) and boundary_id
                 and isinstance(room_id, str) and room_id in room_ids
                 and valid_at and valid_z and element in ROOM_BOUNDARY_ELEMENTS
+                and (side is None or side in CARDINAL_SIDES)
             ):
                 validated_room_boundaries.append(boundary)
 
@@ -574,6 +592,82 @@ class MapValidator:
             )
             if not matches_connection:
                 self.add_error(file_path, f"Room boundary '{boundary['id']}' must match a room connection for room '{room_id}'.")
+
+        complete_room_ids = {
+            room['id']
+            for room in rooms
+            if isinstance(room, dict)
+            and room.get('kind') == 'enclosed'
+            and room.get('boundary_validation') == 'complete'
+            and isinstance(room.get('id'), str)
+        }
+        declared_edges: Dict[tuple, Set[tuple]] = {}
+        for boundary in validated_room_boundaries:
+            room_id = boundary['room']
+            if room_id not in complete_room_ids:
+                continue
+            boundary_id = boundary['id']
+            side = boundary.get('side')
+            if side not in CARDINAL_SIDES:
+                self.add_error(file_path, f"Room boundary '{boundary_id}' side is required for complete boundary validation.")
+                continue
+            x, y = boundary['at']
+            z = boundary['z']
+            level_index = z + 10
+            level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+            if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
+                continue
+            if boundary['element'] == 'wall_tile':
+                delta_x, delta_y = CARDINAL_SIDES[side]
+                room_x, room_y = x + delta_x, y + delta_y
+                if not 0 <= room_x < MAP_WIDTH or not 0 <= room_y < MAP_HEIGHT:
+                    self.add_error(file_path, f"Room boundary '{boundary_id}' side does not point to room '{room_id}'.")
+                    continue
+                room_tile = level[room_y * MAP_WIDTH + room_x]
+                if not isinstance(room_tile, dict) or room_tile.get('rooms') != [room_id]:
+                    self.add_error(file_path, f"Room boundary '{boundary_id}' side does not point to room '{room_id}'.")
+                    continue
+                edge = (room_x, room_y, OPPOSITE_SIDES[side])
+            else:
+                room_tile = level[y * MAP_WIDTH + x]
+                if not isinstance(room_tile, dict) or room_tile.get('rooms') != [room_id]:
+                    self.add_error(file_path, f"Room boundary '{boundary_id}' side does not start on room '{room_id}'.")
+                    continue
+                edge = (x, y, side)
+            key = (room_id, z)
+            edges = declared_edges.setdefault(key, set())
+            if edge in edges:
+                self.add_error(file_path, f"Room boundary '{boundary_id}' duplicates directed boundary edge for room '{room_id}'.")
+            edges.add(edge)
+
+        for room_id in complete_room_ids:
+            for level_index, level in enumerate(levels if isinstance(levels, list) else []):
+                if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
+                    continue
+                required_edges: Set[tuple] = set()
+                for y in range(MAP_HEIGHT):
+                    for x in range(MAP_WIDTH):
+                        tile = level[y * MAP_WIDTH + x]
+                        if not isinstance(tile, dict) or tile.get('rooms') != [room_id]:
+                            continue
+                        for side, (delta_x, delta_y) in CARDINAL_SIDES.items():
+                            neighbor_x, neighbor_y = x + delta_x, y + delta_y
+                            if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
+                                required_edges.add((x, y, side))
+                                continue
+                            neighbor = level[neighbor_y * MAP_WIDTH + neighbor_x]
+                            if not isinstance(neighbor, dict) or neighbor.get('rooms') != [room_id]:
+                                required_edges.add((x, y, side))
+                z = level_index - 10
+                declared = declared_edges.get((room_id, z), set())
+                missing = required_edges - declared
+                extra = declared - required_edges
+                if missing:
+                    x, y, side = sorted(missing)[0]
+                    self.add_error(file_path, f"Complete room '{room_id}' is missing boundary evidence for {side} edge at z {z} [{x}, {y}].")
+                if extra:
+                    x, y, side = sorted(extra)[0]
+                    self.add_error(file_path, f"Complete room '{room_id}' declares non-exposed {side} boundary edge at z {z} [{x}, {y}].")
 
     def run(self, path: str):
         if os.path.isdir(path):
