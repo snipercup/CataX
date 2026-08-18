@@ -80,6 +80,8 @@ ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
 BUILDING_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
+BUILDING_SURFACE_FIELDS = {"id", "building", "kind", "z"}
+BUILDING_SURFACE_KINDS = {"roof", "ceiling"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -95,6 +97,7 @@ RECIPE_FIELDS = {
     "room_connections",
     "room_boundaries",
     "buildings",
+    "building_surfaces",
     "patterns",
     "regions",
     "operations",
@@ -1099,6 +1102,53 @@ def _validate_recipe_buildings(
     return validated
 
 
+def _validate_recipe_building_surfaces(
+    surfaces: Any, buildings: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    if not isinstance(surfaces, list):
+        raise RecipeError("building_surfaces must be an array")
+    building_by_id = {building["id"]: building for building in buildings}
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    seen_kinds: set[tuple[str, str]] = set()
+    for index, surface in enumerate(surfaces):
+        context = f"building_surfaces[{index}]"
+        if not isinstance(surface, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(surface) - BUILDING_SURFACE_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(surface) != BUILDING_SURFACE_FIELDS:
+            raise RecipeError(f"{context} must define id, building, kind, and z")
+        surface_id = surface["id"]
+        if not isinstance(surface_id, str) or not surface_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(surface_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(surface_id) is None:
+            raise RecipeError(f"{context}.id may contain only letters, numbers, underscores, and hyphens")
+        if surface_id in seen_ids:
+            raise RecipeError(f"duplicate building surface ID '{surface_id}'")
+        seen_ids.add(surface_id)
+        building_id = surface["building"]
+        if not isinstance(building_id, str) or building_id not in building_by_id:
+            raise RecipeError(f"{context}.building references unknown building '{building_id}'")
+        kind = surface["kind"]
+        if kind not in BUILDING_SURFACE_KINDS:
+            raise RecipeError(f"{context}.kind has unsupported kind '{kind}'")
+        surface_key = (building_id, kind)
+        if surface_key in seen_kinds:
+            raise RecipeError(f"{context} duplicates {kind} surface for building '{building_id}'")
+        seen_kinds.add(surface_key)
+        z = surface["z"]
+        expected_z = building_by_id[building_id]["z"] + 1
+        if type(z) is not int or z != expected_z or not MIN_LOGICAL_Z <= z <= MAX_LOGICAL_Z:
+            raise RecipeError(
+                f"{context}.z must be immediately above building '{building_id}' at z {expected_z}"
+            )
+        validated.append({"id": surface_id, "building": building_id, "kind": kind, "z": z})
+    return validated
+
+
 def _point_in_building_footprint(x: int, y: int, footprint: dict[str, int]) -> bool:
     return (
         footprint["x"] <= x < footprint["x"] + footprint["width"]
@@ -1809,6 +1859,9 @@ def generate_map(
     rooms = _validate_recipe_rooms(recipe.get("rooms", []))
     known_room_ids = {room["id"] for room in rooms}
     buildings = _validate_recipe_buildings(recipe.get("buildings", []), known_room_ids)
+    building_surfaces = _validate_recipe_building_surfaces(
+        recipe.get("building_surfaces", []), buildings
+    )
     room_connections = _validate_recipe_room_connections(
         recipe.get("room_connections", []), known_room_ids
     )
@@ -1865,6 +1918,8 @@ def generate_map(
         generated["room_boundaries"] = room_boundaries
     if buildings:
         generated["buildings"] = buildings
+    if building_surfaces:
+        generated["building_surfaces"] = building_surfaces
     return generated
 
 
