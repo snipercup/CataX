@@ -23,6 +23,8 @@ ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
+BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
+BUILDING_SURFACE_KINDS = {'roof', 'ceiling'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -138,6 +140,10 @@ class MapValidator:
         if not isinstance(buildings, list):
             self.add_error(file_path, "top-level buildings must be an array.")
             buildings = []
+        building_surfaces = data.get('building_surfaces', [])
+        if not isinstance(building_surfaces, list):
+            self.add_error(file_path, "top-level building_surfaces must be an array.")
+            building_surfaces = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -784,6 +790,45 @@ class MapValidator:
                         x, y = connection['at']
                         if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
                             self.add_error(file_path, f"{context} room connection '{connection['id']}' is outside building footprint.")
+
+        building_by_id = {building['id']: building for building in validated_buildings}
+        seen_surface_ids: Set[str] = set()
+        seen_surface_kinds: Set[tuple] = set()
+        for idx, surface in enumerate(building_surfaces):
+            context = f"Building surface at index {idx}"
+            if not isinstance(surface, dict):
+                self.add_error(file_path, f"{context} is not an object.")
+                continue
+            unknown_fields = sorted(set(surface) - BUILDING_SURFACE_FIELDS)
+            if unknown_fields:
+                self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
+            for field in BUILDING_SURFACE_FIELDS:
+                if field not in surface:
+                    self.add_error(file_path, f"{context} is missing required field '{field}'.")
+            surface_id = surface.get('id')
+            if not isinstance(surface_id, str) or not surface_id:
+                self.add_error(file_path, f"{context} has invalid or missing ID.")
+            elif surface_id in seen_surface_ids:
+                self.add_error(file_path, f"Duplicate building surface ID detected: '{surface_id}'")
+            else:
+                seen_surface_ids.add(surface_id)
+            building_id = surface.get('building')
+            building = building_by_id.get(building_id) if isinstance(building_id, str) else None
+            if building is None:
+                self.add_error(file_path, f"{context} references non-existent building '{building_id}'.")
+            kind = surface.get('kind')
+            if kind not in BUILDING_SURFACE_KINDS:
+                self.add_error(file_path, f"{context} has unsupported kind '{kind}'.")
+            elif building is not None:
+                surface_key = (building_id, kind)
+                if surface_key in seen_surface_kinds:
+                    self.add_error(file_path, f"{context} duplicates {kind} surface for building '{building_id}'.")
+                seen_surface_kinds.add(surface_key)
+            z = surface.get('z')
+            if type(z) is not int or not -10 <= z <= 10:
+                self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
+            elif building is not None and z != building['z'] + 1:
+                self.add_error(file_path, f"{context} z must be immediately above building '{building_id}' at z {building['z'] + 1}.")
 
     def run(self, path: str):
         if os.path.isdir(path):

@@ -383,7 +383,26 @@ Each record has exactly `id`, `rooms`, `footprint`, and `z`. `id` is unique; `ro
 
 Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
 
-`DMap` preserves building records through editor save/load and removes records whose room list becomes stale. The standalone validator performs strict shape, containment, same-level overlap, and complete-enclosed-room checks. No generalized templates, polygons, multi-level building records, roof/ceiling semantics, furniture anchors, or generation operations are introduced.
+`DMap` preserves building records through editor save/load and removes records whose room list becomes stale. The standalone validator performs strict shape, containment, same-level overlap, and complete-enclosed-room checks.
+
+### `building_surfaces`
+
+`building_surfaces` declares authored overhead semantics for an existing validated building footprint without creating roof or ceiling geometry:
+
+```json
+{
+  "building_surfaces": [
+    {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
+    {"id": "office_ceiling", "building": "office_building", "kind": "ceiling", "z": 1}
+  ]
+}
+```
+
+Each record has exactly `id`, `building`, `kind`, and `z`. `id` is unique; `building` must name a root `buildings` record; and `kind` is exactly `roof` or `ceiling`. A building may have at most one record of each kind. `z` is the logical level immediately above the building footprint (`building.z + 1`), so surface semantics inherit the footprint bounds without duplicating coordinates.
+
+`roof` and `ceiling` are separate authored classifications and may both be present for one building. They do not place tiles on their `z`, create a roof or ceiling mesh, imply collision/support, change lighting/weather, mark rooms indoors, or make overhead cells occupied. `DMap` preserves valid records and removes surfaces whose referenced building is deleted; generator and standalone validation enforce the strict reference, uniqueness, and z relationship.
+
+No generalized templates, polygons, multi-level building records, furniture anchors, or generation operations are introduced.
 
 ### `set`
 
