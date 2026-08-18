@@ -183,3 +183,44 @@ func test_dmap_room_boundaries_roundtrip_and_sanitization():
 		"side": "south",
 	}])
 	assert_eq(data["rooms"], [{"id": "office", "kind": "enclosed", "boundary_validation": "complete"}])
+
+
+func test_dmap_buildings_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_buildings", "/tmp/", null)
+	map.set_data({
+		"name": "Buildings",
+		"description": "Preserve authored building footprints.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
+		],
+		"buildings": [
+			{
+				"id": "office_building",
+				"rooms": ["office"],
+				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+			},
+			{
+				"rooms": ["office"],
+			},
+			{
+				"id": "stale_building",
+				"rooms": ["missing_room"],
+				"footprint": {"x": 12, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+			},
+		],
+		"levels": [[
+			{"id": "concrete_00"},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["buildings"], [{
+		"id": "office_building",
+		"rooms": ["office"],
+		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+		"z": 0,
+	}])

@@ -78,6 +78,8 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z"}
+BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -92,6 +94,7 @@ RECIPE_FIELDS = {
     "rooms",
     "room_connections",
     "room_boundaries",
+    "buildings",
     "patterns",
     "regions",
     "operations",
@@ -1043,6 +1046,136 @@ def _validate_recipe_rooms(rooms: Any) -> list[dict[str, str]]:
     return validated
 
 
+def _validate_recipe_buildings(
+    buildings: Any, known_room_ids: set[str]
+) -> list[dict[str, Any]]:
+    if not isinstance(buildings, list):
+        raise RecipeError("buildings must be an array")
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, building in enumerate(buildings):
+        context = f"buildings[{index}]"
+        if not isinstance(building, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(building) - BUILDING_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(building) != BUILDING_FIELDS:
+            raise RecipeError(f"{context} must define id, rooms, footprint, and z")
+        building_id = building["id"]
+        if not isinstance(building_id, str) or not building_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(building_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(building_id) is None:
+            raise RecipeError(f"{context}.id may contain only letters, numbers, underscores, and hyphens")
+        if building_id in seen_ids:
+            raise RecipeError(f"duplicate building ID '{building_id}'")
+        seen_ids.add(building_id)
+        room_ids = building["rooms"]
+        if not isinstance(room_ids, list) or not room_ids:
+            raise RecipeError(f"{context}.rooms must name at least one room")
+        if any(not isinstance(room_id, str) or room_id not in known_room_ids for room_id in room_ids):
+            unknown_room = next(room_id for room_id in room_ids if not isinstance(room_id, str) or room_id not in known_room_ids)
+            raise RecipeError(f"{context}.rooms references unknown room '{unknown_room}'")
+        if len(room_ids) != len(set(room_ids)):
+            raise RecipeError(f"{context}.rooms must not duplicate room IDs")
+        footprint = building["footprint"]
+        if not isinstance(footprint, dict) or set(footprint) != BUILDING_FOOTPRINT_FIELDS:
+            raise RecipeError(f"{context}.footprint must define x, y, width, and height")
+        x, y, width, height = (footprint[field] for field in ("x", "y", "width", "height"))
+        if any(type(value) is not int for value in (x, y, width, height)) or width <= 0 or height <= 0:
+            raise RecipeError(f"{context}.footprint must use positive integer width and height")
+        if x < 0 or y < 0 or x + width > MAP_WIDTH or y + height > MAP_HEIGHT:
+            raise RecipeError(f"{context}.footprint must fit within map bounds")
+        z = building["z"]
+        if type(z) is not int or not MIN_LOGICAL_Z <= z <= MAX_LOGICAL_Z:
+            raise RecipeError(f"{context}.z must be an integer from -10 through 10")
+        validated.append({
+            "id": building_id,
+            "rooms": room_ids,
+            "footprint": {"x": x, "y": y, "width": width, "height": height},
+            "z": z,
+        })
+    return validated
+
+
+def _point_in_building_footprint(x: int, y: int, footprint: dict[str, int]) -> bool:
+    return (
+        footprint["x"] <= x < footprint["x"] + footprint["width"]
+        and footprint["y"] <= y < footprint["y"] + footprint["height"]
+    )
+
+
+def _footprints_overlap(left: dict[str, int], right: dict[str, int]) -> bool:
+    return not (
+        left["x"] + left["width"] <= right["x"]
+        or right["x"] + right["width"] <= left["x"]
+        or left["y"] + left["height"] <= right["y"]
+        or right["y"] + right["height"] <= left["y"]
+    )
+
+
+def _validate_building_targets(
+    buildings: list[dict[str, Any]],
+    rooms: list[dict[str, Any]],
+    room_boundaries: list[dict[str, Any]],
+    room_connections: list[dict[str, Any]],
+    levels: list[list[dict[str, Any]]],
+) -> None:
+    room_definitions = {room["id"]: room for room in rooms}
+    for index, building in enumerate(buildings):
+        context = f"buildings[{index}]"
+        footprint = building["footprint"]
+        z = building["z"]
+        for other in buildings[:index]:
+            if other["z"] == z and _footprints_overlap(footprint, other["footprint"]):
+                raise RecipeError(f"{context} overlaps building '{other['id']}' at z {z}")
+        if not any(
+            room_definitions[room_id]["kind"] == "enclosed"
+            and room_definitions[room_id].get("boundary_validation") == "complete"
+            for room_id in building["rooms"]
+        ):
+            raise RecipeError(
+                f"{context} requires an enclosed room with boundary_validation 'complete'"
+            )
+        for room_id in building["rooms"]:
+            membership_count = 0
+            for level_index, level in enumerate(levels):
+                if not level:
+                    continue
+                logical_z = level_index - POPULATED_LEVEL_INDEX
+                for y in range(MAP_HEIGHT):
+                    for x in range(MAP_WIDTH):
+                        tile = level[y * MAP_WIDTH + x]
+                        if not isinstance(tile, dict) or tile.get("rooms") != [room_id]:
+                            continue
+                        if logical_z != z:
+                            raise RecipeError(
+                                f"{context} room '{room_id}' has membership outside building z {z}"
+                            )
+                        membership_count += 1
+                        if not _point_in_building_footprint(x, y, footprint):
+                            raise RecipeError(
+                                f"{context} room '{room_id}' membership at [{x}, {y}] is outside building footprint"
+                            )
+            if membership_count == 0:
+                raise RecipeError(f"{context} room '{room_id}' has no membership at z {z}")
+            for boundary in room_boundaries:
+                if boundary["room"] == room_id and boundary["z"] == z:
+                    x, y = boundary["at"]
+                    if not _point_in_building_footprint(x, y, footprint):
+                        raise RecipeError(
+                            f"{context} room boundary '{boundary['id']}' is outside building footprint"
+                        )
+            for connection in room_connections:
+                if connection["z"] == z and _room_connection_names_room(connection, room_id):
+                    x, y = connection["at"]
+                    if not _point_in_building_footprint(x, y, footprint):
+                        raise RecipeError(
+                            f"{context} room connection '{connection['id']}' is outside building footprint"
+                        )
+
+
 def _validate_room_connection_endpoint(
     endpoint: Any, context: str, known_room_ids: set[str]
 ) -> dict[str, str]:
@@ -1675,6 +1808,7 @@ def generate_map(
     known_area_ids = {area["id"] for area in areas}
     rooms = _validate_recipe_rooms(recipe.get("rooms", []))
     known_room_ids = {room["id"] for room in rooms}
+    buildings = _validate_recipe_buildings(recipe.get("buildings", []), known_room_ids)
     room_connections = _validate_recipe_room_connections(
         recipe.get("room_connections", []), known_room_ids
     )
@@ -1702,6 +1836,13 @@ def generate_map(
         room_connections,
         rooms,
     )
+    _validate_building_targets(
+        buildings,
+        rooms,
+        room_boundaries,
+        room_connections,
+        levels,
+    )
 
     generated = {
         "id": recipe["id"],
@@ -1722,6 +1863,8 @@ def generate_map(
         generated["room_connections"] = room_connections
     if room_boundaries:
         generated["room_boundaries"] = room_boundaries
+    if buildings:
+        generated["buildings"] = buildings
     return generated
 
 

@@ -21,6 +21,8 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z'}
+BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -132,6 +134,10 @@ class MapValidator:
         if not isinstance(room_boundaries, list):
             self.add_error(file_path, "top-level room_boundaries must be an array.")
             room_boundaries = []
+        buildings = data.get('buildings', [])
+        if not isinstance(buildings, list):
+            self.add_error(file_path, "top-level buildings must be an array.")
+            buildings = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -668,6 +674,116 @@ class MapValidator:
                 if extra:
                     x, y, side = sorted(extra)[0]
                     self.add_error(file_path, f"Complete room '{room_id}' declares non-exposed {side} boundary edge at z {z} [{x}, {y}].")
+
+        validated_buildings = []
+        seen_building_ids: Set[str] = set()
+        for idx, building in enumerate(buildings):
+            context = f"Building at index {idx}"
+            if not isinstance(building, dict):
+                self.add_error(file_path, f"{context} is not an object.")
+                continue
+            unknown_fields = sorted(set(building) - BUILDING_FIELDS)
+            if unknown_fields:
+                self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
+            for field in BUILDING_FIELDS:
+                if field not in building:
+                    self.add_error(file_path, f"{context} is missing required field '{field}'.")
+            building_id = building.get('id')
+            if not isinstance(building_id, str) or not building_id:
+                self.add_error(file_path, f"{context} has invalid or missing ID.")
+            elif building_id in seen_building_ids:
+                self.add_error(file_path, f"Duplicate building ID detected: '{building_id}'")
+            else:
+                seen_building_ids.add(building_id)
+            building_rooms = building.get('rooms')
+            rooms_valid = isinstance(building_rooms, list) and bool(building_rooms)
+            if not rooms_valid:
+                self.add_error(file_path, f"{context} rooms must name at least one room.")
+                building_rooms = []
+            elif len(building_rooms) != len(set(building_rooms)):
+                self.add_error(file_path, f"{context} rooms must not duplicate room IDs.")
+            for room_id in building_rooms:
+                if not isinstance(room_id, str) or room_id not in room_ids:
+                    self.add_error(file_path, f"{context} references non-existent room '{room_id}'.")
+                    rooms_valid = False
+            footprint = building.get('footprint')
+            footprint_valid = isinstance(footprint, dict) and set(footprint) == BUILDING_FOOTPRINT_FIELDS
+            if not footprint_valid:
+                self.add_error(file_path, f"{context} footprint must define x, y, width, and height.")
+                footprint = {}
+            x, y, width, height = (footprint.get(field) for field in ('x', 'y', 'width', 'height'))
+            if (
+                not all(type(value) is int for value in (x, y, width, height))
+                or width is None or height is None or width <= 0 or height <= 0
+            ):
+                self.add_error(file_path, f"{context} footprint must use positive integer width and height.")
+                footprint_valid = False
+            elif x < 0 or y < 0 or x + width > MAP_WIDTH or y + height > MAP_HEIGHT:
+                self.add_error(file_path, f"{context} footprint must fit within map bounds.")
+                footprint_valid = False
+            z = building.get('z')
+            z_valid = type(z) is int and -10 <= z <= 10
+            if not z_valid:
+                self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
+            if (
+                isinstance(building_id, str) and building_id
+                and rooms_valid and footprint_valid and z_valid
+            ):
+                validated_buildings.append(building)
+
+        room_definitions = {
+            room['id']: room for room in rooms
+            if isinstance(room, dict) and isinstance(room.get('id'), str)
+        }
+        for index, building in enumerate(validated_buildings):
+            context = f"Building at index {index}"
+            footprint = building['footprint']
+            z = building['z']
+            for other in validated_buildings[:index]:
+                if other['z'] != z:
+                    continue
+                left, right = footprint, other['footprint']
+                overlaps = not (
+                    left['x'] + left['width'] <= right['x']
+                    or right['x'] + right['width'] <= left['x']
+                    or left['y'] + left['height'] <= right['y']
+                    or right['y'] + right['height'] <= left['y']
+                )
+                if overlaps:
+                    self.add_error(file_path, f"{context} overlaps building '{other['id']}' at z {z}.")
+            if not any(
+                room_definitions[room_id].get('kind') == 'enclosed'
+                and room_definitions[room_id].get('boundary_validation') == 'complete'
+                for room_id in building['rooms']
+            ):
+                self.add_error(file_path, f"{context} requires an enclosed room with boundary_validation 'complete'.")
+            for room_id in building['rooms']:
+                memberships = []
+                for level_index, level in enumerate(levels if isinstance(levels, list) else []):
+                    if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
+                        continue
+                    for tile_index, tile in enumerate(level):
+                        if isinstance(tile, dict) and tile.get('rooms') == [room_id]:
+                            memberships.append((level_index - 10, tile_index % MAP_WIDTH, tile_index // MAP_WIDTH))
+                if not memberships:
+                    self.add_error(file_path, f"{context} room '{room_id}' has no membership at z {z}.")
+                    continue
+                for membership_z, x, y in memberships:
+                    if membership_z != z:
+                        self.add_error(file_path, f"{context} room '{room_id}' has membership outside building z {z}.")
+                    elif not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
+                        self.add_error(file_path, f"{context} room '{room_id}' membership at [{x}, {y}] is outside building footprint.")
+                for boundary in validated_room_boundaries:
+                    if boundary['room'] == room_id and boundary['z'] == z:
+                        x, y = boundary['at']
+                        if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
+                            self.add_error(file_path, f"{context} room boundary '{boundary['id']}' is outside building footprint.")
+                for connection in validated_room_connections:
+                    names_room = any(endpoint.get('kind') == 'room' and endpoint.get('id') == room_id for endpoint in (connection['from'], connection['to']))
+                    if connection['z'] == z and names_room:
+                        x, y = connection['at']
+                        if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
+                            self.add_error(file_path, f"{context} room connection '{connection['id']}' is outside building footprint.")
 
     def run(self, path: str):
         if os.path.isdir(path):

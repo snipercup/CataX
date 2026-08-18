@@ -96,6 +96,7 @@ var areas: Array = []
 var rooms: Array = []
 var room_connections: Array = []
 var room_boundaries: Array = []
+var buildings: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -151,6 +152,7 @@ func set_data(newdata: Dictionary) -> void:
 	rooms = newdata.get("rooms", [])
 	room_connections = newdata.get("room_connections", [])
 	room_boundaries = newdata.get("room_boundaries", [])
+	buildings = newdata.get("buildings", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -174,6 +176,8 @@ func get_data() -> Dictionary:
 		mydata["room_connections"] = room_connections
 	if not room_boundaries.is_empty():
 		mydata["room_boundaries"] = room_boundaries
+	if not buildings.is_empty():
+		mydata["buildings"] = buildings
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
@@ -182,6 +186,7 @@ func get_data() -> Dictionary:
 	_sanitize_room_references(mydata)
 	_sanitize_room_connections(mydata)
 	_sanitize_room_boundaries(mydata)
+	_sanitize_buildings(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -300,6 +305,38 @@ func _sanitize_room_boundaries(data: Dictionary) -> void:
 	)
 	if data["room_boundaries"].is_empty():
 		data.erase("room_boundaries")
+
+
+func _sanitize_buildings(data: Dictionary) -> void:
+	if not data.has("buildings") or not data["buildings"] is Array:
+		return
+
+	var valid_room_ids: Array[String] = []
+	if data.has("rooms") and data["rooms"] is Array:
+		for room in data["rooms"]:
+			if room is Dictionary and room.has("id") and room["id"] is String:
+				valid_room_ids.append(room["id"])
+
+	data["buildings"] = data["buildings"].filter(func(building):
+		if not building is Dictionary \
+			or not building.has("id") \
+			or not building["id"] is String \
+			or building["id"].is_empty() \
+			or not building.has("rooms") \
+			or not building["rooms"] is Array \
+			or building["rooms"].is_empty() \
+			or not building.has("footprint") \
+			or not building["footprint"] is Dictionary \
+			or not building.has("z") \
+			or not building["z"] is int:
+			return false
+		for room_id in building["rooms"]:
+			if not room_id is String or room_id not in valid_room_ids:
+				return false
+		return true
+	)
+	if data["buildings"].is_empty():
+		data.erase("buildings")
 
 
 func load_data_from_disk():
