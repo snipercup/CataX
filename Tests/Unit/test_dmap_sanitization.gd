@@ -255,3 +255,34 @@ func test_dmap_building_surfaces_roundtrip_and_sanitization():
 	assert_eq(data["building_surfaces"], [
 		{"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
 	])
+
+
+func test_dmap_building_compositions_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_building_compositions", "/tmp/", null)
+	map.set_data({
+		"name": "Building compositions",
+		"description": "Preserve authored overhead requirements.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
+		],
+		"buildings": [{
+			"id": "office_building",
+			"rooms": ["office"],
+			"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+			"z": 0,
+		}],
+		"building_compositions": [
+			{"id": "office_complete_overhead", "building": "office_building", "required_surfaces": ["roof", "ceiling"]},
+			{"id": "stale_composition", "building": "missing_building", "required_surfaces": ["roof"]},
+		],
+		"levels": [[
+			{"id": "concrete_00"},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["building_compositions"], [
+		{"id": "office_complete_overhead", "building": "office_building", "required_surfaces": ["roof", "ceiling"]},
+	])

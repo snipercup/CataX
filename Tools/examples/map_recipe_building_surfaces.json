@@ -19,6 +19,9 @@
 		{"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
 		{"id": "office_ceiling", "building": "office_building", "kind": "ceiling", "z": 1}
 	],
+	"building_compositions": [
+		{"id": "office_complete_overhead", "building": "office_building", "required_surfaces": ["roof", "ceiling"]}
+	],
 	"room_connections": [
 		{
 			"id": "office_front_door",

@@ -82,6 +82,7 @@ BUILDING_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
 BUILDING_SURFACE_FIELDS = {"id", "building", "kind", "z"}
 BUILDING_SURFACE_KINDS = {"roof", "ceiling"}
+BUILDING_COMPOSITION_FIELDS = {"id", "building", "required_surfaces"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -98,6 +99,7 @@ RECIPE_FIELDS = {
     "room_boundaries",
     "buildings",
     "building_surfaces",
+    "building_compositions",
     "patterns",
     "regions",
     "operations",
@@ -1149,6 +1151,64 @@ def _validate_recipe_building_surfaces(
     return validated
 
 
+def _validate_recipe_building_compositions(
+    compositions: Any,
+    buildings: list[dict[str, Any]],
+    surfaces: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not isinstance(compositions, list):
+        raise RecipeError("building_compositions must be an array")
+    building_ids = {building["id"] for building in buildings}
+    surface_kinds_by_building: dict[str, set[str]] = {}
+    for surface in surfaces:
+        surface_kinds_by_building.setdefault(surface["building"], set()).add(surface["kind"])
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    seen_buildings: set[str] = set()
+    for index, composition in enumerate(compositions):
+        context = f"building_compositions[{index}]"
+        if not isinstance(composition, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(composition) - BUILDING_COMPOSITION_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(composition) != BUILDING_COMPOSITION_FIELDS:
+            raise RecipeError(f"{context} must define id, building, and required_surfaces")
+        composition_id = composition["id"]
+        if not isinstance(composition_id, str) or not composition_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(composition_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(composition_id) is None:
+            raise RecipeError(f"{context}.id may contain only letters, numbers, underscores, and hyphens")
+        if composition_id in seen_ids:
+            raise RecipeError(f"duplicate building composition ID '{composition_id}'")
+        seen_ids.add(composition_id)
+        building_id = composition["building"]
+        if not isinstance(building_id, str) or building_id not in building_ids:
+            raise RecipeError(f"{context}.building references unknown building '{building_id}'")
+        if building_id in seen_buildings:
+            raise RecipeError(f"{context} duplicates composition for building '{building_id}'")
+        seen_buildings.add(building_id)
+        required_surfaces = composition["required_surfaces"]
+        if not isinstance(required_surfaces, list) or not required_surfaces:
+            raise RecipeError(f"{context}.required_surfaces must require at least one surface kind")
+        if any(kind not in BUILDING_SURFACE_KINDS for kind in required_surfaces):
+            unsupported_kind = next(kind for kind in required_surfaces if kind not in BUILDING_SURFACE_KINDS)
+            raise RecipeError(f"{context}.required_surfaces has unsupported surface kind '{unsupported_kind}'")
+        if len(required_surfaces) != len(set(required_surfaces)):
+            raise RecipeError(f"{context}.required_surfaces must not duplicate surface kinds")
+        surface_kinds = surface_kinds_by_building.get(building_id, set())
+        for kind in required_surfaces:
+            if kind not in surface_kinds:
+                raise RecipeError(f"{context} requires {kind} surface for building '{building_id}'")
+        validated.append({
+            "id": composition_id,
+            "building": building_id,
+            "required_surfaces": required_surfaces,
+        })
+    return validated
+
+
 def _point_in_building_footprint(x: int, y: int, footprint: dict[str, int]) -> bool:
     return (
         footprint["x"] <= x < footprint["x"] + footprint["width"]
@@ -1862,6 +1922,9 @@ def generate_map(
     building_surfaces = _validate_recipe_building_surfaces(
         recipe.get("building_surfaces", []), buildings
     )
+    building_compositions = _validate_recipe_building_compositions(
+        recipe.get("building_compositions", []), buildings, building_surfaces
+    )
     room_connections = _validate_recipe_room_connections(
         recipe.get("room_connections", []), known_room_ids
     )
@@ -1920,6 +1983,8 @@ def generate_map(
         generated["buildings"] = buildings
     if building_surfaces:
         generated["building_surfaces"] = building_surfaces
+    if building_compositions:
+        generated["building_compositions"] = building_compositions
     return generated
 
 

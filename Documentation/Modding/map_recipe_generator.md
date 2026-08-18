@@ -402,6 +402,26 @@ Each record has exactly `id`, `building`, `kind`, and `z`. `id` is unique; `buil
 
 `roof` and `ceiling` are separate authored classifications and may both be present for one building. They do not place tiles on their `z`, create a roof or ceiling mesh, imply collision/support, change lighting/weather, mark rooms indoors, or make overhead cells occupied. `DMap` preserves valid records and removes surfaces whose referenced building is deleted; generator and standalone validation enforce the strict reference, uniqueness, and z relationship.
 
+### `building_compositions`
+
+`building_compositions` is an opt-in, data-only assertion that an existing building contains the named authored overhead classifications:
+
+```json
+{
+  "building_compositions": [
+    {
+      "id": "office_complete_overhead",
+      "building": "office_building",
+      "required_surfaces": ["roof", "ceiling"]
+    }
+  ]
+}
+```
+
+Each record has exactly `id`, `building`, and nonempty `required_surfaces`. `id` is unique; one composition may target each building; `building` must name an existing root `buildings` record; and every required surface kind must be unique and exactly `roof` or `ceiling`. Each named kind must have a matching valid `building_surfaces` record for the same building. This is opt-in: a building without a composition remains valid, and composition does not require all supported kinds unless its author lists them.
+
+Compositions add no geometry or runtime behavior. They only validate authored cross-record consistency; they do not infer indoor status, surface coverage, support, or the presence of any roof/ceiling tiles or meshes. `DMap` preserves valid records and removes ones that reference deleted buildings.
+
 No generalized templates, polygons, multi-level building records, furniture anchors, or generation operations are introduced.
 
 ### `set`
