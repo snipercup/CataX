@@ -623,9 +623,9 @@ Authored room semantics use a separate map-level `rooms` array plus exclusive ti
 
 An `enclosed` room may add `boundary_validation: "complete"`. Only this opt-in mode requires directional evidence and validates every exposed cardinal edge of every room-membership tile: exactly one wall or connected-door boundary must map to each edge. Missing, incorrectly oriented, duplicate, and non-exposed declarations are rejected. `covered_open` and `ruin` cannot opt in, so their intentional openings and damage remain valid without blanket enclosure requirements.
 
-The generator, standalone map validator, and `DMap` save/load path validate or preserve definitions and references. No topology inference, wall/roof generation, indoor weather/lighting, or geometry generation is introduced yet.
+The generator, standalone map validator, and `DMap` save/load path validate or preserve definitions and references. A first `buildings` root field now groups existing room content under one explicit, data-only rectangular footprint at one logical z. Each record names a nonempty set of known rooms, requires every owned membership, boundary target, and named door-connection target to sit inside its bounds, disallows same-level overlap, and requires at least one owned `enclosed` room with complete boundary validation. `Tools/examples/map_recipe_single_level_building.json` provides a 4×4 `office_building` containing the already-proven office, its seven wall tiles, and exterior door. The footprint does not generate or modify geometry, furniture, roofs, collision, navigation, lighting, weather, or indoor state; it only gives authored validated evidence a first building-level grouping.
 
-This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, building footprints, anchors, or generalized templates.
+This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, roof/ceiling semantics, multi-level building records, furniture anchors, or generalized templates.
 
 Capabilities:
 
@@ -860,7 +860,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, and opt-in enclosed-room completeness validation are complete. The next contribution should use that validated authored input for one small single-level building footprint without introducing generalized templates.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, and first single-level authored footprint are complete. The next contribution should add one narrow authored roof/ceiling semantic contract for the validated footprint without introducing multi-level structures or generalized templates.
 
 Do not yet generate walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
@@ -901,7 +901,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Explicit room-to-exterior and room-to-room door-link metadata
 [Complete] Authored existing-wall and connected-door boundary references
 [Complete] Opt-in directional completeness validation for `enclosed` rooms
-[Next]     Small single-level authored building footprint
+[Complete] Small single-level authored building footprint
+[Next]     Authored roof/ceiling semantics for validated footprints
 [Planned]  Rooms and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

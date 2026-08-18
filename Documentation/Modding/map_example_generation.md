@@ -29,6 +29,7 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_room_semantics.json` | `Mods/Dimensionfall/Maps/generated_room_semantics.json` | Authored `enclosed`, `covered_open`, and `ruin` room labels on terrain without generated walls, doors, roofs, or indoor runtime behavior. |
 | `Tools/examples/map_recipe_room_connections.json` | `Mods/Dimensionfall/Maps/generated_room_connections.json` | Existing `door_wood` features with explicit room-to-exterior and room-to-room semantic links, without inferred topology or new runtime door behavior. |
 | `Tools/examples/map_recipe_room_boundaries.json` | `Mods/Dimensionfall/Maps/generated_room_boundaries.json` | A complete opt-in `enclosed` office with directional existing `brick_wall_00`/`door_wood` evidence, plus deliberately partial `covered_open` and `ruin` room references. |
+| `Tools/examples/map_recipe_single_level_building.json` | `Mods/Dimensionfall/Maps/generated_single_level_building.json` | One data-only rectangular `office_building` footprint containing the complete authored office and its existing wall/door evidence at logical `z: 0`. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 
@@ -82,6 +83,11 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_room_boundaries.json \
   Mods/Dimensionfall/Maps/generated_room_boundaries.json
 
+# Ground-level single-level authored building footprint
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_single_level_building.json \
+  Mods/Dimensionfall/Maps/generated_single_level_building.json
+
 # Two-level hill
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_two_level_hill.json \
@@ -112,6 +118,7 @@ rm Mods/Dimensionfall/Maps/generated_area_entity_clearing.json
 rm Mods/Dimensionfall/Maps/generated_room_semantics.json
 rm Mods/Dimensionfall/Maps/generated_room_connections.json
 rm Mods/Dimensionfall/Maps/generated_room_boundaries.json
+rm Mods/Dimensionfall/Maps/generated_single_level_building.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
 rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
 ```
@@ -188,6 +195,8 @@ For the maintained room-semantics map, inspect `generated_room_semantics` in the
 For the maintained room-connections map, open `generated_room_connections`, save it, close it, and re-open it. Confirm that `office_front_door` remains an `office`→`exterior` link and `office_to_garage` remains an `office`→`garage_bay` link. In map preview and **save and test**, verify both existing `door_wood` features load and retain normal open/close interaction. This metadata must not create walls, roofs, lighting, weather, automatic enclosure, or a different door runtime behavior.
 
 For the maintained room-boundaries map, open `generated_room_boundaries`, save it, close it, and re-open it. Confirm that `office` retains `boundary_validation: "complete"`, its eight directed boundary records retain their cardinal `side`, and the office’s seven existing `brick_wall_00` tiles plus one existing `door_wood` feature remain present. The partial garage and ruin records deliberately have no completeness requirement. **Save and test** should confirm normal loading and existing door interaction only: this validation adds no geometry, collision, navigation, lighting, weather, or indoor behavior.
+
+For the maintained single-level building map, open `generated_single_level_building`, save it, close it, and re-open it. Confirm the root `buildings` array retains `office_building` with its `office` room list, `[7, 7]` `4×4` footprint, and logical `z: 0`. Confirm the existing seven `brick_wall_00` tiles and one `door_wood` opening still load and retain normal interaction. The footprint is metadata only: **save and test** must not produce new terrain, walls, roofs, collision, navigation, lighting, weather, or indoor behavior.
 
 Dimensionfall also looks for a same-named `.png` map sprite during startup. The runner intentionally generates map JSON only, so Godot currently logs a non-fatal missing-resource error for that sprite. This does not prevent the JSON map from loading or the map editor's tile-grid preview from rendering it.
 

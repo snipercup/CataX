@@ -362,6 +362,29 @@ An `enclosed` room may opt in to strict completeness by adding `"boundary_valida
 
 Boundary metadata preserves existing terrain, furniture, rotation, collision, and runtime door behavior. `DMap` preserves it through content-editor save/load and removes records naming deleted rooms. It does not create walls or openings, infer a door from rotation, change navigation, or add indoor/outdoor effects.
 
+### `buildings`
+
+`buildings` groups existing authored room evidence into one explicit, rectangular single-level building footprint. It does not generate terrain, walls, doors, roofs, furniture, tile-local memberships, or indoor runtime state:
+
+```json
+{
+  "buildings": [
+    {
+      "id": "office_building",
+      "rooms": ["office"],
+      "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+      "z": 0
+    }
+  ]
+}
+```
+
+Each record has exactly `id`, `rooms`, `footprint`, and `z`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+
+Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
+
+`DMap` preserves building records through editor save/load and removes records whose room list becomes stale. The standalone validator performs strict shape, containment, same-level overlap, and complete-enclosed-room checks. No generalized templates, polygons, multi-level building records, roof/ceiling semantics, furniture anchors, or generation operations are introduced.
+
 ### `set`
 
 Places one tile. Fields: `type`, `x`, `y`, `tile`, and optional root-level `z`.

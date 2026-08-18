@@ -1606,6 +1606,76 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["rooms"], recipe["rooms"])
         self.assertEqual(generated["room_boundaries"], recipe["room_boundaries"])
 
+    def test_buildings_validate_strict_schema_and_preserve_authored_record(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        building = {
+            "id": "office_building",
+            "rooms": ["office"],
+            "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+            "z": 0,
+        }
+        recipe["buildings"] = [building]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["buildings"], [building])
+
+        invalid_cases = [
+            ("not-an-array", "buildings must be an array"),
+            ([{**building, "extra": True}], r"unknown buildings\[0\] field 'extra'"),
+            ([{**building, "rooms": []}], "must name at least one room"),
+            ([{**building, "rooms": ["missing"]}], "references unknown room 'missing'"),
+            ([{**building, "footprint": {"x": 30, "y": 30, "width": 4, "height": 4}}], "must fit within map bounds"),
+            ([{**building, "z": 11}], "must be an integer from -10 through 10"),
+        ]
+        for buildings, message in invalid_cases:
+            with self.subTest(buildings=buildings):
+                invalid_recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+                invalid_recipe["buildings"] = buildings
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(invalid_recipe, TILES_PATH)
+
+    def test_buildings_require_contained_complete_enclosed_room_content(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        building = {
+            "id": "office_building",
+            "rooms": ["office"],
+            "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+            "z": 0,
+        }
+        recipe["buildings"] = [building]
+        self.assertEqual(generate_map(recipe, TILES_PATH)["buildings"], [building])
+
+        cases = [
+            ({**building, "footprint": {"x": 8, "y": 8, "width": 2, "height": 2}}, "outside building footprint"),
+            ({**building, "rooms": ["garage_bay"]}, "requires an enclosed room with boundary_validation 'complete'"),
+            ({**building, "z": 1}, "has membership outside building z 1"),
+            ([building, {**building, "id": "overlap", "footprint": {"x": 10, "y": 7, "width": 2, "height": 4}}], "overlaps building 'office_building'"),
+        ]
+        for buildings, message in cases:
+            with self.subTest(buildings=buildings):
+                invalid_recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+                invalid_recipe["buildings"] = buildings if isinstance(buildings, list) else [buildings]
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(invalid_recipe, TILES_PATH)
+
+    def test_single_level_building_example_preserves_contained_existing_content(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_single_level_building.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(generated["id"], "generated_single_level_building")
+        self.assertEqual(generated["buildings"], [{
+            "id": "office_building",
+            "rooms": ["office"],
+            "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+            "z": 0,
+        }])
+        level = generated["levels"][10]
+        self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
+        self.assertEqual(level[9 * 32 + 8]["feature"]["id"], "door_wood")
+
     def test_complete_enclosed_room_rejects_missing_or_wrong_directional_boundaries(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
 
@@ -2290,6 +2360,32 @@ class MapValidatorDimensionTests(unittest.TestCase):
         non_enclosed["rooms"][0]["kind"] = "covered_open"
         errors = self.validate(non_enclosed)
         self.assertTrue(any("only supported for enclosed rooms" in error for error in errors))
+    def test_validates_single_level_building_footprint_contract(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"] = [{
+            "id": "office_building",
+            "rooms": ["office"],
+            "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+            "z": 0,
+        }]
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        malformed = json.loads(json.dumps(valid_map))
+        malformed["buildings"][0]["rooms"] = ["missing"]
+        errors = self.validate(malformed)
+        self.assertTrue(any("references non-existent room 'missing'" in error for error in errors))
+
+        incomplete = json.loads(json.dumps(valid_map))
+        incomplete["buildings"][0]["footprint"] = {"x": 8, "y": 8, "width": 2, "height": 2}
+        errors = self.validate(incomplete)
+        self.assertTrue(any("outside building footprint" in error for error in errors))
+
+        missing_complete_room = json.loads(json.dumps(valid_map))
+        missing_complete_room["buildings"][0]["rooms"] = ["garage_bay"]
+        errors = self.validate(missing_complete_room)
+        self.assertTrue(any("requires an enclosed room with boundary_validation 'complete'" in error for error in errors))
 
 
 if __name__ == "__main__":
