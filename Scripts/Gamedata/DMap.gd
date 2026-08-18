@@ -98,6 +98,7 @@ var room_connections: Array = []
 var room_boundaries: Array = []
 var buildings: Array = []
 var building_surfaces: Array = []
+var building_compositions: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -155,6 +156,7 @@ func set_data(newdata: Dictionary) -> void:
 	room_boundaries = newdata.get("room_boundaries", [])
 	buildings = newdata.get("buildings", [])
 	building_surfaces = newdata.get("building_surfaces", [])
+	building_compositions = newdata.get("building_compositions", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -182,6 +184,8 @@ func get_data() -> Dictionary:
 		mydata["buildings"] = buildings
 	if not building_surfaces.is_empty():
 		mydata["building_surfaces"] = building_surfaces
+	if not building_compositions.is_empty():
+		mydata["building_compositions"] = building_compositions
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
@@ -192,6 +196,7 @@ func get_data() -> Dictionary:
 	_sanitize_room_boundaries(mydata)
 	_sanitize_buildings(mydata)
 	_sanitize_building_surfaces(mydata)
+	_sanitize_building_compositions(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -369,6 +374,32 @@ func _sanitize_building_surfaces(data: Dictionary) -> void:
 	)
 	if data["building_surfaces"].is_empty():
 		data.erase("building_surfaces")
+
+
+func _sanitize_building_compositions(data: Dictionary) -> void:
+	if not data.has("building_compositions") or not data["building_compositions"] is Array:
+		return
+
+	var valid_building_ids: Array[String] = []
+	if data.has("buildings") and data["buildings"] is Array:
+		for building in data["buildings"]:
+			if building is Dictionary and building.has("id") and building["id"] is String:
+				valid_building_ids.append(building["id"])
+
+	data["building_compositions"] = data["building_compositions"].filter(func(composition):
+		return composition is Dictionary \
+			and composition.has("id") \
+			and composition["id"] is String \
+			and not composition["id"].is_empty() \
+			and composition.has("building") \
+			and composition["building"] is String \
+			and composition["building"] in valid_building_ids \
+			and composition.has("required_surfaces") \
+			and composition["required_surfaces"] is Array \
+			and not composition["required_surfaces"].is_empty()
+	)
+	if data["building_compositions"].is_empty():
+		data.erase("building_compositions")
 
 
 func load_data_from_disk():

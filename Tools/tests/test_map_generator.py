@@ -1675,8 +1675,48 @@ class MapGeneratorTests(unittest.TestCase):
             {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
             {"id": "office_ceiling", "building": "office_building", "kind": "ceiling", "z": 1},
         ])
+        self.assertEqual(generated["building_compositions"], [{
+            "id": "office_complete_overhead",
+            "building": "office_building",
+            "required_surfaces": ["roof", "ceiling"],
+        }])
         self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+
+    def test_building_compositions_require_declared_surface_kinds(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        composition = {
+            "id": "office_complete_overhead",
+            "building": "office_building",
+            "required_surfaces": ["roof", "ceiling"],
+        }
+        recipe["building_compositions"] = [composition]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["building_compositions"], [composition])
+
+        invalid_cases = [
+            ("not-an-array", "building_compositions must be an array"),
+            ([{**composition, "extra": True}], r"unknown building_compositions\[0\] field 'extra'"),
+            ([{**composition, "building": "missing"}], "references unknown building 'missing'"),
+            ([{**composition, "required_surfaces": []}], "must require at least one surface kind"),
+            ([{**composition, "required_surfaces": ["roof", "roof"]}], "must not duplicate surface kinds"),
+            ([{**composition, "required_surfaces": ["awning"]}], "has unsupported surface kind 'awning'"),
+        ]
+        for compositions, message in invalid_cases:
+            with self.subTest(compositions=compositions):
+                invalid_recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+                invalid_recipe["building_compositions"] = compositions
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(invalid_recipe, TILES_PATH)
+
+        missing_surface = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_surface["building_surfaces"] = [missing_surface["building_surfaces"][0]]
+        missing_surface["building_compositions"] = [composition]
+        with self.assertRaisesRegex(RecipeError, "requires ceiling surface for building 'office_building'"):
+            generate_map(missing_surface, TILES_PATH)
 
     def test_buildings_require_contained_complete_enclosed_room_content(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
@@ -2428,6 +2468,36 @@ class MapValidatorDimensionTests(unittest.TestCase):
         invalid_kind["building_surfaces"][0]["kind"] = "awning"
         errors = self.validate(invalid_kind)
         self.assertTrue(any("unsupported kind 'awning'" in error for error in errors))
+
+    def test_validates_building_composition_constraints(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        valid_map = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+        valid_map["building_compositions"] = [{
+            "id": "office_complete_overhead",
+            "building": "office_building",
+            "required_surfaces": ["roof", "ceiling"],
+        }]
+        self.assertEqual(self.validate(valid_map), [])
+
+        missing_surface = json.loads(json.dumps(valid_map))
+        missing_surface["building_surfaces"] = [missing_surface["building_surfaces"][0]]
+        errors = self.validate(missing_surface)
+        self.assertTrue(any("requires ceiling surface for building 'office_building'" in error for error in errors))
+
+        unknown_building = json.loads(json.dumps(valid_map))
+        unknown_building["building_compositions"][0]["building"] = "missing"
+        errors = self.validate(unknown_building)
+        self.assertTrue(any("references non-existent building 'missing'" in error for error in errors))
+
+        non_string_building = json.loads(json.dumps(valid_map))
+        non_string_building["building_compositions"][0]["building"] = ["office_building"]
+        errors = self.validate(non_string_building)
+        self.assertTrue(any("references non-existent building '['office_building']'" in error for error in errors))
+
+        duplicate_requirement = json.loads(json.dumps(valid_map))
+        duplicate_requirement["building_compositions"][0]["required_surfaces"] = ["roof", "roof"]
+        errors = self.validate(duplicate_requirement)
+        self.assertTrue(any("must not duplicate surface kinds" in error for error in errors))
 
     def test_validates_single_level_building_footprint_contract(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"

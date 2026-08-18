@@ -25,6 +25,7 @@ BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
 BUILDING_SURFACE_KINDS = {'roof', 'ceiling'}
+BUILDING_COMPOSITION_FIELDS = {'id', 'building', 'required_surfaces'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -144,6 +145,10 @@ class MapValidator:
         if not isinstance(building_surfaces, list):
             self.add_error(file_path, "top-level building_surfaces must be an array.")
             building_surfaces = []
+        building_compositions = data.get('building_compositions', [])
+        if not isinstance(building_compositions, list):
+            self.add_error(file_path, "top-level building_compositions must be an array.")
+            building_compositions = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -829,6 +834,56 @@ class MapValidator:
                 self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
             elif building is not None and z != building['z'] + 1:
                 self.add_error(file_path, f"{context} z must be immediately above building '{building_id}' at z {building['z'] + 1}.")
+
+        surface_kinds_by_building: Dict[str, Set[str]] = {}
+        for surface in building_surfaces:
+            if not isinstance(surface, dict):
+                continue
+            building_id = surface.get('building')
+            kind = surface.get('kind')
+            if isinstance(building_id, str) and building_id in building_by_id and kind in BUILDING_SURFACE_KINDS:
+                surface_kinds_by_building.setdefault(building_id, set()).add(kind)
+        seen_composition_ids: Set[str] = set()
+        seen_composition_buildings: Set[str] = set()
+        for idx, composition in enumerate(building_compositions):
+            context = f"Building composition at index {idx}"
+            if not isinstance(composition, dict):
+                self.add_error(file_path, f"{context} is not an object.")
+                continue
+            unknown_fields = sorted(set(composition) - BUILDING_COMPOSITION_FIELDS)
+            if unknown_fields:
+                self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
+            for field in BUILDING_COMPOSITION_FIELDS:
+                if field not in composition:
+                    self.add_error(file_path, f"{context} is missing required field '{field}'.")
+            composition_id = composition.get('id')
+            if not isinstance(composition_id, str) or not composition_id:
+                self.add_error(file_path, f"{context} has invalid or missing ID.")
+            elif composition_id in seen_composition_ids:
+                self.add_error(file_path, f"Duplicate building composition ID detected: '{composition_id}'")
+            else:
+                seen_composition_ids.add(composition_id)
+            building_id = composition.get('building')
+            if not isinstance(building_id, str) or building_id not in building_by_id:
+                self.add_error(file_path, f"{context} references non-existent building '{building_id}'.")
+            elif building_id in seen_composition_buildings:
+                self.add_error(file_path, f"{context} duplicates composition for building '{building_id}'.")
+            else:
+                seen_composition_buildings.add(building_id)
+            required_surfaces = composition.get('required_surfaces')
+            if not isinstance(required_surfaces, list) or not required_surfaces:
+                self.add_error(file_path, f"{context} must require at least one surface kind.")
+                continue
+            unsupported_kinds = [kind for kind in required_surfaces if kind not in BUILDING_SURFACE_KINDS]
+            if unsupported_kinds:
+                self.add_error(file_path, f"{context} has unsupported surface kind '{unsupported_kinds[0]}'.")
+            if len(required_surfaces) != len(set(required_surfaces)):
+                self.add_error(file_path, f"{context} must not duplicate surface kinds.")
+            if isinstance(building_id, str) and building_id in building_by_id:
+                surface_kinds = surface_kinds_by_building.get(building_id, set())
+                for kind in required_surfaces:
+                    if kind in BUILDING_SURFACE_KINDS and kind not in surface_kinds:
+                        self.add_error(file_path, f"{context} requires {kind} surface for building '{building_id}'.")
 
     def run(self, path: str):
         if os.path.isdir(path):

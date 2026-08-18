@@ -627,6 +627,8 @@ The generator, standalone map validator, and `DMap` save/load path validate or p
 
 `building_surfaces` now adds one narrow overhead semantic layer to that validated footprint. Each root record has a unique `id`, names one existing `building`, declares `kind` as `roof` or `ceiling`, and declares the immediately overhead logical level (`building.z + 1`). One building may carry one authored record of each kind; the records inherit the building rectangle rather than duplicate per-cell geometry. `Tools/examples/map_recipe_building_surfaces.json` demonstrates both classifications over `office_building` at `z: 1`. These records do not generate roof/ceiling tiles or meshes, mark any cell occupied or indoors, imply support/collision, or alter lighting, weather, or runtime behavior.
 
+`building_compositions` adds an opt-in cross-record constraint over the existing building and surface metadata. Each record has a unique `id`, names one existing `building`, and lists one or both required surface kinds (`roof`, `ceiling`); each named kind must already have a matching authored `building_surfaces` record. A building has at most one composition, while buildings without compositions remain valid. The maintained building-surfaces example asserts that `office_building` requires both its roof and ceiling classifications. This verifies authored consistency only: it creates no geometry, coverage, occupancy, support, indoor state, or runtime behavior.
+
 This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, multi-level building records, furniture anchors, or generalized templates.
 
 Capabilities:
@@ -862,7 +864,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, and narrow authored roof/ceiling metadata are complete. The next contribution should extend validated building content carefully without introducing multi-level structures or generalized templates.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, and opt-in building-level composition constraints are complete. The next contribution should extend validated building content carefully without introducing multi-level structures or generalized templates.
 
 Do not yet generate walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
@@ -905,7 +907,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Opt-in directional completeness validation for `enclosed` rooms
 [Complete] Small single-level authored building footprint
 [Complete] Authored roof/ceiling semantics for validated footprints
-[Next]     Validated building-level composition constraints
+[Complete] Validated building-level composition constraints
+[Next]     Authored building access-completeness validation
 [Planned]  Rooms and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition
