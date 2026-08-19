@@ -78,7 +78,7 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
@@ -1102,6 +1102,18 @@ def _validate_recipe_buildings(
             raise RecipeError(
                 f"{context}.access_validation has unsupported validation '{access_validation}'"
             )
+        interior_rooms = building.get("interior_rooms")
+        if interior_rooms is not None:
+            if not isinstance(interior_rooms, list) or not interior_rooms:
+                raise RecipeError(f"{context}.interior_rooms must name at least one room")
+            if any(not isinstance(room_id, str) or room_id not in known_room_ids for room_id in interior_rooms):
+                unknown_room = next(room_id for room_id in interior_rooms if not isinstance(room_id, str) or room_id not in known_room_ids)
+                raise RecipeError(f"{context}.interior_rooms references unknown room '{unknown_room}'")
+            if len(interior_rooms) != len(set(interior_rooms)):
+                raise RecipeError(f"{context}.interior_rooms must not duplicate room IDs")
+            if any(room_id not in room_ids for room_id in interior_rooms):
+                outside_room = next(room_id for room_id in interior_rooms if room_id not in room_ids)
+                raise RecipeError(f"{context}.interior_rooms room '{outside_room}' is not owned by the building")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1110,6 +1122,8 @@ def _validate_recipe_buildings(
         }
         if access_validation is not None:
             validated_building["access_validation"] = access_validation
+        if interior_rooms is not None:
+            validated_building["interior_rooms"] = interior_rooms
         validated.append(validated_building)
     return validated
 
@@ -1294,6 +1308,16 @@ def _validate_building_targets(
                         raise RecipeError(
                             f"{context} room connection '{connection['id']}' is outside building footprint"
                         )
+        if building.get("interior_rooms") is not None:
+            for room_id in building["interior_rooms"]:
+                room_definition = room_definitions[room_id]
+                if (
+                    room_definition["kind"] != "enclosed"
+                    or room_definition.get("boundary_validation") != "complete"
+                ):
+                    raise RecipeError(
+                        f"{context} interior room '{room_id}' must be enclosed with boundary_validation 'complete'"
+                    )
         if building.get("access_validation") == "complete":
             owned_rooms = set(building["rooms"])
             room_graph = {room_id: set() for room_id in owned_rooms}

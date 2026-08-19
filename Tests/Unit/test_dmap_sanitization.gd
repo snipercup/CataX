@@ -201,15 +201,17 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 				"z": 0,
 				"access_validation": "complete",
+				"interior_rooms": ["office"],
 			},
 			{
 				"rooms": ["office"],
 			},
 			{
-				"id": "stale_building",
-				"rooms": ["missing_room"],
-				"footprint": {"x": 12, "y": 7, "width": 4, "height": 4},
+				"id": "stale_interior_building",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 7, "width": 4, "height": 4},
 				"z": 0,
+				"interior_rooms": ["missing_room"],
 			},
 		],
 		"levels": [[
@@ -225,6 +227,7 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 		"z": 0,
 		"access_validation": "complete",
+		"interior_rooms": ["office"],
 	}])
 
 

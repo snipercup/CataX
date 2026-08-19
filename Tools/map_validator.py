@@ -21,7 +21,7 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
@@ -741,6 +741,18 @@ class MapValidator:
             access_validation = building.get('access_validation')
             if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
                 self.add_error(file_path, f"{context} access_validation has unsupported validation '{access_validation}'.")
+            interior_rooms = building.get('interior_rooms')
+            if interior_rooms is not None:
+                if not isinstance(interior_rooms, list) or not interior_rooms:
+                    self.add_error(file_path, f"{context} interior_rooms must name at least one room.")
+                else:
+                    if len(interior_rooms) != len(set(interior_rooms)):
+                        self.add_error(file_path, f"{context} interior_rooms must not duplicate room IDs.")
+                    for room_id in interior_rooms:
+                        if not isinstance(room_id, str) or room_id not in room_ids:
+                            self.add_error(file_path, f"{context} interior_rooms references unknown room '{room_id}'.")
+                        elif not isinstance(building_rooms, list) or room_id not in building_rooms:
+                            self.add_error(file_path, f"{context} interior_rooms room '{room_id}' is not owned by the building.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -800,6 +812,14 @@ class MapValidator:
                         x, y = connection['at']
                         if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
                             self.add_error(file_path, f"{context} room connection '{connection['id']}' is outside building footprint.")
+            if building.get('interior_rooms') is not None and isinstance(building.get('interior_rooms'), list):
+                for room_id in building['interior_rooms']:
+                    room_definition = room_definitions.get(room_id)
+                    if (
+                        isinstance(room_definition, dict)
+                        and (room_definition.get('kind') != 'enclosed' or room_definition.get('boundary_validation') != 'complete')
+                    ):
+                        self.add_error(file_path, f"{context} interior room '{room_id}' must be enclosed with boundary_validation 'complete'.")
             if building.get('access_validation') == 'complete':
                 owned_rooms = set(building['rooms'])
                 room_graph = {room_id: set() for room_id in owned_rooms}
