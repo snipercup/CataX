@@ -5,16 +5,18 @@
 	"seed": 20260818,
 	"base_tile": {"id": "grass_plain_01"},
 	"rooms": [
-		{"id": "office", "kind": "enclosed", "boundary_validation": "complete"}
+		{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
+		{"id": "garage_bay", "kind": "covered_open"}
 	],
 	"buildings": [
 		{
 			"id": "office_building",
-			"rooms": ["office"],
-			"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+			"rooms": ["office", "garage_bay"],
+			"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
 			"z": 0,
 			"access_validation": "complete",
-			"interior_rooms": ["office"]
+			"interior_rooms": ["office"],
+			"open_space_rooms": ["garage_bay"]
 		}
 	],
 	"building_surfaces": [
@@ -31,6 +33,13 @@
 			"z": 0,
 			"from": {"kind": "room", "id": "office"},
 			"to": {"kind": "exterior"}
+		},
+		{
+			"id": "garage_opening",
+			"at": [11, 8],
+			"z": 0,
+			"from": {"kind": "room", "id": "garage_bay"},
+			"to": {"kind": "exterior"}
 		}
 	],
 	"room_boundaries": [
@@ -46,6 +55,8 @@
 	"operations": [
 		{"type": "rectangle", "x": 8, "y": 8, "width": 2, "height": 2, "tile": {"id": "concrete_00"}},
 		{"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 2, "height": 2},
+		{"type": "set", "x": 11, "y": 8, "tile": {"id": "concrete_00"}},
+		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 1, "height": 1},
 		{"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 9, "y": 7, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 8, "y": 10, "tile": {"id": "brick_wall_00"}},
@@ -53,6 +64,7 @@
 		{"type": "set", "x": 7, "y": 8, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 10, "y": 8, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 10, "y": 9, "tile": {"id": "brick_wall_00"}},
-		{"type": "furniture", "id": "door_wood", "x": 8, "y": 9, "rotation": 0}
+		{"type": "furniture", "id": "door_wood", "x": 8, "y": 9, "rotation": 0},
+		{"type": "furniture", "id": "door_wood", "x": 11, "y": 8, "rotation": 0}
 	]
 }
