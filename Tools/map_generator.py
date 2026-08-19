@@ -78,7 +78,7 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
@@ -1114,6 +1114,20 @@ def _validate_recipe_buildings(
             if any(room_id not in room_ids for room_id in interior_rooms):
                 outside_room = next(room_id for room_id in interior_rooms if room_id not in room_ids)
                 raise RecipeError(f"{context}.interior_rooms room '{outside_room}' is not owned by the building")
+        open_space_rooms = building.get("open_space_rooms")
+        if open_space_rooms is not None:
+            if not isinstance(open_space_rooms, list) or not open_space_rooms:
+                raise RecipeError(f"{context}.open_space_rooms must name at least one room")
+            if any(not isinstance(room_id, str) or room_id not in known_room_ids for room_id in open_space_rooms):
+                unknown_room = next(room_id for room_id in open_space_rooms if not isinstance(room_id, str) or room_id not in known_room_ids)
+                raise RecipeError(f"{context}.open_space_rooms references unknown room '{unknown_room}'")
+            if len(open_space_rooms) != len(set(open_space_rooms)):
+                raise RecipeError(f"{context}.open_space_rooms must not duplicate room IDs")
+            if any(room_id not in room_ids for room_id in open_space_rooms):
+                outside_room = next(room_id for room_id in open_space_rooms if room_id not in room_ids)
+                raise RecipeError(f"{context}.open_space_rooms room '{outside_room}' is not owned by the building")
+            if interior_rooms is not None and set(open_space_rooms) & set(interior_rooms):
+                raise RecipeError(f"{context}.open_space_rooms must not overlap interior_rooms")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1124,6 +1138,8 @@ def _validate_recipe_buildings(
             validated_building["access_validation"] = access_validation
         if interior_rooms is not None:
             validated_building["interior_rooms"] = interior_rooms
+        if open_space_rooms is not None:
+            validated_building["open_space_rooms"] = open_space_rooms
         validated.append(validated_building)
     return validated
 
@@ -1317,6 +1333,13 @@ def _validate_building_targets(
                 ):
                     raise RecipeError(
                         f"{context} interior room '{room_id}' must be enclosed with boundary_validation 'complete'"
+                    )
+        if building.get("open_space_rooms") is not None:
+            for room_id in building["open_space_rooms"]:
+                room_definition = room_definitions[room_id]
+                if room_definition["kind"] not in {"covered_open", "ruin"}:
+                    raise RecipeError(
+                        f"{context} open-space room '{room_id}' must be covered_open or ruin"
                     )
         if building.get("access_validation") == "complete":
             owned_rooms = set(building["rooms"])
