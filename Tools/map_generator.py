@@ -78,8 +78,9 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
+BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {"complete"}
 BUILDING_OVERHEAD_VALIDATIONS = {"complete"}
@@ -1143,6 +1144,21 @@ def _validate_recipe_buildings(
             raise RecipeError(
                 f"{context}.overhead_validation has unsupported validation '{overhead_validation}'"
             )
+        exterior_context = building.get("exterior_context")
+        if exterior_context is not None:
+            if not isinstance(exterior_context, dict) or set(exterior_context) != BUILDING_EXTERIOR_CONTEXT_FIELDS:
+                raise RecipeError(f"{context}.exterior_context must define at and z")
+            at = exterior_context["at"]
+            if (
+                not isinstance(at, list)
+                or len(at) != 2
+                or any(type(value) is not int for value in at)
+                or not 0 <= at[0] < MAP_WIDTH
+                or not 0 <= at[1] < MAP_HEIGHT
+            ):
+                raise RecipeError(f"{context}.exterior_context.at must be within map bounds as a two-integer array")
+            if type(exterior_context["z"]) is not int or exterior_context["z"] != z:
+                raise RecipeError(f"{context}.exterior_context.z must use building z {z}")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1159,6 +1175,8 @@ def _validate_recipe_buildings(
             validated_building["room_partition_validation"] = room_partition_validation
         if overhead_validation is not None:
             validated_building["overhead_validation"] = overhead_validation
+        if exterior_context is not None:
+            validated_building["exterior_context"] = exterior_context
         validated.append(validated_building)
     return validated
 
@@ -1361,6 +1379,22 @@ def _validate_building_targets(
                     raise RecipeError(
                         f"{context} open-space room '{room_id}' must be covered_open or ruin"
                     )
+        if building.get("exterior_context") is not None:
+            context_x, context_y = building["exterior_context"]["at"]
+            if _point_in_building_footprint(context_x, context_y, footprint):
+                raise RecipeError(f"{context}.exterior_context must be outside the building footprint")
+            adjacent = any(
+                _point_in_building_footprint(context_x + dx, context_y + dy, footprint)
+                for dx, dy in CARDINAL_SIDES.values()
+            )
+            if not adjacent:
+                raise RecipeError(f"{context}.exterior_context must be cardinally adjacent to the building footprint")
+            level = levels[_level_index(z)]
+            terrain = level[context_y * MAP_WIDTH + context_x] if level else {}
+            if not isinstance(terrain.get("id"), str) or not terrain["id"]:
+                raise RecipeError(f"{context}.exterior_context must reference existing terrain")
+            if terrain.get("rooms"):
+                raise RecipeError(f"{context}.exterior_context must not reference a room membership")
         if building.get("overhead_validation") == "complete":
             surface_kinds = {
                 surface["kind"]
