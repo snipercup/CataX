@@ -21,10 +21,11 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
+BUILDING_OVERHEAD_VALIDATIONS = {'complete'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
 BUILDING_SURFACE_KINDS = {'roof', 'ceiling'}
@@ -779,6 +780,9 @@ class MapValidator:
                 and room_partition_validation not in BUILDING_ROOM_PARTITION_VALIDATIONS
             ):
                 self.add_error(file_path, f"{context} room_partition_validation has unsupported validation '{room_partition_validation}'.")
+            overhead_validation = building.get('overhead_validation')
+            if overhead_validation is not None and overhead_validation not in BUILDING_OVERHEAD_VALIDATIONS:
+                self.add_error(file_path, f"{context} overhead_validation has unsupported validation '{overhead_validation}'.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -933,6 +937,13 @@ class MapValidator:
             kind = surface.get('kind')
             if isinstance(building_id, str) and building_id in building_by_id and kind in BUILDING_SURFACE_KINDS:
                 surface_kinds_by_building.setdefault(building_id, set()).add(kind)
+        for index, building in enumerate(validated_buildings):
+            if building.get('overhead_validation') != 'complete':
+                continue
+            surface_kinds = surface_kinds_by_building.get(building['id'], set())
+            for kind in ('roof', 'ceiling'):
+                if kind not in surface_kinds:
+                    self.add_error(file_path, f"Building at index {index} requires {kind} surface at z {building['z'] + 1}.")
         seen_composition_ids: Set[str] = set()
         seen_composition_buildings: Set[str] = set()
         for idx, composition in enumerate(building_compositions):

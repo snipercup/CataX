@@ -1680,6 +1680,7 @@ class MapGeneratorTests(unittest.TestCase):
             "interior_rooms": ["office"],
             "open_space_rooms": ["garage_bay"],
             "room_partition_validation": "complete",
+            "overhead_validation": "complete",
         }])
         self.assertEqual(generated["building_surfaces"], [
             {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
@@ -1692,6 +1693,27 @@ class MapGeneratorTests(unittest.TestCase):
         }])
         self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+
+    def test_complete_building_overhead_requires_roof_and_ceiling_classifications(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["overhead_validation"] = "complete"
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["buildings"][0]["overhead_validation"], "complete")
+
+        invalid_validation = json.loads(recipe_path.read_text(encoding="utf-8"))
+        invalid_validation["buildings"][0]["overhead_validation"] = "partial"
+        with self.assertRaisesRegex(RecipeError, "overhead_validation has unsupported validation 'partial'"):
+            generate_map(invalid_validation, TILES_PATH)
+
+        missing_ceiling = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_ceiling["buildings"][0]["overhead_validation"] = "complete"
+        missing_ceiling["building_surfaces"] = [missing_ceiling["building_surfaces"][0]]
+        missing_ceiling["building_compositions"] = []
+        with self.assertRaisesRegex(RecipeError, "requires ceiling surface at z 1"):
+            generate_map(missing_ceiling, TILES_PATH)
 
     def test_complete_building_room_partition_requires_each_owned_room_to_be_classified(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -2578,6 +2600,23 @@ class MapValidatorDimensionTests(unittest.TestCase):
         invalid_kind["building_surfaces"][0]["kind"] = "awning"
         errors = self.validate(invalid_kind)
         self.assertTrue(any("unsupported kind 'awning'" in error for error in errors))
+
+    def test_validates_complete_building_overhead_classification(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["overhead_validation"] = "complete"
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        invalid_validation = json.loads(json.dumps(valid_map))
+        invalid_validation["buildings"][0]["overhead_validation"] = "partial"
+        errors = self.validate(invalid_validation)
+        self.assertTrue(any("overhead_validation has unsupported validation 'partial'" in error for error in errors))
+
+        missing_ceiling = json.loads(json.dumps(valid_map))
+        missing_ceiling["building_surfaces"] = [missing_ceiling["building_surfaces"][0]]
+        errors = self.validate(missing_ceiling)
+        self.assertTrue(any("requires ceiling surface at z 1" in error for error in errors))
 
     def test_validates_complete_building_room_partition(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
