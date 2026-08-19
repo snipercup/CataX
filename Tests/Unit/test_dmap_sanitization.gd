@@ -200,6 +200,7 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 				"rooms": ["office"],
 				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 				"z": 0,
+				"access_validation": "complete",
 			},
 			{
 				"rooms": ["office"],
@@ -223,6 +224,7 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 		"rooms": ["office"],
 		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 		"z": 0,
+		"access_validation": "complete",
 	}])
 
 

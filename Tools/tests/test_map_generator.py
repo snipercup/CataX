@@ -1671,6 +1671,13 @@ class MapGeneratorTests(unittest.TestCase):
         generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
 
         self.assertEqual(generated["id"], "generated_building_surfaces")
+        self.assertEqual(generated["buildings"], [{
+            "id": "office_building",
+            "rooms": ["office"],
+            "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+            "z": 0,
+            "access_validation": "complete",
+        }])
         self.assertEqual(generated["building_surfaces"], [
             {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
             {"id": "office_ceiling", "building": "office_building", "kind": "ceiling", "z": 1},
@@ -1682,6 +1689,27 @@ class MapGeneratorTests(unittest.TestCase):
         }])
         self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+
+    def test_complete_building_access_requires_owned_room_route_to_exterior(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["access_validation"] = "complete"
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["buildings"][0]["access_validation"], "complete")
+
+        invalid_access = json.loads(recipe_path.read_text(encoding="utf-8"))
+        invalid_access["buildings"][0]["access_validation"] = "partial"
+        with self.assertRaisesRegex(RecipeError, "access_validation has unsupported validation 'partial'"):
+            generate_map(invalid_access, TILES_PATH)
+
+        missing_exterior_route = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_exterior_route["buildings"][0]["access_validation"] = "complete"
+        missing_exterior_route["rooms"].append({"id": "garage", "kind": "covered_open"})
+        missing_exterior_route["room_connections"][0]["to"] = {"kind": "room", "id": "garage"}
+        with self.assertRaisesRegex(RecipeError, "room 'office' has no route to exterior"):
+            generate_map(missing_exterior_route, TILES_PATH)
 
     def test_building_compositions_require_declared_surface_kinds(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -2468,6 +2496,24 @@ class MapValidatorDimensionTests(unittest.TestCase):
         invalid_kind["building_surfaces"][0]["kind"] = "awning"
         errors = self.validate(invalid_kind)
         self.assertTrue(any("unsupported kind 'awning'" in error for error in errors))
+
+    def test_validates_complete_building_access(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["access_validation"] = "complete"
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        invalid_access = json.loads(json.dumps(valid_map))
+        invalid_access["buildings"][0]["access_validation"] = "partial"
+        errors = self.validate(invalid_access)
+        self.assertTrue(any("access_validation has unsupported validation 'partial'" in error for error in errors))
+
+        missing_exterior_route = json.loads(json.dumps(valid_map))
+        missing_exterior_route["rooms"].append({"id": "garage", "kind": "covered_open"})
+        missing_exterior_route["room_connections"][0]["to"] = {"kind": "room", "id": "garage"}
+        errors = self.validate(missing_exterior_route)
+        self.assertTrue(any("room 'office' has no route to exterior" in error for error in errors))
 
     def test_validates_building_composition_constraints(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
