@@ -1679,6 +1679,7 @@ class MapGeneratorTests(unittest.TestCase):
             "access_validation": "complete",
             "interior_rooms": ["office"],
             "open_space_rooms": ["garage_bay"],
+            "room_partition_validation": "complete",
         }])
         self.assertEqual(generated["building_surfaces"], [
             {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
@@ -1691,6 +1692,26 @@ class MapGeneratorTests(unittest.TestCase):
         }])
         self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+
+    def test_complete_building_room_partition_requires_each_owned_room_to_be_classified(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["room_partition_validation"] = "complete"
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["buildings"][0]["room_partition_validation"], "complete")
+
+        invalid_validation = json.loads(recipe_path.read_text(encoding="utf-8"))
+        invalid_validation["buildings"][0]["room_partition_validation"] = "partial"
+        with self.assertRaisesRegex(RecipeError, "room_partition_validation has unsupported validation 'partial'"):
+            generate_map(invalid_validation, TILES_PATH)
+
+        missing_classification = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_classification["buildings"][0]["room_partition_validation"] = "complete"
+        missing_classification["buildings"][0].pop("open_space_rooms")
+        with self.assertRaisesRegex(RecipeError, "room 'garage_bay' is not classified as interior or open space"):
+            generate_map(missing_classification, TILES_PATH)
 
     def test_building_open_space_rooms_require_owned_non_enclosed_rooms(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -2557,6 +2578,23 @@ class MapValidatorDimensionTests(unittest.TestCase):
         invalid_kind["building_surfaces"][0]["kind"] = "awning"
         errors = self.validate(invalid_kind)
         self.assertTrue(any("unsupported kind 'awning'" in error for error in errors))
+
+    def test_validates_complete_building_room_partition(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["room_partition_validation"] = "complete"
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        invalid_validation = json.loads(json.dumps(valid_map))
+        invalid_validation["buildings"][0]["room_partition_validation"] = "partial"
+        errors = self.validate(invalid_validation)
+        self.assertTrue(any("room_partition_validation has unsupported validation 'partial'" in error for error in errors))
+
+        missing_classification = json.loads(json.dumps(valid_map))
+        missing_classification["buildings"][0].pop("open_space_rooms")
+        errors = self.validate(missing_classification)
+        self.assertTrue(any("room 'garage_bay' is not classified as interior or open space" in error for error in errors))
 
     def test_validates_building_open_space_room_constraints(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"

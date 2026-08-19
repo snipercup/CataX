@@ -78,9 +78,10 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
+BUILDING_ROOM_PARTITION_VALIDATIONS = {"complete"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
 BUILDING_SURFACE_FIELDS = {"id", "building", "kind", "z"}
 BUILDING_SURFACE_KINDS = {"roof", "ceiling"}
@@ -1128,6 +1129,14 @@ def _validate_recipe_buildings(
                 raise RecipeError(f"{context}.open_space_rooms room '{outside_room}' is not owned by the building")
             if interior_rooms is not None and set(open_space_rooms) & set(interior_rooms):
                 raise RecipeError(f"{context}.open_space_rooms must not overlap interior_rooms")
+        room_partition_validation = building.get("room_partition_validation")
+        if (
+            room_partition_validation is not None
+            and room_partition_validation not in BUILDING_ROOM_PARTITION_VALIDATIONS
+        ):
+            raise RecipeError(
+                f"{context}.room_partition_validation has unsupported validation '{room_partition_validation}'"
+            )
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1140,6 +1149,8 @@ def _validate_recipe_buildings(
             validated_building["interior_rooms"] = interior_rooms
         if open_space_rooms is not None:
             validated_building["open_space_rooms"] = open_space_rooms
+        if room_partition_validation is not None:
+            validated_building["room_partition_validation"] = room_partition_validation
         validated.append(validated_building)
     return validated
 
@@ -1340,6 +1351,13 @@ def _validate_building_targets(
                 if room_definition["kind"] not in {"covered_open", "ruin"}:
                     raise RecipeError(
                         f"{context} open-space room '{room_id}' must be covered_open or ruin"
+                    )
+        if building.get("room_partition_validation") == "complete":
+            classified_rooms = set(building.get("interior_rooms", [])) | set(building.get("open_space_rooms", []))
+            for room_id in building["rooms"]:
+                if room_id not in classified_rooms:
+                    raise RecipeError(
+                        f"{context} room '{room_id}' is not classified as interior or open space"
                     )
         if building.get("access_validation") == "complete":
             owned_rooms = set(building["rooms"])
