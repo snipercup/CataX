@@ -1681,6 +1681,7 @@ class MapGeneratorTests(unittest.TestCase):
             "open_space_rooms": ["garage_bay"],
             "room_partition_validation": "complete",
             "overhead_validation": "complete",
+            "exterior_context": {"at": [6, 8], "z": 0},
         }])
         self.assertEqual(generated["building_surfaces"], [
             {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
@@ -1693,6 +1694,39 @@ class MapGeneratorTests(unittest.TestCase):
         }])
         self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+
+    def test_building_exterior_context_requires_adjacent_unclassified_terrain(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        context = {"at": [6, 8], "z": 0}
+        recipe["buildings"][0]["exterior_context"] = context
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["buildings"][0]["exterior_context"], context)
+
+        invalid_cases = [
+            ({"at": [7, 8], "z": 0}, "must be outside the building footprint"),
+            ({"at": [5, 8], "z": 0}, "must be cardinally adjacent to the building footprint"),
+            ({"at": [6, 8], "z": 1}, "must use building z 0"),
+            ({"at": [6, 8]}, "must define at and z"),
+        ]
+        for exterior_context, message in invalid_cases:
+            with self.subTest(exterior_context=exterior_context):
+                invalid_recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+                invalid_recipe["buildings"][0]["exterior_context"] = exterior_context
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(invalid_recipe, TILES_PATH)
+
+        room_context = json.loads(recipe_path.read_text(encoding="utf-8"))
+        room_context["rooms"].append({"id": "outside_room", "kind": "ruin"})
+        room_context["operations"].extend([
+            {"type": "set", "x": 6, "y": 8, "tile": {"id": "concrete_00"}},
+            {"type": "room_rectangle", "room": "outside_room", "x": 6, "y": 8, "width": 1, "height": 1},
+        ])
+        room_context["buildings"][0]["exterior_context"] = {"at": [6, 8], "z": 0}
+        with self.assertRaisesRegex(RecipeError, "must not reference a room membership"):
+            generate_map(room_context, TILES_PATH)
 
     def test_complete_building_overhead_requires_roof_and_ceiling_classifications(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -2600,6 +2634,23 @@ class MapValidatorDimensionTests(unittest.TestCase):
         invalid_kind["building_surfaces"][0]["kind"] = "awning"
         errors = self.validate(invalid_kind)
         self.assertTrue(any("unsupported kind 'awning'" in error for error in errors))
+
+    def test_validates_building_exterior_context_constraints(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["exterior_context"] = {"at": [6, 8], "z": 0}
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        footprint_context = json.loads(json.dumps(valid_map))
+        footprint_context["buildings"][0]["exterior_context"] = {"at": [7, 8], "z": 0}
+        errors = self.validate(footprint_context)
+        self.assertTrue(any("must be outside the building footprint" in error for error in errors))
+
+        distant_context = json.loads(json.dumps(valid_map))
+        distant_context["buildings"][0]["exterior_context"] = {"at": [5, 8], "z": 0}
+        errors = self.validate(distant_context)
+        self.assertTrue(any("must be cardinally adjacent to the building footprint" in error for error in errors))
 
     def test_validates_complete_building_overhead_classification(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"

@@ -206,6 +206,7 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 				"open_space_rooms": ["garage_bay"],
 				"room_partition_validation": "complete",
 				"overhead_validation": "complete",
+				"exterior_context": {"at": [6, 8], "z": 0},
 			},
 			{
 				"rooms": ["office"],
@@ -235,6 +236,7 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 		"open_space_rooms": ["garage_bay"],
 		"room_partition_validation": "complete",
 		"overhead_validation": "complete",
+		"exterior_context": {"at": [6, 8], "z": 0},
 	}])
 
 
