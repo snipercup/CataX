@@ -379,7 +379,7 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 }
 ```
 
-Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`, `interior_rooms`, `open_space_rooms`, and `room_partition_validation`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, and `overhead_validation`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
 
 Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
 
@@ -415,7 +415,15 @@ A building may opt into a complete authored room partition with `room_partition_
 
 For an opted-in building, every owned room must appear exactly once across `interior_rooms` and `open_space_rooms`. Existing classification rules supply the exact-once guarantees: the lists cannot overlap, interiors must be complete `enclosed` rooms, and open spaces must be `covered_open` or `ruin`. This is optional and validates authored labels only; it does not require every footprint cell to belong to a room and does not infer a classification from geometry or runtime behavior.
 
-`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, or declared open-space rooms become stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition classification checks.
+A building may opt into complete authored overhead classification with `overhead_validation: "complete"`:
+
+```json
+{"id": "office_building", "rooms": ["office", "garage_bay"], "footprint": {"x": 7, "y": 7, "width": 5, "height": 4}, "z": 0, "overhead_validation": "complete"}
+```
+
+The building must then have both exactly-valid authored `roof` and `ceiling` `building_surfaces` at logical `z: 1` (`building.z + 1`). Existing surface validation continues to require that those records name the building, have their own unique IDs/kinds, and sit exactly at that overhead level. This opt-in rule validates classifications only: it does not create roof or ceiling geometry, require physical coverage, mark cells occupied or indoors, imply support/collision, or alter lighting/weather/runtime behavior.
+
+`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, or declared open-space rooms become stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead classification checks.
 
 ### `building_surfaces`
 

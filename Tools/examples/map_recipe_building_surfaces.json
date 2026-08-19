@@ -17,7 +17,8 @@
 			"access_validation": "complete",
 			"interior_rooms": ["office"],
 			"open_space_rooms": ["garage_bay"],
-			"room_partition_validation": "complete"
+			"room_partition_validation": "complete",
+			"overhead_validation": "complete"
 		}
 	],
 	"building_surfaces": [
