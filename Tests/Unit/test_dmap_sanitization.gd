@@ -193,15 +193,17 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 		"description": "Preserve authored building footprints.",
 		"rooms": [
 			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
+			{"id": "garage_bay", "kind": "covered_open"},
 		],
 		"buildings": [
 			{
 				"id": "office_building",
-				"rooms": ["office"],
-				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+				"rooms": ["office", "garage_bay"],
+				"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
 				"z": 0,
 				"access_validation": "complete",
 				"interior_rooms": ["office"],
+				"open_space_rooms": ["garage_bay"],
 			},
 			{
 				"rooms": ["office"],
@@ -223,11 +225,12 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 
 	assert_eq(data["buildings"], [{
 		"id": "office_building",
-		"rooms": ["office"],
-		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+		"rooms": ["office", "garage_bay"],
+		"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
 		"z": 0,
 		"access_validation": "complete",
 		"interior_rooms": ["office"],
+		"open_space_rooms": ["garage_bay"],
 	}])
 
 
