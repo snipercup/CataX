@@ -21,9 +21,10 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
+BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
 BUILDING_SURFACE_KINDS = {'roof', 'ceiling'}
@@ -772,6 +773,12 @@ class MapValidator:
                         and set(open_space_rooms) & set(interior_rooms)
                     ):
                         self.add_error(file_path, f"{context} open_space_rooms must not overlap interior_rooms.")
+            room_partition_validation = building.get('room_partition_validation')
+            if (
+                room_partition_validation is not None
+                and room_partition_validation not in BUILDING_ROOM_PARTITION_VALIDATIONS
+            ):
+                self.add_error(file_path, f"{context} room_partition_validation has unsupported validation '{room_partition_validation}'.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -844,6 +851,14 @@ class MapValidator:
                     room_definition = room_definitions.get(room_id)
                     if isinstance(room_definition, dict) and room_definition.get('kind') not in {'covered_open', 'ruin'}:
                         self.add_error(file_path, f"{context} open-space room '{room_id}' must be covered_open or ruin.")
+            if building.get('room_partition_validation') == 'complete':
+                interior = building.get('interior_rooms', [])
+                open_space = building.get('open_space_rooms', [])
+                if isinstance(interior, list) and isinstance(open_space, list):
+                    classified_rooms = set(interior) | set(open_space)
+                    for room_id in building['rooms']:
+                        if room_id not in classified_rooms:
+                            self.add_error(file_path, f"{context} room '{room_id}' is not classified as interior or open space.")
             if building.get('access_validation') == 'complete':
                 owned_rooms = set(building['rooms'])
                 room_graph = {room_id: set() for room_id in owned_rooms}
