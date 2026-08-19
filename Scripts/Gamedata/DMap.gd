@@ -343,6 +343,12 @@ func _sanitize_buildings(data: Dictionary) -> void:
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
 				return false
+		if building.has("interior_rooms"):
+			if not building["interior_rooms"] is Array or building["interior_rooms"].is_empty():
+				return false
+			for room_id in building["interior_rooms"]:
+				if not room_id is String or room_id not in valid_room_ids or room_id not in building["rooms"]:
+					return false
 		return true
 	)
 	if data["buildings"].is_empty():

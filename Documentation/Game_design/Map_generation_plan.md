@@ -631,6 +631,8 @@ The generator, standalone map validator, and `DMap` save/load path validate or p
 
 A building may now opt into `access_validation: "complete"`. Every owned room must reach `exterior` through same-z authored `room_connections`; exterior door links seed reachability and owned room-to-room links propagate it. Links to rooms outside the building do not satisfy the validation. `office_building` opts in through its existing `office_front_door` exterior link. The check validates authored semantic access only: it does not infer physical door adjacency, collision, navigation, or player traversal.
 
+A building may explicitly classify a nonempty subset of its owned rooms with `interior_rooms`. Every interior room must remain an authored `enclosed` room with complete boundary validation; `covered_open` and `ruin` cannot be interior. This metadata is never inferred from access, floor materials, wall/door placement, roof/ceiling records, or topology, and it adds no indoor runtime behavior. The maintained office building classifies its already-complete enclosed `office` as its interior room.
+
 This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, multi-level building records, furniture anchors, or generalized templates.
 
 Capabilities:
@@ -866,7 +868,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, and authored building access-completeness validation are complete. The next contribution should extend validated building content carefully without introducing multi-level structures or generalized templates.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, and authored interior classification constraints are complete. The next contribution should extend validated building content carefully without introducing multi-level structures or generalized templates.
 
 Do not yet generate walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
@@ -911,7 +913,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Authored roof/ceiling semantics for validated footprints
 [Complete] Validated building-level composition constraints
 [Complete] Authored building access-completeness validation
-[Next]     Authored building interior classification constraints
+[Complete] Authored building interior classification constraints
+[Next]     Authored building exterior/open-space classification constraints
 [Planned]  Rooms and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition
