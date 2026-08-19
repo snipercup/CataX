@@ -13,7 +13,8 @@
 			"rooms": ["office"],
 			"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 			"z": 0,
-			"access_validation": "complete"
+			"access_validation": "complete",
+			"interior_rooms": ["office"]
 		}
 	],
 	"building_surfaces": [

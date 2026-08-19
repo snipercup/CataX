@@ -379,7 +379,7 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 }
 ```
 
-Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation` and `interior_rooms`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
 
 Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
 
@@ -391,7 +391,15 @@ A building may opt into authored access completeness with `"access_validation": 
 
 For that building, every owned room must have a path to `exterior` through same-z authored `room_connections`. A room-to-exterior connection seeds the path; a room-to-room connection propagates it only when both endpoint rooms belong to the same building. Links to rooms outside the building do not satisfy the rule. This validates semantic authored access, not physical walkability: it does not infer door adjacency, rotation, collision, navigation, or player traversal.
 
-`DMap` preserves building records through editor save/load and removes records whose room list becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, and opted-in access checks.
+A building may explicitly classify a nonempty subset of its owned rooms as interior with `interior_rooms`:
+
+```json
+{"id": "office_building", "rooms": ["office"], "footprint": {"x": 7, "y": 7, "width": 4, "height": 4}, "z": 0, "interior_rooms": ["office"]}
+```
+
+Every declared interior room must be a unique, owned, known room whose authored kind is `enclosed` and whose `boundary_validation` is `complete`. The contract never infers interiors from floor material, walls, doors, access links, roof/ceiling records, or geometry. It deliberately excludes `covered_open` and `ruin`; those retain their authored semantic meanings without being classified as interior.
+
+`DMap` preserves building records through editor save/load and removes records whose room list or declared interior rooms become stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior-classification checks.
 
 ### `building_surfaces`
 
