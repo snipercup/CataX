@@ -21,7 +21,9 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation'}
+BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
+BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
 BUILDING_SURFACE_KINDS = {'roof', 'ceiling'}
@@ -696,7 +698,7 @@ class MapValidator:
             unknown_fields = sorted(set(building) - BUILDING_FIELDS)
             if unknown_fields:
                 self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
-            for field in BUILDING_FIELDS:
+            for field in BUILDING_REQUIRED_FIELDS:
                 if field not in building:
                     self.add_error(file_path, f"{context} is missing required field '{field}'.")
             building_id = building.get('id')
@@ -736,6 +738,9 @@ class MapValidator:
             z_valid = type(z) is int and -10 <= z <= 10
             if not z_valid:
                 self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
+            access_validation = building.get('access_validation')
+            if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
+                self.add_error(file_path, f"{context} access_validation has unsupported validation '{access_validation}'.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -795,6 +800,32 @@ class MapValidator:
                         x, y = connection['at']
                         if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
                             self.add_error(file_path, f"{context} room connection '{connection['id']}' is outside building footprint.")
+            if building.get('access_validation') == 'complete':
+                owned_rooms = set(building['rooms'])
+                room_graph = {room_id: set() for room_id in owned_rooms}
+                exterior_rooms: Set[str] = set()
+                for connection in validated_room_connections:
+                    if connection['z'] != z:
+                        continue
+                    endpoints = (connection['from'], connection['to'])
+                    room_endpoints = [endpoint['id'] for endpoint in endpoints if endpoint.get('kind') == 'room']
+                    if any(endpoint.get('kind') == 'exterior' for endpoint in endpoints):
+                        exterior_rooms.update(room_id for room_id in room_endpoints if room_id in owned_rooms)
+                    elif len(room_endpoints) == 2 and all(room_id in owned_rooms for room_id in room_endpoints):
+                        left, right = room_endpoints
+                        room_graph[left].add(right)
+                        room_graph[right].add(left)
+                reachable_rooms = set(exterior_rooms)
+                frontier = list(exterior_rooms)
+                while frontier:
+                    room_id = frontier.pop()
+                    for connected_room in room_graph[room_id]:
+                        if connected_room not in reachable_rooms:
+                            reachable_rooms.add(connected_room)
+                            frontier.append(connected_room)
+                for room_id in building['rooms']:
+                    if room_id not in reachable_rooms:
+                        self.add_error(file_path, f"{context} room '{room_id}' has no route to exterior through owned room_connections.")
 
         building_by_id = {building['id']: building for building in validated_buildings}
         seen_surface_ids: Set[str] = set()

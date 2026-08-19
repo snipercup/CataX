@@ -78,7 +78,9 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation"}
+BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
+BUILDING_ACCESS_VALIDATIONS = {"complete"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
 BUILDING_SURFACE_FIELDS = {"id", "building", "kind", "z"}
 BUILDING_SURFACE_KINDS = {"roof", "ceiling"}
@@ -1065,7 +1067,7 @@ def _validate_recipe_buildings(
         unknown_fields = sorted(set(building) - BUILDING_FIELDS)
         if unknown_fields:
             raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
-        if set(building) != BUILDING_FIELDS:
+        if not BUILDING_REQUIRED_FIELDS <= set(building):
             raise RecipeError(f"{context} must define id, rooms, footprint, and z")
         building_id = building["id"]
         if not isinstance(building_id, str) or not building_id.strip():
@@ -1095,12 +1097,20 @@ def _validate_recipe_buildings(
         z = building["z"]
         if type(z) is not int or not MIN_LOGICAL_Z <= z <= MAX_LOGICAL_Z:
             raise RecipeError(f"{context}.z must be an integer from -10 through 10")
-        validated.append({
+        access_validation = building.get("access_validation")
+        if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
+            raise RecipeError(
+                f"{context}.access_validation has unsupported validation '{access_validation}'"
+            )
+        validated_building = {
             "id": building_id,
             "rooms": room_ids,
             "footprint": {"x": x, "y": y, "width": width, "height": height},
             "z": z,
-        })
+        }
+        if access_validation is not None:
+            validated_building["access_validation"] = access_validation
+        validated.append(validated_building)
     return validated
 
 
@@ -1284,6 +1294,34 @@ def _validate_building_targets(
                         raise RecipeError(
                             f"{context} room connection '{connection['id']}' is outside building footprint"
                         )
+        if building.get("access_validation") == "complete":
+            owned_rooms = set(building["rooms"])
+            room_graph = {room_id: set() for room_id in owned_rooms}
+            exterior_rooms: set[str] = set()
+            for connection in room_connections:
+                if connection["z"] != z:
+                    continue
+                endpoints = (connection["from"], connection["to"])
+                room_endpoints = [endpoint["id"] for endpoint in endpoints if endpoint["kind"] == "room"]
+                if any(endpoint["kind"] == "exterior" for endpoint in endpoints):
+                    exterior_rooms.update(room_id for room_id in room_endpoints if room_id in owned_rooms)
+                elif len(room_endpoints) == 2 and all(room_id in owned_rooms for room_id in room_endpoints):
+                    left, right = room_endpoints
+                    room_graph[left].add(right)
+                    room_graph[right].add(left)
+            reachable_rooms = set(exterior_rooms)
+            frontier = list(exterior_rooms)
+            while frontier:
+                room_id = frontier.pop()
+                for connected_room in room_graph[room_id]:
+                    if connected_room not in reachable_rooms:
+                        reachable_rooms.add(connected_room)
+                        frontier.append(connected_room)
+            for room_id in building["rooms"]:
+                if room_id not in reachable_rooms:
+                    raise RecipeError(
+                        f"{context} room '{room_id}' has no route to exterior through owned room_connections"
+                    )
 
 
 def _validate_room_connection_endpoint(
