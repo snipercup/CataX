@@ -21,8 +21,9 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
+BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
 BUILDING_OVERHEAD_VALIDATIONS = {'complete'}
@@ -783,6 +784,23 @@ class MapValidator:
             overhead_validation = building.get('overhead_validation')
             if overhead_validation is not None and overhead_validation not in BUILDING_OVERHEAD_VALIDATIONS:
                 self.add_error(file_path, f"{context} overhead_validation has unsupported validation '{overhead_validation}'.")
+            exterior_context = building.get('exterior_context')
+            if exterior_context is not None:
+                if not isinstance(exterior_context, dict) or set(exterior_context) != BUILDING_EXTERIOR_CONTEXT_FIELDS:
+                    self.add_error(file_path, f"{context} exterior_context must define at and z.")
+                else:
+                    at = exterior_context.get('at')
+                    context_z = exterior_context.get('z')
+                    if (
+                        not isinstance(at, list)
+                        or len(at) != 2
+                        or any(type(value) is not int for value in at)
+                        or not 0 <= at[0] < MAP_WIDTH
+                        or not 0 <= at[1] < MAP_HEIGHT
+                    ):
+                        self.add_error(file_path, f"{context} exterior_context at must be a two-integer coordinate within map bounds.")
+                    if type(context_z) is not int or context_z != z:
+                        self.add_error(file_path, f"{context} exterior_context z must use building z {z}.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -842,6 +860,27 @@ class MapValidator:
                         x, y = connection['at']
                         if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
                             self.add_error(file_path, f"{context} room connection '{connection['id']}' is outside building footprint.")
+            if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
+                exterior_context = building['exterior_context']
+                at = exterior_context.get('at')
+                if isinstance(at, list) and len(at) == 2 and all(type(value) is int for value in at):
+                    context_x, context_y = at
+                    if footprint['x'] <= context_x < footprint['x'] + footprint['width'] and footprint['y'] <= context_y < footprint['y'] + footprint['height']:
+                        self.add_error(file_path, f"{context} exterior_context must be outside the building footprint.")
+                    adjacent = any(
+                        footprint['x'] <= context_x + dx < footprint['x'] + footprint['width']
+                        and footprint['y'] <= context_y + dy < footprint['y'] + footprint['height']
+                        for dx, dy in CARDINAL_SIDES.values()
+                    )
+                    if not adjacent:
+                        self.add_error(file_path, f"{context} exterior_context must be cardinally adjacent to the building footprint.")
+                    level_index = z + 10
+                    level = levels[level_index] if isinstance(levels, list) and 0 <= level_index < len(levels) else []
+                    terrain = level[context_y * MAP_WIDTH + context_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+                    if not isinstance(terrain, dict) or not isinstance(terrain.get('id'), str) or not terrain.get('id'):
+                        self.add_error(file_path, f"{context} exterior_context must reference existing terrain.")
+                    elif terrain.get('rooms'):
+                        self.add_error(file_path, f"{context} exterior_context must not reference a room membership.")
             if building.get('interior_rooms') is not None and isinstance(building.get('interior_rooms'), list):
                 for room_id in building['interior_rooms']:
                     room_definition = room_definitions.get(room_id)

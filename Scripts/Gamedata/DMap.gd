@@ -355,6 +355,14 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			for room_id in building["open_space_rooms"]:
 				if not room_id is String or room_id not in valid_room_ids or room_id not in building["rooms"]:
 					return false
+		if building.has("exterior_context"):
+			if not building["exterior_context"] is Dictionary \
+			or not building["exterior_context"].has("at") \
+			or not building["exterior_context"]["at"] is Array \
+			or building["exterior_context"]["at"].size() != 2 \
+			or not building["exterior_context"].has("z") \
+			or not building["exterior_context"]["z"] is int:
+				return false
 		return true
 	)
 	if data["buildings"].is_empty():
