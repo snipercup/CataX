@@ -21,9 +21,10 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
+BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
 BUILDING_OVERHEAD_VALIDATIONS = {'complete'}
@@ -801,6 +802,17 @@ class MapValidator:
                         self.add_error(file_path, f"{context} exterior_context at must be a two-integer coordinate within map bounds.")
                     if type(context_z) is not int or context_z != z:
                         self.add_error(file_path, f"{context} exterior_context z must use building z {z}.")
+            exterior_access_context = building.get('exterior_access_context')
+            if exterior_access_context is not None:
+                if (
+                    not isinstance(exterior_access_context, dict)
+                    or set(exterior_access_context) != BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS
+                    or not isinstance(exterior_access_context.get('connection'), str)
+                    or not exterior_access_context['connection']
+                ):
+                    self.add_error(file_path, f"{context} exterior_access_context must define connection.")
+                if exterior_context is None:
+                    self.add_error(file_path, f"{context} exterior_access_context requires exterior_context.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -860,6 +872,25 @@ class MapValidator:
                         x, y = connection['at']
                         if not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
                             self.add_error(file_path, f"{context} room connection '{connection['id']}' is outside building footprint.")
+            if building.get('exterior_access_context') is not None and isinstance(building.get('exterior_access_context'), dict):
+                connection_id = building['exterior_access_context'].get('connection')
+                matching_connections = [
+                    connection for connection in validated_room_connections
+                    if connection.get('id') == connection_id
+                ]
+                if not matching_connections:
+                    self.add_error(file_path, f"{context} exterior_access_context references unknown room connection '{connection_id}'.")
+                else:
+                    connection = matching_connections[0]
+                    endpoints = (connection['from'], connection['to'])
+                    named_rooms = [endpoint['id'] for endpoint in endpoints if endpoint.get('kind') == 'room']
+                    if (
+                        connection['z'] != z
+                        or not any(endpoint.get('kind') == 'exterior' for endpoint in endpoints)
+                        or len(named_rooms) != 1
+                        or named_rooms[0] not in building['rooms']
+                    ):
+                        self.add_error(file_path, f"{context} exterior_access_context must reference a room-to-exterior connection owned by the building.")
             if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
                 exterior_context = building['exterior_context']
                 at = exterior_context.get('at')

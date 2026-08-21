@@ -195,6 +195,13 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
 			{"id": "garage_bay", "kind": "covered_open"},
 		],
+		"room_connections": [{
+			"id": "office_front_door",
+			"at": [8, 9],
+			"z": 0,
+			"from": {"kind": "room", "id": "office"},
+			"to": {"kind": "exterior"},
+		}],
 		"buildings": [
 			{
 				"id": "office_building",
@@ -207,16 +214,17 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 				"room_partition_validation": "complete",
 				"overhead_validation": "complete",
 				"exterior_context": {"at": [6, 8], "z": 0},
+				"exterior_access_context": {"connection": "office_front_door"},
 			},
 			{
 				"rooms": ["office"],
 			},
 			{
-				"id": "stale_interior_building",
+				"id": "stale_exterior_access_building",
 				"rooms": ["office"],
 				"footprint": {"x": 16, "y": 7, "width": 4, "height": 4},
 				"z": 0,
-				"interior_rooms": ["missing_room"],
+				"exterior_access_context": {"connection": "missing_connection"},
 			},
 		],
 		"levels": [[
@@ -237,6 +245,7 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 		"room_partition_validation": "complete",
 		"overhead_validation": "complete",
 		"exterior_context": {"at": [6, 8], "z": 0},
+		"exterior_access_context": {"connection": "office_front_door"},
 	}])
 
 
