@@ -379,7 +379,7 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 }
 ```
 
-Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, and `exterior_context`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, and `exterior_access_context`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
 
 Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
 
@@ -431,7 +431,15 @@ A building may author one data-only external footprint context coordinate:
 
 `exterior_context` has exactly `at` and `z`. It must target an existing terrain tile on the building’s own logical z, lie outside the footprint, be cardinally adjacent to one of its footprint cells, and have no room membership. It provides one explicitly authored external reference point without reusing runtime `areas`, inferring streets/yards, or changing terrain. It does not generate a tile, require a particular terrain material, reserve the cell, create an entrance, or alter runtime behavior.
 
-`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, declared open-space rooms, or malformed exterior context becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead/exterior-context checks.
+A building may explicitly associate that external context with one existing semantic access connection:
+
+```json
+{"id": "office_building", "rooms": ["office", "garage_bay"], "footprint": {"x": 7, "y": 7, "width": 5, "height": 4}, "z": 0, "exterior_context": {"at": [6, 8], "z": 0}, "exterior_access_context": {"connection": "office_front_door"}}
+```
+
+`exterior_access_context` has exactly `connection`. It requires `exterior_context` and names an existing same-z `room_connections` record for one of the building’s owned rooms whose other endpoint is `exterior`. The association is explicit—it does not infer a physical route, coordinate adjacency, door rotation, collision, navigation, or player traversal between the context tile and the referenced door.
+
+`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, declared open-space rooms, malformed exterior context, or stale exterior-access connection becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead/exterior-context/exterior-access-context checks.
 
 ### `building_surfaces`
 

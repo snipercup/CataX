@@ -327,6 +327,12 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			if room is Dictionary and room.has("id") and room["id"] is String:
 				valid_room_ids.append(room["id"])
 
+	var valid_connection_ids: Array[String] = []
+	if data.has("room_connections") and data["room_connections"] is Array:
+		for connection in data["room_connections"]:
+			if connection is Dictionary and connection.has("id") and connection["id"] is String:
+				valid_connection_ids.append(connection["id"])
+
 	data["buildings"] = data["buildings"].filter(func(building):
 		if not building is Dictionary \
 			or not building.has("id") \
@@ -362,6 +368,13 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			or building["exterior_context"]["at"].size() != 2 \
 			or not building["exterior_context"].has("z") \
 			or not building["exterior_context"]["z"] is int:
+				return false
+		if building.has("exterior_access_context"):
+			if not building["exterior_access_context"] is Dictionary \
+			or not building["exterior_access_context"].has("connection") \
+			or not building["exterior_access_context"]["connection"] is String \
+			or building["exterior_access_context"]["connection"].is_empty() \
+			or building["exterior_access_context"]["connection"] not in valid_connection_ids:
 				return false
 		return true
 	)
