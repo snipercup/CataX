@@ -20,7 +20,8 @@
 			"room_partition_validation": "complete",
 			"overhead_validation": "complete",
 			"exterior_context": {"at": [6, 8], "z": 0},
-			"exterior_access_context": {"connection": "office_front_door"}
+			"exterior_access_context": {"connection": "office_front_door"},
+			"entrance": {"connection": "office_front_door", "facing": "east"}
 		}
 	],
 	"building_surfaces": [
