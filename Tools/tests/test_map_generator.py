@@ -3570,6 +3570,13 @@ class MapValidatorDimensionTests(unittest.TestCase):
         errors = self.validate(missing_ground)
         self.assertTrue(any("must start with ground floor z 0" in error for error in errors))
 
+        wrong_slope = json.loads(json.dumps(valid_map))
+        for operation in wrong_slope["levels"][11]:
+            if isinstance(operation, dict) and operation.get("id") == "grass_ramp_00":
+                operation["rotation"] = 0
+        errors = self.validate(wrong_slope)
+        self.assertTrue(any("requires a grass_ramp_00 slope" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

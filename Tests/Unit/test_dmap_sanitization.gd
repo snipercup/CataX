@@ -277,6 +277,14 @@ func test_dmap_building_levels_roundtrip_and_sanitization():
 				"z": 0,
 				"building_levels": [{"z": 0}, {"z": 1}],
 			},
+			{
+				"id": "bad_staircase",
+				"rooms": ["office"],
+				"footprint": {"x": 7, "y": 16, "width": 4, "height": 4},
+				"z": 0,
+				"building_levels": [{"z": 0}, {"z": 2}],
+				"staircases": [{"id": "bad_staircase", "lower_at": [8, 17], "upper_at": [10, 17], "rotation": 90}],
+			},
 		],
 		"levels": [[
 			{"id": "concrete_00"},
