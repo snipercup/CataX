@@ -21,12 +21,13 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrance_validation'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
 BUILDING_ENTRANCE_FACINGS = {'north', 'east', 'south', 'west'}
+BUILDING_ENTRANCE_VALIDATIONS = {'complete'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
 BUILDING_OVERHEAD_VALIDATIONS = {'complete'}
@@ -836,6 +837,12 @@ class MapValidator:
                     and entrance.get('connection') != exterior_access_context.get('connection')
                 ):
                     self.add_error(file_path, f"{context} entrance.connection must match exterior_access_context.connection.")
+            entrance_validation = building.get('entrance_validation')
+            if entrance_validation is not None:
+                if entrance_validation not in BUILDING_ENTRANCE_VALIDATIONS:
+                    self.add_error(file_path, f"{context} entrance_validation has unsupported validation '{entrance_validation}'.")
+                if entrance is None:
+                    self.add_error(file_path, f"{context} entrance_validation requires entrance.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -952,6 +959,49 @@ class MapValidator:
                         and footprint['y'] <= facing_y < footprint['y'] + footprint['height']
                     ):
                         self.add_error(file_path, f"{context} entrance.facing '{facing}' does not point from exterior_context toward the building footprint.")
+                if building.get('entrance_validation') == 'complete' and isinstance(entrance, dict):
+                    entrance_facing = entrance.get('facing')
+                    entrance_connection_id = entrance.get('connection')
+                    matching_entrance_connections = [
+                        conn for conn in validated_room_connections
+                        if conn.get('id') == entrance_connection_id
+                    ]
+                    if matching_entrance_connections:
+                        entrance_connection = matching_entrance_connections[0]
+                        door_x, door_y = entrance_connection['at']
+                        door_boundary = None
+                        for boundary in validated_room_boundaries:
+                            if (
+                                boundary['at'] == [door_x, door_y]
+                                and boundary['z'] == z
+                                and boundary['element'] == 'door_furniture'
+                                and boundary['room'] in building['rooms']
+                            ):
+                                door_boundary = boundary
+                                break
+                        if door_boundary is None:
+                            self.add_error(file_path, f"{context} entrance_validation requires a door_furniture boundary at the entrance connection.")
+                        else:
+                            if door_boundary.get('side') is None:
+                                self.add_error(file_path, f"{context} entrance_validation requires a side on the door_furniture boundary.")
+                            elif entrance_facing in OPPOSITE_SIDES and door_boundary['side'] != OPPOSITE_SIDES[entrance_facing]:
+                                self.add_error(file_path, f"{context} entrance_validation door side '{door_boundary['side']}' must face '{OPPOSITE_SIDES[entrance_facing]}'.")
+                        ext_ctx = building.get('exterior_context')
+                        if (
+                            isinstance(ext_ctx, dict)
+                            and isinstance(ext_ctx.get('at'), list)
+                            and len(ext_ctx['at']) == 2
+                            and all(type(value) is int for value in ext_ctx['at'])
+                        ):
+                            ctx_x, ctx_y = ext_ctx['at']
+                            if entrance_facing in ('east', 'west'):
+                                if not (footprint['y'] <= ctx_y < footprint['y'] + footprint['height']
+                                        and footprint['y'] <= door_y < footprint['y'] + footprint['height']):
+                                    self.add_error(file_path, f"{context} entrance_validation requires exterior_context and entrance door aligned within the footprint height.")
+                            elif entrance_facing in ('north', 'south'):
+                                if not (footprint['x'] <= ctx_x < footprint['x'] + footprint['width']
+                                        and footprint['x'] <= door_x < footprint['x'] + footprint['width']):
+                                    self.add_error(file_path, f"{context} entrance_validation requires exterior_context and entrance door aligned within the footprint width.")
             if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
                 exterior_context = building['exterior_context']
                 at = exterior_context.get('at')

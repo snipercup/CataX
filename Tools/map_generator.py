@@ -78,12 +78,13 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrance_validation"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
 BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
 BUILDING_ENTRANCE_FACINGS = {"north", "east", "south", "west"}
+BUILDING_ENTRANCE_VALIDATIONS = {"complete"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {"complete"}
 BUILDING_OVERHEAD_VALIDATIONS = {"complete"}
@@ -1189,6 +1190,13 @@ def _validate_recipe_buildings(
                 raise RecipeError(f"{context}.entrance requires exterior_context")
             if exterior_access_context is not None and entrance["connection"] != exterior_access_context["connection"]:
                 raise RecipeError(f"{context}.entrance.connection must match exterior_access_context.connection")
+        entrance_validation = building.get("entrance_validation")
+        if entrance_validation is not None and entrance_validation not in BUILDING_ENTRANCE_VALIDATIONS:
+            raise RecipeError(
+                f"{context}.entrance_validation has unsupported validation '{entrance_validation}'"
+            )
+        if entrance_validation is not None and entrance is None:
+            raise RecipeError(f"{context}.entrance_validation requires entrance")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1211,6 +1219,8 @@ def _validate_recipe_buildings(
             validated_building["exterior_access_context"] = exterior_access_context
         if entrance is not None:
             validated_building["entrance"] = entrance
+        if entrance_validation is not None:
+            validated_building["entrance_validation"] = entrance_validation
         validated.append(validated_building)
     return validated
 
@@ -1477,6 +1487,47 @@ def _validate_building_targets(
                 raise RecipeError(
                     f"{context}.entrance.facing '{facing}' does not point from exterior_context toward the building footprint"
                 )
+        if building.get("entrance_validation") == "complete":
+            entrance = building["entrance"]
+            facing = entrance["facing"]
+            connection_id = entrance["connection"]
+            connection = next(conn for conn in room_connections if conn["id"] == connection_id)
+            door_x, door_y = connection["at"]
+            door_boundary = None
+            for boundary in room_boundaries:
+                if (
+                    boundary["at"] == [door_x, door_y]
+                    and boundary["z"] == z
+                    and boundary["element"] == "door_furniture"
+                    and boundary["room"] in building["rooms"]
+                ):
+                    door_boundary = boundary
+                    break
+            if door_boundary is None:
+                raise RecipeError(
+                    f"{context}.entrance_validation requires a door_furniture boundary at the entrance connection"
+                )
+            if door_boundary.get("side") is None:
+                raise RecipeError(
+                    f"{context}.entrance_validation requires a side on the door_furniture boundary"
+                )
+            if door_boundary["side"] != OPPOSITE_SIDES[facing]:
+                raise RecipeError(
+                    f"{context}.entrance_validation door side '{door_boundary['side']}' must face '{OPPOSITE_SIDES[facing]}'"
+                )
+            context_x, context_y = building["exterior_context"]["at"]
+            if facing in ("east", "west"):
+                if not (footprint["y"] <= context_y < footprint["y"] + footprint["height"]
+                        and footprint["y"] <= door_y < footprint["y"] + footprint["height"]):
+                    raise RecipeError(
+                        f"{context}.entrance_validation requires exterior_context and entrance door aligned within the footprint height"
+                    )
+            else:
+                if not (footprint["x"] <= context_x < footprint["x"] + footprint["width"]
+                        and footprint["x"] <= door_x < footprint["x"] + footprint["width"]):
+                    raise RecipeError(
+                        f"{context}.entrance_validation requires exterior_context and entrance door aligned within the footprint width"
+                    )
         if building.get("overhead_validation") == "complete":
             surface_kinds = {
                 surface["kind"]
