@@ -358,6 +358,26 @@ func test_dmap_building_surfaces_roundtrip_and_sanitization():
 	])
 
 
+func test_dmap_road_paths_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_road_paths", "/tmp/", null)
+	map.set_data({
+		"name": "Road paths",
+		"description": "Preserve authored routes.",
+		"connections": {"east": "road", "west": "road", "north": "ground", "south": "ground"},
+		"road_endpoints": [
+			{"id": "west", "direction": "west", "at": [0, 16], "z": 0},
+			{"id": "east", "direction": "east", "at": [31, 16], "z": 0},
+		],
+		"road_paths": [
+			{"id": "valid_route", "from": "west", "to": "east", "waypoints": []},
+			{"id": "bad_route", "from": "west", "to": "missing", "waypoints": []},
+		],
+	})
+	var data = map.get_data()
+	assert_eq(data["road_paths"], [{"id": "valid_route", "from": "west", "to": "east", "waypoints": []}])
+
+
 func test_dmap_building_compositions_roundtrip_and_sanitization():
 	var DMap = load("res://Scripts/Gamedata/DMap.gd")
 	var map = DMap.new("test_building_compositions", "/tmp/", null)

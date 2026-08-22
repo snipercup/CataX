@@ -101,6 +101,7 @@ var building_surfaces: Array = []
 var building_supports: Array = []
 var building_compositions: Array = []
 var road_endpoints: Array = []
+var road_paths: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -161,6 +162,7 @@ func set_data(newdata: Dictionary) -> void:
 	building_supports = newdata.get("building_supports", [])
 	building_compositions = newdata.get("building_compositions", [])
 	road_endpoints = newdata.get("road_endpoints", [])
+	road_paths = newdata.get("road_paths", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -194,6 +196,8 @@ func get_data() -> Dictionary:
 		mydata["building_compositions"] = building_compositions
 	if not road_endpoints.is_empty():
 		mydata["road_endpoints"] = road_endpoints
+	if not road_paths.is_empty():
+		mydata["road_paths"] = road_paths
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
@@ -207,6 +211,7 @@ func get_data() -> Dictionary:
 	_sanitize_building_supports(mydata)
 	_sanitize_building_compositions(mydata)
 	_sanitize_road_endpoints(mydata)
+	_sanitize_road_paths(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -670,6 +675,38 @@ func _sanitize_road_endpoints(data: Dictionary) -> void:
 	)
 	if data["road_endpoints"].is_empty():
 		data.erase("road_endpoints")
+
+
+func _sanitize_road_paths(data: Dictionary) -> void:
+	if not data.has("road_paths") or not data["road_paths"] is Array:
+		return
+	var endpoint_ids: Array[String] = []
+	var seen_path_ids: Array[String] = []
+	for endpoint in data.get("road_endpoints", []):
+		if endpoint is Dictionary and endpoint.get("id") is String:
+			endpoint_ids.append(endpoint["id"])
+	data["road_paths"] = data["road_paths"].filter(func(path):
+		if not path is Dictionary or path.keys().size() != 4 or not path.has("id") or not path["id"] is String or path["id"].is_empty() or path["id"] in seen_path_ids or not path.has("from") or not path["from"] in endpoint_ids or not path.has("to") or not path["to"] in endpoint_ids or path["from"] == path["to"] or not path.has("waypoints") or not path["waypoints"] is Array:
+			return false
+		var points: Array = []
+		for endpoint in data["road_endpoints"]:
+			if endpoint.get("id") == path["from"]:
+				points.append(endpoint["at"])
+		for waypoint in path["waypoints"]:
+			points.append(waypoint)
+		for endpoint in data["road_endpoints"]:
+			if endpoint.get("id") == path["to"]:
+				points.append(endpoint["at"])
+		for index in points.size():
+			if not points[index] is Array or points[index].size() != 2 or not points[index][0] is int or not points[index][1] is int or points[index][0] < 0 or points[index][0] >= 32 or points[index][1] < 0 or points[index][1] >= 32:
+				return false
+			if index > 0 and points[index][0] != points[index - 1][0] and points[index][1] != points[index - 1][1]:
+				return false
+		seen_path_ids.append(path["id"])
+		return true
+	)
+	if data["road_paths"].is_empty():
+		data.erase("road_paths")
 
 
 func load_data_from_disk():

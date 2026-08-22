@@ -108,6 +108,23 @@ Each entry has exactly `id`, `direction`, `at`, and `z`. `id` is unique within t
 
 The standalone validator independently checks the same content: it rejects unknown directions, duplicate IDs, coordinates not on the correct edge, and non-zero `z` values. `DMap` preserves valid road endpoints through editor save/load and removes entries with missing fields, invalid directions, duplicate IDs, or malformed coordinates.
 
+`road_paths` authors a named cardinal polyline between two road endpoints:
+
+```json
+{
+  "road_paths": [
+    {
+      "id": "west_to_east_road",
+      "from": "west_entrance",
+      "to": "east_exit",
+      "waypoints": []
+    }
+  ]
+}
+```
+
+Each path has exactly `id`, `from`, `to`, and `waypoints`. Both endpoint IDs must exist and be different. `waypoints` is an optional array of map-bounded `[x, y]` coordinates; the complete sequence from the `from` endpoint through the waypoints to the `to` endpoint must form cardinally aligned segments. Paths are ground-level metadata only: they do not paint road tiles, run pathfinding, infer walkability, or alter collision/navigation. `DMap` preserves valid paths and removes paths with stale endpoints, malformed points, duplicate IDs, or non-cardinal segments.
+
 `Tools/examples/map_recipe_road_endpoints.json` demonstrates the maintained example with two road endpoints: `west_entrance` at the west edge and `east_exit` at the east edge.
 
 ## Logical levels
