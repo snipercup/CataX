@@ -15,9 +15,6 @@
 		{"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0}
 	],
 	"road_paths": [
-		{"id": "west_to_east_road", "from": "west_entrance", "to": "east_exit", "waypoints": []}
-	],
-	"operations": [
-		{"type": "line", "from": [0, 16], "to": [31, 16], "tile": {"id": "dirt_light_00"}}
+		{"id": "west_to_east_road", "from": "west_entrance", "to": "east_exit", "waypoints": [], "tile": {"id": "dirt_light_00"}}
 	]
 }

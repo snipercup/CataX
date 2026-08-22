@@ -35,6 +35,7 @@ CONNECTION_DIRECTIONS = {"north", "east", "south", "west"}
 CONNECTION_TYPES = {"ground", "road"}
 ROAD_ENDPOINT_FIELDS = {"id", "direction", "at", "z"}
 ROAD_PATH_FIELDS = {"id", "from", "to", "waypoints"}
+ROAD_PATH_OPTIONAL_FIELDS = {"tile"}
 EDGE_COORDINATES = {
     "north": lambda x, y: y == 0,
     "south": lambda x, y: y == MAP_HEIGHT - 1,
@@ -2641,6 +2642,8 @@ def _validate_road_endpoints(
 def _validate_road_paths(
     road_paths: Any,
     road_endpoints: list[dict[str, Any]],
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
 ) -> list[dict[str, Any]]:
     if road_paths is None:
         return []
@@ -2651,8 +2654,8 @@ def _validate_road_paths(
     seen_ids: set[str] = set()
     for index, path in enumerate(road_paths):
         context = f"road_paths[{index}]"
-        if not isinstance(path, dict) or set(path) != ROAD_PATH_FIELDS:
-            raise RecipeError(f"{context} must define id, from, to, and waypoints")
+        if not isinstance(path, dict) or not ROAD_PATH_FIELDS.issubset(path) or set(path) - ROAD_PATH_FIELDS - ROAD_PATH_OPTIONAL_FIELDS:
+            raise RecipeError(f"{context} must define id, from, to, and waypoints, with optional tile")
         path_id = path["id"]
         if not isinstance(path_id, str) or not path_id.strip():
             raise RecipeError(f"{context}.id must be a non-empty string")
@@ -2673,8 +2676,59 @@ def _validate_road_paths(
                 raise RecipeError(f"{context} point {point_index} must be a map-bounded two-integer coordinate")
             if point_index and points[point_index][0] != points[point_index - 1][0] and points[point_index][1] != points[point_index - 1][1]:
                 raise RecipeError(f"{context} points must form cardinally aligned segments")
-        validated.append({"id": path_id, "from": from_id, "to": to_id, "waypoints": waypoints})
+        validated_path = {"id": path_id, "from": from_id, "to": to_id, "waypoints": waypoints}
+        if "tile" in path:
+            _validate_tile_spec(path["tile"], known_tiles, f"{context}.tile", palette=palette)
+            validated_path["tile"] = path["tile"]
+        validated.append(validated_path)
     return validated
+
+
+def _rasterize_cardinal_path(points: list[list[int]]) -> list[tuple[int, int]]:
+    cells: list[tuple[int, int]] = []
+    for point_index in range(len(points) - 1):
+        start_x, start_y = points[point_index]
+        end_x, end_y = points[point_index + 1]
+        if start_x == end_x:
+            step = 1 if end_y >= start_y else -1
+            segment = [(start_x, y) for y in range(start_y, end_y + step, step)]
+        else:
+            step = 1 if end_x >= start_x else -1
+            segment = [(x, start_y) for x in range(start_x, end_x + step, step)]
+        for cell in segment:
+            if not cells or cells[-1] != cell:
+                cells.append(cell)
+    return cells
+
+
+def _apply_road_paths(
+    road_paths: list[dict[str, Any]],
+    road_endpoints: list[dict[str, Any]],
+    levels: list[list[dict[str, Any]]],
+    rng: random.Random,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+) -> None:
+    endpoint_by_id = {endpoint["id"]: endpoint for endpoint in road_endpoints}
+    level = levels[POPULATED_LEVEL_INDEX]
+    for path in road_paths:
+        if "tile" not in path:
+            continue
+        points = [endpoint_by_id[path["from"]]["at"], *path["waypoints"], endpoint_by_id[path["to"]]["at"]]
+        road_cells = _rasterize_cardinal_path(points)
+        road_tile = _make_tile(path["tile"], rng, known_tiles, f"road_paths.{path['id']}.tile", palette=palette)
+        if not road_tile:
+            raise RecipeError(f"road_paths.{path['id']}.tile must define a non-empty terrain tile")
+        for x, y in road_cells:
+            index = y * MAP_WIDTH + x
+            existing = level[index]
+            if not isinstance(existing, dict) or not existing.get("id"):
+                raise RecipeError(f"road_paths.{path['id']} requires supporting terrain at [{x}, {y}]")
+            if "feature" in existing:
+                raise RecipeError(f"road_paths.{path['id']} cannot overwrite a feature at [{x}, {y}]")
+        for x, y in road_cells:
+            level[y * MAP_WIDTH + x] = road_tile.copy()
+        path["tile"] = road_tile
 def generate_map(
     recipe: dict[str, Any],
     tiles_path: Path,
@@ -2801,7 +2855,8 @@ def generate_map(
     )
     connections = _validate_connections(recipe.get("connections"))
     road_endpoints = _validate_road_endpoints(recipe.get("road_endpoints"), connections, levels)
-    road_paths = _validate_road_paths(recipe.get("road_paths"), road_endpoints)
+    road_paths = _validate_road_paths(recipe.get("road_paths"), road_endpoints, known_tiles, palette)
+    _apply_road_paths(road_paths, road_endpoints, levels, rng, known_tiles, palette)
 
     generated = {
         "id": recipe["id"],
