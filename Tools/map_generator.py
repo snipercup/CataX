@@ -89,7 +89,7 @@ ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
 BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
-BUILDING_LEVEL_FIELDS = {"z"}
+BUILDING_LEVEL_FIELDS = {"z", "rooms", "furniture_anchors"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
 BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
@@ -1127,10 +1127,28 @@ def _validate_recipe_buildings(
                 level_context = f"{context}.building_levels[{level_index}]"
                 if (
                     not isinstance(level_definition, dict)
-                    or set(level_definition) != BUILDING_LEVEL_FIELDS
+                    or not set(level_definition) <= BUILDING_LEVEL_FIELDS
+                    or "z" not in level_definition
                     or type(level_definition.get("z")) is not int
                 ):
-                    raise RecipeError(f"{level_context} must define integer z")
+                    raise RecipeError(f"{level_context} must define integer z and may only contain rooms and furniture_anchors")
+                level_rooms = level_definition.get("rooms")
+                if level_rooms is not None:
+                    if not isinstance(level_rooms, list):
+                        raise RecipeError(f"{level_context}.rooms must be an array")
+                    if any(not isinstance(room_id, str) or room_id not in room_ids for room_id in level_rooms):
+                        unknown_room = next(room_id for room_id in level_rooms if not isinstance(room_id, str) or room_id not in room_ids)
+                        raise RecipeError(f"{level_context}.rooms references room not owned by the building '{unknown_room}'")
+                    if len(level_rooms) != len(set(level_rooms)):
+                        raise RecipeError(f"{level_context}.rooms must not duplicate room IDs")
+                level_anchor_ids = level_definition.get("furniture_anchors")
+                if level_anchor_ids is not None:
+                    if not isinstance(level_anchor_ids, list):
+                        raise RecipeError(f"{level_context}.furniture_anchors must be an array")
+                    if any(not isinstance(anchor_id, str) or not anchor_id.strip() for anchor_id in level_anchor_ids):
+                        raise RecipeError(f"{level_context}.furniture_anchors must contain non-empty anchor IDs")
+                    if len(level_anchor_ids) != len(set(level_anchor_ids)):
+                        raise RecipeError(f"{level_context}.furniture_anchors must not duplicate anchor IDs")
                 level_z = level_definition["z"]
                 if not 0 <= level_z <= MAX_LOGICAL_Z:
                     raise RecipeError(f"{level_context}.z must be an integer from 0 through 10")
@@ -1307,9 +1325,29 @@ def _validate_recipe_buildings(
                 ):
                     raise RecipeError(f"{anchor_context}.at must be within map bounds as a two-integer array")
                 anchor_z = anchor["z"]
+                declared_level_zs = {level_definition["z"] for level_definition in building_levels or []}
                 if type(anchor_z) is not int or not MIN_LOGICAL_Z <= anchor_z <= MAX_LOGICAL_Z:
                     raise RecipeError(f"{anchor_context}.z must be an integer from -10 through 10")
+                if building_levels is not None and anchor_z not in declared_level_zs:
+                    raise RecipeError(f"{anchor_context}.z must name a declared building level")
+                if building_levels is None and anchor_z != z:
+                    raise RecipeError(f"{anchor_context}.z must use building z {z}")
                 _validate_unicode(anchor["kind"], f"{anchor_context}.kind")
+            if building_levels is not None:
+                level_room_lists = [level_definition.get("rooms") for level_definition in building_levels if "rooms" in level_definition]
+                if level_room_lists:
+                    owned_level_rooms = [room_id for rooms_at_level in level_room_lists for room_id in rooms_at_level]
+                    if set(owned_level_rooms) != set(room_ids):
+                        raise RecipeError(f"{context}.building_levels rooms must assign every building room exactly once")
+                    if len(owned_level_rooms) != len(set(owned_level_rooms)):
+                        raise RecipeError(f"{context}.building_levels rooms must not assign a room to multiple levels")
+                level_anchor_lists = [level_definition.get("furniture_anchors") for level_definition in building_levels if "furniture_anchors" in level_definition]
+                if level_anchor_lists:
+                    assigned_anchor_ids = [anchor_id for anchors_at_level in level_anchor_lists for anchor_id in anchors_at_level]
+                    if furniture_anchors is None or set(assigned_anchor_ids) != {anchor["id"] for anchor in furniture_anchors}:
+                        raise RecipeError(f"{context}.building_levels furniture_anchors must assign every building anchor exactly once")
+                    if len(assigned_anchor_ids) != len(set(assigned_anchor_ids)):
+                        raise RecipeError(f"{context}.building_levels furniture_anchors must not assign an anchor to multiple levels")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1490,6 +1528,11 @@ def _validate_building_targets(
                 f"{context} requires an enclosed room with boundary_validation 'complete'"
             )
         for room_id in building["rooms"]:
+            owned_room_levels = [
+                level_definition["z"]
+                for level_definition in building.get("building_levels", [])
+                if room_id in level_definition.get("rooms", [])
+            ] if building.get("building_levels") else [z]
             membership_count = 0
             for level_index, level in enumerate(levels):
                 if not level:
@@ -1500,7 +1543,11 @@ def _validate_building_targets(
                         tile = level[y * MAP_WIDTH + x]
                         if not isinstance(tile, dict) or tile.get("rooms") != [room_id]:
                             continue
-                        if logical_z != z:
+                        if logical_z not in owned_room_levels:
+                            if building.get("building_levels"):
+                                raise RecipeError(
+                                    f"{context} room '{room_id}' has membership at undeclared building level z {logical_z}"
+                                )
                             raise RecipeError(
                                 f"{context} room '{room_id}' has membership outside building z {z}"
                             )
@@ -1509,7 +1556,7 @@ def _validate_building_targets(
                             raise RecipeError(
                                 f"{context} room '{room_id}' membership at [{x}, {y}] is outside building footprint"
                             )
-            if membership_count == 0:
+            if z in owned_room_levels and membership_count == 0:
                 raise RecipeError(f"{context} room '{room_id}' has no membership at z {z}")
             for boundary in room_boundaries:
                 if boundary["room"] == room_id and boundary["z"] == z:
@@ -1712,10 +1759,12 @@ def _validate_building_targets(
                     raise RecipeError(
                         f"{anchor_context} at [{anchor_x}, {anchor_y}] is outside building footprint"
                     )
-                if anchor_z != z:
-                    raise RecipeError(
-                        f"{anchor_context}.z must use building z {z}"
-                    )
+                if building.get("building_levels") is not None:
+                    declared_level_zs = {level_definition["z"] for level_definition in building["building_levels"]}
+                    if anchor_z not in declared_level_zs:
+                        raise RecipeError(f"{anchor_context}.z must name a declared building level")
+                elif anchor_z != z:
+                    raise RecipeError(f"{anchor_context}.z must use building z {z}")
                 level = levels[_level_index(anchor_z)]
                 tile = level[anchor_y * MAP_WIDTH + anchor_x] if level else {}
                 feature = tile.get("feature") if isinstance(tile, dict) else None
