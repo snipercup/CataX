@@ -1684,6 +1684,7 @@ class MapGeneratorTests(unittest.TestCase):
             "exterior_context": {"at": [6, 8], "z": 0},
             "exterior_access_context": {"connection": "office_front_door"},
             "entrance": {"connection": "office_front_door", "facing": "east"},
+            "entrance_validation": "complete",
         }])
         self.assertEqual(generated["building_surfaces"], [
             {"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
@@ -1754,6 +1755,7 @@ class MapGeneratorTests(unittest.TestCase):
             with self.subTest(access_context=access_context):
                 invalid_recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
                 invalid_recipe["buildings"][0].pop("entrance", None)
+                invalid_recipe["buildings"][0].pop("entrance_validation", None)
                 invalid_recipe["buildings"][0]["exterior_context"] = {"at": [6, 8], "z": 0}
                 invalid_recipe["buildings"][0]["exterior_access_context"] = access_context
                 with self.assertRaisesRegex(RecipeError, message):
@@ -1761,6 +1763,7 @@ class MapGeneratorTests(unittest.TestCase):
 
         no_exterior_context = json.loads(recipe_path.read_text(encoding="utf-8"))
         no_exterior_context["buildings"][0].pop("entrance", None)
+        no_exterior_context["buildings"][0].pop("entrance_validation", None)
         no_exterior_context["buildings"][0].pop("exterior_context", None)
         no_exterior_context["buildings"][0]["exterior_access_context"] = {
             "connection": "office_front_door"
@@ -1770,6 +1773,7 @@ class MapGeneratorTests(unittest.TestCase):
 
         non_exterior_connection = json.loads(recipe_path.read_text(encoding="utf-8"))
         non_exterior_connection["buildings"][0].pop("entrance", None)
+        non_exterior_connection["buildings"][0].pop("entrance_validation", None)
         non_exterior_connection["buildings"][0]["exterior_context"] = {"at": [6, 8], "z": 0}
         non_exterior_connection["room_connections"][0]["to"] = {"kind": "room", "id": "garage_bay"}
         non_exterior_connection["buildings"][0]["exterior_access_context"] = {
@@ -1828,6 +1832,35 @@ class MapGeneratorTests(unittest.TestCase):
         non_exterior["buildings"][0]["entrance"] = {"connection": "office_front_door", "facing": "east"}
         with self.assertRaisesRegex(RecipeError, "entrance must reference a room-to-exterior connection"):
             generate_map(non_exterior, TILES_PATH)
+
+    def test_building_entrance_validation_requires_oriented_door_and_alignment(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["entrance_validation"] = "complete"
+
+        generated = generate_map(recipe, TILES_PATH)
+        self.assertEqual(generated["buildings"][0]["entrance_validation"], "complete")
+
+        no_entrance = json.loads(recipe_path.read_text(encoding="utf-8"))
+        no_entrance["buildings"][0].pop("entrance", None)
+        no_entrance["buildings"][0]["entrance_validation"] = "complete"
+        with self.assertRaisesRegex(RecipeError, "entrance_validation requires entrance"):
+            generate_map(no_entrance, TILES_PATH)
+
+        bad_validation = json.loads(recipe_path.read_text(encoding="utf-8"))
+        bad_validation["buildings"][0]["entrance_validation"] = "partial"
+        with self.assertRaisesRegex(RecipeError, "entrance_validation has unsupported validation 'partial'"):
+            generate_map(bad_validation, TILES_PATH)
+
+        no_boundary = json.loads(recipe_path.read_text(encoding="utf-8"))
+        no_boundary["buildings"][0].pop("entrance", None)
+        no_boundary["buildings"][0].pop("entrance_validation", None)
+        no_boundary["buildings"][0].pop("exterior_access_context", None)
+        no_boundary["buildings"][0]["exterior_context"] = {"at": [6, 8], "z": 0}
+        no_boundary["buildings"][0]["entrance"] = {"connection": "garage_opening", "facing": "east"}
+        no_boundary["buildings"][0]["entrance_validation"] = "complete"
+        with self.assertRaisesRegex(RecipeError, "entrance_validation requires a door_furniture boundary at the entrance connection"):
+            generate_map(no_boundary, TILES_PATH)
 
     def test_complete_building_overhead_requires_roof_and_ceiling_classifications(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -1948,6 +1981,7 @@ class MapGeneratorTests(unittest.TestCase):
         missing_exterior_route["buildings"][0].pop("open_space_rooms")
         missing_exterior_route["buildings"][0].pop("exterior_access_context", None)
         missing_exterior_route["buildings"][0].pop("entrance", None)
+        missing_exterior_route["buildings"][0].pop("entrance_validation", None)
         missing_exterior_route["room_connections"][0]["to"] = {"kind": "room", "id": "garage_bay"}
         with self.assertRaisesRegex(RecipeError, "room 'office' has no route to exterior"):
             generate_map(missing_exterior_route, TILES_PATH)
@@ -2791,6 +2825,33 @@ class MapValidatorDimensionTests(unittest.TestCase):
         mismatch["buildings"][0]["exterior_access_context"] = {"connection": "garage_opening"}
         errors = self.validate(mismatch)
         self.assertTrue(any("entrance.connection must match exterior_access_context.connection" in error for error in errors))
+
+    def test_validates_building_entrance_validation_constraints(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["entrance_validation"] = "complete"
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        bad_validation = json.loads(json.dumps(valid_map))
+        bad_validation["buildings"][0]["entrance_validation"] = "partial"
+        errors = self.validate(bad_validation)
+        self.assertTrue(any("entrance_validation has unsupported validation 'partial'" in error for error in errors))
+
+        no_entrance = json.loads(json.dumps(valid_map))
+        no_entrance["buildings"][0].pop("entrance")
+        errors = self.validate(no_entrance)
+        self.assertTrue(any("entrance_validation requires entrance" in error for error in errors))
+
+        wrong_side = json.loads(json.dumps(valid_map))
+        wrong_side["room_boundaries"][7]["side"] = "east"
+        errors = self.validate(wrong_side)
+        self.assertTrue(any("entrance_validation door side 'east' must face 'west'" in error for error in errors))
+
+        no_boundary = json.loads(json.dumps(valid_map))
+        no_boundary["room_boundaries"] = no_boundary["room_boundaries"][:7]
+        errors = self.validate(no_boundary)
+        self.assertTrue(any("entrance_validation requires a door_furniture boundary at the entrance connection" in error for error in errors))
 
     def test_validates_building_exterior_context_constraints(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
