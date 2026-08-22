@@ -98,6 +98,7 @@ var room_connections: Array = []
 var room_boundaries: Array = []
 var buildings: Array = []
 var building_surfaces: Array = []
+var building_supports: Array = []
 var building_compositions: Array = []
 var road_endpoints: Array = []
 var sprite: Texture = null
@@ -157,6 +158,7 @@ func set_data(newdata: Dictionary) -> void:
 	room_boundaries = newdata.get("room_boundaries", [])
 	buildings = newdata.get("buildings", [])
 	building_surfaces = newdata.get("building_surfaces", [])
+	building_supports = newdata.get("building_supports", [])
 	building_compositions = newdata.get("building_compositions", [])
 	road_endpoints = newdata.get("road_endpoints", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
@@ -186,6 +188,8 @@ func get_data() -> Dictionary:
 		mydata["buildings"] = buildings
 	if not building_surfaces.is_empty():
 		mydata["building_surfaces"] = building_surfaces
+	if not building_supports.is_empty():
+		mydata["building_supports"] = building_supports
 	if not building_compositions.is_empty():
 		mydata["building_compositions"] = building_compositions
 	if not road_endpoints.is_empty():
@@ -200,6 +204,7 @@ func get_data() -> Dictionary:
 	_sanitize_room_boundaries(mydata)
 	_sanitize_buildings(mydata)
 	_sanitize_building_surfaces(mydata)
+	_sanitize_building_supports(mydata)
 	_sanitize_building_compositions(mydata)
 	_sanitize_road_endpoints(mydata)
 
@@ -569,11 +574,34 @@ func _sanitize_building_surfaces(data: Dictionary) -> void:
 		var building: Dictionary = building_by_id[surface["building"]]
 		if building.has("building_levels"):
 			var declared_zs: Array = building["building_levels"].map(func(level): return level.get("z"))
-			return surface["z"] in declared_zs and not (surface["kind"] == "roof") and not (surface["kind"] == "ceiling" and surface["z"] == building["z"])
+			var highest_z: int = declared_zs.max()
+			return surface["z"] in declared_zs and not (surface["kind"] == "roof" and surface["z"] != highest_z) and not (surface["kind"] == "ceiling" and surface["z"] == building["z"])
 		return surface["kind"] != "floor" and surface["z"] == building["z"] + 1
 	)
 	if data["building_surfaces"].is_empty():
 		data.erase("building_surfaces")
+
+
+func _sanitize_building_supports(data: Dictionary) -> void:
+	if not data.has("building_supports") or not data["building_supports"] is Array:
+		return
+	var building_by_id: Dictionary = {}
+	if data.has("buildings") and data["buildings"] is Array:
+		for building in data["buildings"]:
+			if building is Dictionary and building.has("id") and building["id"] is String:
+				building_by_id[building["id"]] = building
+	data["building_supports"] = data["building_supports"].filter(func(support):
+		if not (support is Dictionary and support.keys().size() == 6 and support.has("id") and support["id"] is String and not support["id"].is_empty() and support.has("building") and support["building"] in building_by_id and support.has("at") and support["at"] is Array and support["at"].size() == 2 and support["at"][0] is int and support["at"][1] is int and support.has("from_z") and support["from_z"] is int and support.has("to_z") and support["to_z"] is int and support.has("kind") and support["kind"] in ["column", "wall"]):
+			return false
+		var building: Dictionary = building_by_id[support["building"]]
+		var footprint: Dictionary = building["footprint"]
+		if support["at"][0] < footprint["x"] or support["at"][0] >= footprint["x"] + footprint["width"] or support["at"][1] < footprint["y"] or support["at"][1] >= footprint["y"] + footprint["height"]:
+			return false
+		var declared_zs: Array = building.get("building_levels", []).map(func(level): return level.get("z"))
+		return support["from_z"] in declared_zs and support["to_z"] in declared_zs and support["from_z"] < support["to_z"]
+	)
+	if data["building_supports"].is_empty():
+		data.erase("building_supports")
 
 
 func _sanitize_building_compositions(data: Dictionary) -> void:

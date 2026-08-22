@@ -42,6 +42,8 @@ BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
 BUILDING_SURFACE_KINDS = {'roof', 'ceiling', 'floor'}
 BUILDING_COMPOSITION_FIELDS = {'id', 'building', 'required_surfaces'}
+BUILDING_SUPPORT_FIELDS = {'id', 'building', 'at', 'from_z', 'to_z', 'kind'}
+BUILDING_SUPPORT_KINDS = {'column', 'wall'}
 
 class MapValidationError(Exception):
     """Custom exception for map validation errors."""
@@ -187,6 +189,10 @@ class MapValidator:
         if not isinstance(building_compositions, list):
             self.add_error(file_path, "top-level building_compositions must be an array.")
             building_compositions = []
+        building_supports = data.get('building_supports', [])
+        if not isinstance(building_supports, list):
+            self.add_error(file_path, "top-level building_supports must be an array.")
+            building_supports = []
 
         # 2. Check Optional Metadata Types
         metadata_checks = {
@@ -1523,8 +1529,8 @@ class MapValidator:
                     declared_zs = [level_definition.get('z') for level_definition in building_levels if isinstance(level_definition, dict)]
                     if z not in declared_zs:
                         self.add_error(file_path, f"{context} z must name a declared building level for building '{building_id}'.")
-                    if kind == 'roof':
-                        self.add_error(file_path, f"{context} kind 'roof' is not yet supported for multi-level buildings.")
+                    if kind == 'roof' and z != max(declared_zs):
+                        self.add_error(file_path, f"{context} roof must be at highest declared building level z {max(declared_zs)}.")
                     if kind == 'ceiling' and z == building['z']:
                         self.add_error(file_path, f"{context} ceiling cannot be declared at ground level z {z}.")
                     surface_key = (building_id, kind, z)
@@ -1541,6 +1547,32 @@ class MapValidator:
                         self.add_error(file_path, f"{context} duplicates {kind} surface for building '{building_id}'.")
                     seen_surface_kinds.add(surface_key)
 
+        seen_support_ids: Set[str] = set()
+        for idx, support in enumerate(building_supports):
+            context = f"Building support at index {idx}"
+            if not isinstance(support, dict) or set(support) != BUILDING_SUPPORT_FIELDS:
+                self.add_error(file_path, f"{context} must define id, building, at, from_z, to_z, and kind.")
+                continue
+            support_id = support.get('id')
+            if not isinstance(support_id, str) or not support_id:
+                self.add_error(file_path, f"{context} has invalid or missing ID.")
+            elif support_id in seen_support_ids:
+                self.add_error(file_path, f"Duplicate building support ID detected: '{support_id}'")
+            seen_support_ids.add(support_id)
+            building = building_by_id.get(support.get('building'))
+            if building is None:
+                self.add_error(file_path, f"{context} references non-existent building '{support.get('building')}'.")
+                continue
+            at = support.get('at')
+            footprint = building['footprint']
+            if not isinstance(at, list) or len(at) != 2 or not all(type(value) is int for value in at) or not (footprint['x'] <= at[0] < footprint['x'] + footprint['width'] and footprint['y'] <= at[1] < footprint['y'] + footprint['height']):
+                self.add_error(file_path, f"{context} at must be inside building footprint.")
+            declared_zs = {level.get('z') for level in building.get('building_levels', []) if isinstance(level, dict)}
+            if type(support.get('from_z')) is not int or type(support.get('to_z')) is not int or support.get('from_z') not in declared_zs or support.get('to_z') not in declared_zs or support.get('from_z') >= support.get('to_z'):
+                self.add_error(file_path, f"{context} from_z and to_z must be ascending declared building levels.")
+            if support.get('kind') not in BUILDING_SUPPORT_KINDS:
+                self.add_error(file_path, f"{context} has unsupported kind '{support.get('kind')}'.")
+
         surface_kinds_by_building: Dict[str, Set[str]] = {}
         for surface in building_surfaces:
             if not isinstance(surface, dict):
@@ -1552,13 +1584,11 @@ class MapValidator:
         for index, building in enumerate(validated_buildings):
             if building.get('overhead_validation') != 'complete':
                 continue
-            if building.get('building_levels') is not None:
-                self.add_error(file_path, f"Building at index {index} overhead_validation is not yet supported for multi-level buildings.")
-                continue
             surface_kinds = surface_kinds_by_building.get(building['id'], set())
-            for kind in ('roof', 'ceiling'):
+            required_kinds = ('roof', 'ceiling')
+            for kind in required_kinds:
                 if kind not in surface_kinds:
-                    self.add_error(file_path, f"Building at index {index} requires {kind} surface at z {building['z'] + 1}.")
+                    self.add_error(file_path, f"Building at index {index} requires {kind} surface for its declared levels.")
         seen_composition_ids: Set[str] = set()
         seen_composition_buildings: Set[str] = set()
         for idx, composition in enumerate(building_compositions):

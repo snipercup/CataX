@@ -39,7 +39,12 @@
 	"building_surfaces": [
 		{"id": "ground_floor_surface", "building": "office_building", "kind": "floor", "z": 0},
 		{"id": "first_floor_surface", "building": "office_building", "kind": "floor", "z": 2},
-		{"id": "ground_ceiling", "building": "office_building", "kind": "ceiling", "z": 2}
+		{"id": "ground_ceiling", "building": "office_building", "kind": "ceiling", "z": 2},
+		{"id": "first_floor_roof", "building": "office_building", "kind": "roof", "z": 2}
+	],
+	"building_supports": [
+		{"id": "northwest_column", "building": "office_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "column"},
+		{"id": "southeast_column", "building": "office_building", "at": [11, 10], "from_z": 0, "to_z": 2, "kind": "column"}
 	],
 	"room_connections": [
 		{

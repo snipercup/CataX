@@ -37,6 +37,8 @@ The root must be a JSON object with these fields:
 | `levels` | non-empty array | Explicit grouped level definitions. Cannot be combined with root `base_tile`, `regions`, or `operations`. |
 | `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
 | `road_endpoints` | array | Authored road endpoint anchors at map edges. Optional; defaults to `[]`. |
+| `building_surfaces` | array | Authored per-building floor, ceiling, and roof surface semantics. Optional; defaults to `[]`. |
+| `building_supports` | array | Authored multi-level structural support paths. Optional; defaults to `[]`. |
 
 A recipe does not define map dimensions: all generated maps are 32 x 32. Top-down `[x, y]` coordinates start at the top-left. Logical `z` is vertical elevation, not a third element in `[x, y]`. Every shape must fit entirely within the map; operations are never silently clipped.
 
@@ -602,6 +604,29 @@ z: 2  ground-floor ceiling      -> kind "ceiling"
 In the top-down game the player never sees the ceiling: a `ceiling` at `z: 2` is the underside of the first-floor slab that closes the air gap above the ground floor, and it is authored metadata only — it is never rendered. `ceiling` cannot be declared at the ground level itself.
 
 Surfaces do not place tiles on their `z`, create a roof/ceiling/floor mesh, imply collision/support, change lighting/weather, mark rooms indoors, or make overhead cells occupied. `DMap` preserves valid records and removes surfaces whose referenced building is deleted, whose kind is unsupported, or whose `z` no longer matches the building's declared levels; generator and standalone validation enforce the strict reference, uniqueness, and z relationship.
+
+### `building_supports`
+
+`building_supports` authors structural support semantics for a multi-level building without generating columns, walls, beams, collision, or support geometry:
+
+```json
+{
+  "building_supports": [
+    {
+      "id": "northwest_column",
+      "building": "office_building",
+      "at": [7, 7],
+      "from_z": 0,
+      "to_z": 2,
+      "kind": "column"
+    }
+  ]
+}
+```
+
+Each record has exactly `id`, `building`, `at`, `from_z`, `to_z`, and `kind`. `kind` is currently `column` or `wall`. The support coordinate must lie inside the building footprint; `from_z` and `to_z` must be ascending declared occupied building levels. This is an authored assertion that the upper-floor/roof semantics have a structural support path back to a lower occupied level. It does not infer support from tile presence or furniture and does not generate or alter runtime geometry.
+
+`DMap` preserves valid support records and removes records with stale buildings, invalid coordinates, unsupported kinds, or undeclared/non-ascending levels.
 
 ### `building_compositions`
 
