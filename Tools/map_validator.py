@@ -27,7 +27,7 @@ ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_LEVEL_FIELDS = {'z', 'rooms', 'furniture_anchors'}
-BUILDING_STAIRCASE_FIELDS = {'id', 'lower_at', 'upper_at', 'rotation'}
+BUILDING_STAIRCASE_FIELDS = {'id', 'lower_at', 'upper_at', 'rotation', 'upper_rotation', 'landing_at'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
@@ -40,7 +40,7 @@ BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
 BUILDING_OVERHEAD_VALIDATIONS = {'complete'}
 BUILDING_FOOTPRINT_FIELDS = {'x', 'y', 'width', 'height'}
 BUILDING_SURFACE_FIELDS = {'id', 'building', 'kind', 'z'}
-BUILDING_SURFACE_KINDS = {'roof', 'ceiling'}
+BUILDING_SURFACE_KINDS = {'roof', 'ceiling', 'floor'}
 BUILDING_COMPOSITION_FIELDS = {'id', 'building', 'required_surfaces'}
 
 class MapValidationError(Exception):
@@ -103,6 +103,28 @@ class MapValidator:
                 and isinstance(entry.get('id'), str)
                 and isinstance(entry.get('categories'), list)
                 and 'Wall' in entry['categories']
+            )
+        }
+
+    def _slope_tile_ids(self):
+        tile_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'Mods', 'Dimensionfall', 'Tiles', 'Tiles.json'
+        )
+        try:
+            with open(tile_path, 'r', encoding='utf-8') as handle:
+                tile_data = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            return set()
+        if not isinstance(tile_data, list):
+            return set()
+        return {
+            entry['id']
+            for entry in tile_data
+            if (
+                isinstance(entry, dict)
+                and isinstance(entry.get('id'), str)
+                and entry.get('shape') == 'slope'
             )
         }
 
@@ -1008,7 +1030,7 @@ class MapValidator:
                     seen_staircase_ids: Set[str] = set()
                     for staircase_index, staircase in enumerate(staircases):
                         staircase_context = f"{context} staircases[{staircase_index}]"
-                        if not isinstance(staircase, dict) or set(staircase) != BUILDING_STAIRCASE_FIELDS:
+                        if not isinstance(staircase, dict) or not {'id', 'lower_at', 'upper_at', 'rotation'} <= set(staircase) or not set(staircase) <= BUILDING_STAIRCASE_FIELDS:
                             self.add_error(file_path, f"{staircase_context} must define id, lower_at, upper_at, and rotation.")
                             continue
                         staircase_id = staircase.get('id')
@@ -1024,6 +1046,12 @@ class MapValidator:
                         rotation = staircase.get('rotation')
                         if type(rotation) is not int or rotation not in {0, 90, 180, 270}:
                             self.add_error(file_path, f"{staircase_context} rotation must be 0, 90, 180, or 270.")
+                        upper_rotation = staircase.get('upper_rotation', rotation)
+                        if type(upper_rotation) is not int or upper_rotation not in {0, 90, 180, 270}:
+                            self.add_error(file_path, f"{staircase_context} upper_rotation must be 0, 90, 180, or 270.")
+                        landing_at = staircase.get('landing_at')
+                        if landing_at is not None and (not isinstance(landing_at, list) or len(landing_at) != 2 or not all(type(value) is int for value in landing_at)):
+                            self.add_error(file_path, f"{staircase_context} landing_at must be a two-integer coordinate.")
                     declared_level_zs = {level_definition.get('z') for level_definition in building_levels if isinstance(level_definition, dict)} if isinstance(building_levels, list) else set()
                     if not {0, 2} <= declared_level_zs:
                         self.add_error(file_path, f"{context} staircases require declared building levels z 0 and z 2.")
@@ -1342,6 +1370,7 @@ class MapValidator:
                                 self.add_error(file_path, f"{anchor_context} must reference furniture at [{anchor_at[0]}, {anchor_at[1]}] on z {z}.")
             if building.get('staircases') is not None and isinstance(building.get('staircases'), list):
                 declared_level_zs = {level_definition.get('z') for level_definition in building.get('building_levels', []) if isinstance(level_definition, dict)}
+                slope_tile_ids = self._slope_tile_ids()
                 for staircase_index, staircase in enumerate(building['staircases']):
                     if not isinstance(staircase, dict):
                         continue
@@ -1352,20 +1381,42 @@ class MapValidator:
                         continue
                     lower_x, lower_y = lower_at
                     upper_x, upper_y = upper_at
+                    landing_at = staircase.get('landing_at')
                     if not (footprint['x'] <= lower_x < footprint['x'] + footprint['width'] and footprint['y'] <= lower_y < footprint['y'] + footprint['height'] and footprint['x'] <= upper_x < footprint['x'] + footprint['width'] and footprint['y'] <= upper_y < footprint['y'] + footprint['height']):
                         self.add_error(file_path, f"{staircase_context} slope coordinates must be inside building footprint.")
-                    if abs(lower_x - upper_x) + abs(lower_y - upper_y) != 1:
-                        self.add_error(file_path, f"{staircase_context} lower_at and upper_at must be cardinally adjacent.")
+                    if (lower_x, lower_y) == (upper_x, upper_y):
+                        self.add_error(file_path, f"{staircase_context} lower_at and upper_at must not stack at the same coordinates.")
+                    lower_rotation = staircase.get('rotation')
+                    upper_rotation = staircase.get('upper_rotation', lower_rotation)
+                    if landing_at is None:
+                        if abs(lower_x - upper_x) + abs(lower_y - upper_y) != 1:
+                            self.add_error(file_path, f"{staircase_context} lower_at and upper_at must be cardinally adjacent.")
+                    else:
+                        if not isinstance(landing_at, list) or len(landing_at) != 2 or not all(type(value) is int for value in landing_at):
+                            continue
+                        landing_x, landing_y = landing_at
+                        if not (footprint['x'] <= landing_x < footprint['x'] + footprint['width'] and footprint['y'] <= landing_y < footprint['y'] + footprint['height']):
+                            self.add_error(file_path, f"{staircase_context} landing_at must be inside building footprint.")
+                        if abs(lower_x - landing_x) + abs(lower_y - landing_y) != 1:
+                            self.add_error(file_path, f"{staircase_context} landing_at must be cardinally adjacent to lower_at.")
+                        if abs(upper_x - landing_x) + abs(upper_y - landing_y) != 1:
+                            self.add_error(file_path, f"{staircase_context} landing_at must be cardinally adjacent to upper_at.")
                     if not {0, 2}.issubset(declared_level_zs):
                         continue
-                    rotation = staircase.get('rotation')
-                    for slope_z, coordinate in ((1, lower_at), (2, upper_at)):
+                    for slope_z, coordinate, slope_rotation in ((1, lower_at, lower_rotation), (2, upper_at, upper_rotation)):
                         slope_x, slope_y = coordinate
                         level_index = slope_z + 10
                         level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
                         tile = level[slope_y * MAP_WIDTH + slope_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
-                        if not isinstance(tile, dict) or tile.get('id') != 'grass_ramp_00' or tile.get('rotation', 0) != rotation:
-                            self.add_error(file_path, f"{staircase_context} requires a grass_ramp_00 slope with rotation {rotation} at [{slope_x}, {slope_y}] on z {slope_z}.")
+                        if not isinstance(tile, dict) or tile.get('id') not in slope_tile_ids or tile.get('rotation', 0) != slope_rotation:
+                            self.add_error(file_path, f"{staircase_context} requires a slope tile with rotation {slope_rotation} at [{slope_x}, {slope_y}] on z {slope_z}.")
+                    if landing_at is not None and isinstance(landing_at, list) and len(landing_at) == 2 and all(type(value) is int for value in landing_at):
+                        landing_x, landing_y = landing_at
+                        level_index = 1 + 10
+                        level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+                        tile = level[landing_y * MAP_WIDTH + landing_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+                        if not isinstance(tile, dict) or not tile.get('id') or tile.get('id') in slope_tile_ids:
+                            self.add_error(file_path, f"{staircase_context} requires a flat landing block at [{landing_x}, {landing_y}] on z 1.")
             if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
                 exterior_context = building['exterior_context']
                 at = exterior_context.get('at')
@@ -1463,16 +1514,32 @@ class MapValidator:
             kind = surface.get('kind')
             if kind not in BUILDING_SURFACE_KINDS:
                 self.add_error(file_path, f"{context} has unsupported kind '{kind}'.")
-            elif building is not None:
-                surface_key = (building_id, kind)
-                if surface_key in seen_surface_kinds:
-                    self.add_error(file_path, f"{context} duplicates {kind} surface for building '{building_id}'.")
-                seen_surface_kinds.add(surface_key)
             z = surface.get('z')
             if type(z) is not int or not -10 <= z <= 10:
                 self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
-            elif building is not None and z != building['z'] + 1:
-                self.add_error(file_path, f"{context} z must be immediately above building '{building_id}' at z {building['z'] + 1}.")
+            elif building is not None:
+                building_levels = building.get('building_levels')
+                if building_levels is not None:
+                    declared_zs = [level_definition.get('z') for level_definition in building_levels if isinstance(level_definition, dict)]
+                    if z not in declared_zs:
+                        self.add_error(file_path, f"{context} z must name a declared building level for building '{building_id}'.")
+                    if kind == 'roof':
+                        self.add_error(file_path, f"{context} kind 'roof' is not yet supported for multi-level buildings.")
+                    if kind == 'ceiling' and z == building['z']:
+                        self.add_error(file_path, f"{context} ceiling cannot be declared at ground level z {z}.")
+                    surface_key = (building_id, kind, z)
+                    if surface_key in seen_surface_kinds:
+                        self.add_error(file_path, f"{context} duplicates {kind} surface at z {z} for building '{building_id}'.")
+                    seen_surface_kinds.add(surface_key)
+                else:
+                    if kind == 'floor':
+                        self.add_error(file_path, f"{context} kind 'floor' requires multi-level building_levels.")
+                    if z != building['z'] + 1:
+                        self.add_error(file_path, f"{context} z must be immediately above building '{building_id}' at z {building['z'] + 1}.")
+                    surface_key = (building_id, kind)
+                    if surface_key in seen_surface_kinds:
+                        self.add_error(file_path, f"{context} duplicates {kind} surface for building '{building_id}'.")
+                    seen_surface_kinds.add(surface_key)
 
         surface_kinds_by_building: Dict[str, Set[str]] = {}
         for surface in building_surfaces:
@@ -1484,6 +1551,9 @@ class MapValidator:
                 surface_kinds_by_building.setdefault(building_id, set()).add(kind)
         for index, building in enumerate(validated_buildings):
             if building.get('overhead_validation') != 'complete':
+                continue
+            if building.get('building_levels') is not None:
+                self.add_error(file_path, f"Building at index {index} overhead_validation is not yet supported for multi-level buildings.")
                 continue
             surface_kinds = surface_kinds_by_building.get(building['id'], set())
             for kind in ('roof', 'ceiling'):
