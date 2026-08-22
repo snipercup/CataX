@@ -595,7 +595,7 @@ Generate an outdoor map with trees, rocks, vegetation, and simple interactable o
 
 ## Phase 6 — Areas, rooms, and buildings
 
-**Status: in progress; level-aware runtime area and multi-level footprint foundations complete**
+**Status: in progress; authored area/room/building foundations and first physical multi-level building slice complete**
 
 The generator needs semantic areas before it can create convincing buildings.
 
@@ -657,9 +657,9 @@ An opted-in `overhead_validation: "complete"` requires that the validated buildi
 
 `building_surfaces` now authors per-floor ceiling/floor surfaces for multi-level buildings in addition to single-level roofs/ceilings. For a building with `building_levels`, `z` must name a declared occupied level and `kind` may be `floor`, `ceiling`, or `roof`; a multi-level `roof` must be at the highest declared occupied level. This models the top-down vertical story directly — `z: 0` ground-floor surface, `z: 1` air gap that is never a surface, `z: 2` first-floor surface, the ground-floor `ceiling` at `z: 2`, and the roof at the highest occupied level. `building_supports` adds authored structural support paths from lower to upper occupied levels.
 
-The generator, standalone validator, and DMap save/load path validate or preserve these metadata-only contracts. They do not generate upper floors, ceilings, walls, roofs, supports, stairs, vertical transitions, collision, navigation, or indoor runtime behavior; physical floor geometry and runtime behavior remain future work.
+The generator, standalone map validator, and `DMap` save/load path validate or preserve these contracts. An opt-in `building_geometry` record now generates physical floors on declared occupied levels, wall tiles from authored room boundaries, and support tiles from authored support paths. Existing doors and staircase slopes remain authored operations. Lower staircase slope cells reserve empty headroom on the directly overhead z2 floor so the player is not blocked by the upper floor. The generated geometry uses the existing Chunk collision/navigation pipeline; a focused Godot test verifies the maintained building's multi-level route through its authored slopes.
 
-This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, per-floor physical geometry, staircase generation, vertical transition behavior, or generalized templates.
+This slice intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, roof/ceiling generation, automatic door or staircase generation, or generalized templates.
 
 Capabilities:
 
@@ -707,7 +707,7 @@ Important checks:
 
 ### Success criterion
 
-Generate one small, enterable building that loads correctly and has a reachable interior. The generated structure must exercise vertical geometry and include at least two reachable occupied floors, valid support, a working vertical transition, and correctly scoped rooms and furniture.
+Generate one small, enterable building that loads correctly and has a reachable interior. The generated structure must exercise physical floor and wall geometry, include at least two reachable occupied floors, valid generated support, an authored working vertical transition, and correctly scoped rooms and furniture. The maintained multi-level building recipe now provides the first evidence for this criterion; remaining roof/ceiling and generalized building-generation work stays outside this slice.
 
 ## Phase 7 — Roads and map connections
 
@@ -855,9 +855,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, authored furniture anchor metadata, the multi-level building footprint foundation, per-floor room/furniture ownership metadata, two-slope staircase physical semantics, per-floor floor/ceiling surface semantics, and multi-level roof/support semantics are complete. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. The next contribution may implement a concrete map-to-map compatibility contract, but should not introduce a second overmap settlement or city-routing system.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, and authored staircase evidence are complete for the first narrow building slice. The next Phase 6 contribution should verify a manual player traversal of the maintained generated building and decide whether roof/ceiling geometry belongs before Phase 6 completion. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Its next optional contribution is a concrete map-to-map compatibility contract, but it should not introduce a second overmap settlement or city-routing system.
 
-Do not yet generate walls, doors, roofs, multi-level building geometry, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads.
+Do not yet generate doors, roofs/ceilings, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -919,6 +919,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Straight and corner staircase formations with no slope stacking
 [Complete] Per-floor ceiling/floor surface semantics (top-down)
 [Complete] Multi-level roof/support semantics
+[Complete] Opt-in physical building floors, wall boundaries, and supports
+[Complete] Multi-level building navigation test through authored slope geometry
 [Complete] Map-local road route painting between declared endpoints
 [Complete] Runtime navigation validation for a painted local road route
 [Next]     Explicit map-to-map edge compatibility

@@ -428,7 +428,7 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 
 ### `buildings`
 
-`buildings` groups existing authored room evidence into one explicit, rectangular single-level building footprint. It does not generate terrain, walls, doors, roofs, furniture, tile-local memberships, or indoor runtime state:
+`buildings` groups authored room evidence into one explicit, rectangular building footprint. By default it remains metadata-only. An opted-in `building_geometry` record generates physical floors, authored wall-boundary tiles, and authored support tiles while preserving existing door features and staircase slopes:
 
 ```json
 {
@@ -443,9 +443,23 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 }
 ```
 
-Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `building_levels`, `staircases`, `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, `exterior_access_context`, `entrance`, `entrances`, `entrance_validation`, and `furniture_anchors`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `building_geometry`, `building_levels`, `staircases`, `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, `exterior_access_context`, `entrance`, `entrances`, `entrance_validation`, and `furniture_anchors`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
 
-Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
+Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. Without `building_geometry`, this remains a strict ownership/containment contract; with it, the footprint's declared occupied levels receive generated floor terrain.
+
+`building_geometry` has exactly these fields:
+
+```json
+{
+  "building_geometry": {
+    "floor_tile": {"id": "concrete_00"},
+    "wall_tile": {"id": "brick_wall_00"},
+    "support_tile": {"id": "brick_wall_00"}
+  }
+}
+```
+
+`floor_tile` must be a known `Ground`, `Floor`, or `Urban` tile; `wall_tile` and `support_tile` must be known `Wall` tiles. The generator fills every declared occupied building level, materializes `wall_tile` boundaries from `room_boundaries`, and materializes `support_tile` at `building_supports.from_z`. Existing features are preserved, existing slope tiles are preserved, lower staircase slope coordinates reserve empty headroom on the directly overhead z2 floor, and generated geometry rejects feature overwrites. Doors, roofs/ceilings, and staircase slopes remain authored operations in this first physical slice; collision and navigation are verified by Godot tests rather than inferred by Python.
 
 A building may declare a multi-level footprint foundation with `building_levels`:
 
@@ -461,7 +475,7 @@ A building may declare a multi-level footprint foundation with `building_levels`
 
 `building_levels` is an optional non-empty, strictly ascending array of objects with required `z` and optional `rooms` and `furniture_anchors` arrays. The building record itself remains rooted at ground level `z: 0`. Declared occupied floor levels must be even logical levels: `z: 0` is the ground floor, `z: 1` is an intentional open gap, `z: 2` is the ceiling/first-floor level, `z: 3` is another open gap, and so on. The current supported range is `0` through `10`. The declaration must start with `{"z": 0}`; odd levels are not occupied floor declarations. A declaration such as `[{"z": 0, "rooms": ["office"], "furniture_anchors": ["desk_anchor"]}, {"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]}]` assigns each room and furniture anchor to one occupied floor. When either ownership list is used, it must assign every aggregate building room or anchor exactly once. A declaration such as `[{"z": 0}, {"z": 2}, {"z": 4}]` remains valid as a vertical-only foundation without per-floor ownership lists.
 
-This is a metadata-only foundation. It does not generate upper floors, ceilings, walls, roofs, supports, stairs, vertical transitions, collision, navigation, or indoor runtime behavior. Existing room and furniture features can now be assigned to declared occupied floors through the ownership lists, but their physical floor geometry and runtime behavior remain undefined until later multi-level schema work. `DMap` preserves valid `building_levels` declarations through save/load and removes malformed declarations.
+Without `building_geometry`, this is a metadata-only foundation. With `building_geometry`, the generator creates physical floor, wall-boundary, and support tiles for the declared building levels. It still does not generate roofs/ceilings, doors, stairs, vertical transitions, indoor runtime state, or runtime behavior beyond the existing Chunk geometry for the emitted tiles. `DMap` preserves valid declarations through save/load and removes malformed declarations.
 
 A building may declare staircases with `staircases`. Staircases are authored physical transition semantics for a two-floor building: exactly two slope blocks are needed to ascend from the ground floor to the first floor. The two slopes never stack — the upper slope must be horizontally offset from the lower slope. Both slope tiles must be tiles whose tile-database `shape` is `"slope"` (for example `grass_ramp_00`, `wood_stairs`, or `dirt_light_ramp_00`), placed on `z: 1` (lower) and `z: 2` (upper). Staircases require declared building levels `z: 0` and `z: 2`.
 
@@ -491,7 +505,7 @@ The lower slope at `lower_at` on `z: 1` and the upper slope at `upper_at` on `z:
 
 The landing block at `landing_at` on `z: 1` must be a flat (non-slope) existing tile, cardinally adjacent to both `lower_at` and `upper_at`. `upper_rotation` is optional and defaults to `rotation`; it is the editor-facing rotation of the upper slope, which may turn the corner. The maintained `Tools/examples/map_recipe_multi_level_building_foundation.json` demonstrates both formations.
 
-Every staircase record has a unique `id` and required `lower_at`, `upper_at`, and editor-facing `rotation`. All coordinates must be inside the building footprint. Staircase metadata does not generate slope tiles, stairs, floor geometry, support, collision, navigation, or player traversal. It validates existing physical evidence only; the existing slope runtime tests remain responsible for mesh, collision, navigation, and traversal behavior.
+Every staircase record has a unique `id` and required `lower_at`, `upper_at`, and editor-facing `rotation`. All coordinates must be inside the building footprint. Staircase metadata still does not generate slope tiles; it validates existing slope evidence. When combined with `building_geometry`, floors and supports are generated around those authored slopes, while the existing slope runtime tests remain responsible for mesh, collision, navigation, and traversal behavior.
 
 A building may opt into authored access completeness with `"access_validation": "complete"`:
 
