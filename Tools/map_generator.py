@@ -87,9 +87,10 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_LEVEL_FIELDS = {"z", "rooms", "furniture_anchors"}
+BUILDING_STAIRCASE_FIELDS = {"id", "lower_at", "upper_at", "rotation"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
 BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
@@ -1166,6 +1167,43 @@ def _validate_recipe_buildings(
             if z != 0:
                 raise RecipeError(f"{context}.z must be 0 when building_levels is declared")
         access_validation = building.get("access_validation")
+        staircases = building.get("staircases")
+        if staircases is not None:
+            if not isinstance(staircases, list) or not staircases:
+                raise RecipeError(f"{context}.staircases must be a non-empty array")
+            seen_staircase_ids: set[str] = set()
+            for staircase_index, staircase in enumerate(staircases):
+                staircase_context = f"{context}.staircases[{staircase_index}]"
+                if not isinstance(staircase, dict) or set(staircase) != BUILDING_STAIRCASE_FIELDS:
+                    raise RecipeError(f"{staircase_context} must define id, lower_at, upper_at, and rotation")
+                staircase_id = staircase["id"]
+                if not isinstance(staircase_id, str) or not staircase_id.strip():
+                    raise RecipeError(f"{staircase_context}.id must be a non-empty string")
+                _validate_unicode(staircase_id, f"{staircase_context}.id")
+                if DEFINITION_NAME_PATTERN.fullmatch(staircase_id) is None:
+                    raise RecipeError(f"{staircase_context}.id may contain only letters, numbers, underscores, and hyphens")
+                if staircase_id in seen_staircase_ids:
+                    raise RecipeError(f"{staircase_context} duplicates staircase ID '{staircase_id}'")
+                seen_staircase_ids.add(staircase_id)
+                for coordinate_name in ("lower_at", "upper_at"):
+                    coordinate = staircase[coordinate_name]
+                    if (
+                        not isinstance(coordinate, list)
+                        or len(coordinate) != 2
+                        or any(type(value) is not int for value in coordinate)
+                        or not 0 <= coordinate[0] < MAP_WIDTH
+                        or not 0 <= coordinate[1] < MAP_HEIGHT
+                    ):
+                        raise RecipeError(f"{staircase_context}.{coordinate_name} must be within map bounds as a two-integer array")
+                rotation = staircase["rotation"]
+                if type(rotation) is not int or rotation not in VALID_ROTATIONS:
+                    raise RecipeError(f"{staircase_context}.rotation must be 0, 90, 180, or 270")
+            declared_level_zs = {level_definition["z"] for level_definition in building_levels or []}
+            if not {0, 2} <= declared_level_zs:
+                raise RecipeError(f"{context}.staircases require declared building levels z 0 and z 2")
+        if staircases is not None and building_levels is None:
+            raise RecipeError(f"{context}.staircases require building_levels")
+        access_validation = building.get("access_validation")
         if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
             raise RecipeError(
                 f"{context}.access_validation has unsupported validation '{access_validation}'"
@@ -1356,6 +1394,8 @@ def _validate_recipe_buildings(
         }
         if building_levels is not None:
             validated_building["building_levels"] = building_levels
+        if staircases is not None:
+            validated_building["staircases"] = staircases
         if access_validation is not None:
             validated_building["access_validation"] = access_validation
         if interior_rooms is not None:
@@ -1777,6 +1817,24 @@ def _validate_building_targets(
                     raise RecipeError(
                         f"{anchor_context} must reference furniture at [{anchor_x}, {anchor_y}] on z {anchor_z}"
                     )
+        if building.get("staircases") is not None:
+            for staircase_index, staircase in enumerate(building["staircases"]):
+                staircase_context = f"{context}.staircases[{staircase_index}]"
+                lower_x, lower_y = staircase["lower_at"]
+                upper_x, upper_y = staircase["upper_at"]
+                if not _point_in_building_footprint(lower_x, lower_y, footprint) or not _point_in_building_footprint(upper_x, upper_y, footprint):
+                    raise RecipeError(f"{staircase_context} slope coordinates must be inside building footprint")
+                if abs(lower_x - upper_x) + abs(lower_y - upper_y) != 1:
+                    raise RecipeError(f"{staircase_context} lower_at and upper_at must be cardinally adjacent")
+                rotation = staircase["rotation"]
+                for slope_z, coordinate in ((1, staircase["lower_at"]), (2, staircase["upper_at"])):
+                    slope_x, slope_y = coordinate
+                    level = levels[_level_index(slope_z)]
+                    tile = level[slope_y * MAP_WIDTH + slope_x] if level else {}
+                    if not isinstance(tile, dict) or tile.get("id") != "grass_ramp_00" or tile.get("rotation", 0) != rotation:
+                        raise RecipeError(
+                            f"{staircase_context} requires a grass_ramp_00 slope with rotation {rotation} at [{slope_x}, {slope_y}] on z {slope_z}"
+                        )
         if building.get("overhead_validation") == "complete":
             surface_kinds = {
                 surface["kind"]

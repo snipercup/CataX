@@ -422,7 +422,7 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 }
 ```
 
-Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `building_levels`, `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, `exterior_access_context`, `entrance`, `entrances`, `entrance_validation`, and `furniture_anchors`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `building_levels`, `staircases`, `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, `exterior_access_context`, `entrance`, `entrances`, `entrance_validation`, and `furniture_anchors`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
 
 Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
 
@@ -441,6 +441,21 @@ A building may declare a multi-level footprint foundation with `building_levels`
 `building_levels` is an optional non-empty, strictly ascending array of objects with required `z` and optional `rooms` and `furniture_anchors` arrays. The building record itself remains rooted at ground level `z: 0`. Declared occupied floor levels must be even logical levels: `z: 0` is the ground floor, `z: 1` is an intentional open gap, `z: 2` is the ceiling/first-floor level, `z: 3` is another open gap, and so on. The current supported range is `0` through `10`. The declaration must start with `{"z": 0}`; odd levels are not occupied floor declarations. A declaration such as `[{"z": 0, "rooms": ["office"], "furniture_anchors": ["desk_anchor"]}, {"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]}]` assigns each room and furniture anchor to one occupied floor. When either ownership list is used, it must assign every aggregate building room or anchor exactly once. A declaration such as `[{"z": 0}, {"z": 2}, {"z": 4}]` remains valid as a vertical-only foundation without per-floor ownership lists.
 
 This is a metadata-only foundation. It does not generate upper floors, ceilings, walls, roofs, supports, stairs, vertical transitions, collision, navigation, or indoor runtime behavior. Existing room and furniture features can now be assigned to declared occupied floors through the ownership lists, but their physical floor geometry and runtime behavior remain undefined until later multi-level schema work. `DMap` preserves valid `building_levels` declarations through save/load and removes malformed declarations.
+
+A building may declare a two-slope staircase with `staircases`:
+
+```json
+{
+  "building_levels": [{"z": 0}, {"z": 2}],
+  "staircases": [
+    {"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90}
+  ]
+}
+```
+
+Each staircase has exactly `id`, `lower_at`, `upper_at`, and editor-facing `rotation`. The two coordinates must be cardinally adjacent and inside the building footprint. The generator requires a `grass_ramp_00` slope with the declared rotation at `lower_at` on `z: 1`, followed by a second `grass_ramp_00` slope with the same rotation at `upper_at` on `z: 2`. This explicitly models the player’s two slope blocks from the ground-floor approach through the open gap to the second-floor surface. Staircases require declared building levels `z: 0` and `z: 2`.
+
+Staircase metadata does not generate slope tiles, stairs, floor geometry, support, collision, navigation, or player traversal. It validates existing physical evidence only; the existing slope runtime tests remain responsible for mesh, collision, navigation, and traversal behavior.
 
 A building may opt into authored access completeness with `"access_validation": "complete"`:
 

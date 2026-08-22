@@ -19,6 +19,9 @@
 				{"z": 0, "rooms": ["office", "garage_bay"], "furniture_anchors": ["office_door_anchor", "garage_door_anchor"]},
 				{"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]}
 			],
+			"staircases": [
+				{"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90}
+			],
 			"exterior_context": {"at": [6, 8], "z": 0},
 			"exterior_access_context": {"connection": "office_front_door"},
 			"entrances": [
@@ -64,7 +67,9 @@
 		{"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 2, "height": 2},
 		{"type": "set", "x": 11, "y": 8, "tile": {"id": "concrete_00"}},
 		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 1, "height": 1},
+		{"type": "set", "x": 9, "y": 9, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}},
 		{"type": "rectangle", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2, "tile": {"id": "concrete_00"}},
+		{"type": "set", "x": 10, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 90}},
 		{"type": "room_rectangle", "room": "office_upper", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2},
 		{"type": "furniture", "id": "bench_garden", "x": 8, "y": 8, "z": 2, "rotation": 0},
 		{"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
