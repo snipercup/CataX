@@ -105,6 +105,8 @@ BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
 BUILDING_SURFACE_FIELDS = {"id", "building", "kind", "z"}
 BUILDING_SURFACE_KINDS = {"roof", "ceiling", "floor"}
 BUILDING_COMPOSITION_FIELDS = {"id", "building", "required_surfaces"}
+BUILDING_SUPPORT_FIELDS = {"id", "building", "at", "from_z", "to_z", "kind"}
+BUILDING_SUPPORT_KINDS = {"column", "wall"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -121,6 +123,7 @@ RECIPE_FIELDS = {
     "room_boundaries",
     "buildings",
     "building_surfaces",
+    "building_supports",
     "building_compositions",
     "patterns",
     "regions",
@@ -1496,8 +1499,8 @@ def _validate_recipe_building_surfaces(
                 raise RecipeError(
                     f"{context}.z must name a declared building level for building '{building_id}'"
                 )
-            if kind == "roof":
-                raise RecipeError(f"{context}.kind 'roof' is not yet supported for multi-level buildings")
+            if kind == "roof" and z != max(declared_zs):
+                raise RecipeError(f"{context}.kind 'roof' must be at the highest declared building level z {max(declared_zs)}")
             if kind == "ceiling" and z == target_building["z"]:
                 raise RecipeError(f"{context} ceiling cannot be declared at ground level z {z}")
         else:
@@ -1516,6 +1519,42 @@ def _validate_recipe_building_surfaces(
     return validated
 
 
+def _validate_recipe_building_supports(
+    supports: Any, buildings: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    if not isinstance(supports, list):
+        raise RecipeError("building_supports must be an array")
+    building_by_id = {building["id"]: building for building in buildings}
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, support in enumerate(supports):
+        context = f"building_supports[{index}]"
+        if not isinstance(support, dict) or set(support) != BUILDING_SUPPORT_FIELDS:
+            raise RecipeError(f"{context} must define id, building, at, from_z, to_z, and kind")
+        support_id = support["id"]
+        if not isinstance(support_id, str) or not support_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        if support_id in seen_ids:
+            raise RecipeError(f"duplicate building support ID '{support_id}'")
+        seen_ids.add(support_id)
+        building_id = support["building"]
+        if building_id not in building_by_id:
+            raise RecipeError(f"{context}.building references unknown building '{building_id}'")
+        at = support["at"]
+        if not isinstance(at, list) or len(at) != 2 or any(type(value) is not int for value in at):
+            raise RecipeError(f"{context}.at must be a two-integer coordinate")
+        building = building_by_id[building_id]
+        footprint = building["footprint"]
+        if not _point_in_building_footprint(at[0], at[1], footprint):
+            raise RecipeError(f"{context}.at must be inside building footprint")
+        from_z, to_z = support["from_z"], support["to_z"]
+        declared_zs = {level["z"] for level in building.get("building_levels", [])}
+        if type(from_z) is not int or type(to_z) is not int or from_z not in declared_zs or to_z not in declared_zs or from_z >= to_z:
+            raise RecipeError(f"{context}.from_z and to_z must be ascending declared building levels")
+        if support["kind"] not in BUILDING_SUPPORT_KINDS:
+            raise RecipeError(f"{context}.kind has unsupported kind '{support['kind']}'")
+        validated.append(dict(support))
+    return validated
 def _validate_recipe_building_compositions(
     compositions: Any,
     buildings: list[dict[str, Any]],
@@ -2675,6 +2714,9 @@ def generate_map(
     building_surfaces = _validate_recipe_building_surfaces(
         recipe.get("building_surfaces", []), buildings
     )
+    building_supports = _validate_recipe_building_supports(
+        recipe.get("building_supports", []), buildings
+    )
     building_compositions = _validate_recipe_building_compositions(
         recipe.get("building_compositions", []), buildings, building_surfaces
     )
@@ -2744,6 +2786,8 @@ def generate_map(
         generated["buildings"] = buildings
     if building_surfaces:
         generated["building_surfaces"] = building_surfaces
+    if building_supports:
+        generated["building_supports"] = building_supports
     if building_compositions:
         generated["building_compositions"] = building_compositions
     if road_endpoints:

@@ -336,6 +336,10 @@ func test_dmap_building_surfaces_roundtrip_and_sanitization():
 			{"id": "multi_ceiling", "building": "multi_building", "kind": "ceiling", "z": 2},
 			{"id": "bad_floor_gap", "building": "multi_building", "kind": "floor", "z": 1},
 		],
+		"building_supports": [
+			{"id": "valid_column", "building": "multi_building", "at": [16, 7], "from_z": 0, "to_z": 2, "kind": "column"},
+			{"id": "bad_support", "building": "multi_building", "at": [20, 20], "from_z": 0, "to_z": 2, "kind": "column"},
+		],
 		"levels": [[
 			{"id": "concrete_00"},
 		]],
@@ -348,6 +352,9 @@ func test_dmap_building_surfaces_roundtrip_and_sanitization():
 		{"id": "multi_floor", "building": "multi_building", "kind": "floor", "z": 0},
 		{"id": "multi_floor_upper", "building": "multi_building", "kind": "floor", "z": 2},
 		{"id": "multi_ceiling", "building": "multi_building", "kind": "ceiling", "z": 2},
+	])
+	assert_eq(data["building_supports"], [
+		{"id": "valid_column", "building": "multi_building", "at": [16, 7], "from_z": 0, "to_z": 2, "kind": "column"},
 	])
 
 
