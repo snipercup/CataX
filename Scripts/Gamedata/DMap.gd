@@ -381,6 +381,30 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				previous_level_z = level_definition["z"]
 			if building["building_levels"][0].get("z") != 0:
 				return false
+		if building.has("staircases"):
+			if not building["staircases"] is Array or building["staircases"].is_empty() or not building.has("building_levels"):
+				return false
+			var staircase_ids: Array = []
+			for staircase in building["staircases"]:
+				if not staircase is Dictionary \
+				or staircase.keys().size() != 4 \
+				or not staircase.has("id") \
+				or not staircase["id"] is String \
+				or staircase["id"].is_empty() \
+				or staircase["id"] in staircase_ids \
+				or not staircase.has("lower_at") \
+				or not staircase["lower_at"] is Array \
+				or staircase["lower_at"].size() != 2 \
+				or not staircase.has("upper_at") \
+				or not staircase["upper_at"] is Array \
+				or staircase["upper_at"].size() != 2 \
+				or not staircase.has("rotation") \
+				or not staircase["rotation"] is int \
+				or staircase["rotation"] not in [0, 90, 180, 270]:
+					return false
+				staircase_ids.append(staircase["id"])
+			if not (0 in building["building_levels"].map(func(level): return level.get("z")) and 2 in building["building_levels"].map(func(level): return level.get("z"))):
+				return false
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
 				return false
