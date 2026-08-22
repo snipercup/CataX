@@ -441,6 +441,16 @@ func _sanitize_buildings(data: Dictionary) -> void:
 						return false
 				elif abs(lower_at[0] - upper_at[0]) + abs(lower_at[1] - upper_at[1]) != 1:
 					return false
+		if building.has("building_geometry"):
+			var geometry: Variant = building["building_geometry"]
+			if not geometry is Dictionary or geometry.keys().size() != 3:
+				return false
+			for geometry_key in ["floor_tile", "wall_tile", "support_tile"]:
+				if not geometry.has(geometry_key) or not geometry[geometry_key] is Dictionary \
+				or not geometry[geometry_key].has("id") \
+				or not geometry[geometry_key]["id"] is String \
+				or geometry[geometry_key]["id"].is_empty():
+					return false
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
 				return false

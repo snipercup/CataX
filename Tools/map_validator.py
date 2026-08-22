@@ -26,7 +26,7 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors', 'building_geometry'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_LEVEL_FIELDS = {'z', 'rooms', 'furniture_anchors'}
 BUILDING_STAIRCASE_FIELDS = {'id', 'lower_at', 'upper_at', 'rotation', 'upper_rotation', 'landing_at'}
@@ -845,6 +845,14 @@ class MapValidator:
             unknown_fields = sorted(set(building) - BUILDING_FIELDS)
             if unknown_fields:
                 self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
+            if 'building_geometry' in building:
+                geometry = building['building_geometry']
+                if not isinstance(geometry, dict) or set(geometry) != {'floor_tile', 'wall_tile', 'support_tile'}:
+                    self.add_error(file_path, f"{context} building_geometry must define floor_tile, wall_tile, and support_tile.")
+                else:
+                    for geometry_key, tile in geometry.items():
+                        if not isinstance(tile, dict) or not isinstance(tile.get('id'), str) or not tile.get('id'):
+                            self.add_error(file_path, f"{context} building_geometry.{geometry_key} must contain a non-empty tile id.")
             for field in BUILDING_REQUIRED_FIELDS:
                 if field not in building:
                     self.add_error(file_path, f"{context} is missing required field '{field}'.")
