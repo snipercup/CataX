@@ -269,6 +269,7 @@ func test_dmap_building_levels_roundtrip_and_sanitization():
 				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 				"z": 0,
 				"building_levels": [{"z": 0}, {"z": 2}],
+				"staircases": [{"id": "corner_stairs", "lower_at": [8, 9], "upper_at": [9, 8], "landing_at": [9, 9], "rotation": 90, "upper_rotation": 0}],
 			},
 			{
 				"id": "bad_levels",
@@ -299,6 +300,7 @@ func test_dmap_building_levels_roundtrip_and_sanitization():
 		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 		"z": 0,
 		"building_levels": [{"z": 0}, {"z": 2}],
+		"staircases": [{"id": "corner_stairs", "lower_at": [8, 9], "upper_at": [9, 8], "landing_at": [9, 9], "rotation": 90, "upper_rotation": 0}],
 	}])
 
 
@@ -311,15 +313,28 @@ func test_dmap_building_surfaces_roundtrip_and_sanitization():
 		"rooms": [
 			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
 		],
-		"buildings": [{
-			"id": "office_building",
-			"rooms": ["office"],
-			"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
-			"z": 0,
-		}],
+		"buildings": [
+			{
+				"id": "office_building",
+				"rooms": ["office"],
+				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+			},
+			{
+				"id": "multi_building",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+				"building_levels": [{"z": 0}, {"z": 2}],
+			},
+		],
 		"building_surfaces": [
 			{"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
 			{"id": "stale_roof", "building": "missing_building", "kind": "roof", "z": 1},
+			{"id": "multi_floor", "building": "multi_building", "kind": "floor", "z": 0},
+			{"id": "multi_floor_upper", "building": "multi_building", "kind": "floor", "z": 2},
+			{"id": "multi_ceiling", "building": "multi_building", "kind": "ceiling", "z": 2},
+			{"id": "bad_floor_gap", "building": "multi_building", "kind": "floor", "z": 1},
 		],
 		"levels": [[
 			{"id": "concrete_00"},
@@ -330,6 +345,9 @@ func test_dmap_building_surfaces_roundtrip_and_sanitization():
 
 	assert_eq(data["building_surfaces"], [
 		{"id": "office_roof", "building": "office_building", "kind": "roof", "z": 1},
+		{"id": "multi_floor", "building": "multi_building", "kind": "floor", "z": 0},
+		{"id": "multi_floor_upper", "building": "multi_building", "kind": "floor", "z": 2},
+		{"id": "multi_ceiling", "building": "multi_building", "kind": "ceiling", "z": 2},
 	])
 
 

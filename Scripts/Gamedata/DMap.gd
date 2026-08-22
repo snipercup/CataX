@@ -387,7 +387,7 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			var staircase_ids: Array = []
 			for staircase in building["staircases"]:
 				if not staircase is Dictionary \
-				or staircase.keys().size() != 4 \
+				or not staircase.keys().all(func(key): return key in ["id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at"]) \
 				or not staircase.has("id") \
 				or not staircase["id"] is String \
 				or staircase["id"].is_empty() \
@@ -402,18 +402,34 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				or not staircase["rotation"] is int \
 				or staircase["rotation"] not in [0, 90, 180, 270]:
 					return false
+				if staircase.has("upper_rotation") \
+				and (not staircase["upper_rotation"] is int or staircase["upper_rotation"] not in [0, 90, 180, 270]):
+					return false
+				if staircase.has("landing_at") \
+				and (not staircase["landing_at"] is Array or staircase["landing_at"].size() != 2):
+					return false
 				staircase_ids.append(staircase["id"])
 			if not (0 in building["building_levels"].map(func(level): return level.get("z")) and 2 in building["building_levels"].map(func(level): return level.get("z"))):
 				return false
 			for staircase in building["staircases"]:
 				var lower_at: Array = staircase["lower_at"]
 				var upper_at: Array = staircase["upper_at"]
+				if lower_at[0] == upper_at[0] and lower_at[1] == upper_at[1]:
+					return false
 				if lower_at[0] < building["footprint"]["x"] or lower_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
 				or lower_at[1] < building["footprint"]["y"] or lower_at[1] >= building["footprint"]["y"] + building["footprint"]["height"] \
 				or upper_at[0] < building["footprint"]["x"] or upper_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
 				or upper_at[1] < building["footprint"]["y"] or upper_at[1] >= building["footprint"]["y"] + building["footprint"]["height"]:
 					return false
-				if abs(lower_at[0] - upper_at[0]) + abs(lower_at[1] - upper_at[1]) != 1:
+				if staircase.has("landing_at"):
+					var landing_at: Array = staircase["landing_at"]
+					if landing_at[0] < building["footprint"]["x"] or landing_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
+					or landing_at[1] < building["footprint"]["y"] or landing_at[1] >= building["footprint"]["y"] + building["footprint"]["height"]:
+						return false
+					if abs(lower_at[0] - landing_at[0]) + abs(lower_at[1] - landing_at[1]) != 1 \
+					or abs(upper_at[0] - landing_at[0]) + abs(upper_at[1] - landing_at[1]) != 1:
+						return false
+				elif abs(lower_at[0] - upper_at[0]) + abs(lower_at[1] - upper_at[1]) != 1:
 					return false
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
@@ -529,13 +545,15 @@ func _sanitize_building_surfaces(data: Dictionary) -> void:
 		return
 
 	var valid_building_ids: Array[String] = []
+	var building_by_id: Dictionary = {}
 	if data.has("buildings") and data["buildings"] is Array:
 		for building in data["buildings"]:
 			if building is Dictionary and building.has("id") and building["id"] is String:
 				valid_building_ids.append(building["id"])
+				building_by_id[building["id"]] = building
 
 	data["building_surfaces"] = data["building_surfaces"].filter(func(surface):
-		return surface is Dictionary \
+		if not (surface is Dictionary \
 			and surface.has("id") \
 			and surface["id"] is String \
 			and not surface["id"].is_empty() \
@@ -544,8 +562,15 @@ func _sanitize_building_surfaces(data: Dictionary) -> void:
 			and surface["building"] in valid_building_ids \
 			and surface.has("kind") \
 			and surface["kind"] is String \
+			and surface["kind"] in ["roof", "ceiling", "floor"] \
 			and surface.has("z") \
-			and surface["z"] is int
+			and surface["z"] is int):
+			return false
+		var building: Dictionary = building_by_id[surface["building"]]
+		if building.has("building_levels"):
+			var declared_zs: Array = building["building_levels"].map(func(level): return level.get("z"))
+			return surface["z"] in declared_zs and not (surface["kind"] == "roof") and not (surface["kind"] == "ceiling" and surface["z"] == building["z"])
+		return surface["kind"] != "floor" and surface["z"] == building["z"] + 1
 	)
 	if data["building_surfaces"].is_empty():
 		data.erase("building_surfaces")

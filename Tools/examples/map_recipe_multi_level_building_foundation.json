@@ -1,7 +1,7 @@
 {
 	"id": "generated_multi_level_building_foundation",
 	"name": "Generated Multi-Level Building Foundation",
-	"description": "A metadata-only two-floor building foundation with a ground floor at z 0, an open gap at z 1, and a first floor at z 2.",
+	"description": "A metadata-only two-floor building with per-floor floor/ceiling surfaces, a straight staircase, a corner staircase, and a ground floor at z 0, open gap at z 1, and first floor at z 2.",
 	"seed": 20260822,
 	"base_tile": {"id": "grass_plain_01"},
 	"rooms": [
@@ -20,7 +20,8 @@
 				{"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]}
 			],
 			"staircases": [
-				{"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90}
+				{"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90},
+				{"id": "corner_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0}
 			],
 			"exterior_context": {"at": [6, 8], "z": 0},
 			"exterior_access_context": {"connection": "office_front_door"},
@@ -34,6 +35,11 @@
 				{"id": "upper_bench_anchor", "at": [8, 8], "z": 2, "kind": "workstation"}
 			]
 		}
+	],
+	"building_surfaces": [
+		{"id": "ground_floor_surface", "building": "office_building", "kind": "floor", "z": 0},
+		{"id": "first_floor_surface", "building": "office_building", "kind": "floor", "z": 2},
+		{"id": "ground_ceiling", "building": "office_building", "kind": "ceiling", "z": 2}
 	],
 	"room_connections": [
 		{
@@ -68,8 +74,11 @@
 		{"type": "set", "x": 11, "y": 8, "tile": {"id": "concrete_00"}},
 		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 1, "height": 1},
 		{"type": "set", "x": 9, "y": 9, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}},
+		{"type": "set", "x": 10, "y": 10, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}},
+		{"type": "set", "x": 11, "y": 10, "z": 1, "tile": {"id": "concrete_00"}},
 		{"type": "rectangle", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2, "tile": {"id": "concrete_00"}},
 		{"type": "set", "x": 10, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 90}},
+		{"type": "set", "x": 11, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 0}},
 		{"type": "room_rectangle", "room": "office_upper", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2},
 		{"type": "furniture", "id": "bench_garden", "x": 8, "y": 8, "z": 2, "rotation": 0},
 		{"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
