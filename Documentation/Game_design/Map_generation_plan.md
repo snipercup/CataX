@@ -711,7 +711,7 @@ Generate one small, enterable building that loads correctly and has a reachable 
 
 ## Phase 7 — Roads and map connections
 
-**Status: in progress; authored map-edge connection metadata and road endpoint anchoring complete**
+**Status: in progress; authored map-edge connections, road endpoints, and route polylines complete**
 
 The prototype previously hardcoded all four edge connections as `"ground"`. These are now authored recipe-level metadata, with named endpoint anchors identifying the exact map-edge cells where roads enter or exit.
 
@@ -721,7 +721,7 @@ The recipe generator supports a root-level `connections` field. It accepts up to
 
 The recipe generator now also supports root-level `road_endpoints`. Each endpoint has a unique `id`, a cardinal `direction`, an edge coordinate `at`, and ground-level `z: 0`. Its direction must be declared as `"road"` in `connections`, and its coordinate must lie on the corresponding map edge. The generator, standalone validator, and DMap save/load path validate or preserve these authored references. `Tools/examples/map_recipe_road_endpoints.json` is the maintained evidence: a simple outdoor map with west and east road endpoints and a deterministic connecting dirt path.
 
-This foundation authors metadata only: it does not generate road tiles, perform path routing, or alter edge tile placement. It declares what the runtime should expect at each edge and where the authored road entry/exit anchors are so later routing and adjacent-map integration can build on a validated contract.
+`road_paths` now authors a named ground-level cardinal polyline between two validated `road_endpoints`. The generator and standalone validator require different existing endpoint IDs, optional map-bounded waypoints, and cardinal continuity across the complete endpoint-to-endpoint sequence. The maintained `map_recipe_road_endpoints.json` demonstrates a direct west-to-east route. This remains metadata-only: it does not paint road tiles, perform pathfinding, infer walkability, or alter collision/navigation.
 
 Capabilities:
 
@@ -959,13 +959,14 @@ Do not commit or push unless explicitly requested.
 [Complete] Authored furniture anchor metadata
 [Complete] Authored map-edge connection metadata
 [Complete] Authored road endpoint anchoring
+[Complete] Authored road path routing metadata
 [Complete] Multi-level building footprint foundation with intentional open gaps
 [Complete] Per-floor room and furniture ownership metadata
 [Complete] Two-slope staircase physical semantics at z 1 and z 2
 [Complete] Straight and corner staircase formations with no slope stacking
 [Complete] Per-floor ceiling/floor surface semantics (top-down)
 [Complete] Multi-level roof/support semantics
-[Next]     Road path routing
+[Next]     Road feature connectivity or map-to-map route integration
 [In Progress]  Rooms and buildings
 [In Progress]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

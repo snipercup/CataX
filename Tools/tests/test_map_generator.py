@@ -2653,6 +2653,20 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(len(endpoints), 2)
         self.assertEqual(endpoints[0], {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0})
         self.assertEqual(endpoints[1], {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0})
+        self.assertEqual(generated["road_paths"], [{"id": "west_to_east_road", "from": "west_entrance", "to": "east_exit", "waypoints": []}])
+
+    def test_road_paths_require_endpoint_references_and_cardinal_continuity(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_endpoints.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        invalid_reference = json.loads(json.dumps(recipe))
+        invalid_reference["road_paths"][0]["to"] = "missing"
+        with self.assertRaisesRegex(RecipeError, "must reference existing road endpoint IDs"):
+            generate_map(invalid_reference, TILES_PATH)
+        invalid_segment = json.loads(json.dumps(recipe))
+        invalid_segment["road_paths"][0]["waypoints"] = [[2, 17]]
+        with self.assertRaisesRegex(RecipeError, "points must form cardinally aligned segments"):
+            generate_map(invalid_segment, TILES_PATH)
+
 
     def test_road_endpoints_require_road_connection(self):
         recipe = valid_recipe()
@@ -3628,6 +3642,11 @@ class MapValidatorDimensionTests(unittest.TestCase):
         non_array["road_endpoints"] = {}
         errors = self.validate(non_array)
         self.assertTrue(any("top-level road_endpoints must be an array" in error for error in errors))
+
+        invalid_path = json.loads(json.dumps(valid_map))
+        invalid_path["road_paths"][0]["waypoints"] = [[2, 17]]
+        errors = self.validate(invalid_path)
+        self.assertTrue(any("points must form cardinally aligned segments" in error for error in errors))
 
     def test_validates_multi_level_building_foundation_content(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"

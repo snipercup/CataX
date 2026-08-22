@@ -34,6 +34,7 @@ DEFAULT_CONNECTIONS = {
 CONNECTION_DIRECTIONS = {"north", "east", "south", "west"}
 CONNECTION_TYPES = {"ground", "road"}
 ROAD_ENDPOINT_FIELDS = {"id", "direction", "at", "z"}
+ROAD_PATH_FIELDS = {"id", "from", "to", "waypoints"}
 EDGE_COORDINATES = {
     "north": lambda x, y: y == 0,
     "south": lambda x, y: y == MAP_HEIGHT - 1,
@@ -131,6 +132,7 @@ RECIPE_FIELDS = {
     "levels",
     "connections",
     "road_endpoints",
+    "road_paths",
 }
 
 
@@ -2636,6 +2638,43 @@ def _validate_road_endpoints(
     return validated
 
 
+def _validate_road_paths(
+    road_paths: Any,
+    road_endpoints: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if road_paths is None:
+        return []
+    if not isinstance(road_paths, list):
+        raise RecipeError("road_paths must be an array")
+    endpoint_by_id = {endpoint["id"]: endpoint for endpoint in road_endpoints}
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, path in enumerate(road_paths):
+        context = f"road_paths[{index}]"
+        if not isinstance(path, dict) or set(path) != ROAD_PATH_FIELDS:
+            raise RecipeError(f"{context} must define id, from, to, and waypoints")
+        path_id = path["id"]
+        if not isinstance(path_id, str) or not path_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        if path_id in seen_ids:
+            raise RecipeError(f"duplicate road path ID '{path_id}'")
+        seen_ids.add(path_id)
+        from_id, to_id = path["from"], path["to"]
+        if from_id not in endpoint_by_id or to_id not in endpoint_by_id:
+            raise RecipeError(f"{context} must reference existing road endpoint IDs")
+        if from_id == to_id:
+            raise RecipeError(f"{context}.from and to must reference different endpoints")
+        waypoints = path["waypoints"]
+        if not isinstance(waypoints, list):
+            raise RecipeError(f"{context}.waypoints must be an array")
+        points = [endpoint_by_id[from_id]["at"], *waypoints, endpoint_by_id[to_id]["at"]]
+        for point_index, point in enumerate(points):
+            if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point) or not 0 <= point[0] < MAP_WIDTH or not 0 <= point[1] < MAP_HEIGHT:
+                raise RecipeError(f"{context} point {point_index} must be a map-bounded two-integer coordinate")
+            if point_index and points[point_index][0] != points[point_index - 1][0] and points[point_index][1] != points[point_index - 1][1]:
+                raise RecipeError(f"{context} points must form cardinally aligned segments")
+        validated.append({"id": path_id, "from": from_id, "to": to_id, "waypoints": waypoints})
+    return validated
 def generate_map(
     recipe: dict[str, Any],
     tiles_path: Path,
@@ -2762,6 +2801,7 @@ def generate_map(
     )
     connections = _validate_connections(recipe.get("connections"))
     road_endpoints = _validate_road_endpoints(recipe.get("road_endpoints"), connections, levels)
+    road_paths = _validate_road_paths(recipe.get("road_paths"), road_endpoints)
 
     generated = {
         "id": recipe["id"],
@@ -2792,6 +2832,8 @@ def generate_map(
         generated["building_compositions"] = building_compositions
     if road_endpoints:
         generated["road_endpoints"] = road_endpoints
+    if road_paths:
+        generated["road_paths"] = road_paths
     return generated
 
 

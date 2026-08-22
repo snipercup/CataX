@@ -11,6 +11,7 @@ POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
 CONNECTION_DIRECTIONS = {'north', 'east', 'south', 'west'}
 CONNECTION_TYPES = {'ground', 'road'}
 ROAD_ENDPOINT_FIELDS = {'id', 'direction', 'at', 'z'}
+ROAD_PATH_FIELDS = {'id', 'from', 'to', 'waypoints'}
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 ROOM_BOUNDARY_VALIDATIONS = {'complete'}
 CARDINAL_SIDES = {
@@ -225,7 +226,11 @@ class MapValidator:
         if not isinstance(road_endpoints, list):
             self.add_error(file_path, "top-level road_endpoints must be an array.")
             road_endpoints = []
-        else:
+        road_paths = data.get('road_paths', [])
+        if not isinstance(road_paths, list):
+            self.add_error(file_path, "top-level road_paths must be an array.")
+            road_paths = []
+        if isinstance(road_endpoints, list):
             seen_endpoint_ids: Set[str] = set()
             for idx, endpoint in enumerate(road_endpoints):
                 if not isinstance(endpoint, dict):
@@ -275,6 +280,36 @@ class MapValidator:
                 z = endpoint.get('z')
                 if z is not None and (type(z) is not int or z != 0):
                     self.add_error(file_path, f"{context} z must be 0.")
+
+            endpoint_by_id = {endpoint.get('id'): endpoint for endpoint in road_endpoints if isinstance(endpoint, dict) and isinstance(endpoint.get('id'), str)}
+            seen_path_ids: Set[str] = set()
+            for idx, path in enumerate(road_paths):
+                context = f"road_paths[{idx}]"
+                if not isinstance(path, dict) or set(path) != ROAD_PATH_FIELDS:
+                    self.add_error(file_path, f"{context} must define id, from, to, and waypoints.")
+                    continue
+                path_id = path.get('id')
+                if not isinstance(path_id, str) or not path_id:
+                    self.add_error(file_path, f"{context} id must be a non-empty string.")
+                elif path_id in seen_path_ids:
+                    self.add_error(file_path, f"{context} duplicates road path ID '{path_id}'.")
+                seen_path_ids.add(path_id)
+                from_id, to_id = path.get('from'), path.get('to')
+                if from_id not in endpoint_by_id or to_id not in endpoint_by_id:
+                    self.add_error(file_path, f"{context} must reference existing road endpoint IDs.")
+                if from_id == to_id:
+                    self.add_error(file_path, f"{context} from and to must reference different endpoints.")
+                waypoints = path.get('waypoints')
+                if not isinstance(waypoints, list):
+                    self.add_error(file_path, f"{context} waypoints must be an array.")
+                    continue
+                endpoints = [endpoint_by_id[from_id]['at']] if from_id in endpoint_by_id else []
+                points = endpoints + waypoints + ([endpoint_by_id[to_id]['at']] if to_id in endpoint_by_id else [])
+                for point_index, point in enumerate(points):
+                    if not isinstance(point, list) or len(point) != 2 or not all(type(value) is int for value in point) or not 0 <= point[0] < MAP_WIDTH or not 0 <= point[1] < MAP_HEIGHT:
+                        self.add_error(file_path, f"{context} point {point_index} must be a map-bounded two-integer coordinate.")
+                    elif point_index and points[point_index][0] != points[point_index - 1][0] and points[point_index][1] != points[point_index - 1][1]:
+                        self.add_error(file_path, f"{context} points must form cardinally aligned segments.")
 
         # 3. Enforce the fixed map dimensions used by the loader and editor.
         map_width = data.get('mapwidth', MAP_WIDTH)
