@@ -21,13 +21,14 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
 BUILDING_ENTRANCES_ENTRY_FIELDS = {'id', 'connection', 'facing'}
 BUILDING_ENTRANCE_FACINGS = {'north', 'east', 'south', 'west'}
+BUILDING_FURNITURE_ANCHOR_FIELDS = {'id', 'at', 'z', 'kind'}
 BUILDING_ENTRANCE_VALIDATIONS = {'complete'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
@@ -883,6 +884,40 @@ class MapValidator:
                     self.add_error(file_path, f"{context} entrance_validation has unsupported validation '{entrance_validation}'.")
                 if entrance is None and entrances is None:
                     self.add_error(file_path, f"{context} entrance_validation requires entrance or entrances.")
+            furniture_anchors = building.get('furniture_anchors')
+            if furniture_anchors is not None:
+                if not isinstance(furniture_anchors, list) or not furniture_anchors:
+                    self.add_error(file_path, f"{context} furniture_anchors must be a non-empty array.")
+                else:
+                    seen_anchor_ids: Set[str] = set()
+                    for anchor_index, anchor in enumerate(furniture_anchors):
+                        anchor_context = f"{context} furniture_anchors[{anchor_index}]"
+                        if (
+                            not isinstance(anchor, dict)
+                            or set(anchor) != BUILDING_FURNITURE_ANCHOR_FIELDS
+                            or not isinstance(anchor.get('id'), str)
+                            or not anchor.get('id')
+                            or not isinstance(anchor.get('kind'), str)
+                            or not anchor.get('kind')
+                        ):
+                            self.add_error(file_path, f"{anchor_context} must define id, at, z, and kind.")
+                        else:
+                            if anchor['id'] in seen_anchor_ids:
+                                self.add_error(file_path, f"{anchor_context} duplicates anchor id '{anchor['id']}'.")
+                            seen_anchor_ids.add(anchor['id'])
+                        if isinstance(anchor, dict):
+                            anchor_at = anchor.get('at')
+                            if (
+                                not isinstance(anchor_at, list)
+                                or len(anchor_at) != 2
+                                or not all(type(value) is int for value in anchor_at)
+                                or not 0 <= anchor_at[0] < MAP_WIDTH
+                                or not 0 <= anchor_at[1] < MAP_HEIGHT
+                            ):
+                                self.add_error(file_path, f"{anchor_context} at must be a two-integer coordinate within map bounds.")
+                            anchor_z = anchor.get('z')
+                            if anchor_z is not None and (type(anchor_z) is not int or not -10 <= anchor_z <= 10):
+                                self.add_error(file_path, f"{anchor_context} z must be an integer from -10 through 10.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -1112,6 +1147,34 @@ class MapValidator:
                                 if not (footprint['x'] <= ctx_x < footprint['x'] + footprint['width']
                                         and footprint['x'] <= door_x < footprint['x'] + footprint['width']):
                                     self.add_error(file_path, f"{context} entrance_validation requires exterior_context and entrance door aligned within the footprint width.")
+            if building.get('furniture_anchors') is not None and isinstance(building.get('furniture_anchors'), list):
+                for anchor_index, anchor in enumerate(building['furniture_anchors']):
+                    if not isinstance(anchor, dict):
+                        continue
+                    anchor_context = f"{context} furniture_anchors[{anchor_index}]"
+                    anchor_at = anchor.get('at')
+                    anchor_z = anchor.get('z')
+                    if isinstance(anchor_at, list) and len(anchor_at) == 2 and all(type(value) is int for value in anchor_at):
+                        anchor_x, anchor_y = anchor_at
+                        if not (footprint['x'] <= anchor_x < footprint['x'] + footprint['width']
+                                and footprint['y'] <= anchor_y < footprint['y'] + footprint['height']):
+                            self.add_error(file_path, f"{anchor_context} at [{anchor_x}, {anchor_y}] is outside building footprint.")
+                    if isinstance(anchor_z, int) and anchor_z != z:
+                        self.add_error(file_path, f"{anchor_context} z must use building z {z}.")
+                    if isinstance(anchor_z, int) and anchor_z == z:
+                        if isinstance(anchor_at, list) and len(anchor_at) == 2 and all(type(value) is int for value in anchor_at):
+                            anchor_x, anchor_y = anchor_at
+                            level_index = z + 10
+                            level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+                            tile = level[anchor_y * MAP_WIDTH + anchor_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+                            feature = tile.get('feature') if isinstance(tile, dict) else None
+                            if (
+                                not isinstance(feature, dict)
+                                or feature.get('type') != 'furniture'
+                                or not isinstance(feature.get('id'), str)
+                                or not feature.get('id')
+                            ):
+                                self.add_error(file_path, f"{anchor_context} must reference furniture at [{anchor_at[0]}, {anchor_at[1]}] on z {z}.")
             if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
                 exterior_context = building['exterior_context']
                 at = exterior_context.get('at')
