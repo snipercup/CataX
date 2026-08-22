@@ -387,6 +387,11 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			or building["entrance"]["facing"] not in ["north", "east", "south", "west"] \
 			or not building.has("exterior_context"):
 				return false
+		if building.has("entrance_validation"):
+			if not building["entrance_validation"] is String \
+			or building["entrance_validation"] != "complete" \
+			or not building.has("entrance"):
+				return false
 		return true
 	)
 	if data["buildings"].is_empty():
