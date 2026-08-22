@@ -387,10 +387,45 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			or building["entrance"]["facing"] not in ["north", "east", "south", "west"] \
 			or not building.has("exterior_context"):
 				return false
+		if building.has("entrances"):
+			if not building["entrances"] is Array \
+			or building["entrances"].is_empty():
+				return false
+			var seen_entrance_ids: Array[String] = []
+			var seen_entrance_conns: Array[String] = []
+			for entrance_entry in building["entrances"]:
+				if not entrance_entry is Dictionary \
+				or not entrance_entry.has("id") \
+				or not entrance_entry["id"] is String \
+				or entrance_entry["id"].is_empty() \
+				or not entrance_entry.has("connection") \
+				or not entrance_entry["connection"] is String \
+				or entrance_entry["connection"].is_empty() \
+				or entrance_entry["connection"] not in valid_connection_ids \
+				or not entrance_entry.has("facing") \
+				or not entrance_entry["facing"] is String \
+				or entrance_entry["facing"] not in ["north", "east", "south", "west"]:
+					return false
+				if entrance_entry["id"] in seen_entrance_ids:
+					return false
+				seen_entrance_ids.append(entrance_entry["id"])
+				if entrance_entry["connection"] in seen_entrance_conns:
+					return false
+				seen_entrance_conns.append(entrance_entry["connection"])
+			if not building.has("exterior_context"):
+				return false
+			if building.has("exterior_access_context") \
+			and building["exterior_access_context"] is Dictionary \
+			and building["exterior_access_context"].has("connection") \
+			and building["exterior_access_context"]["connection"] is String \
+			and building["exterior_access_context"]["connection"] not in seen_entrance_conns:
+				return false
+		if building.has("entrance") and building.has("entrances"):
+			return false
 		if building.has("entrance_validation"):
 			if not building["entrance_validation"] is String \
 			or building["entrance_validation"] != "complete" \
-			or not building.has("entrance"):
+			or (not building.has("entrance") and not building.has("entrances")):
 				return false
 		return true
 	)
