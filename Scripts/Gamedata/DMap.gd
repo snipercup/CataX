@@ -686,7 +686,12 @@ func _sanitize_road_paths(data: Dictionary) -> void:
 		if endpoint is Dictionary and endpoint.get("id") is String:
 			endpoint_ids.append(endpoint["id"])
 	data["road_paths"] = data["road_paths"].filter(func(path):
-		if not path is Dictionary or path.keys().size() != 4 or not path.has("id") or not path["id"] is String or path["id"].is_empty() or path["id"] in seen_path_ids or not path.has("from") or not path["from"] in endpoint_ids or not path.has("to") or not path["to"] in endpoint_ids or path["from"] == path["to"] or not path.has("waypoints") or not path["waypoints"] is Array:
+		if not path is Dictionary or path.keys().size() < 4 or path.keys().size() > 5 or not path.has("id") or not path["id"] is String or path["id"].is_empty() or path["id"] in seen_path_ids or not path.has("from") or not path["from"] in endpoint_ids or not path.has("to") or not path["to"] in endpoint_ids or path["from"] == path["to"] or not path.has("waypoints") or not path["waypoints"] is Array:
+			return false
+		for key in path.keys():
+			if key not in ["id", "from", "to", "waypoints", "tile"]:
+				return false
+		if path.has("tile") and (not path["tile"] is Dictionary or not path["tile"].has("id") or not path["tile"]["id"] is String or path["tile"]["id"].is_empty()):
 			return false
 		var points: Array = []
 		for endpoint in data["road_endpoints"]:

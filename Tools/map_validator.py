@@ -12,6 +12,7 @@ CONNECTION_DIRECTIONS = {'north', 'east', 'south', 'west'}
 CONNECTION_TYPES = {'ground', 'road'}
 ROAD_ENDPOINT_FIELDS = {'id', 'direction', 'at', 'z'}
 ROAD_PATH_FIELDS = {'id', 'from', 'to', 'waypoints'}
+ROAD_PATH_OPTIONAL_FIELDS = {'tile'}
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 ROOM_BOUNDARY_VALIDATIONS = {'complete'}
 CARDINAL_SIDES = {
@@ -285,8 +286,8 @@ class MapValidator:
             seen_path_ids: Set[str] = set()
             for idx, path in enumerate(road_paths):
                 context = f"road_paths[{idx}]"
-                if not isinstance(path, dict) or set(path) != ROAD_PATH_FIELDS:
-                    self.add_error(file_path, f"{context} must define id, from, to, and waypoints.")
+                if not isinstance(path, dict) or not ROAD_PATH_FIELDS.issubset(path) or set(path) - ROAD_PATH_FIELDS - ROAD_PATH_OPTIONAL_FIELDS:
+                    self.add_error(file_path, f"{context} must define id, from, to, and waypoints, with optional tile.")
                     continue
                 path_id = path.get('id')
                 if not isinstance(path_id, str) or not path_id:
@@ -310,6 +311,10 @@ class MapValidator:
                         self.add_error(file_path, f"{context} point {point_index} must be a map-bounded two-integer coordinate.")
                     elif point_index and points[point_index][0] != points[point_index - 1][0] and points[point_index][1] != points[point_index - 1][1]:
                         self.add_error(file_path, f"{context} points must form cardinally aligned segments.")
+                if 'tile' in path:
+                    tile = path['tile']
+                    if not isinstance(tile, dict) or set(tile) - {'id', 'rotation'} or not isinstance(tile.get('id'), str) or not tile.get('id'):
+                        self.add_error(file_path, f"{context}.tile must be a non-empty tile object.")
 
         # 3. Enforce the fixed map dimensions used by the loader and editor.
         map_width = data.get('mapwidth', MAP_WIDTH)

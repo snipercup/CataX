@@ -37,6 +37,7 @@ The root must be a JSON object with these fields:
 | `levels` | non-empty array | Explicit grouped level definitions. Cannot be combined with root `base_tile`, `regions`, or `operations`. |
 | `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
 | `road_endpoints` | array | Authored road endpoint anchors at map edges. Optional; defaults to `[]`. |
+| `road_paths` | array | Authored cardinal routes between road endpoints. Optional; defaults to `[]`; a path may paint a map-local route with `tile`. |
 | `building_surfaces` | array | Authored per-building floor, ceiling, and roof surface semantics. Optional; defaults to `[]`. |
 | `building_supports` | array | Authored multi-level structural support paths. Optional; defaults to `[]`. |
 
@@ -108,7 +109,7 @@ Each entry has exactly `id`, `direction`, `at`, and `z`. `id` is unique within t
 
 The standalone validator independently checks the same content: it rejects unknown directions, duplicate IDs, coordinates not on the correct edge, and non-zero `z` values. `DMap` preserves valid road endpoints through editor save/load and removes entries with missing fields, invalid directions, duplicate IDs, or malformed coordinates.
 
-`road_paths` authors a named cardinal polyline between two road endpoints:
+`road_paths` authors a named cardinal polyline between two road endpoints. For a map-local physical route, add a `tile` field; the generator rasterizes every cell in the route and replaces its terrain with that tile. This keeps route geometry explicit and deterministic while avoiding a second pathfinding system.
 
 ```json
 {
@@ -117,13 +118,14 @@ The standalone validator independently checks the same content: it rejects unkno
       "id": "west_to_east_road",
       "from": "west_entrance",
       "to": "east_exit",
-      "waypoints": []
+      "waypoints": [],
+      "tile": {"id": "dirt_light_00"}
     }
   ]
 }
 ```
 
-Each path has exactly `id`, `from`, `to`, and `waypoints`. Both endpoint IDs must exist and be different. `waypoints` is an optional array of map-bounded `[x, y]` coordinates; the complete sequence from the `from` endpoint through the waypoints to the `to` endpoint must form cardinally aligned segments. Paths are ground-level metadata only: they do not paint road tiles, run pathfinding, infer walkability, or alter collision/navigation. `DMap` preserves valid paths and removes paths with stale endpoints, malformed points, duplicate IDs, or non-cardinal segments.
+Each path requires `id`, `from`, `to`, and `waypoints`; `tile` is optional for backwards-compatible metadata-only paths. Both endpoint IDs must exist and be different. `waypoints` is an optional array of map-bounded `[x, y]` coordinates; the complete sequence from the `from` endpoint through the waypoints to the `to` endpoint must form cardinally aligned segments. When `tile` is present, it must reference a known non-empty tile, every route cell must contain supporting terrain, route cells may not contain features, and the generator paints the complete ground-level route. This validates and generates map-local road geometry only; it does not run pathfinding, infer walkability from arbitrary terrain, alter collision/navigation, or integrate multiple maps. `DMap` preserves valid paths with or without `tile` and removes paths with stale endpoints, malformed points, duplicate IDs, invalid tile objects, or non-cardinal segments.
 
 `Tools/examples/map_recipe_road_endpoints.json` demonstrates the maintained example with two road endpoints: `west_entrance` at the west edge and `east_exit` at the east edge.
 
