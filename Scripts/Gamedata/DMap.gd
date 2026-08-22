@@ -357,7 +357,6 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			var previous_level_z: int = -1
 			for level_definition in building["building_levels"]:
 				if not level_definition is Dictionary \
-				or level_definition.keys().size() != 1 \
 				or not level_definition.has("z") \
 				or not level_definition["z"] is int \
 				or level_definition["z"] < 0 \
@@ -365,6 +364,20 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				or level_definition["z"] % 2 != 0 \
 				or level_definition["z"] <= previous_level_z:
 					return false
+				if level_definition.keys().size() > 3 \
+				or (level_definition.has("rooms") and not level_definition["rooms"] is Array) \
+				or (level_definition.has("furniture_anchors") and not level_definition["furniture_anchors"] is Array):
+					return false
+				if level_definition.has("rooms"):
+					for room_id in level_definition["rooms"]:
+						if not room_id is String or room_id not in building["rooms"]:
+							return false
+				if level_definition.has("furniture_anchors"):
+					var level_anchor_ids: Array = []
+					for anchor_id in level_definition["furniture_anchors"]:
+						if not anchor_id is String or anchor_id.is_empty() or anchor_id in level_anchor_ids:
+							return false
+						level_anchor_ids.append(anchor_id)
 				previous_level_z = level_definition["z"]
 			if building["building_levels"][0].get("z") != 0:
 				return false

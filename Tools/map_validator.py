@@ -26,7 +26,7 @@ ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
-BUILDING_LEVEL_FIELDS = {'z'}
+BUILDING_LEVEL_FIELDS = {'z', 'rooms', 'furniture_anchors'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
@@ -824,9 +824,25 @@ class MapValidator:
                     previous_z = None
                     for level_index, level_definition in enumerate(building_levels):
                         level_context = f"{context} building_levels[{level_index}]"
-                        if not isinstance(level_definition, dict) or set(level_definition) != BUILDING_LEVEL_FIELDS or type(level_definition.get('z')) is not int:
-                            self.add_error(file_path, f"{level_context} must define integer z.")
+                        if not isinstance(level_definition, dict) or not set(level_definition) <= BUILDING_LEVEL_FIELDS or 'z' not in level_definition or type(level_definition.get('z')) is not int:
+                            self.add_error(file_path, f"{level_context} must define integer z and may only contain rooms and furniture_anchors.")
                             continue
+                        level_rooms = level_definition.get('rooms')
+                        if level_rooms is not None:
+                            if not isinstance(level_rooms, list):
+                                self.add_error(file_path, f"{level_context} rooms must be an array.")
+                            else:
+                                if len(level_rooms) != len(set(level_rooms)):
+                                    self.add_error(file_path, f"{level_context} rooms must not duplicate room IDs.")
+                                for room_id in level_rooms:
+                                    if not isinstance(room_id, str) or room_id not in building_rooms:
+                                        self.add_error(file_path, f"{level_context} rooms references room not owned by the building '{room_id}'.")
+                        level_anchor_ids = level_definition.get('furniture_anchors')
+                        if level_anchor_ids is not None:
+                            if not isinstance(level_anchor_ids, list):
+                                self.add_error(file_path, f"{level_context} furniture_anchors must be an array.")
+                            elif len(level_anchor_ids) != len(set(level_anchor_ids)):
+                                self.add_error(file_path, f"{level_context} furniture_anchors must not duplicate anchor IDs.")
                         level_z = level_definition['z']
                         if not 0 <= level_z <= 10:
                             self.add_error(file_path, f"{level_context} z must be an integer from 0 through 10.")
@@ -837,6 +853,18 @@ class MapValidator:
                         previous_z = level_z
                     if isinstance(building_levels[0], dict) and building_levels[0].get('z') != 0:
                         self.add_error(file_path, f"{context} building_levels must start with ground floor z 0.")
+                    if isinstance(building_levels, list) and building_levels:
+                        level_room_lists = [level_definition.get('rooms') for level_definition in building_levels if isinstance(level_definition, dict) and 'rooms' in level_definition]
+                        if level_room_lists:
+                            assigned_rooms = [room_id for rooms_at_level in level_room_lists for room_id in (rooms_at_level or [])]
+                            if set(assigned_rooms) != set(building_rooms) or len(assigned_rooms) != len(set(assigned_rooms)):
+                                self.add_error(file_path, f"{context} building_levels rooms must assign every building room exactly once.")
+                        level_anchor_lists = [level_definition.get('furniture_anchors') for level_definition in building_levels if isinstance(level_definition, dict) and 'furniture_anchors' in level_definition]
+                        if level_anchor_lists:
+                            assigned_anchors = [anchor_id for anchors_at_level in level_anchor_lists for anchor_id in (anchors_at_level or [])]
+                            root_anchor_ids = {anchor.get('id') for anchor in building.get('furniture_anchors', []) if isinstance(anchor, dict)}
+                            if set(assigned_anchors) != root_anchor_ids or len(assigned_anchors) != len(set(assigned_anchors)):
+                                self.add_error(file_path, f"{context} building_levels furniture_anchors must assign every building anchor exactly once.")
                 if z_valid and z != 0:
                     self.add_error(file_path, f"{context} z must be 0 when building_levels is declared.")
             access_validation = building.get('access_validation')
@@ -1043,6 +1071,11 @@ class MapValidator:
             ):
                 self.add_error(file_path, f"{context} requires an enclosed room with boundary_validation 'complete'.")
             for room_id in building['rooms']:
+                owned_room_levels = [
+                    level_definition['z']
+                    for level_definition in building.get('building_levels', [])
+                    if room_id in level_definition.get('rooms', [])
+                ] if building.get('building_levels') else [z]
                 memberships = []
                 for level_index, level in enumerate(levels if isinstance(levels, list) else []):
                     if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
@@ -1050,12 +1083,15 @@ class MapValidator:
                     for tile_index, tile in enumerate(level):
                         if isinstance(tile, dict) and tile.get('rooms') == [room_id]:
                             memberships.append((level_index - 10, tile_index % MAP_WIDTH, tile_index // MAP_WIDTH))
-                if not memberships:
+                if z in owned_room_levels and not memberships:
                     self.add_error(file_path, f"{context} room '{room_id}' has no membership at z {z}.")
                     continue
                 for membership_z, x, y in memberships:
-                    if membership_z != z:
-                        self.add_error(file_path, f"{context} room '{room_id}' has membership outside building z {z}.")
+                    if membership_z not in owned_room_levels:
+                        if building.get('building_levels'):
+                            self.add_error(file_path, f"{context} room '{room_id}' has membership at undeclared building level z {membership_z}.")
+                        else:
+                            self.add_error(file_path, f"{context} room '{room_id}' has membership outside building z {z}.")
                     elif not (footprint['x'] <= x < footprint['x'] + footprint['width'] and footprint['y'] <= y < footprint['y'] + footprint['height']):
                         self.add_error(file_path, f"{context} room '{room_id}' membership at [{x}, {y}] is outside building footprint.")
                 for boundary in validated_room_boundaries:
@@ -1251,12 +1287,16 @@ class MapValidator:
                         if not (footprint['x'] <= anchor_x < footprint['x'] + footprint['width']
                                 and footprint['y'] <= anchor_y < footprint['y'] + footprint['height']):
                             self.add_error(file_path, f"{anchor_context} at [{anchor_x}, {anchor_y}] is outside building footprint.")
-                    if isinstance(anchor_z, int) and anchor_z != z:
+                    if building.get('building_levels') is not None:
+                        declared_level_zs = {level_definition['z'] for level_definition in building['building_levels']}
+                        if isinstance(anchor_z, int) and anchor_z not in declared_level_zs:
+                            self.add_error(file_path, f"{anchor_context} z must name a declared building level.")
+                    elif isinstance(anchor_z, int) and anchor_z != z:
                         self.add_error(file_path, f"{anchor_context} z must use building z {z}.")
-                    if isinstance(anchor_z, int) and anchor_z == z:
+                    if isinstance(anchor_z, int) and (anchor_z in ({level_definition['z'] for level_definition in building.get('building_levels', [])} if building.get('building_levels') else {z})):
                         if isinstance(anchor_at, list) and len(anchor_at) == 2 and all(type(value) is int for value in anchor_at):
                             anchor_x, anchor_y = anchor_at
-                            level_index = z + 10
+                            level_index = anchor_z + 10
                             level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
                             tile = level[anchor_y * MAP_WIDTH + anchor_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
                             feature = tile.get('feature') if isinstance(tile, dict) else None

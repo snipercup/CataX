@@ -2738,7 +2738,10 @@ class MapGeneratorTests(unittest.TestCase):
 
         building = generated["buildings"][0]
         self.assertEqual(building["z"], 0)
-        self.assertEqual(building["building_levels"], [{"z": 0}, {"z": 2}])
+        self.assertEqual(building["building_levels"], [
+            {"z": 0, "rooms": ["office", "garage_bay"], "furniture_anchors": ["office_door_anchor", "garage_door_anchor"]},
+            {"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]},
+        ])
         self.assertNotIn("building_surfaces", generated)
 
     def test_multi_level_building_foundation_requires_ground_and_even_levels(self):
