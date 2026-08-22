@@ -24,8 +24,9 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
+BUILDING_LEVEL_FIELDS = {'z'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
@@ -815,6 +816,29 @@ class MapValidator:
             z_valid = type(z) is int and -10 <= z <= 10
             if not z_valid:
                 self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
+            building_levels = building.get('building_levels')
+            if building_levels is not None:
+                if not isinstance(building_levels, list) or not building_levels:
+                    self.add_error(file_path, f"{context} building_levels must be a non-empty array.")
+                else:
+                    previous_z = None
+                    for level_index, level_definition in enumerate(building_levels):
+                        level_context = f"{context} building_levels[{level_index}]"
+                        if not isinstance(level_definition, dict) or set(level_definition) != BUILDING_LEVEL_FIELDS or type(level_definition.get('z')) is not int:
+                            self.add_error(file_path, f"{level_context} must define integer z.")
+                            continue
+                        level_z = level_definition['z']
+                        if not 0 <= level_z <= 10:
+                            self.add_error(file_path, f"{level_context} z must be an integer from 0 through 10.")
+                        elif level_z % 2 != 0:
+                            self.add_error(file_path, f"{level_context} z must be even; odd levels are intentional open gaps.")
+                        if previous_z is not None and level_z <= previous_z:
+                            self.add_error(file_path, f"{level_context} z must be strictly greater than the previous building level.")
+                        previous_z = level_z
+                    if isinstance(building_levels[0], dict) and building_levels[0].get('z') != 0:
+                        self.add_error(file_path, f"{context} building_levels must start with ground floor z 0.")
+                if z_valid and z != 0:
+                    self.add_error(file_path, f"{context} z must be 0 when building_levels is declared.")
             access_validation = building.get('access_validation')
             if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
                 self.add_error(file_path, f"{context} access_validation has unsupported validation '{access_validation}'.")

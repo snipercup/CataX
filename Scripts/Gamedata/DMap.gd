@@ -351,6 +351,23 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			or not building.has("z") \
 			or not building["z"] is int:
 			return false
+		if building.has("building_levels"):
+			if not building["building_levels"] is Array or building["building_levels"].is_empty() or building["z"] != 0:
+				return false
+			var previous_level_z: int = -1
+			for level_definition in building["building_levels"]:
+				if not level_definition is Dictionary \
+				or level_definition.keys().size() != 1 \
+				or not level_definition.has("z") \
+				or not level_definition["z"] is int \
+				or level_definition["z"] < 0 \
+				or level_definition["z"] > 10 \
+				or level_definition["z"] % 2 != 0 \
+				or level_definition["z"] <= previous_level_z:
+					return false
+				previous_level_z = level_definition["z"]
+			if building["building_levels"][0].get("z") != 0:
+				return false
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
 				return false
