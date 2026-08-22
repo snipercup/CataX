@@ -228,6 +228,18 @@ def _tile_ids(tiles_path: Path) -> set[str]:
     }
 
 
+def _tile_catalog(tiles_path: Path) -> dict[str, dict[str, Any]]:
+    with tiles_path.open(encoding="utf-8") as handle:
+        tile_data = json.load(handle)
+    if not isinstance(tile_data, list):
+        raise RecipeError("tile database must be a JSON array")
+    return {
+        entry["id"]: entry
+        for entry in tile_data
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str)
+    }
+
+
 def _wall_tile_ids(tiles_path: Path) -> set[str]:
     with tiles_path.open(encoding="utf-8") as handle:
         tile_data = json.load(handle)
@@ -2644,6 +2656,7 @@ def _validate_road_paths(
     road_endpoints: list[dict[str, Any]],
     known_tiles: set[str],
     palette: dict[str, list[dict[str, Any]]],
+    tile_catalog: dict[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
     if road_paths is None:
         return []
@@ -2679,6 +2692,17 @@ def _validate_road_paths(
         validated_path = {"id": path_id, "from": from_id, "to": to_id, "waypoints": waypoints}
         if "tile" in path:
             _validate_tile_spec(path["tile"], known_tiles, f"{context}.tile", palette=palette)
+            if "id" in path["tile"]:
+                tile_ids = [path["tile"]["id"]]
+            else:
+                tile_ids = [entry["id"] for entry in palette[path["tile"]["palette"]]]
+            for tile_id in tile_ids:
+                tile = tile_catalog[tile_id]
+                if "Ground" not in tile.get("categories", []) or tile.get("shape", "cube") != "cube":
+                    raise RecipeError(
+                        f"{context}.tile must reference a Ground cube tile; "
+                        f"'{tile_id}' is not suitable for walkable road terrain"
+                    )
             validated_path["tile"] = path["tile"]
         validated.append(validated_path)
     return validated
@@ -2855,7 +2879,10 @@ def generate_map(
     )
     connections = _validate_connections(recipe.get("connections"))
     road_endpoints = _validate_road_endpoints(recipe.get("road_endpoints"), connections, levels)
-    road_paths = _validate_road_paths(recipe.get("road_paths"), road_endpoints, known_tiles, palette)
+    tile_catalog = _tile_catalog(Path(tiles_path))
+    road_paths = _validate_road_paths(
+        recipe.get("road_paths"), road_endpoints, known_tiles, palette, tile_catalog
+    )
     _apply_road_paths(road_paths, road_endpoints, levels, rng, known_tiles, palette)
 
     generated = {
