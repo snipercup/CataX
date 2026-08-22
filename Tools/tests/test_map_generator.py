@@ -2750,6 +2750,11 @@ class MapGeneratorTests(unittest.TestCase):
             {"id": "ground_floor_surface", "building": "office_building", "kind": "floor", "z": 0},
             {"id": "first_floor_surface", "building": "office_building", "kind": "floor", "z": 2},
             {"id": "ground_ceiling", "building": "office_building", "kind": "ceiling", "z": 2},
+            {"id": "first_floor_roof", "building": "office_building", "kind": "roof", "z": 2},
+        ])
+        self.assertEqual(generated["building_supports"], [
+            {"id": "northwest_column", "building": "office_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "column"},
+            {"id": "southeast_column", "building": "office_building", "at": [11, 10], "from_z": 0, "to_z": 2, "kind": "column"},
         ])
 
     def test_multi_level_building_foundation_requires_ground_and_even_levels(self):
@@ -2846,8 +2851,8 @@ class MapGeneratorTests(unittest.TestCase):
             generate_map(ground_ceiling, TILES_PATH)
 
         multi_roof = json.loads(json.dumps(recipe))
-        multi_roof["building_surfaces"] = [dict(surfaces[0], id="bad_roof", kind="roof", z=2)]
-        with self.assertRaisesRegex(RecipeError, "'roof' is not yet supported for multi-level buildings"):
+        multi_roof["building_surfaces"] = [dict(surfaces[0], id="bad_roof", kind="roof", z=0)]
+        with self.assertRaisesRegex(RecipeError, "must be at the highest declared building level"):
             generate_map(multi_roof, TILES_PATH)
 
         duplicate = json.loads(json.dumps(recipe))
@@ -3390,7 +3395,7 @@ class MapValidatorDimensionTests(unittest.TestCase):
         missing_ceiling = json.loads(json.dumps(valid_map))
         missing_ceiling["building_surfaces"] = [missing_ceiling["building_surfaces"][0]]
         errors = self.validate(missing_ceiling)
-        self.assertTrue(any("requires ceiling surface at z 1" in error for error in errors))
+        self.assertTrue(any("requires ceiling surface for its declared levels" in error for error in errors))
 
     def test_validates_complete_building_room_partition(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
