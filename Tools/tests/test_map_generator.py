@@ -2421,6 +2421,107 @@ class MapGeneratorTests(unittest.TestCase):
                 "generated_test_map",
             )
 
+    def test_multi_entrance_building_generates_and_validates(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        building = generated["buildings"][0]
+        self.assertNotIn("entrance", building)
+        self.assertIn("entrances", building)
+        entrances = building["entrances"]
+        self.assertEqual(len(entrances), 2)
+        self.assertEqual(entrances[0], {"id": "front_entrance", "connection": "office_front_door", "facing": "east"})
+        self.assertEqual(entrances[1], {"id": "garage_entrance", "connection": "garage_opening", "facing": "west"})
+        self.assertEqual(building["entrance_validation"], "complete")
+
+    def test_entrance_and_entrances_are_mutually_exclusive(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["entrance"] = {"connection": "office_front_door", "facing": "east"}
+
+        with self.assertRaisesRegex(RecipeError, "entrance and entrances are mutually exclusive"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_entrances_rejects_duplicate_ids_and_connections(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        dup_id = json.loads(recipe_path.read_text(encoding="utf-8"))
+        dup_id["buildings"][0]["entrances"][1]["id"] = "front_entrance"
+        with self.assertRaisesRegex(RecipeError, "duplicates entrance id 'front_entrance'"):
+            generate_map(dup_id, TILES_PATH)
+
+        dup_conn = json.loads(recipe_path.read_text(encoding="utf-8"))
+        dup_conn["buildings"][0]["entrances"][1]["connection"] = "office_front_door"
+        with self.assertRaisesRegex(RecipeError, "duplicates connection 'office_front_door'"):
+            generate_map(dup_conn, TILES_PATH)
+
+    def test_entrances_requires_exterior_context_and_validates_access_context(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        no_context = json.loads(recipe_path.read_text(encoding="utf-8"))
+        no_context["buildings"][0].pop("exterior_context")
+        no_context["buildings"][0].pop("exterior_access_context")
+        with self.assertRaisesRegex(RecipeError, "entrances requires exterior_context"):
+            generate_map(no_context, TILES_PATH)
+
+        mismatch = json.loads(recipe_path.read_text(encoding="utf-8"))
+        mismatch["buildings"][0]["exterior_access_context"] = {"connection": "nonexistent"}
+        with self.assertRaisesRegex(RecipeError, "exterior_access_context.connection must match one of the entrances connections"):
+            generate_map(mismatch, TILES_PATH)
+
+    def test_entrances_rejects_invalid_entries_and_unknown_connections(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        missing_fields = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_fields["buildings"][0]["entrances"][0] = {"id": "front", "connection": "office_front_door"}
+        with self.assertRaisesRegex(RecipeError, "must define id, connection, and facing"):
+            generate_map(missing_fields, TILES_PATH)
+
+        bad_facing = json.loads(recipe_path.read_text(encoding="utf-8"))
+        bad_facing["buildings"][0]["entrances"][0]["facing"] = "up"
+        with self.assertRaisesRegex(RecipeError, "facing must be one of north, east, south, or west"):
+            generate_map(bad_facing, TILES_PATH)
+
+        unknown_conn = json.loads(recipe_path.read_text(encoding="utf-8"))
+        unknown_conn["buildings"][0].pop("exterior_access_context")
+        unknown_conn["buildings"][0]["entrances"][0]["connection"] = "missing"
+        with self.assertRaisesRegex(RecipeError, "references unknown room connection 'missing'"):
+            generate_map(unknown_conn, TILES_PATH)
+
+    def test_entrance_validation_with_entrances_checks_all_entrance_doors(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        generated = generate_map(recipe, TILES_PATH)
+        self.assertEqual(generated["buildings"][0]["entrance_validation"], "complete")
+
+        # Remove the garage door boundary — entrance_validation should fail
+        no_garage_boundary = json.loads(recipe_path.read_text(encoding="utf-8"))
+        no_garage_boundary["room_boundaries"] = [b for b in no_garage_boundary["room_boundaries"] if b["id"] != "garage_east_door"]
+        with self.assertRaisesRegex(RecipeError, "entrance_validation requires a door_furniture boundary at the entrance connection"):
+            generate_map(no_garage_boundary, TILES_PATH)
+
+        # Flip the garage door side — entrance_validation should fail
+        wrong_side = json.loads(recipe_path.read_text(encoding="utf-8"))
+        for b in wrong_side["room_boundaries"]:
+            if b["id"] == "garage_east_door":
+                b["side"] = "west"
+        with self.assertRaisesRegex(RecipeError, "entrance_validation door side 'west' must face 'east'"):
+            generate_map(wrong_side, TILES_PATH)
+
+    def test_entrance_validation_without_entrance_or_entrances_fails(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0].pop("entrances")
+        recipe["buildings"][0]["entrance_validation"] = "complete"
+        with self.assertRaisesRegex(RecipeError, "entrance_validation requires entrance or entrances"):
+            generate_map(recipe, TILES_PATH)
+
 
 class MapValidatorDimensionTests(unittest.TestCase):
     def validate(self, map_data):
@@ -2850,6 +2951,68 @@ class MapValidatorDimensionTests(unittest.TestCase):
 
         no_boundary = json.loads(json.dumps(valid_map))
         no_boundary["room_boundaries"] = no_boundary["room_boundaries"][:7]
+        errors = self.validate(no_boundary)
+        self.assertTrue(any("entrance_validation requires a door_furniture boundary at the entrance connection" in error for error in errors))
+
+    def test_validates_multi_entrance_building_constraints(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_entrance_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        # Mutual exclusion: both entrance and entrances
+        both = json.loads(json.dumps(valid_map))
+        both["buildings"][0]["entrance"] = {"connection": "office_front_door", "facing": "east"}
+        errors = self.validate(both)
+        self.assertTrue(any("entrance and entrances are mutually exclusive" in error for error in errors))
+
+        # Duplicate entrance id
+        dup_id = json.loads(json.dumps(valid_map))
+        dup_id["buildings"][0]["entrances"][1]["id"] = "front_entrance"
+        errors = self.validate(dup_id)
+        self.assertTrue(any("duplicates entrance id 'front_entrance'" in error for error in errors))
+
+        # Duplicate connection
+        dup_conn = json.loads(json.dumps(valid_map))
+        dup_conn["buildings"][0]["entrances"][1]["connection"] = "office_front_door"
+        errors = self.validate(dup_conn)
+        self.assertTrue(any("duplicates connection 'office_front_door'" in error for error in errors))
+
+        # Unknown connection
+        unknown = json.loads(json.dumps(valid_map))
+        unknown["buildings"][0]["entrances"][0]["connection"] = "missing"
+        errors = self.validate(unknown)
+        self.assertTrue(any("references unknown room connection 'missing'" in error for error in errors))
+
+        # Bad facing
+        bad_facing = json.loads(json.dumps(valid_map))
+        bad_facing["buildings"][0]["entrances"][0]["facing"] = "up"
+        errors = self.validate(bad_facing)
+        self.assertTrue(any("facing must be one of north, east, south, or west" in error for error in errors))
+
+        # Missing exterior_context
+        no_context = json.loads(json.dumps(valid_map))
+        no_context["buildings"][0].pop("exterior_context")
+        errors = self.validate(no_context)
+        self.assertTrue(any("entrances requires exterior_context" in error for error in errors))
+
+        # entrance_validation without entrance or entrances
+        no_entrances = json.loads(json.dumps(valid_map))
+        no_entrances["buildings"][0].pop("entrances")
+        errors = self.validate(no_entrances)
+        self.assertTrue(any("entrance_validation requires entrance or entrances" in error for error in errors))
+
+        # Wrong door side on second entrance
+        wrong_side = json.loads(json.dumps(valid_map))
+        for b in wrong_side["room_boundaries"]:
+            if b.get("id") == "garage_east_door":
+                b["side"] = "west"
+        errors = self.validate(wrong_side)
+        self.assertTrue(any("entrance_validation door side 'west' must face 'east'" in error for error in errors))
+
+        # Missing door boundary for second entrance
+        no_boundary = json.loads(json.dumps(valid_map))
+        no_boundary["room_boundaries"] = [b for b in no_boundary["room_boundaries"] if b.get("id") != "garage_east_door"]
         errors = self.validate(no_boundary)
         self.assertTrue(any("entrance_validation requires a door_furniture boundary at the entrance connection" in error for error in errors))
 
