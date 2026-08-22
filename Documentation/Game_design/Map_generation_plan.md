@@ -703,15 +703,17 @@ Generate one small, enterable building that loads correctly and has a reachable 
 
 ## Phase 7 — Roads and map connections
 
-**Status: in progress; authored map-edge connection metadata complete**
+**Status: in progress; authored map-edge connection metadata and road endpoint anchoring complete**
 
-The prototype previously hardcoded all four edge connections as `"ground"`. These now become authored recipe-level metadata.
+The prototype previously hardcoded all four edge connections as `"ground"`. These are now authored recipe-level metadata, with named endpoint anchors identifying the exact map-edge cells where roads enter or exit.
 
 ### Completed foundation
 
-The recipe generator now supports a root-level `connections` field. It accepts up to four keys — `north`, `east`, `south`, and `west` — each with a value of `ground` or `road`, matching the existing runtime map format. Omitted directions default to `ground`, so existing recipes without the field remain compatible. The generator validates unknown directions and unsupported connection types and outputs the complete four-direction dictionary. The standalone validator independently checks the same content: it rejects unknown directions and non-`ground`/`road` values. `Tools/examples/map_recipe_road_connections.json` is the maintained evidence: a simple outdoor map with roads entering from east and west.
+The recipe generator supports a root-level `connections` field. It accepts up to four keys — `north`, `east`, `south`, and `west` — each with a value of `ground` or `road`, matching the existing runtime map format. Omitted directions default to `ground`, so existing recipes without the field remain compatible. The generator validates unknown directions and unsupported connection types and outputs the complete four-direction dictionary. The standalone validator independently checks the same content.
 
-This foundation authors metadata only: it does not generate road tiles, path routing, or edge tile placement. It declares what the runtime should expect at each edge so the overworld generator can connect adjacent maps correctly.
+The recipe generator now also supports root-level `road_endpoints`. Each endpoint has a unique `id`, a cardinal `direction`, an edge coordinate `at`, and ground-level `z: 0`. Its direction must be declared as `"road"` in `connections`, and its coordinate must lie on the corresponding map edge. The generator, standalone validator, and DMap save/load path validate or preserve these authored references. `Tools/examples/map_recipe_road_endpoints.json` is the maintained evidence: a simple outdoor map with west and east road endpoints and a deterministic connecting dirt path.
+
+This foundation authors metadata only: it does not generate road tiles, perform path routing, or alter edge tile placement. It declares what the runtime should expect at each edge and where the authored road entry/exit anchors are so later routing and adjacent-map integration can build on a validated contract.
 
 Capabilities:
 
@@ -892,9 +894,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, and authored furniture anchor metadata are complete. **Phase 7 is in progress** with authored map-edge connection metadata. The next contribution should extend road or building content carefully without introducing multi-level structures or generalized templates.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, and authored furniture anchor metadata are complete. **Phase 7 is in progress** with authored map-edge connection metadata and road endpoint anchoring. The next contribution should extend road or building content carefully without introducing multi-level structures or generalized templates.
 
-Do not yet generate walls, doors, roofs, multi-level building footprints, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
+Do not yet generate walls, doors, roofs, multi-level building footprints, road geometry, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -948,7 +950,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Authored multi-entrance building semantics with per-entrance validation
 [Complete] Authored furniture anchor metadata
 [Complete] Authored map-edge connection metadata
-[Next]     Road endpoint anchoring or multi-level building footprint foundations
+[Complete] Authored road endpoint anchoring
+[Next]     Road path routing or multi-level building footprint foundations
 [Planned]  Rooms and buildings
 [In Progress]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

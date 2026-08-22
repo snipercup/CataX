@@ -36,6 +36,7 @@ The root must be a JSON object with these fields:
 | `operations` | array | Ordered placement operations. Optional; defaults to `[]`. |
 | `levels` | non-empty array | Explicit grouped level definitions. Cannot be combined with root `base_tile`, `regions`, or `operations`. |
 | `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
+| `road_endpoints` | array | Authored road endpoint anchors at map edges. Optional; defaults to `[]`. |
 
 A recipe does not define map dimensions: all generated maps are 32 x 32. Top-down `[x, y]` coordinates start at the top-left. Logical `z` is vertical elevation, not a third element in `[x, y]`. Every shape must fit entirely within the map; operations are never silently clipped.
 
@@ -86,6 +87,26 @@ Each key is one of `north`, `east`, `south`, or `west`; each value is one of `gr
 This field authors metadata only: it does not generate road tiles, path routing, or edge tile placement. It declares what the runtime should expect at each edge so the overworld generator can connect adjacent maps correctly.
 
 `Tools/examples/map_recipe_road_connections.json` demonstrates a simple outdoor map with roads entering from east and west.
+
+## Road endpoints
+
+The `road_endpoints` field authors named anchor points that identify where roads enter or exit the map at its edges. Each endpoint is a data-only reference point — it does not generate road tiles, path routing, or geometry.
+
+```json
+{
+  "connections": {"north": "ground", "east": "road", "south": "ground", "west": "road"},
+  "road_endpoints": [
+    {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+    {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0}
+  ]
+}
+```
+
+Each entry has exactly `id`, `direction`, `at`, and `z`. `id` is unique within the recipe and follows the standard naming pattern. `direction` is one of `north`, `east`, `south`, or `west` and must match a `connections` entry whose value is `"road"` — a road endpoint cannot be placed on an edge declared as `"ground"`. `at` is a two-integer `[x, y]` coordinate that must lie on the correct map edge for its `direction` (north edge: `y = 0`, south edge: `y = 31`, west edge: `x = 0`, east edge: `x = 31`). `z` must be `0` — road endpoints are ground-level only in this first slice.
+
+The standalone validator independently checks the same content: it rejects unknown directions, duplicate IDs, coordinates not on the correct edge, and non-zero `z` values. `DMap` preserves valid road endpoints through editor save/load and removes entries with missing fields, invalid directions, duplicate IDs, or malformed coordinates.
+
+`Tools/examples/map_recipe_road_endpoints.json` demonstrates the maintained example with two road endpoints: `west_entrance` at the west edge and `east_exit` at the east edge.
 
 ## Logical levels
 
