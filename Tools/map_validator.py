@@ -8,6 +8,8 @@ MAP_WIDTH = 32
 MAP_HEIGHT = 32
 LEVEL_COUNT = 21
 POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
+CONNECTION_DIRECTIONS = {'north', 'east', 'south', 'west'}
+CONNECTION_TYPES = {'ground', 'road'}
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 ROOM_BOUNDARY_VALIDATIONS = {'complete'}
 CARDINAL_SIDES = {
@@ -177,6 +179,15 @@ class MapValidator:
                 val = data[field]
                 if not isinstance(str(val) if expected_type == str else val, expected_type):
                     self.add_error(file_path, f"Field '{field}' has incorrect type (expected {expected_type})")
+
+        # 2b. Validate connections content
+        connections = data.get('connections')
+        if isinstance(connections, dict):
+            for direction, value in connections.items():
+                if direction not in CONNECTION_DIRECTIONS:
+                    self.add_error(file_path, f"connections has unknown direction '{direction}'.")
+                if not isinstance(value, str) or value not in CONNECTION_TYPES:
+                    self.add_error(file_path, f"connections.{direction} has unsupported type '{value}'.")
 
         # 3. Enforce the fixed map dimensions used by the loader and editor.
         map_width = data.get('mapwidth', MAP_WIDTH)
