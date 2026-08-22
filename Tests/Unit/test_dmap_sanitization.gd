@@ -249,6 +249,47 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 	}])
 
 
+func test_dmap_building_levels_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_building_levels", "/tmp/", null)
+	map.set_data({
+		"name": "Building levels",
+		"description": "Preserve multi-level footprint metadata.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
+		],
+		"buildings": [
+			{
+				"id": "office_building",
+				"rooms": ["office"],
+				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+				"building_levels": [{"z": 0}, {"z": 2}],
+			},
+			{
+				"id": "bad_levels",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+				"building_levels": [{"z": 0}, {"z": 1}],
+			},
+		],
+		"levels": [[
+			{"id": "concrete_00"},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["buildings"], [{
+		"id": "office_building",
+		"rooms": ["office"],
+		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+		"z": 0,
+		"building_levels": [{"z": 0}, {"z": 2}],
+	}])
+
+
 func test_dmap_building_surfaces_roundtrip_and_sanitization():
 	var DMap = load("res://Scripts/Gamedata/DMap.gd")
 	var map = DMap.new("test_building_surfaces", "/tmp/", null)

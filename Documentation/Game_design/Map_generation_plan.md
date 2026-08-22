@@ -595,7 +595,7 @@ Generate an outdoor map with trees, rocks, vegetation, and simple interactable o
 
 ## Phase 6 — Areas, rooms, and buildings
 
-**Status: in progress; level-aware runtime area foundation complete**
+**Status: in progress; level-aware runtime area and multi-level footprint foundations complete**
 
 The generator needs semantic areas before it can create convincing buildings.
 
@@ -651,7 +651,9 @@ An opted-in `overhead_validation: "complete"` requires that the validated buildi
 
 `furniture_anchors` now authors named data-only furniture anchor metadata for a validated building. Each record is a non-empty array of `{ "id", "at", "z", "kind" }` entries. Each `id` is unique within the building and follows the standard naming pattern. `at` is a two-integer `[x, y]` coordinate within map bounds. `z` is a logical level from `-10` through `10` and must match the building's own `z`. `kind` is a non-empty free-form semantic label (e.g. `"door"`, `"storage"`, `"workstation"`) — not an enumerated set and carrying no runtime behavior. Each anchor must reference a tile inside the building footprint that has an existing furniture feature at the authored `[x, y, z]`; the anchor does not generate furniture, modify terrain, infer walkability, check furniture category or function, or alter collision, navigation, lighting, weather, or runtime behavior. `Tools/examples/map_recipe_furniture_anchors.json` demonstrates the maintained office building with two furniture anchors: `office_door_anchor` and `garage_door_anchor`, each pointing to an existing `door_wood` feature inside the footprint. This is a data-only authored reference point that future template composition and gameplay validation can use as an anchor.
 
-This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, multi-level building records, or generalized templates.
+`building_levels` now provides the first multi-level building footprint foundation. A building remains rooted at ground floor `z: 0` and may declare strictly ascending occupied floor levels at even logical z values: `z: 0` ground, `z: 1` intentional open gap, `z: 2` ceiling/first floor, `z: 3` open gap, and so on through `z: 10`. `Tools/examples/map_recipe_multi_level_building_foundation.json` demonstrates the two-floor declaration `[{"z": 0}, {"z": 2}]`. The generator, standalone validator, and DMap save/load path validate or preserve this metadata-only foundation. It does not generate upper floors, ceilings, walls, roofs, supports, stairs, vertical transitions, collision, navigation, or indoor runtime behavior; existing room and furniture metadata remains associated with the root ground level until a later per-floor schema is defined.
+
+This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, per-floor room or furniture ownership, vertical transitions, or generalized templates.
 
 Capabilities:
 
@@ -894,9 +896,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, and authored furniture anchor metadata are complete. **Phase 7 is in progress** with authored map-edge connection metadata and road endpoint anchoring. The next contribution should extend road or building content carefully without introducing multi-level structures or generalized templates.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, authored furniture anchor metadata, and the first multi-level building footprint foundation are complete. **Phase 7 is in progress** with authored map-edge connection metadata and road endpoint anchoring. The next contribution should extend per-floor building semantics or road content without introducing generated geometry or generalized templates.
 
-Do not yet generate walls, doors, roofs, multi-level building footprints, road geometry, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
+Do not yet generate walls, doors, roofs, multi-level building geometry, road geometry, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -951,8 +953,9 @@ Do not commit or push unless explicitly requested.
 [Complete] Authored furniture anchor metadata
 [Complete] Authored map-edge connection metadata
 [Complete] Authored road endpoint anchoring
-[Next]     Road path routing or multi-level building footprint foundations
-[Planned]  Rooms and buildings
+[Complete] Multi-level building footprint foundation with intentional open gaps
+[Next]     Per-floor room/furniture ownership or road path routing
+[In Progress]  Rooms and buildings
 [In Progress]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition
 [Planned]  Semantic map planning

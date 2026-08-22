@@ -87,8 +87,9 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
+BUILDING_LEVEL_FIELDS = {"z"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
 BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
@@ -1117,6 +1118,35 @@ def _validate_recipe_buildings(
         z = building["z"]
         if type(z) is not int or not MIN_LOGICAL_Z <= z <= MAX_LOGICAL_Z:
             raise RecipeError(f"{context}.z must be an integer from -10 through 10")
+        building_levels = building.get("building_levels")
+        if building_levels is not None:
+            if not isinstance(building_levels, list) or not building_levels:
+                raise RecipeError(f"{context}.building_levels must be a non-empty array")
+            level_z_values: list[int] = []
+            for level_index, level_definition in enumerate(building_levels):
+                level_context = f"{context}.building_levels[{level_index}]"
+                if (
+                    not isinstance(level_definition, dict)
+                    or set(level_definition) != BUILDING_LEVEL_FIELDS
+                    or type(level_definition.get("z")) is not int
+                ):
+                    raise RecipeError(f"{level_context} must define integer z")
+                level_z = level_definition["z"]
+                if not 0 <= level_z <= MAX_LOGICAL_Z:
+                    raise RecipeError(f"{level_context}.z must be an integer from 0 through 10")
+                if level_z % 2 != 0:
+                    raise RecipeError(
+                        f"{level_context}.z must be even; odd levels are intentional open gaps"
+                    )
+                if level_z_values and level_z <= level_z_values[-1]:
+                    raise RecipeError(
+                        f"{level_context}.z must be strictly greater than the previous building level"
+                    )
+                level_z_values.append(level_z)
+            if level_z_values[0] != 0:
+                raise RecipeError(f"{context}.building_levels must start with ground floor z 0")
+            if z != 0:
+                raise RecipeError(f"{context}.z must be 0 when building_levels is declared")
         access_validation = building.get("access_validation")
         if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
             raise RecipeError(
@@ -1286,6 +1316,8 @@ def _validate_recipe_buildings(
             "footprint": {"x": x, "y": y, "width": width, "height": height},
             "z": z,
         }
+        if building_levels is not None:
+            validated_building["building_levels"] = building_levels
         if access_validation is not None:
             validated_building["access_validation"] = access_validation
         if interior_rooms is not None:
