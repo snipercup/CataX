@@ -2642,6 +2642,94 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "connections must be an object"):
             generate_map(recipe, TILES_PATH)
 
+    def test_road_endpoints_generate_and_validate(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_endpoints.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertIn("road_endpoints", generated)
+        endpoints = generated["road_endpoints"]
+        self.assertEqual(len(endpoints), 2)
+        self.assertEqual(endpoints[0], {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0})
+        self.assertEqual(endpoints[1], {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0})
+
+    def test_road_endpoints_require_road_connection(self):
+        recipe = valid_recipe()
+        recipe["connections"] = {"east": "ground", "west": "road"}
+        recipe["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+        ]
+        generate_map(recipe, TILES_PATH)
+
+        no_road = json.loads(json.dumps(recipe))
+        no_road["connections"] = {"west": "ground"}
+        with self.assertRaisesRegex(RecipeError, "requires connections.west to be 'road'"):
+            generate_map(no_road, TILES_PATH)
+
+    def test_road_endpoints_reject_duplicate_ids_and_wrong_edge(self):
+        recipe = valid_recipe()
+        recipe["connections"] = {"east": "road", "west": "road"}
+        recipe["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+            {"id": "west_entrance", "direction": "east", "at": [31, 16], "z": 0},
+        ]
+        with self.assertRaisesRegex(RecipeError, "duplicate road endpoint ID 'west_entrance'"):
+            generate_map(recipe, TILES_PATH)
+
+        wrong_edge = valid_recipe()
+        wrong_edge["connections"] = {"west": "road"}
+        wrong_edge["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [5, 16], "z": 0},
+        ]
+        with self.assertRaisesRegex(RecipeError, "at must be on the west edge of the map"):
+            generate_map(wrong_edge, TILES_PATH)
+
+    def test_road_endpoints_reject_invalid_entries(self):
+        recipe = valid_recipe()
+        recipe["connections"] = {"west": "road"}
+
+        missing_fields = json.loads(json.dumps(recipe))
+        missing_fields["road_endpoints"] = [{"id": "test", "direction": "west", "at": [0, 16]}]
+        with self.assertRaisesRegex(RecipeError, "must define id, direction, at, and z"):
+            generate_map(missing_fields, TILES_PATH)
+
+        bad_direction = json.loads(json.dumps(recipe))
+        bad_direction["road_endpoints"] = [{"id": "test", "direction": "up", "at": [0, 16], "z": 0}]
+        with self.assertRaisesRegex(RecipeError, "direction must be north, east, south, or west"):
+            generate_map(bad_direction, TILES_PATH)
+
+        bad_z = json.loads(json.dumps(recipe))
+        bad_z["road_endpoints"] = [{"id": "test", "direction": "west", "at": [0, 16], "z": 1}]
+        with self.assertRaisesRegex(RecipeError, "z must be 0"):
+            generate_map(bad_z, TILES_PATH)
+
+        empty = json.loads(json.dumps(recipe))
+        empty["road_endpoints"] = []
+        with self.assertRaisesRegex(RecipeError, "road_endpoints must not be empty"):
+            generate_map(empty, TILES_PATH)
+
+    def test_road_endpoints_omitted_produces_no_field(self):
+        recipe = valid_recipe()
+        generated = generate_map(recipe, TILES_PATH)
+        self.assertNotIn("road_endpoints", generated)
+
+    def test_road_endpoints_require_existing_terrain(self):
+        recipe = valid_recipe()
+        recipe["connections"] = {"west": "road"}
+        recipe["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+        ]
+        recipe["operations"] = [{"type": "set", "x": 0, "y": 16, "tile": None}]
+        with self.assertRaisesRegex(RecipeError, "must reference existing terrain"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_road_endpoints_reject_non_array(self):
+        recipe = valid_recipe()
+        recipe["road_endpoints"] = {"id": "west_entrance"}
+        with self.assertRaisesRegex(RecipeError, "road_endpoints must be an array"):
+            generate_map(recipe, TILES_PATH)
+
 
 class MapValidatorDimensionTests(unittest.TestCase):
     def validate(self, map_data):
@@ -3359,6 +3447,48 @@ class MapValidatorDimensionTests(unittest.TestCase):
         bad_type["connections"]["north"] = "river"
         errors = self.validate(bad_type)
         self.assertTrue(any("unsupported type 'river'" in error for error in errors))
+
+    def test_validates_road_endpoints_content(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_endpoints.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        # Duplicate id
+        dup_id = json.loads(json.dumps(valid_map))
+        dup_id["road_endpoints"][1]["id"] = "west_entrance"
+        errors = self.validate(dup_id)
+        self.assertTrue(any("duplicates road endpoint ID 'west_entrance'" in error for error in errors))
+
+        # Wrong edge
+        wrong_edge = json.loads(json.dumps(valid_map))
+        wrong_edge["road_endpoints"][0]["at"] = [5, 16]
+        errors = self.validate(wrong_edge)
+        self.assertTrue(any("at must be on the west edge" in error for error in errors))
+
+        # Direction not road in connections
+        ground_dir = json.loads(json.dumps(valid_map))
+        ground_dir["connections"]["west"] = "ground"
+        errors = self.validate(ground_dir)
+        self.assertTrue(any("requires connections.west to be 'road'" in error for error in errors))
+
+        # Bad z
+        bad_z = json.loads(json.dumps(valid_map))
+        bad_z["road_endpoints"][0]["z"] = 1
+        errors = self.validate(bad_z)
+        self.assertTrue(any("z must be 0" in error for error in errors))
+
+        # Missing terrain
+        missing_terrain = json.loads(json.dumps(valid_map))
+        missing_terrain["levels"][10][16 * 32] = {}
+        errors = self.validate(missing_terrain)
+        self.assertTrue(any("must reference existing terrain" in error for error in errors))
+
+        # Non-array field
+        non_array = json.loads(json.dumps(valid_map))
+        non_array["road_endpoints"] = {}
+        errors = self.validate(non_array)
+        self.assertTrue(any("top-level road_endpoints must be an array" in error for error in errors))
 
 
 if __name__ == "__main__":
