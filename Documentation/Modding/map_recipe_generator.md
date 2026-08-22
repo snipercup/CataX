@@ -442,7 +442,9 @@ A building may declare a multi-level footprint foundation with `building_levels`
 
 This is a metadata-only foundation. It does not generate upper floors, ceilings, walls, roofs, supports, stairs, vertical transitions, collision, navigation, or indoor runtime behavior. Existing room and furniture features can now be assigned to declared occupied floors through the ownership lists, but their physical floor geometry and runtime behavior remain undefined until later multi-level schema work. `DMap` preserves valid `building_levels` declarations through save/load and removes malformed declarations.
 
-A building may declare a two-slope staircase with `staircases`:
+A building may declare staircases with `staircases`. Staircases are authored physical transition semantics for a two-floor building: exactly two slope blocks are needed to ascend from the ground floor to the first floor. The two slopes never stack — the upper slope must be horizontally offset from the lower slope. Both slope tiles must be tiles whose tile-database `shape` is `"slope"` (for example `grass_ramp_00`, `wood_stairs`, or `dirt_light_ramp_00`), placed on `z: 1` (lower) and `z: 2` (upper). Staircases require declared building levels `z: 0` and `z: 2`.
+
+**Straight stairs** use two cardinally adjacent slopes:
 
 ```json
 {
@@ -453,9 +455,22 @@ A building may declare a two-slope staircase with `staircases`:
 }
 ```
 
-Each staircase has exactly `id`, `lower_at`, `upper_at`, and editor-facing `rotation`. The two coordinates must be cardinally adjacent and inside the building footprint. The generator requires a `grass_ramp_00` slope with the declared rotation at `lower_at` on `z: 1`, followed by a second `grass_ramp_00` slope with the same rotation at `upper_at` on `z: 2`. This explicitly models the player’s two slope blocks from the ground-floor approach through the open gap to the second-floor surface. Staircases require declared building levels `z: 0` and `z: 2`.
+The lower slope at `lower_at` on `z: 1` and the upper slope at `upper_at` on `z: 2` are cardinally adjacent, and both use the same editor-facing `rotation` so the slope continues in the same direction.
 
-Staircase metadata does not generate slope tiles, stairs, floor geometry, support, collision, navigation, or player traversal. It validates existing physical evidence only; the existing slope runtime tests remain responsible for mesh, collision, navigation, and traversal behavior.
+**Corner stairs** insert one flat landing block at `z: 1` between the two slopes, so the upper slope is diagonally offset from the lower slope and turns the corner:
+
+```json
+{
+  "building_levels": [{"z": 0}, {"z": 2}],
+  "staircases": [
+    {"id": "corner_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0}
+  ]
+}
+```
+
+The landing block at `landing_at` on `z: 1` must be a flat (non-slope) existing tile, cardinally adjacent to both `lower_at` and `upper_at`. `upper_rotation` is optional and defaults to `rotation`; it is the editor-facing rotation of the upper slope, which may turn the corner. The maintained `Tools/examples/map_recipe_multi_level_building_foundation.json` demonstrates both formations.
+
+Every staircase record has a unique `id` and required `lower_at`, `upper_at`, and editor-facing `rotation`. All coordinates must be inside the building footprint. Staircase metadata does not generate slope tiles, stairs, floor geometry, support, collision, navigation, or player traversal. It validates existing physical evidence only; the existing slope runtime tests remain responsible for mesh, collision, navigation, and traversal behavior.
 
 A building may opt into authored access completeness with `"access_validation": "complete"`:
 
@@ -571,9 +586,22 @@ Each anchor must reference a tile inside the building footprint that has an exis
 }
 ```
 
-Each record has exactly `id`, `building`, `kind`, and `z`. `id` is unique; `building` must name a root `buildings` record; and `kind` is exactly `roof` or `ceiling`. A building may have at most one record of each kind. `z` is the logical level immediately above the building footprint (`building.z + 1`), so surface semantics inherit the footprint bounds without duplicating coordinates.
+Each record has exactly `id`, `building`, `kind`, and `z`. `id` is unique; `building` must name a root `buildings` record; and `kind` is exactly `roof`, `ceiling`, or `floor`. A building may have at most one record of each kind at each `z`.
 
-`roof` and `ceiling` are separate authored classifications and may both be present for one building. They do not place tiles on their `z`, create a roof or ceiling mesh, imply collision/support, change lighting/weather, mark rooms indoors, or make overhead cells occupied. `DMap` preserves valid records and removes surfaces whose referenced building is deleted; generator and standalone validation enforce the strict reference, uniqueness, and z relationship.
+For a single-level building (no `building_levels`), `z` is the logical level immediately above the building footprint (`building.z + 1`), and only `roof` and `ceiling` kinds are allowed. `roof` and `ceiling` are separate authored classifications and may both be present for one building.
+
+For a multi-level building (with `building_levels`), `z` must name a declared occupied building level, and only `floor` and `ceiling` kinds are allowed (`roof` for multi-level buildings is not yet supported). This models the top-down vertical story directly:
+
+```text
+z: 0  ground-floor surface      -> kind "floor"
+z: 1  air gap (never a surface)
+z: 2  first-floor surface       -> kind "floor"
+z: 2  ground-floor ceiling      -> kind "ceiling"
+```
+
+In the top-down game the player never sees the ceiling: a `ceiling` at `z: 2` is the underside of the first-floor slab that closes the air gap above the ground floor, and it is authored metadata only — it is never rendered. `ceiling` cannot be declared at the ground level itself.
+
+Surfaces do not place tiles on their `z`, create a roof/ceiling/floor mesh, imply collision/support, change lighting/weather, mark rooms indoors, or make overhead cells occupied. `DMap` preserves valid records and removes surfaces whose referenced building is deleted, whose kind is unsupported, or whose `z` no longer matches the building's declared levels; generator and standalone validation enforce the strict reference, uniqueness, and z relationship.
 
 ### `building_compositions`
 
