@@ -370,12 +370,12 @@ func test_dmap_road_paths_roundtrip_and_sanitization():
 			{"id": "east", "direction": "east", "at": [31, 16], "z": 0},
 		],
 		"road_paths": [
-			{"id": "valid_route", "from": "west", "to": "east", "waypoints": []},
+			{"id": "valid_route", "from": "west", "to": "east", "waypoints": [], "tile": {"id": "dirt_light_00"}},
 			{"id": "bad_route", "from": "west", "to": "missing", "waypoints": []},
 		],
 	})
 	var data = map.get_data()
-	assert_eq(data["road_paths"], [{"id": "valid_route", "from": "west", "to": "east", "waypoints": []}])
+	assert_eq(data["road_paths"], [{"id": "valid_route", "from": "west", "to": "east", "waypoints": [], "tile": {"id": "dirt_light_00"}}])
 
 
 func test_dmap_building_compositions_roundtrip_and_sanitization():

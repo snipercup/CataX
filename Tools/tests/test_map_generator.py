@@ -2653,7 +2653,36 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(len(endpoints), 2)
         self.assertEqual(endpoints[0], {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0})
         self.assertEqual(endpoints[1], {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0})
-        self.assertEqual(generated["road_paths"], [{"id": "west_to_east_road", "from": "west_entrance", "to": "east_exit", "waypoints": []}])
+        self.assertEqual(generated["road_paths"], [{"id": "west_to_east_road", "from": "west_entrance", "to": "east_exit", "waypoints": [], "tile": {"id": "dirt_light_00"}}])
+        self.assertTrue(all(tile == {"id": "dirt_light_00"} for tile in generated["levels"][10][16 * 32:17 * 32]))
+
+    def test_metadata_only_road_path_does_not_change_terrain(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["connections"] = {"west": "road", "east": "road"}
+        recipe["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+            {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0},
+        ]
+        recipe["road_paths"] = [{"id": "metadata_route", "from": "west_entrance", "to": "east_exit", "waypoints": []}]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertTrue(all(tile == {"id": "grass_plain_01"} for tile in generated["levels"][10][16 * 32:17 * 32]))
+
+    def test_road_path_rejects_feature_overwrite(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["connections"] = {"west": "road", "east": "road"}
+        recipe["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+            {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0},
+        ]
+        recipe["operations"] = [{"type": "furniture", "id": "door_wood", "x": 10, "y": 16, "rotation": 0}]
+        recipe["road_paths"] = [{"id": "blocked_route", "from": "west_entrance", "to": "east_exit", "waypoints": [], "tile": {"id": "dirt_light_00"}}]
+
+        with self.assertRaisesRegex(RecipeError, r"cannot overwrite a feature at \[10, 16\]"):
+            generate_map(recipe, TILES_PATH, furnitures_path=FURNITURES_PATH)
 
     def test_road_paths_require_endpoint_references_and_cardinal_continuity(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_endpoints.json"
