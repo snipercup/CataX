@@ -716,13 +716,18 @@ class MapValidator:
                 self.add_error(file_path, f"Room boundary '{boundary['id']}' duplicates boundary target for room '{room_id}' at z {z} [{x}, {y}].")
                 continue
             seen_boundary_targets.add(target)
-            level_index = z + 10
+            level_index = z + 11 if boundary['element'] == 'wall_tile' else z + 10
             level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+            if boundary['element'] == 'wall_tile' and (not level or level[y * MAP_WIDTH + x].get('id') not in wall_tile_ids):
+                level = levels[z + 10] if isinstance(levels, list) and z + 10 < len(levels) else []
             tile = level[y * MAP_WIDTH + x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
             if not isinstance(tile, dict) or not isinstance(tile.get('id'), str) or not tile['id']:
-                self.add_error(file_path, f"Room boundary '{boundary['id']}' requires existing terrain at z {z} [{x}, {y}].")
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' requires existing terrain at z {z + 1 if boundary['element'] == 'wall_tile' else z} [{x}, {y}].")
                 continue
+            room_level = level
             if boundary['element'] == 'wall_tile':
+                room_level_index = z + 10
+                room_level = levels[room_level_index] if isinstance(levels, list) and 0 <= room_level_index < len(levels) else []
                 if tile['id'] not in wall_tile_ids:
                     self.add_error(file_path, f"Room boundary '{boundary['id']}' must reference a Wall-category tile at z {z} [{x}, {y}].")
                     continue
@@ -732,7 +737,7 @@ class MapValidator:
                     neighbor_y = y + delta_y
                     if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
                         continue
-                    neighbor = level[neighbor_y * MAP_WIDTH + neighbor_x]
+                    neighbor = room_level[neighbor_y * MAP_WIDTH + neighbor_x]
                     if isinstance(neighbor, dict) and neighbor.get('rooms') == [room_id]:
                         adjacent_to_room = True
                         break
@@ -784,12 +789,17 @@ class MapValidator:
             if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
                 continue
             if boundary['element'] == 'wall_tile':
+                room_level_index = z + 10
+                room_level = levels[room_level_index] if isinstance(levels, list) and room_level_index < len(levels) else []
+                level = room_level
                 delta_x, delta_y = CARDINAL_SIDES[side]
                 room_x, room_y = x + delta_x, y + delta_y
                 if not 0 <= room_x < MAP_WIDTH or not 0 <= room_y < MAP_HEIGHT:
                     self.add_error(file_path, f"Room boundary '{boundary_id}' side does not point to room '{room_id}'.")
                     continue
-                room_tile = level[room_y * MAP_WIDTH + room_x]
+                room_level_index = z + 10
+                room_level = levels[room_level_index] if isinstance(levels, list) and 0 <= room_level_index < len(levels) else []
+                room_tile = room_level[room_y * MAP_WIDTH + room_x] if room_level else {}
                 if not isinstance(room_tile, dict) or room_tile.get('rooms') != [room_id]:
                     self.add_error(file_path, f"Room boundary '{boundary_id}' side does not point to room '{room_id}'.")
                     continue
@@ -800,7 +810,8 @@ class MapValidator:
                     self.add_error(file_path, f"Room boundary '{boundary_id}' side does not start on room '{room_id}'.")
                     continue
                 edge = (x, y, side)
-            key = (room_id, z)
+            boundary_level_z = z
+            key = (room_id, boundary_level_z)
             edges = declared_edges.setdefault(key, set())
             if edge in edges:
                 self.add_error(file_path, f"Room boundary '{boundary_id}' duplicates directed boundary edge for room '{room_id}'.")

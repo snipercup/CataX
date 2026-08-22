@@ -629,6 +629,14 @@ def _apply_set(
     )
 
 
+def _is_implicit_wall_set(operation: dict[str, Any], wall_tile_ids: set[str]) -> bool:
+    return (
+        "z" not in operation
+        and isinstance(operation.get("tile"), dict)
+        and operation["tile"].get("id") in wall_tile_ids
+    )
+
+
 def _rectangle_dimensions(spec: dict[str, Any], context: str) -> dict[str, int]:
     dimensions: dict[str, int] = {}
     for field in ("x", "y", "width", "height"):
@@ -2348,7 +2356,8 @@ def _validate_room_boundary_targets(
         edge = _room_boundary_edge(boundary, level)
         if edge is None:
             raise RecipeError(f"{context}.side does not point to an edge of room '{room_id}'")
-        key = (room_id, boundary["z"])
+        boundary_level_z = boundary["z"]
+        key = (room_id, boundary_level_z)
         edges = directed_edges.setdefault(key, set())
         if edge in edges:
             raise RecipeError(f"{context} duplicates directed boundary edge for room '{room_id}'")
@@ -2364,16 +2373,23 @@ def _validate_room_boundary_targets(
         if target in seen_room_targets:
             raise RecipeError(f"{context} duplicates boundary target for room '{room_id}' at z {z} [{x}, {y}]")
         seen_room_targets.add(target)
-        level = levels[_level_index(z)]
+        if boundary["element"] == "wall_tile":
+            candidate = levels[_level_index(z + 1)]
+            candidate_tile = candidate[y * MAP_WIDTH + x] if candidate else {}
+            level = candidate if candidate_tile.get("id") in wall_tile_ids else levels[_level_index(z)]
+            room_level = levels[_level_index(z)]
+        else:
+            level = levels[_level_index(z)]
+            room_level = level
         tile = level[y * MAP_WIDTH + x] if level else {}
         if not isinstance(tile, dict) or not isinstance(tile.get("id"), str) or not tile["id"]:
             raise RecipeError(f"{context} requires existing terrain at z {z} [{x}, {y}]")
         if boundary["element"] == "wall_tile":
             if tile["id"] not in wall_tile_ids:
                 raise RecipeError(f"{context} must reference a Wall-category tile at z {z} [{x}, {y}]")
-            if not _wall_tile_bounds_room(x, y, room_id, level):
+            if not _wall_tile_bounds_room(x, y, room_id, room_level):
                 raise RecipeError(f"{context} wall tile must be cardinally adjacent to room '{room_id}'")
-            record_complete_edge(boundary, level, context)
+            record_complete_edge(boundary, room_level, context)
             continue
         feature = tile.get("feature")
         if (
@@ -2496,6 +2512,7 @@ def _apply_layout(
     furniture_palette: dict[str, list[dict[str, Any]]],
     known_area_ids: set[str],
     known_room_ids: set[str],
+    wall_tile_ids: set[str],
     context_prefix: str = "",
     inherited_z: int | None = None,
 ) -> None:
@@ -2525,7 +2542,13 @@ def _apply_layout(
         if operation_type in TILE_OPERATION_TYPES and "tile" not in operation:
             raise RecipeError(f"{context}.tile is required")
         if operation_type == "set":
-            _apply_set(level, operation, rng, known_tiles, palette, context)
+            if _is_implicit_wall_set(operation, wall_tile_ids):
+                support_level = _get_or_create_level(levels, 0)
+                support_level[operation["y"] * MAP_WIDTH + operation["x"]] = {"id": "dirt_light_00"}
+                wall_level = _get_or_create_level(levels, 1)
+                _apply_set(wall_level, operation, rng, known_tiles, palette, context)
+            else:
+                _apply_set(level, operation, rng, known_tiles, palette, context)
         elif operation_type == "rectangle":
             _apply_rectangle(
                 level, operation, rng, known_tiles, palette, context, RECTANGLE_FIELDS
@@ -2568,6 +2591,7 @@ def _generate_levels(
     furniture_palette: dict[str, list[dict[str, Any]]],
     known_area_ids: set[str],
     known_room_ids: set[str],
+    wall_tile_ids: set[str],
 ) -> list[list[dict[str, Any]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
     if "levels" not in recipe:
@@ -2592,6 +2616,7 @@ def _generate_levels(
             furniture_palette,
             known_area_ids,
             known_room_ids,
+            wall_tile_ids,
         )
         return levels
 
@@ -2647,6 +2672,7 @@ def _generate_levels(
             furniture_palette,
             known_area_ids,
             known_room_ids,
+            wall_tile_ids,
             context_prefix=f"{context}.",
             inherited_z=logical_z,
         )
@@ -2888,7 +2914,7 @@ def generate_map(
         if furnitures_path is None:
             raise RecipeError("room connections or boundaries require a furniture database")
         door_furniture_ids = _door_furniture_ids(Path(furnitures_path))
-    wall_tile_ids = _wall_tile_ids(Path(tiles_path)) if "room_boundaries" in recipe else set()
+    wall_tile_ids = _wall_tile_ids(Path(tiles_path))
     known_area_entity_ids: dict[str, set[str]] = {
         "furniture": known_furnitures,
         "mob": set(),
@@ -2945,6 +2971,7 @@ def generate_map(
         furniture_palette,
         known_area_ids,
         known_room_ids,
+        wall_tile_ids,
     )
     _apply_building_geometry(
         buildings,

@@ -320,6 +320,18 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(level[2 * 32 + 3], {"id": "dirt_light_00"})
         self.assertEqual(level[2 * 32 + 2], {"id": "grass_plain_01"})
 
+    def test_implicit_wall_set_places_dirt_support_below_wall(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["operations"] = [
+            {"type": "set", "x": 8, "y": 13, "tile": {"id": "brick_wall_00"}}
+        ]
+
+        levels = generate_map(recipe, TILES_PATH)["levels"]
+
+        self.assertEqual(levels[10][13 * 32 + 8], {"id": "dirt_light_00"})
+        self.assertEqual(levels[11][13 * 32 + 8], {"id": "brick_wall_00"})
+
     def test_furniture_operation_embeds_known_feature_on_explicit_logical_level(self):
         recipe = valid_recipe()
         recipe["operations"] = [
@@ -1560,9 +1572,9 @@ class MapGeneratorTests(unittest.TestCase):
         generated = generate_map(recipe, TILES_PATH)
 
         self.assertEqual(generated["room_boundaries"], recipe["room_boundaries"])
-        level = generated["levels"][10]
+        level = generated["levels"][11]
         self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(level[10 * 32 + 11]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][10 * 32 + 11]["feature"]["id"], "door_wood")
 
     def test_enclosed_room_can_opt_into_complete_directional_boundaries(self):
         recipe = valid_recipe()
@@ -1716,7 +1728,7 @@ class MapGeneratorTests(unittest.TestCase):
             "building": "office_building",
             "required_surfaces": ["roof", "ceiling"],
         }])
-        self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
 
     def test_building_exterior_context_requires_adjacent_unclassified_terrain(self):
@@ -2078,9 +2090,9 @@ class MapGeneratorTests(unittest.TestCase):
             "footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
             "z": 0,
         }])
-        level = generated["levels"][10]
+        level = generated["levels"][11]
         self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(level[9 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
 
     def test_complete_enclosed_room_rejects_missing_or_wrong_directional_boundaries(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
@@ -3242,10 +3254,10 @@ class MapValidatorDimensionTests(unittest.TestCase):
         self.assertEqual(
             sum(boundary["element"] == "door_furniture" for boundary in generated["room_boundaries"]), 1
         )
-        level = generated["levels"][10]
+        level = generated["levels"][11]
         for x, y in ((8, 7), (9, 7), (8, 10), (9, 10), (7, 8), (10, 8), (10, 9)):
             self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
-        self.assertEqual(level[9 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
     def test_validates_opt_in_enclosed_room_boundary_completeness(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
         complete_map = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
