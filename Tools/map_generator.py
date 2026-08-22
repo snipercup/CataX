@@ -33,6 +33,13 @@ DEFAULT_CONNECTIONS = {
 }
 CONNECTION_DIRECTIONS = {"north", "east", "south", "west"}
 CONNECTION_TYPES = {"ground", "road"}
+ROAD_ENDPOINT_FIELDS = {"id", "direction", "at", "z"}
+EDGE_COORDINATES = {
+    "north": lambda x, y: y == 0,
+    "south": lambda x, y: y == MAP_HEIGHT - 1,
+    "west": lambda x, y: x == 0,
+    "east": lambda x, y: x == MAP_WIDTH - 1,
+}
 # Recipe rotations use the same editor-facing values stored in map JSON. Keep
 # them unchanged here; Chunk.get_block_rotation() applies shape-specific runtime
 # conversion when a newly generated map is loaded.
@@ -118,6 +125,7 @@ RECIPE_FIELDS = {
     "operations",
     "levels",
     "connections",
+    "road_endpoints",
 }
 
 
@@ -2312,6 +2320,72 @@ def _validate_connections(connections: Any) -> dict[str, str]:
     return validated
 
 
+def _validate_road_endpoints(
+    road_endpoints: Any,
+    connections: dict[str, str],
+    levels: list[list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    if road_endpoints is None:
+        return []
+    if not isinstance(road_endpoints, list):
+        raise RecipeError("road_endpoints must be an array")
+    if not road_endpoints:
+        raise RecipeError("road_endpoints must not be empty")
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, endpoint in enumerate(road_endpoints):
+        context = f"road_endpoints[{index}]"
+        if not isinstance(endpoint, dict):
+            raise RecipeError(f"{context} must be an object")
+        unknown_fields = sorted(set(endpoint) - ROAD_ENDPOINT_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if set(endpoint) != ROAD_ENDPOINT_FIELDS:
+            raise RecipeError(f"{context} must define id, direction, at, and z")
+        endpoint_id = endpoint["id"]
+        if not isinstance(endpoint_id, str) or not endpoint_id.strip():
+            raise RecipeError(f"{context}.id must be a non-empty string")
+        _validate_unicode(endpoint_id, f"{context}.id")
+        if DEFINITION_NAME_PATTERN.fullmatch(endpoint_id) is None:
+            raise RecipeError(f"{context}.id may contain only letters, numbers, underscores, and hyphens")
+        if endpoint_id in seen_ids:
+            raise RecipeError(f"duplicate road endpoint ID '{endpoint_id}'")
+        seen_ids.add(endpoint_id)
+        direction = endpoint["direction"]
+        if direction not in CONNECTION_DIRECTIONS:
+            raise RecipeError(f"{context}.direction must be north, east, south, or west")
+        if connections[direction] != "road":
+            raise RecipeError(
+                f"{context}.direction '{direction}' requires connections.{direction} to be 'road'"
+            )
+        at = endpoint["at"]
+        if (
+            not isinstance(at, list)
+            or len(at) != 2
+            or any(type(value) is not int for value in at)
+            or not 0 <= at[0] < MAP_WIDTH
+            or not 0 <= at[1] < MAP_HEIGHT
+        ):
+            raise RecipeError(f"{context}.at must be within map bounds as a two-integer array")
+        ep_x, ep_y = at
+        if not EDGE_COORDINATES[direction](ep_x, ep_y):
+            raise RecipeError(f"{context}.at must be on the {direction} edge of the map")
+        z = endpoint["z"]
+        if type(z) is not int or z != 0:
+            raise RecipeError(f"{context}.z must be 0")
+        level = levels[_level_index(z)]
+        tile = level[ep_y * MAP_WIDTH + ep_x] if level else {}
+        if not isinstance(tile, dict) or not isinstance(tile.get("id"), str) or not tile["id"]:
+            raise RecipeError(f"{context} must reference existing terrain at [{ep_x}, {ep_y}] on z {z}")
+        validated.append({
+            "id": endpoint_id,
+            "direction": direction,
+            "at": at,
+            "z": z,
+        })
+    return validated
+
+
 def generate_map(
     recipe: dict[str, Any],
     tiles_path: Path,
@@ -2429,6 +2503,7 @@ def generate_map(
         levels,
     )
     connections = _validate_connections(recipe.get("connections"))
+    road_endpoints = _validate_road_endpoints(recipe.get("road_endpoints"), connections, levels)
 
     generated = {
         "id": recipe["id"],
@@ -2455,6 +2530,8 @@ def generate_map(
         generated["building_surfaces"] = building_surfaces
     if building_compositions:
         generated["building_compositions"] = building_compositions
+    if road_endpoints:
+        generated["road_endpoints"] = road_endpoints
     return generated
 
 

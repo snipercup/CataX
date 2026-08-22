@@ -99,6 +99,7 @@ var room_boundaries: Array = []
 var buildings: Array = []
 var building_surfaces: Array = []
 var building_compositions: Array = []
+var road_endpoints: Array = []
 var sprite: Texture = null
 # Variable to store connections. For example: {"south": "road","west": "ground"} default to ground
 var connections: Dictionary = {
@@ -157,6 +158,7 @@ func set_data(newdata: Dictionary) -> void:
 	buildings = newdata.get("buildings", [])
 	building_surfaces = newdata.get("building_surfaces", [])
 	building_compositions = newdata.get("building_compositions", [])
+	road_endpoints = newdata.get("road_endpoints", [])
 	connections = newdata.get("connections", {})  # Set connections from data if present
 
 
@@ -186,6 +188,8 @@ func get_data() -> Dictionary:
 		mydata["building_surfaces"] = building_surfaces
 	if not building_compositions.is_empty():
 		mydata["building_compositions"] = building_compositions
+	if not road_endpoints.is_empty():
+		mydata["road_endpoints"] = road_endpoints
 	if not connections.is_empty():  # Omit connections if empty
 		mydata["connections"] = connections
 	
@@ -197,6 +201,7 @@ func get_data() -> Dictionary:
 	_sanitize_buildings(mydata)
 	_sanitize_building_surfaces(mydata)
 	_sanitize_building_compositions(mydata)
+	_sanitize_road_endpoints(mydata)
 
 	# NEW: Implement sanitization for corrupt tiles (missing or empty ID when metadata exists)
 	_sanitize_tile_objects(mydata)
@@ -506,6 +511,48 @@ func _sanitize_building_compositions(data: Dictionary) -> void:
 	)
 	if data["building_compositions"].is_empty():
 		data.erase("building_compositions")
+
+
+func _sanitize_road_endpoints(data: Dictionary) -> void:
+	if not data.has("road_endpoints") or not data["road_endpoints"] is Array:
+		return
+
+	var valid_directions: Array[String] = ["north", "east", "south", "west"]
+	var seen_ids: Array[String] = []
+	var map_connections: Dictionary = data.get("connections", {})
+	data["road_endpoints"] = data["road_endpoints"].filter(func(endpoint):
+		if not endpoint is Dictionary:
+			return false
+		if not endpoint.has("id") or not endpoint["id"] is String or endpoint["id"].is_empty():
+			return false
+		if endpoint["id"] in seen_ids:
+			return false
+		seen_ids.append(endpoint["id"])
+		if not endpoint.has("direction") or not endpoint["direction"] is String:
+			return false
+		if endpoint["direction"] not in valid_directions:
+			return false
+		if map_connections.get(endpoint["direction"], "ground") != "road":
+			return false
+		if not endpoint.has("at") or not endpoint["at"] is Array or endpoint["at"].size() != 2:
+			return false
+		if not endpoint.has("z") or not endpoint["z"] is int or endpoint["z"] != 0:
+			return false
+		var at: Array = endpoint["at"]
+		if not at[0] is int or not at[1] is int or at[0] < 0 or at[0] >= 32 or at[1] < 0 or at[1] >= 32:
+			return false
+		if endpoint["direction"] == "north" and at[1] != 0:
+			return false
+		if endpoint["direction"] == "south" and at[1] != 31:
+			return false
+		if endpoint["direction"] == "west" and at[0] != 0:
+			return false
+		if endpoint["direction"] == "east" and at[0] != 31:
+			return false
+		return true
+	)
+	if data["road_endpoints"].is_empty():
+		data.erase("road_endpoints")
 
 
 func load_data_from_disk():

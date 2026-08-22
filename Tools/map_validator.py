@@ -10,6 +10,7 @@ LEVEL_COUNT = 21
 POPULATED_LEVEL_TILE_COUNT = MAP_WIDTH * MAP_HEIGHT
 CONNECTION_DIRECTIONS = {'north', 'east', 'south', 'west'}
 CONNECTION_TYPES = {'ground', 'road'}
+ROAD_ENDPOINT_FIELDS = {'id', 'direction', 'at', 'z'}
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 ROOM_BOUNDARY_VALIDATIONS = {'complete'}
 CARDINAL_SIDES = {
@@ -188,6 +189,62 @@ class MapValidator:
                     self.add_error(file_path, f"connections has unknown direction '{direction}'.")
                 if not isinstance(value, str) or value not in CONNECTION_TYPES:
                     self.add_error(file_path, f"connections.{direction} has unsupported type '{value}'.")
+
+        # 2c. Validate road_endpoints
+        road_endpoints = data.get('road_endpoints', [])
+        if not isinstance(road_endpoints, list):
+            self.add_error(file_path, "top-level road_endpoints must be an array.")
+            road_endpoints = []
+        else:
+            seen_endpoint_ids: Set[str] = set()
+            for idx, endpoint in enumerate(road_endpoints):
+                if not isinstance(endpoint, dict):
+                    self.add_error(file_path, f"road_endpoints[{idx}] is not an object.")
+                    continue
+                context = f"road_endpoints[{idx}]"
+                unknown_fields = set(endpoint) - ROAD_ENDPOINT_FIELDS
+                if unknown_fields:
+                    self.add_error(file_path, f"{context} has unknown field '{sorted(unknown_fields)[0]}'.")
+                if set(endpoint) != ROAD_ENDPOINT_FIELDS:
+                    self.add_error(file_path, f"{context} must define id, direction, at, and z.")
+                    continue
+                endpoint_id = endpoint.get('id')
+                if not isinstance(endpoint_id, str) or not endpoint_id:
+                    self.add_error(file_path, f"{context} id must be a non-empty string.")
+                elif endpoint_id in seen_endpoint_ids:
+                    self.add_error(file_path, f"{context} duplicates road endpoint ID '{endpoint_id}'.")
+                else:
+                    seen_endpoint_ids.add(endpoint_id)
+                direction = endpoint.get('direction')
+                if direction not in CONNECTION_DIRECTIONS:
+                    self.add_error(file_path, f"{context} direction must be north, east, south, or west.")
+                elif isinstance(connections, dict) and connections.get(direction) != 'road':
+                    self.add_error(file_path, f"{context} direction '{direction}' requires connections.{direction} to be 'road'.")
+                at = endpoint.get('at')
+                if isinstance(at, list) and len(at) == 2 and all(type(v) is int for v in at):
+                    ep_x, ep_y = at
+                    if not 0 <= ep_x < MAP_WIDTH or not 0 <= ep_y < MAP_HEIGHT:
+                        self.add_error(file_path, f"{context} at must be within map bounds.")
+                    elif direction in CONNECTION_DIRECTIONS:
+                        edge_checks = {
+                            'north': ep_y == 0,
+                            'south': ep_y == MAP_HEIGHT - 1,
+                            'west': ep_x == 0,
+                            'east': ep_x == MAP_WIDTH - 1,
+                        }
+                        if not edge_checks[direction]:
+                            self.add_error(file_path, f"{context} at must be on the {direction} edge of the map.")
+                        elif endpoint.get('z') == 0:
+                            level_index = 10
+                            level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+                            tile = level[ep_y * MAP_WIDTH + ep_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+                            if not isinstance(tile, dict) or not isinstance(tile.get('id'), str) or not tile.get('id'):
+                                self.add_error(file_path, f"{context} must reference existing terrain at [{ep_x}, {ep_y}] on z 0.")
+                else:
+                    self.add_error(file_path, f"{context} at must be a two-integer coordinate within map bounds.")
+                z = endpoint.get('z')
+                if z is not None and (type(z) is not int or z != 0):
+                    self.add_error(file_path, f"{context} z must be 0.")
 
         # 3. Enforce the fixed map dimensions used by the loader and editor.
         map_width = data.get('mapwidth', MAP_WIDTH)

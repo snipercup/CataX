@@ -1,0 +1,20 @@
+{
+	"id": "generated_road_endpoints",
+	"name": "Generated Road Endpoints",
+	"description": "An outdoor map with authored road endpoint anchors at the east and west edges, identifying where roads enter the map.",
+	"seed": 20260822,
+	"base_tile": {"id": "grass_plain_01"},
+	"connections": {
+		"north": "ground",
+		"east": "road",
+		"south": "ground",
+		"west": "road"
+	},
+	"road_endpoints": [
+		{"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+		{"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0}
+	],
+	"operations": [
+		{"type": "line", "from": [0, 16], "to": [31, 16], "tile": {"id": "dirt_light_00"}}
+	]
+}
