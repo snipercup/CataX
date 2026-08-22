@@ -1636,6 +1636,27 @@ class MapGeneratorTests(unittest.TestCase):
                 with self.assertRaisesRegex(RecipeError, message):
                     generate_map(invalid_recipe, TILES_PATH)
 
+    def test_multi_level_building_geometry_materializes_floors_walls_and_supports(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][8 * 32 + 8]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][8 * 32 + 8]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][9 * 32 + 9], {})
+        self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
+        self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][10][7 * 32 + 7]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][9 * 32 + 9]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][12][9 * 32 + 10]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+
+    def test_building_geometry_rejects_non_wall_wall_or_support_tiles(self):
+        recipe = json.loads((ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json").read_text(encoding="utf-8"))
+        recipe["buildings"][0]["building_geometry"]["wall_tile"] = {"id": "grass_plain_01"}
+
+        with self.assertRaisesRegex(RecipeError, "wall_tile must reference a Wall tile"):
+            generate_map(recipe, TILES_PATH)
+
     def test_building_surfaces_require_existing_building_and_overhead_level(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_single_level_building.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))

@@ -89,7 +89,7 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors", "building_geometry"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_LEVEL_FIELDS = {"z", "rooms", "furniture_anchors"}
 BUILDING_STAIRCASE_FIELDS = {"id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at"}
@@ -109,6 +109,7 @@ BUILDING_SURFACE_KINDS = {"roof", "ceiling", "floor"}
 BUILDING_COMPOSITION_FIELDS = {"id", "building", "required_surfaces"}
 BUILDING_SUPPORT_FIELDS = {"id", "building", "at", "from_z", "to_z", "kind"}
 BUILDING_SUPPORT_KINDS = {"column", "wall"}
+BUILDING_GEOMETRY_FIELDS = {"floor_tile", "wall_tile", "support_tile"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -1468,6 +1469,13 @@ def _validate_recipe_buildings(
             validated_building["entrance_validation"] = entrance_validation
         if furniture_anchors is not None:
             validated_building["furniture_anchors"] = furniture_anchors
+        building_geometry = building.get("building_geometry")
+        if building_geometry is not None:
+            if not isinstance(building_geometry, dict) or set(building_geometry) != BUILDING_GEOMETRY_FIELDS:
+                raise RecipeError(
+                    f"{context}.building_geometry must define floor_tile, wall_tile, and support_tile"
+                )
+            validated_building["building_geometry"] = building_geometry
         validated.append(validated_building)
     return validated
 
@@ -1642,6 +1650,88 @@ def _footprints_overlap(left: dict[str, int], right: dict[str, int]) -> bool:
         or left["y"] + left["height"] <= right["y"]
         or right["y"] + right["height"] <= left["y"]
     )
+
+
+def _apply_building_geometry(
+    buildings: list[dict[str, Any]],
+    room_boundaries: list[dict[str, Any]],
+    building_supports: list[dict[str, Any]],
+    levels: list[list[dict[str, Any]]],
+    rng: random.Random,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+    tile_catalog: dict[str, dict[str, Any]],
+) -> None:
+    for building in buildings:
+        geometry = building.get("building_geometry")
+        if geometry is None:
+            continue
+        context = f"buildings.{building['id']}.building_geometry"
+        tile_specs = {}
+        for field in BUILDING_GEOMETRY_FIELDS:
+            spec = geometry[field]
+            _validate_tile_spec(spec, known_tiles, f"{context}.{field}", palette=palette)
+            tile = _make_tile(spec, rng, known_tiles, f"{context}.{field}", palette=palette)
+            if not tile:
+                raise RecipeError(f"{context}.{field} must produce a non-empty tile")
+            catalog_entry = tile_catalog[tile["id"]]
+            categories = set(catalog_entry.get("categories", []))
+            if field == "floor_tile" and not ({"Ground", "Floor", "Urban"} & categories):
+                raise RecipeError(f"{context}.floor_tile must reference a Ground, Floor, or Urban tile")
+            if field in {"wall_tile", "support_tile"} and "Wall" not in categories:
+                raise RecipeError(f"{context}.{field} must reference a Wall tile")
+            tile_specs[field] = tile
+
+        footprint = building["footprint"]
+        occupied_zs = [building["z"]]
+        if building.get("building_levels"):
+            occupied_zs = [entry["z"] for entry in building["building_levels"]]
+        upper_floor_clearance: set[tuple[int, int]] = set()
+        for staircase in building.get("staircases", []):
+            upper_floor_clearance.add(tuple(staircase["lower_at"]))
+        for z in occupied_zs:
+            level = levels[_level_index(z)]
+            for y in range(footprint["y"], footprint["y"] + footprint["height"]):
+                for x in range(footprint["x"], footprint["x"] + footprint["width"]):
+                    index = y * MAP_WIDTH + x
+                    existing = level[index]
+                    if not isinstance(existing, dict):
+                        existing = {}
+                    if existing.get("feature") and not existing.get("id"):
+                        raise RecipeError(f"{context} cannot place a floor under a feature at [{x}, {y}, {z}]")
+                    if z == 2 and (x, y) in upper_floor_clearance:
+                        if existing.get("feature"):
+                            raise RecipeError(f"{context} cannot clear staircase headroom over a feature at [{x}, {y}, {z}]")
+                        level[index] = {}
+                        continue
+                    if existing.get("id") in tile_catalog and tile_catalog[existing["id"]].get("shape") == "slope":
+                        continue
+                    replacement = tile_specs["floor_tile"].copy()
+                    replacement.update({key: value for key, value in existing.items() if key != "id"})
+                    level[index] = replacement
+
+        owned_rooms = set(building["rooms"])
+        for boundary in room_boundaries:
+            if boundary["room"] not in owned_rooms or boundary["element"] != "wall_tile":
+                continue
+            x, y = boundary["at"]
+            level = levels[_level_index(boundary["z"])]
+            index = y * MAP_WIDTH + x
+            existing = level[index]
+            if isinstance(existing, dict) and existing.get("feature"):
+                raise RecipeError(f"{context} cannot place a wall over a feature at [{x}, {y}, {boundary['z']}]")
+            level[index] = tile_specs["wall_tile"].copy()
+
+        for support in building_supports:
+            if support["building"] != building["id"]:
+                continue
+            x, y = support["at"]
+            level = levels[_level_index(support["from_z"])]
+            index = y * MAP_WIDTH + x
+            existing = level[index]
+            if isinstance(existing, dict) and existing.get("feature"):
+                raise RecipeError(f"{context} cannot place support over a feature at [{x}, {y}, {support['from_z']}]")
+            level[index] = tile_specs["support_tile"].copy()
 
 
 def _validate_building_targets(
@@ -2780,6 +2870,7 @@ def generate_map(
     if type(seed) is not int:
         raise RecipeError("seed must be an integer")
     known_tiles = _tile_ids(Path(tiles_path))
+    tile_catalog = _tile_catalog(Path(tiles_path))
     content_root = Path(tiles_path).parent.parent
     known_furnitures: set[str] = set()
     requires_furniture_catalog = (
@@ -2855,6 +2946,16 @@ def generate_map(
         known_area_ids,
         known_room_ids,
     )
+    _apply_building_geometry(
+        buildings,
+        room_boundaries,
+        building_supports,
+        levels,
+        rng,
+        known_tiles,
+        palette,
+        tile_catalog,
+    )
     _validate_room_connection_targets(room_connections, levels, door_furniture_ids)
     _validate_room_boundary_targets(
         room_boundaries,
@@ -2879,7 +2980,6 @@ def generate_map(
     )
     connections = _validate_connections(recipe.get("connections"))
     road_endpoints = _validate_road_endpoints(recipe.get("road_endpoints"), connections, levels)
-    tile_catalog = _tile_catalog(Path(tiles_path))
     road_paths = _validate_road_paths(
         recipe.get("road_paths"), road_endpoints, known_tiles, palette, tile_catalog
     )

@@ -1,7 +1,7 @@
 {
 	"id": "generated_multi_level_building_foundation",
 	"name": "Generated Multi-Level Building Foundation",
-	"description": "A metadata-only two-floor building with per-floor floor/ceiling surfaces, a straight staircase, a corner staircase, and a ground floor at z 0, open gap at z 1, and first floor at z 2.",
+	"description": "A generated two-floor building with physical floors and walls, authored support, per-floor surfaces, stairs, and a ground floor at z 0, open gap at z 1, and first floor at z 2.",
 	"seed": 20260822,
 	"base_tile": {"id": "grass_plain_01"},
 	"rooms": [
@@ -15,6 +15,11 @@
 			"rooms": ["office", "garage_bay", "office_upper"],
 			"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
 			"z": 0,
+			"building_geometry": {
+				"floor_tile": {"id": "concrete_00"},
+				"wall_tile": {"id": "brick_wall_00"},
+				"support_tile": {"id": "brick_wall_00"}
+			},
 			"building_levels": [
 				{"z": 0, "rooms": ["office", "garage_bay"], "furniture_anchors": ["office_door_anchor", "garage_door_anchor"]},
 				{"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]}
@@ -86,13 +91,6 @@
 		{"type": "set", "x": 11, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 0}},
 		{"type": "room_rectangle", "room": "office_upper", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2},
 		{"type": "furniture", "id": "bench_garden", "x": 8, "y": 8, "z": 2, "rotation": 0},
-		{"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 9, "y": 7, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 8, "y": 10, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 9, "y": 10, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 7, "y": 8, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 10, "y": 8, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 10, "y": 9, "tile": {"id": "brick_wall_00"}},
 		{"type": "furniture", "id": "door_wood", "x": 8, "y": 9, "rotation": 0},
 		{"type": "furniture", "id": "door_wood", "x": 11, "y": 8, "rotation": 0}
 	]

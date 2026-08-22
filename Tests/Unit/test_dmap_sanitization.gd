@@ -208,6 +208,11 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 				"rooms": ["office", "garage_bay"],
 				"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
 				"z": 0,
+				"building_geometry": {
+					"floor_tile": {"id": "concrete_00"},
+					"wall_tile": {"id": "brick_wall_00"},
+					"support_tile": {"id": "brick_wall_00"},
+				},
 				"building_levels": [{"z": 0}, {"z": 2}],
 				"staircases": [{"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90}],
 				"access_validation": "complete",
@@ -241,6 +246,11 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 		"rooms": ["office", "garage_bay"],
 		"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
 		"z": 0,
+		"building_geometry": {
+			"floor_tile": {"id": "concrete_00"},
+			"wall_tile": {"id": "brick_wall_00"},
+			"support_tile": {"id": "brick_wall_00"},
+		},
 		"building_levels": [{"z": 0}, {"z": 2}],
 		"staircases": [{"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90}],
 		"access_validation": "complete",
