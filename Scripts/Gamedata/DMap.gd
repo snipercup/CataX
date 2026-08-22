@@ -405,6 +405,16 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				staircase_ids.append(staircase["id"])
 			if not (0 in building["building_levels"].map(func(level): return level.get("z")) and 2 in building["building_levels"].map(func(level): return level.get("z"))):
 				return false
+			for staircase in building["staircases"]:
+				var lower_at: Array = staircase["lower_at"]
+				var upper_at: Array = staircase["upper_at"]
+				if lower_at[0] < building["footprint"]["x"] or lower_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
+				or lower_at[1] < building["footprint"]["y"] or lower_at[1] >= building["footprint"]["y"] + building["footprint"]["height"] \
+				or upper_at[0] < building["footprint"]["x"] or upper_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
+				or upper_at[1] < building["footprint"]["y"] or upper_at[1] >= building["footprint"]["y"] + building["footprint"]["height"]:
+					return false
+				if abs(lower_at[0] - upper_at[0]) + abs(lower_at[1] - upper_at[1]) != 1:
+					return false
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
 				return false
