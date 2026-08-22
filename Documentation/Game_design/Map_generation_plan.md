@@ -643,6 +643,8 @@ An opted-in `overhead_validation: "complete"` requires that the validated buildi
 
 `exterior_access_context` now explicitly associates that context with one existing owned room-to-exterior connection at the same logical z. The maintained building names `office_front_door`. This validates authored semantic association only: it does not infer physical routes or door/context adjacency, create entrances, alter collision/navigation, or change runtime behavior.
 
+`entrance` now authors one data-only building-level entrance semantic. Each record has exactly `connection` and `facing`: `connection` names an existing same-z room-to-exterior connection owned by the building (the same contract as `exterior_access_context.connection`), and `facing` is one of `north`, `east`, `south`, or `west`. It requires `exterior_context` and, when `exterior_access_context` is also present, `entrance.connection` must match it. The `facing` direction must point from `exterior_context.at` toward the building footprint: stepping one cell in that direction from the context coordinate must land inside the footprint. The maintained building authors `office_front_door` facing `east`, matching its west-of-footprint exterior context. This validates authored entrance orientation only: it does not generate a door, infer a physical route, require coordinate adjacency between the context tile and the referenced door, or alter collision, navigation, lighting, weather, or runtime behavior.
+
 This foundation intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, wall/roof generation, multi-level building records, furniture anchors, or generalized templates.
 
 Capabilities:
@@ -878,7 +880,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, and validated exterior-access context are complete. The next contribution should extend validated building content carefully without introducing multi-level structures or generalized templates.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, and authored building-level entrance semantics are complete. The next contribution should extend validated building content carefully without introducing multi-level structures or generalized templates.
 
 Do not yet generate walls, doors, roofs, multi-level building footprints, furniture anchors, roads, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and validate any physical semantics in the editor and runtime.
 
@@ -929,7 +931,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Validated building overhead-classification constraints
 [Complete] Authored building-level external footprint context constraints
 [Complete] Validated building-level exterior-access context constraints
-[Next]     Authored building-level entrance semantics constraints
+[Complete] Authored building-level entrance semantics constraints
+[Next]     Authored building-level entrance orientation and approach validation
 [Planned]  Rooms and buildings
 [Planned]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

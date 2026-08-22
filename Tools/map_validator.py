@@ -21,10 +21,12 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
+BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
+BUILDING_ENTRANCE_FACINGS = {'north', 'east', 'south', 'west'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {'complete'}
 BUILDING_OVERHEAD_VALIDATIONS = {'complete'}
@@ -813,6 +815,27 @@ class MapValidator:
                     self.add_error(file_path, f"{context} exterior_access_context must define connection.")
                 if exterior_context is None:
                     self.add_error(file_path, f"{context} exterior_access_context requires exterior_context.")
+            entrance = building.get('entrance')
+            if entrance is not None:
+                if (
+                    not isinstance(entrance, dict)
+                    or set(entrance) != BUILDING_ENTRANCE_FIELDS
+                    or not isinstance(entrance.get('connection'), str)
+                    or not entrance.get('connection')
+                    or not isinstance(entrance.get('facing'), str)
+                ):
+                    self.add_error(file_path, f"{context} entrance must define connection and facing.")
+                elif entrance['facing'] not in BUILDING_ENTRANCE_FACINGS:
+                    self.add_error(file_path, f"{context} entrance.facing must be one of north, east, south, or west.")
+                if exterior_context is None:
+                    self.add_error(file_path, f"{context} entrance requires exterior_context.")
+                if (
+                    exterior_access_context is not None
+                    and isinstance(exterior_access_context, dict)
+                    and isinstance(entrance, dict)
+                    and entrance.get('connection') != exterior_access_context.get('connection')
+                ):
+                    self.add_error(file_path, f"{context} entrance.connection must match exterior_access_context.connection.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -891,6 +914,44 @@ class MapValidator:
                         or named_rooms[0] not in building['rooms']
                     ):
                         self.add_error(file_path, f"{context} exterior_access_context must reference a room-to-exterior connection owned by the building.")
+            if building.get('entrance') is not None and isinstance(building.get('entrance'), dict):
+                entrance = building['entrance']
+                connection_id = entrance.get('connection')
+                matching_connections = [
+                    connection for connection in validated_room_connections
+                    if connection.get('id') == connection_id
+                ]
+                if not matching_connections:
+                    self.add_error(file_path, f"{context} entrance references unknown room connection '{connection_id}'.")
+                else:
+                    connection = matching_connections[0]
+                    endpoints = (connection['from'], connection['to'])
+                    named_rooms = [endpoint['id'] for endpoint in endpoints if endpoint.get('kind') == 'room']
+                    if (
+                        connection['z'] != z
+                        or not any(endpoint.get('kind') == 'exterior' for endpoint in endpoints)
+                        or len(named_rooms) != 1
+                        or named_rooms[0] not in building['rooms']
+                    ):
+                        self.add_error(file_path, f"{context} entrance must reference a room-to-exterior connection owned by the building.")
+                facing = entrance.get('facing')
+                exterior_context = building.get('exterior_context')
+                if (
+                    facing in CARDINAL_SIDES
+                    and isinstance(exterior_context, dict)
+                    and isinstance(exterior_context.get('at'), list)
+                    and len(exterior_context['at']) == 2
+                    and all(type(value) is int for value in exterior_context['at'])
+                ):
+                    context_x, context_y = exterior_context['at']
+                    delta_x, delta_y = CARDINAL_SIDES[facing]
+                    facing_x = context_x + delta_x
+                    facing_y = context_y + delta_y
+                    if not (
+                        footprint['x'] <= facing_x < footprint['x'] + footprint['width']
+                        and footprint['y'] <= facing_y < footprint['y'] + footprint['height']
+                    ):
+                        self.add_error(file_path, f"{context} entrance.facing '{facing}' does not point from exterior_context toward the building footprint.")
             if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
                 exterior_context = building['exterior_context']
                 at = exterior_context.get('at')

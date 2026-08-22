@@ -376,6 +376,17 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			or building["exterior_access_context"]["connection"].is_empty() \
 			or building["exterior_access_context"]["connection"] not in valid_connection_ids:
 				return false
+		if building.has("entrance"):
+			if not building["entrance"] is Dictionary \
+			or not building["entrance"].has("connection") \
+			or not building["entrance"]["connection"] is String \
+			or building["entrance"]["connection"].is_empty() \
+			or building["entrance"]["connection"] not in valid_connection_ids \
+			or not building["entrance"].has("facing") \
+			or not building["entrance"]["facing"] is String \
+			or building["entrance"]["facing"] not in ["north", "east", "south", "west"] \
+			or not building.has("exterior_context"):
+				return false
 		return true
 	)
 	if data["buildings"].is_empty():
