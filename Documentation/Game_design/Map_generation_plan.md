@@ -253,7 +253,7 @@ It does not currently support:
 * reusable templates;
 * towns or settlements;
 * biome rules;
-* walkability checks;
+* general walkability checks beyond the Phase 7 road-route navigation test;
 * accessibility or connectivity checks;
 * encounters, creatures, items, or spawn points;
 * standalone image or HTML previews outside Godot; generated map JSON can already be opened with the existing content-editor map preview;
@@ -711,7 +711,7 @@ Generate one small, enterable building that loads correctly and has a reachable 
 
 ## Phase 7 — Roads and map connections
 
-**Status: in progress; authored map-edge connections, road endpoints, route polylines, and map-local road painting complete**
+**Status: in progress; authored map-edge connections, road endpoints, map-local road painting, and runtime walkability validation complete**
 
 The prototype previously hardcoded all four edge connections as `"ground"`. These are now authored recipe-level metadata, with named endpoint anchors identifying the exact map-edge cells where roads enter or exit.
 
@@ -721,7 +721,7 @@ The recipe generator supports a root-level `connections` field. It accepts up to
 
 The recipe generator now also supports root-level `road_endpoints`. Each endpoint has a unique `id`, a cardinal `direction`, an edge coordinate `at`, and ground-level `z: 0`. Its direction must be declared as `"road"` in `connections`, and its coordinate must lie on the corresponding map edge. The generator, standalone validator, and DMap save/load path validate or preserve these authored references. `Tools/examples/map_recipe_road_endpoints.json` is the maintained evidence: a simple outdoor map with west and east road endpoints and a deterministic connecting dirt path.
 
-`road_paths` now authors a named ground-level cardinal polyline between two validated `road_endpoints`. The generator and standalone validator require different existing endpoint IDs, optional map-bounded waypoints, and cardinal continuity across the complete endpoint-to-endpoint sequence. A path may now provide a known `tile`; the generator rasterizes and paints the complete route after validating supporting terrain and rejecting feature overwrites. The maintained `map_recipe_road_endpoints.json` demonstrates a generated west-to-east dirt route. This remains map-local geometry: it does not run pathfinding, infer walkability from arbitrary terrain, alter collision/navigation, or integrate multiple maps.
+`road_paths` now authors a named ground-level cardinal polyline between two validated `road_endpoints`. The generator and standalone validator require different existing endpoint IDs, optional map-bounded waypoints, and cardinal continuity across the complete endpoint-to-endpoint sequence. A path may now provide a known `Ground` cube `tile`; the generator rasterizes and paints the complete route after validating supporting terrain and rejecting feature overwrites. The maintained `map_recipe_road_endpoints.json` demonstrates a generated west-to-east dirt route. A focused GUT test bakes a corresponding ground route through the real Chunk navigation pipeline and verifies a path between interior points near both map edges. This remains map-local geometry: it does not integrate multiple maps.
 
 Capabilities:
 
@@ -737,11 +737,12 @@ Validation should determine:
 * whether every declared connection has a corresponding terrain edge;
 * whether every generated route has continuous supporting terrain;
 * whether road paths terminate at their declared endpoints;
+* whether generated Ground cube routes are connected by runtime navigation;
 * whether edge tiles match adjacent-map expectations.
 
 ### Success criterion
 
-Generate a standalone map with one or more road edge connections and a continuous, deterministically painted ground-level route between declared endpoints. Full walkability/pathfinding and multi-map route integration remain later validation or overmap concerns.
+Generate a standalone map with one or more road edge connections and a continuous, deterministically painted ground-level route between declared endpoints. The route must use conservative walkable terrain and pass a real Godot navigation-path check. Full multi-map route integration remains later validation or an overmap concern.
 
 ## Phase 8 — Templates and compositional generation
 
@@ -854,7 +855,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, authored furniture anchor metadata, the multi-level building footprint foundation, per-floor room/furniture ownership metadata, two-slope staircase physical semantics, per-floor floor/ceiling surface semantics, and multi-level roof/support semantics are complete. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, and deterministic map-local route painting. The next contribution should validate route cells against actual runtime walkability or implement a concrete map-to-map compatibility contract, but should not introduce a second overmap settlement or city-routing system.
+**Phase 6 is in progress.** Its runtime-compatible area foundation, catalog-validated per-instance entity variation, authored room semantics, explicit door-link metadata, partial physical boundary references, opt-in enclosed-room completeness validation, first single-level authored footprint, narrow authored roof/ceiling metadata, opt-in building-level composition constraints, authored building access-completeness validation, authored interior classification constraints, authored exterior/open-space classification constraints, validated building-level room partition constraints, validated building overhead-classification constraints, authored external footprint context, validated exterior-access context, authored building-level entrance semantics, validated building-level entrance orientation and approach alignment, authored multi-entrance building semantics with per-entrance validation, authored furniture anchor metadata, the multi-level building footprint foundation, per-floor room/furniture ownership metadata, two-slope staircase physical semantics, per-floor floor/ceiling surface semantics, and multi-level roof/support semantics are complete. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. The next contribution may implement a concrete map-to-map compatibility contract, but should not introduce a second overmap settlement or city-routing system.
 
 Do not yet generate walls, doors, roofs, multi-level building geometry, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads.
 
@@ -919,7 +920,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Per-floor ceiling/floor surface semantics (top-down)
 [Complete] Multi-level roof/support semantics
 [Complete] Map-local road route painting between declared endpoints
-[Next]     Runtime walkability validation or explicit map-to-map edge compatibility
+[Complete] Runtime navigation validation for a painted local road route
+[Next]     Explicit map-to-map edge compatibility
 [In Progress]  Rooms and buildings
 [In Progress]  Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition

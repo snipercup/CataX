@@ -2684,6 +2684,19 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, r"cannot overwrite a feature at \[10, 16\]"):
             generate_map(recipe, TILES_PATH, furnitures_path=FURNITURES_PATH)
 
+    def test_road_path_rejects_non_ground_or_non_cube_tile(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["connections"] = {"west": "road", "east": "road"}
+        recipe["road_endpoints"] = [
+            {"id": "west_entrance", "direction": "west", "at": [0, 16], "z": 0},
+            {"id": "east_exit", "direction": "east", "at": [31, 16], "z": 0},
+        ]
+        recipe["road_paths"] = [{"id": "slope_route", "from": "west_entrance", "to": "east_exit", "waypoints": [], "tile": {"id": "rock_slope_00"}}]
+
+        with self.assertRaisesRegex(RecipeError, "must reference a Ground cube tile"):
+            generate_map(recipe, TILES_PATH)
+
     def test_road_paths_require_endpoint_references_and_cardinal_continuity(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_endpoints.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
