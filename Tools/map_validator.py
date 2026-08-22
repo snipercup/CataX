@@ -21,11 +21,12 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrance_validation'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
+BUILDING_ENTRANCES_ENTRY_FIELDS = {'id', 'connection', 'facing'}
 BUILDING_ENTRANCE_FACINGS = {'north', 'east', 'south', 'west'}
 BUILDING_ENTRANCE_VALIDATIONS = {'complete'}
 BUILDING_ACCESS_VALIDATIONS = {'complete'}
@@ -817,6 +818,9 @@ class MapValidator:
                 if exterior_context is None:
                     self.add_error(file_path, f"{context} exterior_access_context requires exterior_context.")
             entrance = building.get('entrance')
+            entrances = building.get('entrances')
+            if entrance is not None and entrances is not None:
+                self.add_error(file_path, f"{context} entrance and entrances are mutually exclusive.")
             if entrance is not None:
                 if (
                     not isinstance(entrance, dict)
@@ -837,12 +841,48 @@ class MapValidator:
                     and entrance.get('connection') != exterior_access_context.get('connection')
                 ):
                     self.add_error(file_path, f"{context} entrance.connection must match exterior_access_context.connection.")
+            if entrances is not None:
+                if not isinstance(entrances, list) or not entrances:
+                    self.add_error(file_path, f"{context} entrances must be a non-empty array.")
+                else:
+                    seen_entrance_ids: Set[str] = set()
+                    seen_entrance_connections: Set[str] = set()
+                    for ent_index, entrance_entry in enumerate(entrances):
+                        ent_context = f"{context} entrances[{ent_index}]"
+                        if (
+                            not isinstance(entrance_entry, dict)
+                            or set(entrance_entry) != BUILDING_ENTRANCES_ENTRY_FIELDS
+                            or not isinstance(entrance_entry.get('id'), str)
+                            or not entrance_entry.get('id')
+                            or not isinstance(entrance_entry.get('connection'), str)
+                            or not entrance_entry.get('connection')
+                            or not isinstance(entrance_entry.get('facing'), str)
+                        ):
+                            self.add_error(file_path, f"{ent_context} must define id, connection, and facing.")
+                        else:
+                            if entrance_entry['facing'] not in BUILDING_ENTRANCE_FACINGS:
+                                self.add_error(file_path, f"{ent_context} facing must be one of north, east, south, or west.")
+                            if entrance_entry['id'] in seen_entrance_ids:
+                                self.add_error(file_path, f"{ent_context} duplicates entrance id '{entrance_entry['id']}'.")
+                            seen_entrance_ids.add(entrance_entry['id'])
+                            if entrance_entry['connection'] in seen_entrance_connections:
+                                self.add_error(file_path, f"{ent_context} duplicates connection '{entrance_entry['connection']}'.")
+                            seen_entrance_connections.add(entrance_entry['connection'])
+                    if exterior_context is None:
+                        self.add_error(file_path, f"{context} entrances requires exterior_context.")
+                    if (
+                        exterior_access_context is not None
+                        and isinstance(exterior_access_context, dict)
+                        and isinstance(exterior_access_context.get('connection'), str)
+                        and exterior_access_context.get('connection') not in seen_entrance_connections
+                    ):
+                        self.add_error(file_path, f"{context} exterior_access_context.connection must match one of the entrances connections.")
             entrance_validation = building.get('entrance_validation')
             if entrance_validation is not None:
                 if entrance_validation not in BUILDING_ENTRANCE_VALIDATIONS:
                     self.add_error(file_path, f"{context} entrance_validation has unsupported validation '{entrance_validation}'.")
-                if entrance is None:
-                    self.add_error(file_path, f"{context} entrance_validation requires entrance.")
+                if entrance is None and entrances is None:
+                    self.add_error(file_path, f"{context} entrance_validation requires entrance or entrances.")
             if (
                 isinstance(building_id, str) and building_id
                 and rooms_valid and footprint_valid and z_valid
@@ -959,33 +999,103 @@ class MapValidator:
                         and footprint['y'] <= facing_y < footprint['y'] + footprint['height']
                     ):
                         self.add_error(file_path, f"{context} entrance.facing '{facing}' does not point from exterior_context toward the building footprint.")
-                if building.get('entrance_validation') == 'complete' and isinstance(entrance, dict):
-                    entrance_facing = entrance.get('facing')
-                    entrance_connection_id = entrance.get('connection')
+            if building.get('entrances') is not None and isinstance(building.get('entrances'), list):
+                entrances = building['entrances']
+                primary_connection = None
+                exterior_access_context = building.get('exterior_access_context')
+                if isinstance(exterior_access_context, dict) and isinstance(exterior_access_context.get('connection'), str):
+                    primary_connection = exterior_access_context.get('connection')
+                for ent_index, entrance_entry in enumerate(entrances):
+                    if not isinstance(entrance_entry, dict):
+                        continue
+                    ent_context = f"{context} entrances[{ent_index}]"
+                    connection_id = entrance_entry.get('connection')
+                    matching_connections = [
+                        connection for connection in validated_room_connections
+                        if connection.get('id') == connection_id
+                    ]
+                    if not matching_connections:
+                        self.add_error(file_path, f"{ent_context} references unknown room connection '{connection_id}'.")
+                    else:
+                        connection = matching_connections[0]
+                        endpoints = (connection['from'], connection['to'])
+                        named_rooms = [endpoint['id'] for endpoint in endpoints if endpoint.get('kind') == 'room']
+                        if (
+                            connection['z'] != z
+                            or not any(endpoint.get('kind') == 'exterior' for endpoint in endpoints)
+                            or len(named_rooms) != 1
+                            or named_rooms[0] not in building['rooms']
+                        ):
+                            self.add_error(file_path, f"{ent_context} must reference a room-to-exterior connection owned by the building.")
+                    facing = entrance_entry.get('facing')
+                    exterior_context = building.get('exterior_context')
+                    is_primary = (
+                        primary_connection is not None and connection_id == primary_connection
+                    ) or (primary_connection is None and ent_index == 0)
+                    if (
+                        is_primary
+                        and facing in CARDINAL_SIDES
+                        and isinstance(exterior_context, dict)
+                        and isinstance(exterior_context.get('at'), list)
+                        and len(exterior_context['at']) == 2
+                        and all(type(value) is int for value in exterior_context['at'])
+                    ):
+                        context_x, context_y = exterior_context['at']
+                        delta_x, delta_y = CARDINAL_SIDES[facing]
+                        facing_x = context_x + delta_x
+                        facing_y = context_y + delta_y
+                        if not (
+                            footprint['x'] <= facing_x < footprint['x'] + footprint['width']
+                            and footprint['y'] <= facing_y < footprint['y'] + footprint['height']
+                        ):
+                            self.add_error(file_path, f"{ent_context} facing '{facing}' does not point from exterior_context toward the building footprint.")
+            if building.get('entrance_validation') == 'complete':
+                entrance = building.get('entrance')
+                entrances_list = building.get('entrances')
+                if isinstance(entrance, dict):
+                    entries = [{'connection': entrance.get('connection'), 'facing': entrance.get('facing')}]
+                elif isinstance(entrances_list, list):
+                    entries = entrances_list
+                else:
+                    entries = []
+                primary_connection = None
+                exterior_access_context = building.get('exterior_access_context')
+                if isinstance(exterior_access_context, dict) and isinstance(exterior_access_context.get('connection'), str):
+                    primary_connection = exterior_access_context.get('connection')
+                for ent_index, entry in enumerate(entries):
+                    if not isinstance(entry, dict):
+                        continue
+                    entrance_facing = entry.get('facing')
+                    entrance_connection_id = entry.get('connection')
                     matching_entrance_connections = [
                         conn for conn in validated_room_connections
                         if conn.get('id') == entrance_connection_id
                     ]
-                    if matching_entrance_connections:
-                        entrance_connection = matching_entrance_connections[0]
-                        door_x, door_y = entrance_connection['at']
-                        door_boundary = None
-                        for boundary in validated_room_boundaries:
-                            if (
-                                boundary['at'] == [door_x, door_y]
-                                and boundary['z'] == z
-                                and boundary['element'] == 'door_furniture'
-                                and boundary['room'] in building['rooms']
-                            ):
-                                door_boundary = boundary
-                                break
-                        if door_boundary is None:
-                            self.add_error(file_path, f"{context} entrance_validation requires a door_furniture boundary at the entrance connection.")
-                        else:
-                            if door_boundary.get('side') is None:
-                                self.add_error(file_path, f"{context} entrance_validation requires a side on the door_furniture boundary.")
-                            elif entrance_facing in OPPOSITE_SIDES and door_boundary['side'] != OPPOSITE_SIDES[entrance_facing]:
-                                self.add_error(file_path, f"{context} entrance_validation door side '{door_boundary['side']}' must face '{OPPOSITE_SIDES[entrance_facing]}'.")
+                    if not matching_entrance_connections:
+                        continue
+                    entrance_connection = matching_entrance_connections[0]
+                    door_x, door_y = entrance_connection['at']
+                    door_boundary = None
+                    for boundary in validated_room_boundaries:
+                        if (
+                            boundary['at'] == [door_x, door_y]
+                            and boundary['z'] == z
+                            and boundary['element'] == 'door_furniture'
+                            and boundary['room'] in building['rooms']
+                        ):
+                            door_boundary = boundary
+                            break
+                    if door_boundary is None:
+                        self.add_error(file_path, f"{context} entrance_validation requires a door_furniture boundary at the entrance connection.")
+                    else:
+                        if door_boundary.get('side') is None:
+                            self.add_error(file_path, f"{context} entrance_validation requires a side on the door_furniture boundary.")
+                        elif entrance_facing in OPPOSITE_SIDES and door_boundary['side'] != OPPOSITE_SIDES[entrance_facing]:
+                            self.add_error(file_path, f"{context} entrance_validation door side '{door_boundary['side']}' must face '{OPPOSITE_SIDES[entrance_facing]}'.")
+                    is_primary = (
+                        primary_connection is not None and entrance_connection_id == primary_connection
+                    ) or (primary_connection is None and ent_index == 0)
+                    if is_primary:
                         ext_ctx = building.get('exterior_context')
                         if (
                             isinstance(ext_ctx, dict)

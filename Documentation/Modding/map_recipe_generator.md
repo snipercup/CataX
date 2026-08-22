@@ -379,7 +379,7 @@ Boundary metadata preserves existing terrain, furniture, rotation, collision, an
 }
 ```
 
-Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, `exterior_access_context`, `entrance`, and `entrance_validation`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
+Each record has required `id`, `rooms`, `footprint`, and `z`, plus optional `access_validation`, `interior_rooms`, `open_space_rooms`, `room_partition_validation`, `overhead_validation`, `exterior_context`, `exterior_access_context`, `entrance`, `entrances`, and `entrance_validation`. `id` is unique; `rooms` is a nonempty list of unique known room IDs; `footprint` has exactly non-negative integer `x`/`y` plus positive integer `width`/`height`, fully inside the 32×32 map; and `z` is a required logical level from `-10` through `10`. Footprints on the same logical z must not overlap, though they may touch.
 
 Every owned room must have membership only at the building level and wholly inside its footprint. At least one owned room must be an `enclosed` room with `"boundary_validation": "complete"`. Its same-level `room_boundaries` and any same-level `room_connections` naming it must also lie inside the footprint. This makes the record a strict ownership/containment contract for already-authored physical evidence, not a claim that every footprint cell is occupied, roofed, or indoors.
 
@@ -447,20 +447,30 @@ A building may author one data-only entrance semantic with `entrance`:
 
 `entrance` has exactly `connection` and `facing`. It requires `exterior_context` and names an existing same-z `room_connections` record for one of the building’s owned rooms whose other endpoint is `exterior`, following the same contract as `exterior_access_context.connection`. When `exterior_access_context` is also present, `entrance.connection` must match it. `facing` is one of `north`, `east`, `south`, or `west` and must point from `exterior_context.at` toward the building footprint: stepping one cell in the facing direction from the context coordinate must land inside the footprint. This validates authored entrance orientation only—it does not generate a door, infer a physical route, require coordinate adjacency between the context tile and the referenced door, or alter collision, navigation, lighting, weather, or runtime behavior.
 
+A building may author multiple data-only entrance semantics with `entrances`:
+
+```json
+{"id": "office_building", "rooms": ["office", "garage_bay"], "footprint": {"x": 7, "y": 7, "width": 5, "height": 4}, "z": 0, "exterior_context": {"at": [6, 8], "z": 0}, "exterior_access_context": {"connection": "office_front_door"}, "entrances": [{"id": "front_entrance", "connection": "office_front_door", "facing": "east"}, {"id": "garage_entrance", "connection": "garage_opening", "facing": "west"}], "entrance_validation": "complete"}
+```
+
+`entrances` is a non-empty array of entrance records. `entrance` and `entrances` are mutually exclusive. Each entry has exactly `id`, `connection`, and `facing`. `id` is unique within the building and follows the same naming pattern as other authored IDs. `connection` names an existing same-z `room_connections` record for one of the building's owned rooms whose other endpoint is `exterior`, following the same contract as the singular `entrance.connection`. Each connection may be referenced by at most one entrance. `facing` is one of `north`, `east`, `south`, or `west`. `entrances` requires `exterior_context`. When `exterior_access_context` is also present, its `connection` must match one of the entrance connections.
+
+The primary entrance is the one whose `connection` matches `exterior_access_context.connection`, or the first entry when `exterior_access_context` is absent. Only the primary entrance is checked against `exterior_context.at`: stepping one cell in its `facing` direction from the context coordinate must land inside the footprint. Non-primary entrances are not checked against `exterior_context` because a single context tile cannot serve multiple approach directions.
+
 A building may opt into complete entrance orientation and approach validation with `entrance_validation: "complete"`:
 
 ```json
 {"id": "office_building", "rooms": ["office", "garage_bay"], "footprint": {"x": 7, "y": 7, "width": 5, "height": 4}, "z": 0, "exterior_context": {"at": [6, 8], "z": 0}, "exterior_access_context": {"connection": "office_front_door"}, "entrance": {"connection": "office_front_door", "facing": "east"}, "entrance_validation": "complete"}
 ```
 
-For an opted-in building, `entrance_validation` requires `entrance` and then checks two authored constraints:
+For an opted-in building, `entrance_validation` requires `entrance` or `entrances` and then checks two authored constraints per entrance:
 
 1. **Door orientation**: the `room_boundaries` record with `element: "door_furniture"` at the entrance connection's `at` and `z`, naming a building-owned room, must have a `side` equal to `OPPOSITE_SIDES[facing]`—the door opens toward the approaching direction. A missing door boundary, missing `side`, or wrong-facing door is rejected.
-2. **Approach alignment**: `exterior_context.at` and the entrance connection's `at` must both fall within the footprint's perpendicular range. For `east`/`west` facing, both Y values must be within the footprint height; for `north`/`south` facing, both X values must be within the footprint width. This ensures the approach path from the context tile to the door runs along the correct building side.
+2. **Approach alignment** (primary entrance only): `exterior_context.at` and the primary entrance connection's `at` must both fall within the footprint's perpendicular range. For `east`/`west` facing, both Y values must be within the footprint height; for `north`/`south` facing, both X values must be within the footprint width. This ensures the approach path from the context tile to the door runs along the correct building side.
 
 This validates authored orientation and alignment only: it does not generate or modify geometry, infer a walkable path, check collision or navigation, require the context tile and door to be cardinally adjacent, or alter runtime behavior.
 
-`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, declared open-space rooms, malformed exterior context, stale exterior-access connection, stale entrance connection, or malformed entrance validation becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead/exterior-context/exterior-access-context/entrance/entrance-validation checks.
+`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, declared open-space rooms, malformed exterior context, stale exterior-access connection, stale entrance connection, malformed entrances array, stale entrance connection in the entrances array, or malformed entrance validation becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead/exterior-context/exterior-access-context/entrance/entrances/entrance-validation checks.
 
 ### `building_surfaces`
 

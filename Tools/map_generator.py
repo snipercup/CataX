@@ -78,11 +78,12 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrance_validation"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
 BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
+BUILDING_ENTRANCES_ENTRY_FIELDS = {"id", "connection", "facing"}
 BUILDING_ENTRANCE_FACINGS = {"north", "east", "south", "west"}
 BUILDING_ENTRANCE_VALIDATIONS = {"complete"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
@@ -1175,6 +1176,9 @@ def _validate_recipe_buildings(
             if exterior_context is None:
                 raise RecipeError(f"{context}.exterior_access_context requires exterior_context")
         entrance = building.get("entrance")
+        entrances = building.get("entrances")
+        if entrance is not None and entrances is not None:
+            raise RecipeError(f"{context}.entrance and entrances are mutually exclusive")
         if entrance is not None:
             if (
                 not isinstance(entrance, dict)
@@ -1190,13 +1194,45 @@ def _validate_recipe_buildings(
                 raise RecipeError(f"{context}.entrance requires exterior_context")
             if exterior_access_context is not None and entrance["connection"] != exterior_access_context["connection"]:
                 raise RecipeError(f"{context}.entrance.connection must match exterior_access_context.connection")
+        if entrances is not None:
+            if not isinstance(entrances, list) or not entrances:
+                raise RecipeError(f"{context}.entrances must be a non-empty array")
+            seen_entrance_ids: set[str] = set()
+            seen_entrance_connections: set[str] = set()
+            for ent_index, entrance_entry in enumerate(entrances):
+                ent_context = f"{context}.entrances[{ent_index}]"
+                if (
+                    not isinstance(entrance_entry, dict)
+                    or set(entrance_entry) != BUILDING_ENTRANCES_ENTRY_FIELDS
+                    or not isinstance(entrance_entry["id"], str)
+                    or not entrance_entry["id"].strip()
+                    or not isinstance(entrance_entry["connection"], str)
+                    or not entrance_entry["connection"].strip()
+                    or not isinstance(entrance_entry["facing"], str)
+                ):
+                    raise RecipeError(f"{ent_context} must define id, connection, and facing")
+                _validate_unicode(entrance_entry["id"], f"{ent_context}.id")
+                if DEFINITION_NAME_PATTERN.fullmatch(entrance_entry["id"]) is None:
+                    raise RecipeError(f"{ent_context}.id may contain only letters, numbers, underscores, and hyphens")
+                if entrance_entry["id"] in seen_entrance_ids:
+                    raise RecipeError(f"{ent_context} duplicates entrance id '{entrance_entry['id']}'")
+                seen_entrance_ids.add(entrance_entry["id"])
+                if entrance_entry["connection"] in seen_entrance_connections:
+                    raise RecipeError(f"{ent_context} duplicates connection '{entrance_entry['connection']}'")
+                seen_entrance_connections.add(entrance_entry["connection"])
+                if entrance_entry["facing"] not in BUILDING_ENTRANCE_FACINGS:
+                    raise RecipeError(f"{ent_context}.facing must be one of north, east, south, or west")
+            if exterior_context is None:
+                raise RecipeError(f"{context}.entrances requires exterior_context")
+            if exterior_access_context is not None and exterior_access_context["connection"] not in seen_entrance_connections:
+                raise RecipeError(f"{context}.exterior_access_context.connection must match one of the entrances connections")
         entrance_validation = building.get("entrance_validation")
         if entrance_validation is not None and entrance_validation not in BUILDING_ENTRANCE_VALIDATIONS:
             raise RecipeError(
                 f"{context}.entrance_validation has unsupported validation '{entrance_validation}'"
             )
-        if entrance_validation is not None and entrance is None:
-            raise RecipeError(f"{context}.entrance_validation requires entrance")
+        if entrance_validation is not None and entrance is None and entrances is None:
+            raise RecipeError(f"{context}.entrance_validation requires entrance or entrances")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1219,6 +1255,8 @@ def _validate_recipe_buildings(
             validated_building["exterior_access_context"] = exterior_access_context
         if entrance is not None:
             validated_building["entrance"] = entrance
+        if entrances is not None:
+            validated_building["entrances"] = entrances
         if entrance_validation is not None:
             validated_building["entrance_validation"] = entrance_validation
         validated.append(validated_building)
@@ -1487,47 +1525,103 @@ def _validate_building_targets(
                 raise RecipeError(
                     f"{context}.entrance.facing '{facing}' does not point from exterior_context toward the building footprint"
                 )
-        if building.get("entrance_validation") == "complete":
-            entrance = building["entrance"]
-            facing = entrance["facing"]
-            connection_id = entrance["connection"]
-            connection = next(conn for conn in room_connections if conn["id"] == connection_id)
-            door_x, door_y = connection["at"]
-            door_boundary = None
-            for boundary in room_boundaries:
+        if building.get("entrances") is not None:
+            entrances = building["entrances"]
+            primary_connection = None
+            exterior_access_context = building.get("exterior_access_context")
+            if exterior_access_context is not None:
+                primary_connection = exterior_access_context["connection"]
+            for ent_index, entrance_entry in enumerate(entrances):
+                ent_context = f"{context}.entrances[{ent_index}]"
+                connection_id = entrance_entry["connection"]
+                facing = entrance_entry["facing"]
+                matching_connections = [connection for connection in room_connections if connection["id"] == connection_id]
+                if not matching_connections:
+                    raise RecipeError(
+                        f"{ent_context} references unknown room connection '{connection_id}'"
+                    )
+                connection = matching_connections[0]
+                endpoints = (connection["from"], connection["to"])
+                named_rooms = [endpoint["id"] for endpoint in endpoints if endpoint["kind"] == "room"]
                 if (
-                    boundary["at"] == [door_x, door_y]
-                    and boundary["z"] == z
-                    and boundary["element"] == "door_furniture"
-                    and boundary["room"] in building["rooms"]
+                    connection["z"] != z
+                    or not any(endpoint["kind"] == "exterior" for endpoint in endpoints)
+                    or len(named_rooms) != 1
+                    or named_rooms[0] not in building["rooms"]
                 ):
-                    door_boundary = boundary
-                    break
-            if door_boundary is None:
-                raise RecipeError(
-                    f"{context}.entrance_validation requires a door_furniture boundary at the entrance connection"
-                )
-            if door_boundary.get("side") is None:
-                raise RecipeError(
-                    f"{context}.entrance_validation requires a side on the door_furniture boundary"
-                )
-            if door_boundary["side"] != OPPOSITE_SIDES[facing]:
-                raise RecipeError(
-                    f"{context}.entrance_validation door side '{door_boundary['side']}' must face '{OPPOSITE_SIDES[facing]}'"
-                )
-            context_x, context_y = building["exterior_context"]["at"]
-            if facing in ("east", "west"):
-                if not (footprint["y"] <= context_y < footprint["y"] + footprint["height"]
-                        and footprint["y"] <= door_y < footprint["y"] + footprint["height"]):
                     raise RecipeError(
-                        f"{context}.entrance_validation requires exterior_context and entrance door aligned within the footprint height"
+                        f"{ent_context} must reference a room-to-exterior connection owned by the building"
                     )
+                is_primary = (
+                    primary_connection is not None and connection_id == primary_connection
+                ) or (primary_connection is None and ent_index == 0)
+                if is_primary:
+                    context_x, context_y = building["exterior_context"]["at"]
+                    delta_x, delta_y = CARDINAL_SIDES[facing]
+                    facing_x = context_x + delta_x
+                    facing_y = context_y + delta_y
+                    if not _point_in_building_footprint(facing_x, facing_y, footprint):
+                        raise RecipeError(
+                            f"{ent_context}.facing '{facing}' does not point from exterior_context toward the building footprint"
+                        )
+        if building.get("entrance_validation") == "complete":
+            entrance = building.get("entrance")
+            entrances = building.get("entrances")
+            if entrance is not None:
+                entries = [{"connection": entrance["connection"], "facing": entrance["facing"]}]
+            elif entrances is not None:
+                entries = entrances
             else:
-                if not (footprint["x"] <= context_x < footprint["x"] + footprint["width"]
-                        and footprint["x"] <= door_x < footprint["x"] + footprint["width"]):
+                raise RecipeError(f"{context}.entrance_validation requires entrance or entrances")
+            primary_connection = None
+            exterior_access_context = building.get("exterior_access_context")
+            if exterior_access_context is not None:
+                primary_connection = exterior_access_context["connection"]
+            for ent_index, entry in enumerate(entries):
+                ent_context = f"{context}.entrance_validation"
+                facing = entry["facing"]
+                connection_id = entry["connection"]
+                connection = next(conn for conn in room_connections if conn["id"] == connection_id)
+                door_x, door_y = connection["at"]
+                door_boundary = None
+                for boundary in room_boundaries:
+                    if (
+                        boundary["at"] == [door_x, door_y]
+                        and boundary["z"] == z
+                        and boundary["element"] == "door_furniture"
+                        and boundary["room"] in building["rooms"]
+                    ):
+                        door_boundary = boundary
+                        break
+                if door_boundary is None:
                     raise RecipeError(
-                        f"{context}.entrance_validation requires exterior_context and entrance door aligned within the footprint width"
+                        f"{ent_context} requires a door_furniture boundary at the entrance connection"
                     )
+                if door_boundary.get("side") is None:
+                    raise RecipeError(
+                        f"{ent_context} requires a side on the door_furniture boundary"
+                    )
+                if door_boundary["side"] != OPPOSITE_SIDES[facing]:
+                    raise RecipeError(
+                        f"{ent_context} door side '{door_boundary['side']}' must face '{OPPOSITE_SIDES[facing]}'"
+                    )
+                is_primary = (
+                    primary_connection is not None and connection_id == primary_connection
+                ) or (primary_connection is None and ent_index == 0)
+                if is_primary:
+                    context_x, context_y = building["exterior_context"]["at"]
+                    if facing in ("east", "west"):
+                        if not (footprint["y"] <= context_y < footprint["y"] + footprint["height"]
+                                and footprint["y"] <= door_y < footprint["y"] + footprint["height"]):
+                            raise RecipeError(
+                                f"{ent_context} requires exterior_context and entrance door aligned within the footprint height"
+                            )
+                    else:
+                        if not (footprint["x"] <= context_x < footprint["x"] + footprint["width"]
+                                and footprint["x"] <= door_x < footprint["x"] + footprint["width"]):
+                            raise RecipeError(
+                                f"{ent_context} requires exterior_context and entrance door aligned within the footprint width"
+                            )
         if building.get("overhead_validation") == "complete":
             surface_kinds = {
                 surface["kind"]
