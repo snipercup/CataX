@@ -2742,6 +2742,9 @@ class MapGeneratorTests(unittest.TestCase):
             {"z": 0, "rooms": ["office", "garage_bay"], "furniture_anchors": ["office_door_anchor", "garage_door_anchor"]},
             {"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]},
         ])
+        self.assertEqual(building["staircases"], [
+            {"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90},
+        ])
         self.assertNotIn("building_surfaces", generated)
 
     def test_multi_level_building_foundation_requires_ground_and_even_levels(self):
@@ -2769,6 +2772,27 @@ class MapGeneratorTests(unittest.TestCase):
         non_ground_building["buildings"][0]["z"] = 1
         with self.assertRaisesRegex(RecipeError, "z must be 0 when building_levels is declared"):
             generate_map(non_ground_building, TILES_PATH)
+
+    def test_staircases_require_two_adjacent_slopes_at_z1_and_z2(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        wrong_position = json.loads(json.dumps(recipe))
+        wrong_position["buildings"][0]["staircases"][0]["upper_at"] = [12, 12]
+        with self.assertRaisesRegex(RecipeError, "slope coordinates must be inside building footprint"):
+            generate_map(wrong_position, TILES_PATH)
+
+        wrong_slope = json.loads(json.dumps(recipe))
+        wrong_slope["operations"] = [operation for operation in wrong_slope["operations"] if operation.get("z") != 1]
+        with self.assertRaisesRegex(RecipeError, "requires a grass_ramp_00 slope.*on z 1"):
+            generate_map(wrong_slope, TILES_PATH)
+
+        wrong_rotation = json.loads(json.dumps(recipe))
+        for operation in wrong_rotation["operations"]:
+            if operation.get("z") == 2 and isinstance(operation.get("tile"), dict) and operation["tile"].get("id") == "grass_ramp_00":
+                operation["tile"]["rotation"] = 0
+        with self.assertRaisesRegex(RecipeError, "requires a grass_ramp_00 slope with rotation 90"):
+            generate_map(wrong_rotation, TILES_PATH)
 
 
 class MapValidatorDimensionTests(unittest.TestCase):

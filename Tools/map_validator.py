@@ -24,9 +24,10 @@ ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
-BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
+BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_LEVEL_FIELDS = {'z', 'rooms', 'furniture_anchors'}
+BUILDING_STAIRCASE_FIELDS = {'id', 'lower_at', 'upper_at', 'rotation'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
@@ -998,6 +999,38 @@ class MapValidator:
                         and exterior_access_context.get('connection') not in seen_entrance_connections
                     ):
                         self.add_error(file_path, f"{context} exterior_access_context.connection must match one of the entrances connections.")
+            access_validation = building.get('access_validation')
+            staircases = building.get('staircases')
+            if staircases is not None:
+                if not isinstance(staircases, list) or not staircases:
+                    self.add_error(file_path, f"{context} staircases must be a non-empty array.")
+                else:
+                    seen_staircase_ids: Set[str] = set()
+                    for staircase_index, staircase in enumerate(staircases):
+                        staircase_context = f"{context} staircases[{staircase_index}]"
+                        if not isinstance(staircase, dict) or set(staircase) != BUILDING_STAIRCASE_FIELDS:
+                            self.add_error(file_path, f"{staircase_context} must define id, lower_at, upper_at, and rotation.")
+                            continue
+                        staircase_id = staircase.get('id')
+                        if not isinstance(staircase_id, str) or not staircase_id:
+                            self.add_error(file_path, f"{staircase_context} id must be a non-empty string.")
+                        elif staircase_id in seen_staircase_ids:
+                            self.add_error(file_path, f"{staircase_context} duplicates staircase ID '{staircase_id}'.")
+                        seen_staircase_ids.add(staircase_id)
+                        for coordinate_name in ('lower_at', 'upper_at'):
+                            coordinate = staircase.get(coordinate_name)
+                            if not isinstance(coordinate, list) or len(coordinate) != 2 or not all(type(value) is int for value in coordinate):
+                                self.add_error(file_path, f"{staircase_context} {coordinate_name} must be a two-integer coordinate.")
+                        rotation = staircase.get('rotation')
+                        if type(rotation) is not int or rotation not in {0, 90, 180, 270}:
+                            self.add_error(file_path, f"{staircase_context} rotation must be 0, 90, 180, or 270.")
+                    declared_level_zs = {level_definition.get('z') for level_definition in building_levels if isinstance(level_definition, dict)} if isinstance(building_levels, list) else set()
+                    if not {0, 2} <= declared_level_zs:
+                        self.add_error(file_path, f"{context} staircases require declared building levels z 0 and z 2.")
+                if building_levels is None:
+                    self.add_error(file_path, f"{context} staircases require building_levels.")
+            if access_validation is not None and access_validation not in BUILDING_ACCESS_VALIDATIONS:
+                self.add_error(file_path, f"{context} access_validation has unsupported validation '{access_validation}'.")
             entrance_validation = building.get('entrance_validation')
             if entrance_validation is not None:
                 if entrance_validation not in BUILDING_ENTRANCE_VALIDATIONS:
@@ -1307,6 +1340,32 @@ class MapValidator:
                                 or not feature.get('id')
                             ):
                                 self.add_error(file_path, f"{anchor_context} must reference furniture at [{anchor_at[0]}, {anchor_at[1]}] on z {z}.")
+            if building.get('staircases') is not None and isinstance(building.get('staircases'), list):
+                declared_level_zs = {level_definition.get('z') for level_definition in building.get('building_levels', []) if isinstance(level_definition, dict)}
+                for staircase_index, staircase in enumerate(building['staircases']):
+                    if not isinstance(staircase, dict):
+                        continue
+                    staircase_context = f"{context} staircases[{staircase_index}]"
+                    lower_at = staircase.get('lower_at')
+                    upper_at = staircase.get('upper_at')
+                    if not isinstance(lower_at, list) or not isinstance(upper_at, list) or len(lower_at) != 2 or len(upper_at) != 2 or not all(type(value) is int for value in lower_at + upper_at):
+                        continue
+                    lower_x, lower_y = lower_at
+                    upper_x, upper_y = upper_at
+                    if not (footprint['x'] <= lower_x < footprint['x'] + footprint['width'] and footprint['y'] <= lower_y < footprint['y'] + footprint['height'] and footprint['x'] <= upper_x < footprint['x'] + footprint['width'] and footprint['y'] <= upper_y < footprint['y'] + footprint['height']):
+                        self.add_error(file_path, f"{staircase_context} slope coordinates must be inside building footprint.")
+                    if abs(lower_x - upper_x) + abs(lower_y - upper_y) != 1:
+                        self.add_error(file_path, f"{staircase_context} lower_at and upper_at must be cardinally adjacent.")
+                    if not {0, 2}.issubset(declared_level_zs):
+                        continue
+                    rotation = staircase.get('rotation')
+                    for slope_z, coordinate in ((1, lower_at), (2, upper_at)):
+                        slope_x, slope_y = coordinate
+                        level_index = slope_z + 10
+                        level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+                        tile = level[slope_y * MAP_WIDTH + slope_x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
+                        if not isinstance(tile, dict) or tile.get('id') != 'grass_ramp_00' or tile.get('rotation', 0) != rotation:
+                            self.add_error(file_path, f"{staircase_context} requires a grass_ramp_00 slope with rotation {rotation} at [{slope_x}, {slope_y}] on z {slope_z}.")
             if building.get('exterior_context') is not None and isinstance(building.get('exterior_context'), dict):
                 exterior_context = building['exterior_context']
                 at = exterior_context.get('at')
