@@ -78,7 +78,7 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
@@ -86,6 +86,7 @@ BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
 BUILDING_ENTRANCES_ENTRY_FIELDS = {"id", "connection", "facing"}
 BUILDING_ENTRANCE_FACINGS = {"north", "east", "south", "west"}
 BUILDING_ENTRANCE_VALIDATIONS = {"complete"}
+BUILDING_FURNITURE_ANCHOR_FIELDS = {"id", "at", "z", "kind"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {"complete"}
 BUILDING_OVERHEAD_VALIDATIONS = {"complete"}
@@ -1233,6 +1234,41 @@ def _validate_recipe_buildings(
             )
         if entrance_validation is not None and entrance is None and entrances is None:
             raise RecipeError(f"{context}.entrance_validation requires entrance or entrances")
+        furniture_anchors = building.get("furniture_anchors")
+        if furniture_anchors is not None:
+            if not isinstance(furniture_anchors, list) or not furniture_anchors:
+                raise RecipeError(f"{context}.furniture_anchors must be a non-empty array")
+            seen_anchor_ids: set[str] = set()
+            for anchor_index, anchor in enumerate(furniture_anchors):
+                anchor_context = f"{context}.furniture_anchors[{anchor_index}]"
+                if (
+                    not isinstance(anchor, dict)
+                    or set(anchor) != BUILDING_FURNITURE_ANCHOR_FIELDS
+                    or not isinstance(anchor["id"], str)
+                    or not anchor["id"].strip()
+                    or not isinstance(anchor["kind"], str)
+                    or not anchor["kind"].strip()
+                ):
+                    raise RecipeError(f"{anchor_context} must define id, at, z, and kind")
+                _validate_unicode(anchor["id"], f"{anchor_context}.id")
+                if DEFINITION_NAME_PATTERN.fullmatch(anchor["id"]) is None:
+                    raise RecipeError(f"{anchor_context}.id may contain only letters, numbers, underscores, and hyphens")
+                if anchor["id"] in seen_anchor_ids:
+                    raise RecipeError(f"{anchor_context} duplicates anchor id '{anchor['id']}'")
+                seen_anchor_ids.add(anchor["id"])
+                anchor_at = anchor["at"]
+                if (
+                    not isinstance(anchor_at, list)
+                    or len(anchor_at) != 2
+                    or any(type(value) is not int for value in anchor_at)
+                    or not 0 <= anchor_at[0] < MAP_WIDTH
+                    or not 0 <= anchor_at[1] < MAP_HEIGHT
+                ):
+                    raise RecipeError(f"{anchor_context}.at must be within map bounds as a two-integer array")
+                anchor_z = anchor["z"]
+                if type(anchor_z) is not int or not MIN_LOGICAL_Z <= anchor_z <= MAX_LOGICAL_Z:
+                    raise RecipeError(f"{anchor_context}.z must be an integer from -10 through 10")
+                _validate_unicode(anchor["kind"], f"{anchor_context}.kind")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -1259,6 +1295,8 @@ def _validate_recipe_buildings(
             validated_building["entrances"] = entrances
         if entrance_validation is not None:
             validated_building["entrance_validation"] = entrance_validation
+        if furniture_anchors is not None:
+            validated_building["furniture_anchors"] = furniture_anchors
         validated.append(validated_building)
     return validated
 
@@ -1622,6 +1660,31 @@ def _validate_building_targets(
                             raise RecipeError(
                                 f"{ent_context} requires exterior_context and entrance door aligned within the footprint width"
                             )
+        if building.get("furniture_anchors") is not None:
+            for anchor_index, anchor in enumerate(building["furniture_anchors"]):
+                anchor_context = f"{context}.furniture_anchors[{anchor_index}]"
+                anchor_x, anchor_y = anchor["at"]
+                anchor_z = anchor["z"]
+                if not _point_in_building_footprint(anchor_x, anchor_y, footprint):
+                    raise RecipeError(
+                        f"{anchor_context} at [{anchor_x}, {anchor_y}] is outside building footprint"
+                    )
+                if anchor_z != z:
+                    raise RecipeError(
+                        f"{anchor_context}.z must use building z {z}"
+                    )
+                level = levels[_level_index(anchor_z)]
+                tile = level[anchor_y * MAP_WIDTH + anchor_x] if level else {}
+                feature = tile.get("feature") if isinstance(tile, dict) else None
+                if (
+                    not isinstance(feature, dict)
+                    or feature.get("type") != "furniture"
+                    or not isinstance(feature.get("id"), str)
+                    or not feature["id"]
+                ):
+                    raise RecipeError(
+                        f"{anchor_context} must reference furniture at [{anchor_x}, {anchor_y}] on z {anchor_z}"
+                    )
         if building.get("overhead_validation") == "complete":
             surface_kinds = {
                 surface["kind"]

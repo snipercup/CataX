@@ -2522,6 +2522,71 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "entrance_validation requires entrance or entrances"):
             generate_map(recipe, TILES_PATH)
 
+    def test_furniture_anchors_generate_and_validate(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        building = generated["buildings"][0]
+        self.assertIn("furniture_anchors", building)
+        anchors = building["furniture_anchors"]
+        self.assertEqual(len(anchors), 2)
+        self.assertEqual(anchors[0], {"id": "office_door_anchor", "at": [8, 9], "z": 0, "kind": "door"})
+        self.assertEqual(anchors[1], {"id": "garage_door_anchor", "at": [11, 8], "z": 0, "kind": "door"})
+
+    def test_furniture_anchors_reject_duplicate_ids(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["furniture_anchors"][1]["id"] = "office_door_anchor"
+        with self.assertRaisesRegex(RecipeError, "duplicates anchor id 'office_door_anchor'"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_furniture_anchors_reject_invalid_entries(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        missing_fields = json.loads(recipe_path.read_text(encoding="utf-8"))
+        missing_fields["buildings"][0]["furniture_anchors"][0] = {"id": "test", "at": [8, 9], "z": 0}
+        with self.assertRaisesRegex(RecipeError, "must define id, at, z, and kind"):
+            generate_map(missing_fields, TILES_PATH)
+
+        bad_at = json.loads(recipe_path.read_text(encoding="utf-8"))
+        bad_at["buildings"][0]["furniture_anchors"][0]["at"] = [32, 9]
+        with self.assertRaisesRegex(RecipeError, "at must be within map bounds as a two-integer array"):
+            generate_map(bad_at, TILES_PATH)
+
+        bad_z = json.loads(recipe_path.read_text(encoding="utf-8"))
+        bad_z["buildings"][0]["furniture_anchors"][0]["z"] = 11
+        with self.assertRaisesRegex(RecipeError, "z must be an integer from -10 through 10"):
+            generate_map(bad_z, TILES_PATH)
+
+    def test_furniture_anchors_reject_outside_footprint_and_missing_furniture(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        outside = json.loads(recipe_path.read_text(encoding="utf-8"))
+        outside["buildings"][0]["furniture_anchors"][0]["at"] = [5, 5]
+        with self.assertRaisesRegex(RecipeError, "is outside building footprint"):
+            generate_map(outside, TILES_PATH)
+
+        wrong_z = json.loads(recipe_path.read_text(encoding="utf-8"))
+        wrong_z["buildings"][0]["furniture_anchors"][0]["z"] = 1
+        with self.assertRaisesRegex(RecipeError, "z must use building z 0"):
+            generate_map(wrong_z, TILES_PATH)
+
+        no_furniture = json.loads(recipe_path.read_text(encoding="utf-8"))
+        no_furniture["buildings"][0]["furniture_anchors"][0]["at"] = [9, 8]
+        with self.assertRaisesRegex(RecipeError, "must reference furniture at"):
+            generate_map(no_furniture, TILES_PATH)
+
+    def test_furniture_anchors_reject_empty_array(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["furniture_anchors"] = []
+        with self.assertRaisesRegex(RecipeError, "furniture_anchors must be a non-empty array"):
+            generate_map(recipe, TILES_PATH)
+
 
 class MapValidatorDimensionTests(unittest.TestCase):
     def validate(self, map_data):
@@ -3179,6 +3244,48 @@ class MapValidatorDimensionTests(unittest.TestCase):
         missing_complete_room["buildings"][0]["rooms"] = ["garage_bay"]
         errors = self.validate(missing_complete_room)
         self.assertTrue(any("requires an enclosed room with boundary_validation 'complete'" in error for error in errors))
+
+    def test_validates_furniture_anchors_constraints(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        # Empty array
+        empty = json.loads(json.dumps(valid_map))
+        empty["buildings"][0]["furniture_anchors"] = []
+        errors = self.validate(empty)
+        self.assertTrue(any("furniture_anchors must be a non-empty array" in error for error in errors))
+
+        # Duplicate id
+        dup_id = json.loads(json.dumps(valid_map))
+        dup_id["buildings"][0]["furniture_anchors"][1]["id"] = "office_door_anchor"
+        errors = self.validate(dup_id)
+        self.assertTrue(any("duplicates anchor id 'office_door_anchor'" in error for error in errors))
+
+        # Missing fields
+        missing = json.loads(json.dumps(valid_map))
+        missing["buildings"][0]["furniture_anchors"][0] = {"id": "test", "at": [8, 9], "z": 0}
+        errors = self.validate(missing)
+        self.assertTrue(any("must define id, at, z, and kind" in error for error in errors))
+
+        # Outside footprint
+        outside = json.loads(json.dumps(valid_map))
+        outside["buildings"][0]["furniture_anchors"][0]["at"] = [5, 5]
+        errors = self.validate(outside)
+        self.assertTrue(any("is outside building footprint" in error for error in errors))
+
+        # Wrong z
+        wrong_z = json.loads(json.dumps(valid_map))
+        wrong_z["buildings"][0]["furniture_anchors"][0]["z"] = 1
+        errors = self.validate(wrong_z)
+        self.assertTrue(any("z must use building z 0" in error for error in errors))
+
+        # No furniture at location
+        no_furniture = json.loads(json.dumps(valid_map))
+        no_furniture["buildings"][0]["furniture_anchors"][0]["at"] = [9, 8]
+        errors = self.validate(no_furniture)
+        self.assertTrue(any("must reference furniture at" in error for error in errors))
 
 
 if __name__ == "__main__":

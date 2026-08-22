@@ -427,6 +427,28 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			or building["entrance_validation"] != "complete" \
 			or (not building.has("entrance") and not building.has("entrances")):
 				return false
+		if building.has("furniture_anchors"):
+			if not building["furniture_anchors"] is Array \
+			or building["furniture_anchors"].is_empty():
+				return false
+			var seen_anchor_ids: Array[String] = []
+			for anchor in building["furniture_anchors"]:
+				if not anchor is Dictionary \
+				or not anchor.has("id") \
+				or not anchor["id"] is String \
+				or anchor["id"].is_empty() \
+				or not anchor.has("at") \
+				or not anchor["at"] is Array \
+				or anchor["at"].size() != 2 \
+				or not anchor.has("z") \
+				or not anchor["z"] is int \
+				or not anchor.has("kind") \
+				or not anchor["kind"] is String \
+				or anchor["kind"].is_empty():
+					return false
+				if anchor["id"] in seen_anchor_ids:
+					return false
+				seen_anchor_ids.append(anchor["id"])
 		return true
 	)
 	if data["buildings"].is_empty():
