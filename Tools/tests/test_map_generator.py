@@ -2730,6 +2730,43 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "road_endpoints must be an array"):
             generate_map(recipe, TILES_PATH)
 
+    def test_multi_level_building_foundation_preserves_even_floor_levels(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        building = generated["buildings"][0]
+        self.assertEqual(building["z"], 0)
+        self.assertEqual(building["building_levels"], [{"z": 0}, {"z": 2}])
+        self.assertNotIn("building_surfaces", generated)
+
+    def test_multi_level_building_foundation_requires_ground_and_even_levels(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        def with_levels(levels):
+            candidate = json.loads(json.dumps(recipe))
+            candidate["buildings"][0]["building_levels"] = levels
+            return candidate
+
+        invalid_cases = [
+            ([], "building_levels must be a non-empty array"),
+            ([{"z": 2}], "building_levels must start with ground floor z 0"),
+            ([{"z": 0}, {"z": 1}], "z must be even; odd levels are intentional open gaps"),
+            ([{"z": 0}, {"z": 4}, {"z": 2}], "z must be strictly greater than the previous building level"),
+            ([{"z": 0, "kind": "floor"}], "must define integer z"),
+        ]
+        for levels, message in invalid_cases:
+            with self.subTest(levels=levels):
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(with_levels(levels), TILES_PATH)
+
+        non_ground_building = with_levels([{"z": 0}, {"z": 2}])
+        non_ground_building["buildings"][0]["z"] = 1
+        with self.assertRaisesRegex(RecipeError, "z must be 0 when building_levels is declared"):
+            generate_map(non_ground_building, TILES_PATH)
+
 
 class MapValidatorDimensionTests(unittest.TestCase):
     def validate(self, map_data):
@@ -3489,6 +3526,22 @@ class MapValidatorDimensionTests(unittest.TestCase):
         non_array["road_endpoints"] = {}
         errors = self.validate(non_array)
         self.assertTrue(any("top-level road_endpoints must be an array" in error for error in errors))
+
+    def test_validates_multi_level_building_foundation_content(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        odd_level = json.loads(json.dumps(valid_map))
+        odd_level["buildings"][0]["building_levels"][1]["z"] = 1
+        errors = self.validate(odd_level)
+        self.assertTrue(any("z must be even" in error for error in errors))
+
+        missing_ground = json.loads(json.dumps(valid_map))
+        missing_ground["buildings"][0]["building_levels"] = [{"z": 2}]
+        errors = self.validate(missing_ground)
+        self.assertTrue(any("must start with ground floor z 0" in error for error in errors))
 
 
 if __name__ == "__main__":
