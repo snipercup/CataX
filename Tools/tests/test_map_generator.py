@@ -2587,6 +2587,61 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "furniture_anchors must be a non-empty array"):
             generate_map(recipe, TILES_PATH)
 
+    def test_connections_generates_authored_values(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_connections.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["connections"], {
+            "north": "ground",
+            "east": "road",
+            "south": "ground",
+            "west": "road",
+        })
+
+    def test_connections_defaults_to_ground_when_omitted(self):
+        recipe = valid_recipe()
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["connections"], {
+            "north": "ground",
+            "east": "ground",
+            "south": "ground",
+            "west": "ground",
+        })
+
+    def test_connections_partial_authoring_fills_defaults(self):
+        recipe = valid_recipe()
+        recipe["connections"] = {"east": "road"}
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["connections"], {
+            "north": "ground",
+            "east": "road",
+            "south": "ground",
+            "west": "ground",
+        })
+
+    def test_connections_rejects_invalid_directions_and_types(self):
+        recipe = valid_recipe()
+
+        recipe["connections"] = {"up": "ground"}
+        with self.assertRaisesRegex(RecipeError, "unknown connections direction 'up'"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["connections"] = {"north": "river"}
+        with self.assertRaisesRegex(RecipeError, "unsupported type 'river'"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["connections"] = {"north": 42}
+        with self.assertRaisesRegex(RecipeError, "must be a non-empty string"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["connections"] = "road"
+        with self.assertRaisesRegex(RecipeError, "connections must be an object"):
+            generate_map(recipe, TILES_PATH)
+
 
 class MapValidatorDimensionTests(unittest.TestCase):
     def validate(self, map_data):
@@ -3286,6 +3341,24 @@ class MapValidatorDimensionTests(unittest.TestCase):
         no_furniture["buildings"][0]["furniture_anchors"][0]["at"] = [9, 8]
         errors = self.validate(no_furniture)
         self.assertTrue(any("must reference furniture at" in error for error in errors))
+
+    def test_validates_connections_content(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_road_connections.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        # Unknown direction
+        bad_direction = json.loads(json.dumps(valid_map))
+        bad_direction["connections"]["up"] = "ground"
+        errors = self.validate(bad_direction)
+        self.assertTrue(any("unknown direction 'up'" in error for error in errors))
+
+        # Unsupported type
+        bad_type = json.loads(json.dumps(valid_map))
+        bad_type["connections"]["north"] = "river"
+        errors = self.validate(bad_type)
+        self.assertTrue(any("unsupported type 'river'" in error for error in errors))
 
 
 if __name__ == "__main__":

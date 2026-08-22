@@ -31,6 +31,8 @@ DEFAULT_CONNECTIONS = {
     "south": "ground",
     "west": "ground",
 }
+CONNECTION_DIRECTIONS = {"north", "east", "south", "west"}
+CONNECTION_TYPES = {"ground", "road"}
 # Recipe rotations use the same editor-facing values stored in map JSON. Keep
 # them unchanged here; Chunk.get_block_rotation() applies shape-specific runtime
 # conversion when a newly generated map is loaded.
@@ -115,6 +117,7 @@ RECIPE_FIELDS = {
     "regions",
     "operations",
     "levels",
+    "connections",
 }
 
 
@@ -2291,6 +2294,24 @@ def _generate_levels(
     return levels
 
 
+def _validate_connections(connections: Any) -> dict[str, str]:
+    if connections is None:
+        return DEFAULT_CONNECTIONS.copy()
+    if not isinstance(connections, dict):
+        raise RecipeError("connections must be an object")
+    unknown_keys = set(connections) - CONNECTION_DIRECTIONS
+    if unknown_keys:
+        raise RecipeError(f"unknown connections direction '{sorted(unknown_keys)[0]}'")
+    validated = DEFAULT_CONNECTIONS.copy()
+    for direction, value in connections.items():
+        if not isinstance(value, str) or not value.strip():
+            raise RecipeError(f"connections.{direction} must be a non-empty string")
+        if value not in CONNECTION_TYPES:
+            raise RecipeError(f"connections.{direction} has unsupported type '{value}'")
+        validated[direction] = value
+    return validated
+
+
 def generate_map(
     recipe: dict[str, Any],
     tiles_path: Path,
@@ -2407,6 +2428,7 @@ def generate_map(
         building_surfaces,
         levels,
     )
+    connections = _validate_connections(recipe.get("connections"))
 
     generated = {
         "id": recipe["id"],
@@ -2417,7 +2439,7 @@ def generate_map(
         "mapwidth": MAP_WIDTH,
         "mapheight": MAP_HEIGHT,
         "levels": levels,
-        "connections": DEFAULT_CONNECTIONS.copy(),
+        "connections": connections,
     }
     if areas:
         generated["areas"] = areas
