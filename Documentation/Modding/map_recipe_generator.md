@@ -35,6 +35,7 @@ The root must be a JSON object with these fields:
 | `regions` | array | Legacy filled rectangles. Optional; defaults to `[]`. |
 | `operations` | array | Ordered placement operations. Optional; defaults to `[]`. |
 | `levels` | non-empty array | Explicit grouped level definitions. Cannot be combined with root `base_tile`, `regions`, or `operations`. |
+| `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
 
 A recipe does not define map dimensions: all generated maps are 32 x 32. Top-down `[x, y]` coordinates start at the top-left. Logical `z` is vertical elevation, not a third element in `[x, y]`. Every shape must fit entirely within the map; operations are never silently clipped.
 
@@ -64,6 +65,27 @@ Palette entries are objects with `id`, optional positive integer `weight` (defau
 ```
 
 Legacy `regions` are applied first in array order, followed by `operations` in array order. Pattern cells are expanded in their definition order at the position of the invoking operation. Later tile placements on the same logical level overwrite earlier cells, including the complete `feature` of an earlier furnished tile. A furniture operation instead rejects a cell that already has a feature. `regions` remain supported for version-one recipes and use the same filled-rectangle placement implementation as `rectangle` operations.
+
+## Map-edge connections
+
+The `connections` field authors the map's edge connection metadata — the type of terrain or road that connects at each cardinal edge. The runtime uses these values to select appropriate edge tiles when the map is instanced in the overworld.
+
+```json
+{
+  "connections": {
+    "north": "ground",
+    "east": "road",
+    "south": "ground",
+    "west": "road"
+  }
+}
+```
+
+Each key is one of `north`, `east`, `south`, or `west`; each value is one of `ground` or `road`. Omitted directions default to `"ground"`, so existing recipes without a `connections` field remain compatible. The standalone validator rejects unknown directions and unsupported connection types.
+
+This field authors metadata only: it does not generate road tiles, path routing, or edge tile placement. It declares what the runtime should expect at each edge so the overworld generator can connect adjacent maps correctly.
+
+`Tools/examples/map_recipe_road_connections.json` demonstrates a simple outdoor map with roads entering from east and west.
 
 ## Logical levels
 

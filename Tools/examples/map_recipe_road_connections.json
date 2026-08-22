@@ -1,0 +1,16 @@
+{
+	"id": "generated_road_connections",
+	"name": "Generated Road Connections",
+	"description": "A simple outdoor map demonstrating authored map-edge connection metadata with roads entering from east and west.",
+	"seed": 20260822,
+	"base_tile": {"id": "grass_plain_01"},
+	"connections": {
+		"north": "ground",
+		"east": "road",
+		"south": "ground",
+		"west": "road"
+	},
+	"operations": [
+		{"type": "line", "from": [0, 16], "to": [31, 16], "tile": {"id": "dirt_light_00"}}
+	]
+}
