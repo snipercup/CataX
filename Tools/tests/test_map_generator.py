@@ -1654,13 +1654,17 @@ class MapGeneratorTests(unittest.TestCase):
 
         self.assertEqual(generated["levels"][10][8 * 32 + 8]["id"], "concrete_00")
         self.assertEqual(generated["levels"][12][8 * 32 + 8]["id"], "concrete_00")
-        self.assertEqual(generated["levels"][12][9 * 32 + 9], {})
+        # Staircase headroom: lower_at [10,10] is cleared on z2
         self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
-        self.assertEqual(generated["levels"][10][7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][7 * 32 + 7]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][11][9 * 32 + 9]["id"], "grass_ramp_00")
-        self.assertEqual(generated["levels"][12][9 * 32 + 10]["id"], "grass_ramp_00")
-        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
+        # Walls from building_geometry are at z+1 (boundary z=0, walls at z=1)
+        self.assertEqual(generated["levels"][11][7 * 32 + 8]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][7 * 32 + 9]["id"], "brick_wall_00")
+        # Staircase slope at z1
+        self.assertEqual(generated["levels"][11][10 * 32 + 10]["id"], "grass_ramp_00")
+        # Staircase slope at z2 (corner staircase upper at [11,9])
+        self.assertEqual(generated["levels"][12][9 * 32 + 11]["id"], "grass_ramp_00")
+        # Door at z0
+        self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
 
     def test_building_geometry_rejects_non_wall_wall_or_support_tiles(self):
         recipe = json.loads((ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json").read_text(encoding="utf-8"))
@@ -2835,18 +2839,16 @@ class MapGeneratorTests(unittest.TestCase):
             {"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]},
         ])
         self.assertEqual(building["staircases"], [
-            {"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90},
-            {"id": "corner_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0},
+            {"id": "office_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0},
         ])
         self.assertEqual(generated["building_surfaces"], [
-            {"id": "ground_floor_surface", "building": "office_building", "kind": "floor", "z": 0},
-            {"id": "first_floor_surface", "building": "office_building", "kind": "floor", "z": 2},
-            {"id": "ground_ceiling", "building": "office_building", "kind": "ceiling", "z": 2},
+            {"id": "ground_floor", "building": "office_building", "kind": "floor", "z": 0},
+            {"id": "first_floor", "building": "office_building", "kind": "floor", "z": 2},
             {"id": "first_floor_roof", "building": "office_building", "kind": "roof", "z": 2},
         ])
         self.assertEqual(generated["building_supports"], [
             {"id": "northwest_column", "building": "office_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "column"},
-            {"id": "southeast_column", "building": "office_building", "at": [11, 10], "from_z": 0, "to_z": 2, "kind": "column"},
+            {"id": "southeast_column", "building": "office_building", "at": [13, 11], "from_z": 0, "to_z": 2, "kind": "column"},
         ])
 
     def test_multi_level_building_foundation_requires_ground_and_even_levels(self):
@@ -2880,7 +2882,7 @@ class MapGeneratorTests(unittest.TestCase):
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
 
         wrong_position = json.loads(json.dumps(recipe))
-        wrong_position["buildings"][0]["staircases"][0]["upper_at"] = [12, 12]
+        wrong_position["buildings"][0]["staircases"][0]["upper_at"] = [14, 12]
         with self.assertRaisesRegex(RecipeError, "slope coordinates must be inside building footprint"):
             generate_map(wrong_position, TILES_PATH)
 
@@ -2891,7 +2893,7 @@ class MapGeneratorTests(unittest.TestCase):
 
         wrong_rotation = json.loads(json.dumps(recipe))
         for operation in wrong_rotation["operations"]:
-            if operation.get("z") == 2 and isinstance(operation.get("tile"), dict) and operation["tile"].get("id") == "grass_ramp_00":
+            if operation.get("z") == 1 and isinstance(operation.get("tile"), dict) and operation["tile"].get("id") == "grass_ramp_00":
                 operation["tile"]["rotation"] = 0
         with self.assertRaisesRegex(RecipeError, "requires a slope tile with rotation 90"):
             generate_map(wrong_rotation, TILES_PATH)
@@ -2899,31 +2901,41 @@ class MapGeneratorTests(unittest.TestCase):
     def test_corner_staircases_require_landing_block_and_adjacency(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        # Add a corner staircase for testing landing validation
+        recipe["buildings"][0]["staircases"].append(
+            {"id": "corner_staircase", "lower_at": [9, 8], "upper_at": [9, 10], "landing_at": [9, 9], "rotation": 90, "upper_rotation": 0}
+        )
+        # Provide the landing flat block at z1 [9,9] (inside office, no wall boundary there)
+        recipe["operations"].append({"type": "set", "x": 9, "y": 9, "z": 1, "tile": {"id": "concrete_00"}})
+        # Provide the lower z1 slope for the corner staircase
+        recipe["operations"].append({"type": "set", "x": 9, "y": 8, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}})
+        # Provide the upper z2 slope for the corner staircase
+        recipe["operations"].append({"type": "set", "x": 9, "y": 10, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 0}})
         staircase = recipe["buildings"][0]["staircases"][1]
 
         self.assertEqual(staircase["id"], "corner_staircase")
 
         not_adjacent_lower = json.loads(json.dumps(recipe))
-        not_adjacent_lower["buildings"][0]["staircases"][1]["landing_at"] = [9, 9]
+        not_adjacent_lower["buildings"][0]["staircases"][1]["landing_at"] = [11, 11]
         with self.assertRaisesRegex(RecipeError, "landing_at must be cardinally adjacent to lower_at"):
             generate_map(not_adjacent_lower, TILES_PATH)
 
         not_adjacent_upper = json.loads(json.dumps(recipe))
-        not_adjacent_upper["buildings"][0]["staircases"][1]["landing_at"] = [9, 10]
+        not_adjacent_upper["buildings"][0]["staircases"][1]["landing_at"] = [10, 8]
         with self.assertRaisesRegex(RecipeError, "landing_at must be cardinally adjacent to upper_at"):
             generate_map(not_adjacent_upper, TILES_PATH)
 
         missing_landing = json.loads(json.dumps(recipe))
         missing_landing["operations"] = [
             operation for operation in missing_landing["operations"]
-            if not (operation.get("z") == 1 and operation.get("x") == 11 and operation.get("y") == 10)
+            if not (operation.get("z") == 1 and operation.get("x") == 9 and operation.get("y") == 9 and operation.get("tile", {}).get("id") == "concrete_00")
         ]
         with self.assertRaisesRegex(RecipeError, "requires a flat landing block"):
             generate_map(missing_landing, TILES_PATH)
 
         stacked = json.loads(json.dumps(recipe))
-        stacked["buildings"][0]["staircases"][1]["upper_at"] = [10, 10]
-        stacked["buildings"][0]["staircases"][1]["landing_at"] = [11, 9]
+        stacked["buildings"][0]["staircases"][1]["upper_at"] = [9, 8]
+        stacked["buildings"][0]["staircases"][1]["landing_at"] = [9, 10]
         with self.assertRaisesRegex(RecipeError, "must not stack at the same coordinates"):
             generate_map(stacked, TILES_PATH)
 
@@ -2939,8 +2951,10 @@ class MapGeneratorTests(unittest.TestCase):
 
         ground_ceiling = json.loads(json.dumps(recipe))
         ground_ceiling["building_surfaces"] = [dict(surfaces[0], id="bad_ceiling", kind="ceiling", z=0)]
-        with self.assertRaisesRegex(RecipeError, "ceiling cannot be declared at ground level"):
-            generate_map(ground_ceiling, TILES_PATH)
+        # Multi-level buildings allow ceiling at ground level z 0 (floor serves as ceiling)
+        # Only single-level buildings reject ceiling at ground level
+        generated_gc = generate_map(ground_ceiling, TILES_PATH)
+        self.assertEqual(generated_gc["building_surfaces"][0]["kind"], "ceiling")
 
         multi_roof = json.loads(json.dumps(recipe))
         multi_roof["building_surfaces"] = [dict(surfaces[0], id="bad_roof", kind="roof", z=0)]
@@ -3750,7 +3764,10 @@ class MapValidatorDimensionTests(unittest.TestCase):
         self.assertTrue(any("requires a slope tile" in error for error in errors))
 
         corner_landing = json.loads(json.dumps(valid_map))
-        corner_landing["buildings"][0]["staircases"][1]["landing_at"] = [9, 9]
+        # Add a corner staircase to test landing validation on the generated map
+        corner_landing["buildings"][0]["staircases"].append(
+            {"id": "corner_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [9, 9], "rotation": 90, "upper_rotation": 0}
+        )
         errors = self.validate(corner_landing)
         self.assertTrue(any("landing_at must be cardinally adjacent to lower_at" in error for error in errors))
 

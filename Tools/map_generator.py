@@ -84,10 +84,10 @@ CARDINAL_SIDES = {
 OPPOSITE_SIDES = {"north": "south", "east": "west", "south": "north", "west": "east"}
 ROOM_KINDS = {"enclosed", "covered_open", "ruin"}
 ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
-ROOM_CONNECTION_FIELDS = {"id", "at", "z", "from", "to"}
+ROOM_CONNECTION_FIELDS = {"id", "at", "target_at", "z", "from", "to"}
 ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
-ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "z", "element", "side"}
+ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "target_at", "room_at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
 BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors", "building_geometry"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
@@ -1532,7 +1532,7 @@ def _validate_recipe_building_surfaces(
                 )
             if kind == "roof" and z != max(declared_zs):
                 raise RecipeError(f"{context}.kind 'roof' must be at the highest declared building level z {max(declared_zs)}")
-            if kind == "ceiling" and z == target_building["z"]:
+            if kind == "ceiling" and z == target_building["z"] and len(declared_zs) == 1:
                 raise RecipeError(f"{context} ceiling cannot be declared at ground level z {z}")
         else:
             expected_z = target_building["z"] + 1
@@ -1696,7 +1696,18 @@ def _apply_building_geometry(
             occupied_zs = [entry["z"] for entry in building["building_levels"]]
         upper_floor_clearance: set[tuple[int, int]] = set()
         for staircase in building.get("staircases", []):
-            upper_floor_clearance.add(tuple(staircase["lower_at"]))
+            lower_at = tuple(staircase["lower_at"])
+            upper_floor_clearance.add(lower_at)
+            landing_at = staircase.get("landing_at")
+            if landing_at is not None:
+                landing = tuple(landing_at)
+                upper_floor_clearance.add(landing)
+        # Collect positions that will have walls at z+1 so the floor fill can place dirt below them
+        wall_support_positions: set[tuple[int, int]] = set()
+        owned_rooms = set(building["rooms"])
+        for boundary in room_boundaries:
+            if boundary["room"] in owned_rooms and boundary["element"] == "wall_tile":
+                wall_support_positions.add(tuple(_physical_at(boundary)))
         for z in occupied_zs:
             level = levels[_level_index(z)]
             for y in range(footprint["y"], footprint["y"] + footprint["height"]):
@@ -1714,21 +1725,30 @@ def _apply_building_geometry(
                         continue
                     if existing.get("id") in tile_catalog and tile_catalog[existing["id"]].get("shape") == "slope":
                         continue
+                    # Place dirt (not floor tile) below ground-level wall positions that don't have room membership
+                    if z == building["z"] and (x, y) in wall_support_positions and not existing.get("rooms") and not existing.get("feature"):
+                        level[index] = {"id": "dirt_light_00"}
+                        continue
                     replacement = tile_specs["floor_tile"].copy()
                     replacement.update({key: value for key, value in existing.items() if key != "id"})
                     level[index] = replacement
 
-        owned_rooms = set(building["rooms"])
         for boundary in room_boundaries:
             if boundary["room"] not in owned_rooms or boundary["element"] != "wall_tile":
                 continue
-            x, y = boundary["at"]
-            level = levels[_level_index(boundary["z"])]
+            x, y = _physical_at(boundary)
+            wall_z = boundary["z"] + 1
+            wall_level = _get_or_create_level(levels, wall_z)
             index = y * MAP_WIDTH + x
-            existing = level[index]
+            existing = wall_level[index]
             if isinstance(existing, dict) and existing.get("feature"):
-                raise RecipeError(f"{context} cannot place a wall over a feature at [{x}, {y}, {boundary['z']}]")
-            level[index] = tile_specs["wall_tile"].copy()
+                raise RecipeError(f"{context} cannot place a wall over a feature at [{x}, {y}, {wall_z}]")
+            # Place dirt support below the wall if z0 is empty
+            support_level = _get_or_create_level(levels, boundary["z"])
+            support_index = y * MAP_WIDTH + x
+            if not support_level[support_index].get("rooms") and not support_level[support_index].get("feature"):
+                support_level[support_index] = {"id": "dirt_light_00"}
+            wall_level[index] = tile_specs["wall_tile"].copy()
 
         for support in building_supports:
             if support["building"] != building["id"]:
@@ -1801,14 +1821,16 @@ def _validate_building_targets(
             for boundary in room_boundaries:
                 if boundary["room"] == room_id and boundary["z"] == z:
                     x, y = boundary["at"]
-                    if not _point_in_building_footprint(x, y, footprint):
+                    target_x, target_y = _physical_at(boundary)
+                    if not _point_in_building_footprint(x, y, footprint) or not _point_in_building_footprint(target_x, target_y, footprint):
                         raise RecipeError(
                             f"{context} room boundary '{boundary['id']}' is outside building footprint"
                         )
             for connection in room_connections:
                 if connection["z"] == z and _room_connection_names_room(connection, room_id):
                     x, y = connection["at"]
-                    if not _point_in_building_footprint(x, y, footprint):
+                    target_x, target_y = _physical_at(connection)
+                    if not _point_in_building_footprint(x, y, footprint) or not _point_in_building_footprint(target_x, target_y, footprint):
                         raise RecipeError(
                             f"{context} room connection '{connection['id']}' is outside building footprint"
                         )
@@ -2058,18 +2080,32 @@ def _validate_building_targets(
                     if not isinstance(tile, dict) or not tile.get("id") or tile.get("id") in slope_tile_ids:
                         raise RecipeError(f"{staircase_context} requires a flat landing block at [{landing_x}, {landing_y}] on z 1")
         if building.get("overhead_validation") == "complete":
+            surface_kinds_by_z: dict[int, set[str]] = {}
+            for surface in building_surfaces:
+                if surface["building"] == building["id"]:
+                    surface_kinds_by_z.setdefault(surface["z"], set()).add(surface["kind"])
             if building.get("building_levels") is not None:
-                raise RecipeError(f"{context} overhead_validation is not yet supported for multi-level buildings")
-            surface_kinds = {
-                surface["kind"]
-                for surface in building_surfaces
-                if surface["building"] == building["id"] and surface["z"] == z + 1
-            }
-            for kind in ("roof", "ceiling"):
-                if kind not in surface_kinds:
+                declared_zs = [level_definition["z"] for level_definition in building["building_levels"]]
+                for check_z in declared_zs:
+                    if check_z == building["z"]:
+                        continue
+                    kinds = surface_kinds_by_z.get(check_z, set())
+                    if "floor" not in kinds and "ceiling" not in kinds:
+                        raise RecipeError(
+                            f"{context} requires floor or ceiling surface at z {check_z}"
+                        )
+                roof_z = max(declared_zs)
+                if "roof" not in surface_kinds_by_z.get(roof_z, set()):
                     raise RecipeError(
-                        f"{context} requires {kind} surface at z {z + 1}"
+                        f"{context} requires roof surface at highest level z {roof_z}"
                     )
+            else:
+                surface_kinds = surface_kinds_by_z.get(z + 1, set())
+                for kind in ("roof", "ceiling"):
+                    if kind not in surface_kinds:
+                        raise RecipeError(
+                            f"{context} requires {kind} surface at z {z + 1}"
+                        )
         if building.get("room_partition_validation") == "complete":
             classified_rooms = set(building.get("interior_rooms", [])) | set(building.get("open_space_rooms", []))
             for room_id in building["rooms"]:
@@ -2145,7 +2181,7 @@ def _validate_recipe_room_connections(
         unknown_fields = sorted(set(connection) - ROOM_CONNECTION_FIELDS)
         if unknown_fields:
             raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
-        if set(connection) != ROOM_CONNECTION_FIELDS:
+        if not {"id", "at", "z", "from", "to"} <= set(connection):
             raise RecipeError(f"{context} must define id, at, z, from, and to")
         connection_id = connection["id"]
         if not isinstance(connection_id, str) or not connection_id.strip():
@@ -2176,13 +2212,25 @@ def _validate_recipe_room_connections(
         )
         if from_endpoint == to_endpoint:
             raise RecipeError(f"{context} must connect distinct endpoints")
-        validated.append({
+        validated_connection = {
             "id": connection_id,
             "at": at,
             "z": z,
             "from": from_endpoint,
             "to": to_endpoint,
-        })
+        }
+        if "target_at" in connection:
+            target_at = connection["target_at"]
+            if (
+                not isinstance(target_at, list)
+                or len(target_at) != 2
+                or any(type(value) is not int for value in target_at)
+                or not 0 <= target_at[0] < MAP_WIDTH
+                or not 0 <= target_at[1] < MAP_HEIGHT
+            ):
+                raise RecipeError(f"{context}.target_at must be within map bounds as a two-integer array")
+            validated_connection["target_at"] = target_at
+        validated.append(validated_connection)
     return validated
 
 
@@ -2194,7 +2242,7 @@ def _validate_room_connection_targets(
     seen_targets: set[tuple[int, int, int]] = set()
     for index, connection in enumerate(connections):
         context = f"room_connections[{index}]"
-        x, y = connection["at"]
+        x, y = _physical_at(connection)
         z = connection["z"]
         target = (z, x, y)
         if target in seen_targets:
@@ -2268,6 +2316,19 @@ def _validate_recipe_room_boundaries(
             "z": z,
             "element": element,
         }
+        for coordinate_field in ("target_at", "room_at"):
+            if coordinate_field not in boundary:
+                continue
+            coordinate = boundary[coordinate_field]
+            if (
+                not isinstance(coordinate, list)
+                or len(coordinate) != 2
+                or any(type(value) is not int for value in coordinate)
+                or not 0 <= coordinate[0] < MAP_WIDTH
+                or not 0 <= coordinate[1] < MAP_HEIGHT
+            ):
+                raise RecipeError(f"{context}.{coordinate_field} must be within map bounds as a two-integer array")
+            validated_boundary[coordinate_field] = coordinate
         if side is not None:
             validated_boundary["side"] = side
         validated.append(validated_boundary)
@@ -2279,6 +2340,11 @@ def _room_connection_names_room(connection: dict[str, Any], room_id: str) -> boo
         endpoint.get("kind") == "room" and endpoint.get("id") == room_id
         for endpoint in (connection["from"], connection["to"])
     )
+
+
+def _physical_at(record: dict[str, Any]) -> tuple[int, int]:
+    x, y = record.get("target_at", record["at"])
+    return x, y
 
 
 def _wall_tile_bounds_room(x: int, y: int, room_id: str, level: list[dict[str, Any]]) -> bool:
@@ -2299,11 +2365,13 @@ def _room_boundary_edge(
     side = boundary.get("side")
     if side is None:
         return None
-    x, y = boundary["at"]
+    room_x, room_y = boundary.get("room_at", boundary["at"])
+    x, y = _physical_at(boundary)
     room_id = boundary["room"]
     if boundary["element"] == "wall_tile":
-        delta_x, delta_y = CARDINAL_SIDES[side]
-        room_x, room_y = x + delta_x, y + delta_y
+        if "room_at" not in boundary:
+            delta_x, delta_y = CARDINAL_SIDES[side]
+            room_x, room_y = x + delta_x, y + delta_y
         if not 0 <= room_x < MAP_WIDTH or not 0 <= room_y < MAP_HEIGHT:
             return None
         room_tile = level[room_y * MAP_WIDTH + room_x]
@@ -2311,6 +2379,11 @@ def _room_boundary_edge(
             return None
         return room_x, room_y, OPPOSITE_SIDES[side]
     tile = level[y * MAP_WIDTH + x]
+    if "room_at" in boundary:
+        room_tile = level[room_y * MAP_WIDTH + room_x]
+        if not isinstance(room_tile, dict) or room_tile.get("rooms") != [room_id]:
+            return None
+        return room_x, room_y, side
     if not isinstance(tile, dict) or tile.get("rooms") != [room_id]:
         return None
     return x, y, side
@@ -2359,7 +2432,7 @@ def _validate_room_boundary_targets(
         boundary_level_z = boundary["z"]
         key = (room_id, boundary_level_z)
         edges = directed_edges.setdefault(key, set())
-        if edge in edges:
+        if edge in edges and "target_at" not in boundary:
             raise RecipeError(f"{context} duplicates directed boundary edge for room '{room_id}'")
         edges.add(edge)
 
@@ -2367,7 +2440,8 @@ def _validate_room_boundary_targets(
     for index, boundary in enumerate(boundaries):
         context = f"room_boundaries[{index}]"
         room_id = boundary["room"]
-        x, y = boundary["at"]
+        x, y = _physical_at(boundary)
+        room_x, room_y = boundary.get("room_at", boundary["at"])
         z = boundary["z"]
         target = (room_id, z, x, y)
         if target in seen_room_targets:
@@ -2381,13 +2455,19 @@ def _validate_room_boundary_targets(
         else:
             level = levels[_level_index(z)]
             room_level = level
-        tile = level[y * MAP_WIDTH + x] if level else {}
+        tile_x, tile_y = _physical_at(boundary)
+        tile = level[tile_y * MAP_WIDTH + tile_x] if level else {}
         if not isinstance(tile, dict) or not isinstance(tile.get("id"), str) or not tile["id"]:
             raise RecipeError(f"{context} requires existing terrain at z {z} [{x}, {y}]")
         if boundary["element"] == "wall_tile":
             if tile["id"] not in wall_tile_ids:
                 raise RecipeError(f"{context} must reference a Wall-category tile at z {z} [{x}, {y}]")
-            if not _wall_tile_bounds_room(x, y, room_id, room_level):
+            if "target_at" in boundary:
+                room_tile = room_level[room_y * MAP_WIDTH + room_x]
+                adjacent_to_room = isinstance(room_tile, dict) and room_tile.get("rooms") == [room_id]
+            else:
+                adjacent_to_room = _wall_tile_bounds_room(x, y, room_id, room_level)
+            if not adjacent_to_room:
                 raise RecipeError(f"{context} wall tile must be cardinally adjacent to room '{room_id}'")
             record_complete_edge(boundary, room_level, context)
             continue
@@ -2399,7 +2479,8 @@ def _validate_room_boundary_targets(
         ):
             raise RecipeError(f"{context} must reference door-capable furniture at z {z} [{x}, {y}]")
         if not any(
-            connection["at"] == [x, y]
+            connection["at"] == [room_x, room_y]
+            and ("target_at" not in connection or connection["target_at"] == [x, y])
             and connection["z"] == z
             and _room_connection_names_room(connection, room_id)
             for connection in room_connections
