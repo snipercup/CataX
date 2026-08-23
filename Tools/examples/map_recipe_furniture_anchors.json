@@ -27,7 +27,7 @@
 			],
 			"entrance_validation": "complete",
 			"furniture_anchors": [
-				{"id": "office_door_anchor", "at": [8, 9], "z": 0, "kind": "door"},
+				{"id": "office_door_anchor", "at": [8, 8], "z": 0, "kind": "door"},
 				{"id": "garage_door_anchor", "at": [11, 8], "z": 0, "kind": "door"}
 			]
 		}
@@ -42,7 +42,7 @@
 	"room_connections": [
 		{
 			"id": "office_front_door",
-			"at": [8, 9],
+			"at": [8, 8],
 			"z": 0,
 			"from": {"kind": "room", "id": "office"},
 			"to": {"kind": "exterior"}
@@ -60,10 +60,10 @@
 		{"id": "office_northeast_north", "room": "office", "at": [9, 7], "z": 0, "element": "wall_tile", "side": "south"},
 		{"id": "office_southwest_south", "room": "office", "at": [8, 10], "z": 0, "element": "wall_tile", "side": "north"},
 		{"id": "office_southeast_south", "room": "office", "at": [9, 10], "z": 0, "element": "wall_tile", "side": "north"},
-		{"id": "office_northwest_west", "room": "office", "at": [7, 8], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "office_southwest_west", "room": "office", "at": [7, 9], "z": 0, "element": "wall_tile", "side": "east"},
 		{"id": "office_northeast_east", "room": "office", "at": [10, 8], "z": 0, "element": "wall_tile", "side": "west"},
 		{"id": "office_southeast_east", "room": "office", "at": [10, 9], "z": 0, "element": "wall_tile", "side": "west"},
-		{"id": "office_southwest_door", "room": "office", "at": [8, 9], "z": 0, "element": "door_furniture", "side": "west"},
+		{"id": "office_northwest_door", "room": "office", "at": [8, 8], "z": 0, "element": "door_furniture", "side": "west"},
 		{"id": "garage_east_door", "room": "garage_bay", "at": [11, 8], "z": 0, "element": "door_furniture", "side": "east"}
 	],
 	"operations": [
@@ -71,14 +71,18 @@
 		{"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 2, "height": 2},
 		{"type": "set", "x": 11, "y": 8, "tile": {"id": "concrete_00"}},
 		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 1, "height": 1},
+		{"type": "set", "x": 7, "y": 7, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 8, "y": 7, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 9, "y": 7, "tile": {"id": "brick_wall_00"}},
+		{"type": "set", "x": 10, "y": 7, "tile": {"id": "brick_wall_00"}},
+		{"type": "set", "x": 7, "y": 9, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 8, "y": 10, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 9, "y": 10, "tile": {"id": "brick_wall_00"}},
-		{"type": "set", "x": 7, "y": 8, "tile": {"id": "brick_wall_00"}},
+		{"type": "set", "x": 10, "y": 10, "tile": {"id": "brick_wall_00"}},
+		{"type": "set", "x": 7, "y": 10, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 10, "y": 8, "tile": {"id": "brick_wall_00"}},
 		{"type": "set", "x": 10, "y": 9, "tile": {"id": "brick_wall_00"}},
-		{"type": "furniture", "id": "door_wood", "x": 8, "y": 9, "rotation": 0},
+		{"type": "furniture", "id": "door_wood", "x": 8, "y": 8, "rotation": 0},
 		{"type": "furniture", "id": "door_wood", "x": 11, "y": 8, "rotation": 0}
 	]
 }

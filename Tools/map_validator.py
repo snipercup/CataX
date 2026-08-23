@@ -22,9 +22,17 @@ CARDINAL_SIDES = {
     'west': (-1, 0),
 }
 OPPOSITE_SIDES = {'north': 'south', 'east': 'west', 'south': 'north', 'west': 'east'}
-ROOM_CONNECTION_FIELDS = {'id', 'at', 'z', 'from', 'to'}
+ROOM_CONNECTION_FIELDS = {'id', 'at', 'target_at', 'z', 'from', 'to'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
-ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'z', 'element', 'side'}
+ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'target_at', 'room_at', 'z', 'element', 'side'}
+
+
+def _physical_at(record):
+    return record.get('target_at', record['at'])
+
+
+def _room_at(record):
+    return record.get('room_at', record['at'])
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors', 'building_geometry'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
@@ -411,7 +419,7 @@ class MapValidator:
             unknown_fields = sorted(set(connection) - ROOM_CONNECTION_FIELDS)
             if unknown_fields:
                 self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
-            for field in ROOM_CONNECTION_FIELDS:
+            for field in ('id', 'at', 'z', 'from', 'to'):
                 if field not in connection:
                     self.add_error(file_path, f"{context} is missing required field '{field}'.")
             connection_id = connection.get('id')
@@ -430,6 +438,15 @@ class MapValidator:
                 or not 0 <= at[1] < MAP_HEIGHT
             ):
                 self.add_error(file_path, f"{context} at must be a two-integer coordinate within map bounds.")
+            target_at = connection.get('target_at')
+            if target_at is not None and (
+                not isinstance(target_at, list)
+                or len(target_at) != 2
+                or any(type(value) is not int for value in target_at)
+                or not 0 <= target_at[0] < MAP_WIDTH
+                or not 0 <= target_at[1] < MAP_HEIGHT
+            ):
+                self.add_error(file_path, f"{context} target_at must be a two-integer coordinate within map bounds.")
             z = connection.get('z')
             if type(z) is not int or not -10 <= z <= 10:
                 self.add_error(file_path, f"{context} z must be an integer from -10 through 10.")
@@ -507,6 +524,16 @@ class MapValidator:
             )
             if not valid_at:
                 self.add_error(file_path, f"{context} at must be a two-integer coordinate within map bounds.")
+            for coordinate_field in ('target_at', 'room_at'):
+                coordinate = boundary.get(coordinate_field)
+                if coordinate is not None and (
+                    not isinstance(coordinate, list)
+                    or len(coordinate) != 2
+                    or any(type(value) is not int for value in coordinate)
+                    or not 0 <= coordinate[0] < MAP_WIDTH
+                    or not 0 <= coordinate[1] < MAP_HEIGHT
+                ):
+                    self.add_error(file_path, f"{context} {coordinate_field} must be a two-integer coordinate within map bounds.")
             z = boundary.get('z')
             valid_z = type(z) is int and -10 <= z <= 10
             if not valid_z:
@@ -684,7 +711,7 @@ class MapValidator:
         door_furniture_ids = self._door_furniture_ids() if (validated_room_connections or validated_room_boundaries) else set()
         seen_door_targets: Set[tuple] = set()
         for connection in validated_room_connections:
-            x, y = connection['at']
+            x, y = _physical_at(connection)
             z = connection['z']
             target = (z, x, y)
             if target in seen_door_targets:
@@ -709,33 +736,43 @@ class MapValidator:
         seen_boundary_targets: Set[tuple] = set()
         for boundary in validated_room_boundaries:
             room_id = boundary['room']
-            x, y = boundary['at']
+            x, y = _physical_at(boundary)
+            room_x, room_y = _room_at(boundary)
             z = boundary['z']
             target = (room_id, z, x, y)
             if target in seen_boundary_targets:
                 self.add_error(file_path, f"Room boundary '{boundary['id']}' duplicates boundary target for room '{room_id}' at z {z} [{x}, {y}].")
                 continue
             seen_boundary_targets.add(target)
-            level_index = z + 10
+            level_index = z + 11 if boundary['element'] == 'wall_tile' else z + 10
             level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
+            if boundary['element'] == 'wall_tile' and (not level or level[y * MAP_WIDTH + x].get('id') not in wall_tile_ids):
+                level = levels[z + 10] if isinstance(levels, list) and z + 10 < len(levels) else []
             tile = level[y * MAP_WIDTH + x] if isinstance(level, list) and len(level) == POPULATED_LEVEL_TILE_COUNT else {}
             if not isinstance(tile, dict) or not isinstance(tile.get('id'), str) or not tile['id']:
-                self.add_error(file_path, f"Room boundary '{boundary['id']}' requires existing terrain at z {z} [{x}, {y}].")
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' requires existing terrain at z {z + 1 if boundary['element'] == 'wall_tile' else z} [{x}, {y}].")
                 continue
+            room_level = level
             if boundary['element'] == 'wall_tile':
+                room_level_index = z + 10
+                room_level = levels[room_level_index] if isinstance(levels, list) and 0 <= room_level_index < len(levels) else []
                 if tile['id'] not in wall_tile_ids:
                     self.add_error(file_path, f"Room boundary '{boundary['id']}' must reference a Wall-category tile at z {z} [{x}, {y}].")
                     continue
-                adjacent_to_room = False
-                for delta_x, delta_y in ((0, -1), (1, 0), (0, 1), (-1, 0)):
-                    neighbor_x = x + delta_x
-                    neighbor_y = y + delta_y
-                    if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
-                        continue
-                    neighbor = level[neighbor_y * MAP_WIDTH + neighbor_x]
-                    if isinstance(neighbor, dict) and neighbor.get('rooms') == [room_id]:
-                        adjacent_to_room = True
-                        break
+                if 'room_at' in boundary:
+                    room_tile = room_level[room_y * MAP_WIDTH + room_x]
+                    adjacent_to_room = isinstance(room_tile, dict) and room_tile.get('rooms') == [room_id]
+                else:
+                    adjacent_to_room = False
+                    for delta_x, delta_y in ((0, -1), (1, 0), (0, 1), (-1, 0)):
+                        neighbor_x = x + delta_x
+                        neighbor_y = y + delta_y
+                        if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
+                            continue
+                        neighbor = room_level[neighbor_y * MAP_WIDTH + neighbor_x]
+                        if isinstance(neighbor, dict) and neighbor.get('rooms') == [room_id]:
+                            adjacent_to_room = True
+                            break
                 if not adjacent_to_room:
                     self.add_error(file_path, f"Room boundary '{boundary['id']}' wall tile must be cardinally adjacent to room '{room_id}'.")
                 continue
@@ -748,7 +785,8 @@ class MapValidator:
                 self.add_error(file_path, f"Room boundary '{boundary['id']}' must reference door-capable furniture at z {z} [{x}, {y}].")
                 continue
             matches_connection = any(
-                connection['at'] == [x, y]
+                connection['at'] == [room_x, room_y]
+                and ('target_at' not in connection or connection['target_at'] == [x, y])
                 and connection['z'] == z
                 and any(
                     endpoint.get('kind') == 'room' and endpoint.get('id') == room_id
@@ -777,32 +815,40 @@ class MapValidator:
             if side not in CARDINAL_SIDES:
                 self.add_error(file_path, f"Room boundary '{boundary_id}' side is required for complete boundary validation.")
                 continue
-            x, y = boundary['at']
+            x, y = _physical_at(boundary)
+            room_x, room_y = _room_at(boundary)
             z = boundary['z']
             level_index = z + 10
             level = levels[level_index] if isinstance(levels, list) and level_index < len(levels) else []
             if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
                 continue
             if boundary['element'] == 'wall_tile':
-                delta_x, delta_y = CARDINAL_SIDES[side]
-                room_x, room_y = x + delta_x, y + delta_y
+                room_level_index = z + 10
+                room_level = levels[room_level_index] if isinstance(levels, list) and room_level_index < len(levels) else []
+                level = room_level
+                if 'room_at' not in boundary:
+                    delta_x, delta_y = CARDINAL_SIDES[side]
+                    room_x, room_y = x + delta_x, y + delta_y
                 if not 0 <= room_x < MAP_WIDTH or not 0 <= room_y < MAP_HEIGHT:
                     self.add_error(file_path, f"Room boundary '{boundary_id}' side does not point to room '{room_id}'.")
                     continue
-                room_tile = level[room_y * MAP_WIDTH + room_x]
+                room_level_index = z + 10
+                room_level = levels[room_level_index] if isinstance(levels, list) and 0 <= room_level_index < len(levels) else []
+                room_tile = room_level[room_y * MAP_WIDTH + room_x] if room_level else {}
                 if not isinstance(room_tile, dict) or room_tile.get('rooms') != [room_id]:
                     self.add_error(file_path, f"Room boundary '{boundary_id}' side does not point to room '{room_id}'.")
                     continue
                 edge = (room_x, room_y, OPPOSITE_SIDES[side])
             else:
-                room_tile = level[y * MAP_WIDTH + x]
+                room_tile = room_level[room_y * MAP_WIDTH + room_x] if room_level else {}
                 if not isinstance(room_tile, dict) or room_tile.get('rooms') != [room_id]:
                     self.add_error(file_path, f"Room boundary '{boundary_id}' side does not start on room '{room_id}'.")
                     continue
-                edge = (x, y, side)
-            key = (room_id, z)
+                edge = (room_x, room_y, side)
+            boundary_level_z = z
+            key = (room_id, boundary_level_z)
             edges = declared_edges.setdefault(key, set())
-            if edge in edges:
+            if edge in edges and 'target_at' not in boundary:
                 self.add_error(file_path, f"Room boundary '{boundary_id}' duplicates directed boundary edge for room '{room_id}'.")
             edges.add(edge)
 
