@@ -13,7 +13,7 @@
 		{
 			"id": "office_building",
 			"rooms": ["office", "garage_bay", "office_upper"],
-			"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
+			"footprint": {"x": 7, "y": 7, "width": 7, "height": 5},
 			"z": 0,
 			"building_geometry": {
 				"floor_tile": {"id": "concrete_00"},
@@ -25,8 +25,7 @@
 				{"z": 2, "rooms": ["office_upper"], "furniture_anchors": ["upper_bench_anchor"]}
 			],
 			"staircases": [
-				{"id": "office_staircase", "lower_at": [9, 9], "upper_at": [10, 9], "rotation": 90},
-				{"id": "corner_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0}
+				{"id": "office_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0}
 			],
 			"exterior_context": {"at": [6, 8], "z": 0},
 			"exterior_access_context": {"connection": "office_front_door"},
@@ -35,26 +34,26 @@
 				{"id": "garage_entrance", "connection": "garage_opening", "facing": "west"}
 			],
 			"furniture_anchors": [
-				{"id": "office_door_anchor", "at": [8, 9], "z": 0, "kind": "door"},
-				{"id": "garage_door_anchor", "at": [11, 8], "z": 0, "kind": "door"},
+				{"id": "office_door_anchor", "at": [7, 8], "z": 0, "kind": "door"},
+				{"id": "garage_door_anchor", "at": [11, 7], "z": 0, "kind": "door"},
 				{"id": "upper_bench_anchor", "at": [8, 8], "z": 2, "kind": "workstation"}
 			]
 		}
 	],
 	"building_surfaces": [
-		{"id": "ground_floor_surface", "building": "office_building", "kind": "floor", "z": 0},
-		{"id": "first_floor_surface", "building": "office_building", "kind": "floor", "z": 2},
-		{"id": "ground_ceiling", "building": "office_building", "kind": "ceiling", "z": 2},
+		{"id": "ground_floor", "building": "office_building", "kind": "floor", "z": 0},
+		{"id": "first_floor", "building": "office_building", "kind": "floor", "z": 2},
 		{"id": "first_floor_roof", "building": "office_building", "kind": "roof", "z": 2}
 	],
 	"building_supports": [
 		{"id": "northwest_column", "building": "office_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "column"},
-		{"id": "southeast_column", "building": "office_building", "at": [11, 10], "from_z": 0, "to_z": 2, "kind": "column"}
+		{"id": "southeast_column", "building": "office_building", "at": [13, 11], "from_z": 0, "to_z": 2, "kind": "column"}
 	],
 	"room_connections": [
 		{
 			"id": "office_front_door",
-			"at": [8, 9],
+			"at": [8, 8],
+			"target_at": [7, 8],
 			"z": 0,
 			"from": {"kind": "room", "id": "office"},
 			"to": {"kind": "exterior"}
@@ -62,6 +61,7 @@
 		{
 			"id": "garage_opening",
 			"at": [11, 8],
+			"target_at": [11, 7],
 			"z": 0,
 			"from": {"kind": "room", "id": "garage_bay"},
 			"to": {"kind": "exterior"}
@@ -70,28 +70,32 @@
 	"room_boundaries": [
 		{"id": "office_northwest_north", "room": "office", "at": [8, 7], "z": 0, "element": "wall_tile", "side": "south"},
 		{"id": "office_northeast_north", "room": "office", "at": [9, 7], "z": 0, "element": "wall_tile", "side": "south"},
-		{"id": "office_southwest_south", "room": "office", "at": [8, 10], "z": 0, "element": "wall_tile", "side": "north"},
-		{"id": "office_southeast_south", "room": "office", "at": [9, 10], "z": 0, "element": "wall_tile", "side": "north"},
-		{"id": "office_northwest_west", "room": "office", "at": [7, 8], "z": 0, "element": "wall_tile", "side": "east"},
-		{"id": "office_northeast_east", "room": "office", "at": [10, 8], "z": 0, "element": "wall_tile", "side": "west"},
-		{"id": "office_southeast_east", "room": "office", "at": [10, 9], "z": 0, "element": "wall_tile", "side": "west"},
-		{"id": "office_southwest_door", "room": "office", "at": [8, 9], "z": 0, "element": "door_furniture", "side": "west"},
-		{"id": "garage_east_door", "room": "garage_bay", "at": [11, 8], "z": 0, "element": "door_furniture", "side": "east"}
+		{"id": "office_south_west", "room": "office", "at": [8, 10], "room_at": [8, 9], "target_at": [8, 11], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "office_south_east", "room": "office", "at": [9, 10], "room_at": [9, 9], "target_at": [9, 11], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "office_south_outer_west", "room": "office", "at": [8, 10], "room_at": [8, 9], "target_at": [7, 11], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "office_south_outer_east", "room": "office", "at": [9, 10], "room_at": [9, 9], "target_at": [10, 11], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "office_west_door", "room": "office", "at": [8, 8], "target_at": [7, 8], "room_at": [8, 8], "z": 0, "element": "door_furniture", "side": "west"},
+		{"id": "office_west_south", "room": "office", "at": [7, 9], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "office_north_east", "room": "office", "at": [10, 8], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "office_south_east_wall", "room": "office", "at": [10, 9], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "garage_north_wall_1", "room": "garage_bay", "at": [12, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "garage_north_wall_2", "room": "garage_bay", "at": [13, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "garage_south_wall_1", "room": "garage_bay", "at": [12, 11], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "garage_south_wall_3", "room": "garage_bay", "at": [11, 11], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "garage_east_door", "room": "garage_bay", "at": [11, 8], "target_at": [11, 7], "z": 0, "element": "door_furniture", "side": "east"}
 	],
 	"operations": [
 		{"type": "rectangle", "x": 8, "y": 8, "width": 2, "height": 2, "tile": {"id": "concrete_00"}},
 		{"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 2, "height": 2},
-		{"type": "set", "x": 11, "y": 8, "tile": {"id": "concrete_00"}},
-		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 1, "height": 1},
-		{"type": "set", "x": 9, "y": 9, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}},
+		{"type": "rectangle", "x": 11, "y": 8, "width": 3, "height": 3, "tile": {"id": "concrete_00"}},
+		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 3, "height": 3},
 		{"type": "set", "x": 10, "y": 10, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}},
 		{"type": "set", "x": 11, "y": 10, "z": 1, "tile": {"id": "concrete_00"}},
 		{"type": "rectangle", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2, "tile": {"id": "concrete_00"}},
-		{"type": "set", "x": 10, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 90}},
 		{"type": "set", "x": 11, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 0}},
 		{"type": "room_rectangle", "room": "office_upper", "x": 8, "y": 8, "width": 2, "height": 2, "z": 2},
 		{"type": "furniture", "id": "bench_garden", "x": 8, "y": 8, "z": 2, "rotation": 0},
-		{"type": "furniture", "id": "door_wood", "x": 8, "y": 9, "rotation": 0},
-		{"type": "furniture", "id": "door_wood", "x": 11, "y": 8, "rotation": 0}
+		{"type": "furniture", "id": "door_wood", "x": 7, "y": 8, "rotation": 270},
+		{"type": "furniture", "id": "door_wood", "x": 11, "y": 7, "rotation": 0}
 	]
 }
