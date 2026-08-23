@@ -31,6 +31,11 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_room_boundaries.json` | `Mods/Dimensionfall/Maps/generated_room_boundaries.json` | A complete opt-in `enclosed` office with directional existing `brick_wall_00`/`door_wood` evidence, plus deliberately partial `covered_open` and `ruin` room references. |
 | `Tools/examples/map_recipe_single_level_building.json` | `Mods/Dimensionfall/Maps/generated_single_level_building.json` | One data-only rectangular `office_building` footprint containing the complete authored office and its existing wall/door evidence at logical `z: 0`. |
 | `Tools/examples/map_recipe_building_surfaces.json` | `Mods/Dimensionfall/Maps/generated_building_surfaces.json` | One validated building with complete owned-room, overhead, external-context, and exterior-access metadata: its office is interior, garage is open space, roof/ceiling classifications exist at logical `z: 1`, room-free terrain west of the footprint is the authored external context, and `office_front_door` explicitly associates that context with owned exterior access. It retains an opt-in composition without generated overhead geometry. |
+| `Tools/examples/map_recipe_furniture_anchors.json` | `Mods/Dimensionfall/Maps/generated_furniture_anchors.json` | A validated building with authored furniture-anchor metadata pointing at existing furniture inside its footprint. |
+| `Tools/examples/map_recipe_multi_entrance_building.json` | `Mods/Dimensionfall/Maps/generated_multi_entrance_building.json` | A validated building with two authored entrances: the office front door facing east and the garage opening facing west. |
+| `Tools/examples/map_recipe_multi_level_building_foundation.json` | `Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json` | A generated two-floor building with physical floors and walls, authored supports, per-floor surfaces, stairs, a ground floor at `z: 0`, an open gap at `z: 1`, and a first floor at `z: 2`. |
+| `Tools/examples/map_recipe_road_connections.json` | `Mods/Dimensionfall/Maps/generated_road_connections.json` | A simple outdoor map demonstrating authored map-edge connection metadata with roads entering from east and west. |
+| `Tools/examples/map_recipe_road_endpoints.json` | `Mods/Dimensionfall/Maps/generated_road_endpoints.json` | An outdoor map with authored road-endpoint anchors at the east and west edges, identifying where roads enter the map. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 
@@ -94,6 +99,31 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_building_surfaces.json \
   Mods/Dimensionfall/Maps/generated_building_surfaces.json
 
+# Ground-level authored furniture anchors for a validated building
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_furniture_anchors.json \
+  Mods/Dimensionfall/Maps/generated_furniture_anchors.json
+
+# Ground-level multi-entrance building with two authored doors
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_multi_entrance_building.json \
+  Mods/Dimensionfall/Maps/generated_multi_entrance_building.json
+
+# Two-floor building with floors, walls, supports, surfaces, and stairs
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_multi_level_building_foundation.json \
+  Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json
+
+# Ground-level authored map-edge road connection metadata
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_road_connections.json \
+  Mods/Dimensionfall/Maps/generated_road_connections.json
+
+# Ground-level authored map-edge road endpoint anchors
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_road_endpoints.json \
+  Mods/Dimensionfall/Maps/generated_road_endpoints.json
+
 # Two-level hill
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_two_level_hill.json \
@@ -114,6 +144,38 @@ python3 Tools/map_generator.py \
   --overwrite
 ```
 
+## Generate all maintained examples with overwrite
+
+`map_generator.py` accepts exactly one input recipe and one output path per invocation. To regenerate the whole set of maintained example maps in a single terminal command, loop over every recipe and call it once per recipe with `--overwrite`:
+
+```bash
+for recipe in \
+  Tools/examples/map_recipe.json \
+  Tools/examples/map_recipe_furniture_outdoor.json \
+  Tools/examples/map_recipe_area_meadow.json \
+  Tools/examples/map_recipe_area_entity_clearing.json \
+  Tools/examples/map_recipe_room_semantics.json \
+  Tools/examples/map_recipe_room_connections.json \
+  Tools/examples/map_recipe_room_boundaries.json \
+  Tools/examples/map_recipe_single_level_building.json \
+  Tools/examples/map_recipe_building_surfaces.json \
+  Tools/examples/map_recipe_furniture_anchors.json \
+  Tools/examples/map_recipe_multi_entrance_building.json \
+  Tools/examples/map_recipe_multi_level_building_foundation.json \
+  Tools/examples/map_recipe_road_connections.json \
+  Tools/examples/map_recipe_road_endpoints.json \
+  Tools/examples/map_recipe_two_level_hill.json \
+  Tools/examples/map_recipe_two_level_depression.json; do
+  id=$(python3 -c "import json,sys;print(json.load(open('$recipe'))['id'])")
+  python3 Tools/map_generator.py \
+    "$recipe" \
+    "Mods/Dimensionfall/Maps/$id.json" \
+    --overwrite
+done
+```
+
+The loop reads each recipe's `id` (which the examples keep in sync with their canonical output filename), then regenerates that map in `Mods/Dimensionfall/Maps/` with `--overwrite`. Use this for a quick end-to-end smoke test that every maintained recipe still generates and passes validation. If a recipe has been added or renamed, the loop covers whatever recipes you list, and the output filename always follows the recipe's `id`.
+
 After generating a map, start or restart Godot and follow the content-editor steps below. Files created directly with `map_generator.py` are not registered in the example runner's cleanup manifest. Remove them explicitly when manual testing is complete:
 
 ```bash
@@ -126,6 +188,11 @@ rm Mods/Dimensionfall/Maps/generated_room_connections.json
 rm Mods/Dimensionfall/Maps/generated_room_boundaries.json
 rm Mods/Dimensionfall/Maps/generated_single_level_building.json
 rm Mods/Dimensionfall/Maps/generated_building_surfaces.json
+rm Mods/Dimensionfall/Maps/generated_furniture_anchors.json
+rm Mods/Dimensionfall/Maps/generated_multi_entrance_building.json
+rm Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json
+rm Mods/Dimensionfall/Maps/generated_road_connections.json
+rm Mods/Dimensionfall/Maps/generated_road_endpoints.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
 rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
 ```
@@ -201,11 +268,11 @@ For the maintained room-semantics map, inspect `generated_room_semantics` in the
 
 For the maintained room-connections map, open `generated_room_connections`, save it, close it, and re-open it. Confirm that `office_front_door` remains an `office`→`exterior` link and `office_to_garage` remains an `office`→`garage_bay` link. In map preview and **save and test**, verify both existing `door_wood` features load and retain normal open/close interaction. This metadata must not create walls, roofs, lighting, weather, automatic enclosure, or a different door runtime behavior.
 
-For the maintained room-boundaries map, open `generated_room_boundaries`, save it, close it, and re-open it. Confirm that `office` retains `boundary_validation: "complete"`, its eight directed boundary records retain their cardinal `side`, and the office’s seven existing `brick_wall_00` tiles plus one existing `door_wood` feature remain present. The partial garage and ruin records deliberately have no completeness requirement. **Save and test** should confirm normal loading and existing door interaction only: this validation adds no geometry, collision, navigation, lighting, weather, or indoor behavior.
+For the maintained room-boundaries map, open `generated_room_boundaries`, save it, close it, and re-open it. Confirm that `office` retains `boundary_validation: "complete"`, its eight directed boundary records retain their cardinal `side`, and the office’s eleven existing `brick_wall_00` tiles plus one existing `door_wood` feature remain present. The partial garage and ruin records deliberately have no completeness requirement. **Save and test** should confirm normal loading and existing door interaction only: this validation adds no geometry, collision, navigation, lighting, weather, or indoor behavior.
 
-For the maintained single-level building map, open `generated_single_level_building`, save it, close it, and re-open it. Confirm the root `buildings` array retains `office_building` with its `office` room list, `[7, 7]` `4×4` footprint, and logical `z: 0`. Confirm the existing seven `brick_wall_00` tiles and one `door_wood` opening still load and retain normal interaction. The footprint is metadata only: **save and test** must not produce new terrain, walls, roofs, collision, navigation, lighting, weather, or indoor behavior.
+For the maintained single-level building map, open `generated_single_level_building`, save it, close it, and re-open it. Confirm the root `buildings` array retains `office_building` with its `office` room list, `[7, 7]` `4×4` footprint, and logical `z: 0`. Confirm the existing eleven `brick_wall_00` tiles and one `door_wood` opening still load and retain normal interaction. The footprint is metadata only: **save and test** must not produce new terrain, walls, roofs, collision, navigation, lighting, weather, or indoor behavior.
 
-For the maintained building-surfaces map, open `generated_building_surfaces`, save it, close it, and re-open it. Confirm `office_building` retains `access_validation: "complete"`, `interior_rooms: ["office"]`, `open_space_rooms: ["garage_bay"]`, `room_partition_validation: "complete"`, `overhead_validation: "complete"`, `exterior_context: {"at": [6, 8], "z": 0}`, and `exterior_access_context: {"connection": "office_front_door"}`. The external tile remains room-free terrain west of the footprint; the access context explicitly names the existing owned office-to-exterior connection without asserting a physical path between the two coordinates. The office and garage remain the exact authored partition of the building’s owned rooms, and roof/ceiling remain required classifications at `z: 1`. Their existing `office_front_door` and `garage_opening` room-to-exterior links independently satisfy authored access completeness. Confirm `office_roof` (`roof`) and `office_ceiling` (`ceiling`) retain their building references and logical `z: 1`, while `building_compositions` retains `office_complete_overhead` requiring both kinds. The seven `brick_wall_00` tiles plus both existing `door_wood` features must remain unchanged. **Save and test** must not add terrain, roof/ceiling tiles, meshes, collision, support, lighting, weather, indoor state, pathfinding, roads, or any runtime behavior; this slice verifies authored metadata persistence and cross-record consistency only.
+For the maintained building-surfaces map, open `generated_building_surfaces`, save it, close it, and re-open it. Confirm `office_building` retains `access_validation: "complete"`, `interior_rooms: ["office"]`, `open_space_rooms: ["garage_bay"]`, `room_partition_validation: "complete"`, `overhead_validation: "complete"`, `exterior_context: {"at": [6, 8], "z": 0}`, and `exterior_access_context: {"connection": "office_front_door"}`. The external tile remains room-free terrain west of the footprint; the access context explicitly names the existing owned office-to-exterior connection without asserting a physical path between the two coordinates. The office and garage remain the exact authored partition of the building’s owned rooms, and roof/ceiling remain required classifications at `z: 1`. Their existing `office_front_door` and `garage_opening` room-to-exterior links independently satisfy authored access completeness. Confirm `office_roof` (`roof`) and `office_ceiling` (`ceiling`) retain their building references and logical `z: 1`, while `building_compositions` retains `office_complete_overhead` requiring both kinds. The eleven `brick_wall_00` tiles plus both existing `door_wood` features must remain unchanged. **Save and test** must not add terrain, roof/ceiling tiles, meshes, collision, support, lighting, weather, indoor state, pathfinding, roads, or any runtime behavior; this slice verifies authored metadata persistence and cross-record consistency only.
 
 Dimensionfall also looks for a same-named `.png` map sprite during startup. The runner intentionally generates map JSON only, so Godot currently logs a non-fatal missing-resource error for that sprite. This does not prevent the JSON map from loading or the map editor's tile-grid preview from rendering it.
 

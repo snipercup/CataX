@@ -1660,7 +1660,7 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][10][7 * 32 + 7]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][11][9 * 32 + 9]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][9 * 32 + 10]["id"], "grass_ramp_00")
-        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
 
     def test_building_geometry_rejects_non_wall_wall_or_support_tiles(self):
         recipe = json.loads((ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json").read_text(encoding="utf-8"))
@@ -1729,7 +1729,7 @@ class MapGeneratorTests(unittest.TestCase):
             "required_surfaces": ["roof", "ceiling"],
         }])
         self.assertEqual(generated["levels"][11][7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
 
     def test_building_exterior_context_requires_adjacent_unclassified_terrain(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -2092,7 +2092,10 @@ class MapGeneratorTests(unittest.TestCase):
         }])
         level = generated["levels"][11]
         self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
+        # The office is fully enclosed: all four corners and both side walls are present.
+        for x, y in ((7, 7), (10, 7), (7, 10), (10, 10), (7, 9), (10, 8), (10, 9)):
+            self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
 
     def test_complete_enclosed_room_rejects_missing_or_wrong_directional_boundaries(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
@@ -2565,7 +2568,7 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertIn("furniture_anchors", building)
         anchors = building["furniture_anchors"]
         self.assertEqual(len(anchors), 2)
-        self.assertEqual(anchors[0], {"id": "office_door_anchor", "at": [8, 9], "z": 0, "kind": "door"})
+        self.assertEqual(anchors[0], {"id": "office_door_anchor", "at": [8, 8], "z": 0, "kind": "door"})
         self.assertEqual(anchors[1], {"id": "garage_door_anchor", "at": [11, 8], "z": 0, "kind": "door"})
 
     def test_furniture_anchors_reject_duplicate_ids(self):
@@ -3255,9 +3258,9 @@ class MapValidatorDimensionTests(unittest.TestCase):
             sum(boundary["element"] == "door_furniture" for boundary in generated["room_boundaries"]), 1
         )
         level = generated["levels"][11]
-        for x, y in ((8, 7), (9, 7), (8, 10), (9, 10), (7, 8), (10, 8), (10, 9)):
+        for x, y in ((7, 7), (8, 7), (9, 7), (10, 7), (7, 9), (8, 10), (9, 10), (10, 10), (7, 10), (10, 8), (10, 9)):
             self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][9 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
     def test_validates_opt_in_enclosed_room_boundary_completeness(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
         complete_map = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
