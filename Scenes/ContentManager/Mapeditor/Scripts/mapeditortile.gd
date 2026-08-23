@@ -61,6 +61,12 @@ func get_tile_texture():
 func set_tooltip(tileData: Dictionary) -> void:
 	var tooltiptext = "Tile Overview:\n"
 
+	# Display tile coordinates
+	var tile_index: int = get_index()
+	var coord_x: int = tile_index % 32
+	var coord_y: int = tile_index / 32
+	tooltiptext += "Coordinates: [" + str(coord_x) + ", " + str(coord_y) + "]\n"
+
 	# Display tile ID
 	var tile_id: String = tileData.get("id", "")
 	if tile_id == "":
