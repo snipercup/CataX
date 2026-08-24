@@ -38,6 +38,8 @@ The root must be a JSON object with these fields:
 | `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
 | `road_endpoints` | array | Authored road endpoint anchors at map edges. Optional; defaults to `[]`. |
 | `road_paths` | array | Authored cardinal routes between road endpoints. Optional; defaults to `[]`; a path may paint a map-local route with `tile`. |
+| `templates` | object | Minimal reusable template definitions with relative `levels`. Optional; requires `placements` when present. |
+| `placements` | array | Unrotated template placements with an origin and relative-level expansion. Optional; requires `templates` when present. |
 | `building_surfaces` | array | Authored per-building floor, ceiling, and roof surface semantics. Optional; defaults to `[]`. |
 | `building_supports` | array | Authored multi-level structural support paths. Optional; defaults to `[]`. |
 
@@ -129,6 +131,33 @@ Each path requires `id`, `from`, `to`, and `waypoints`; `tile` is optional for b
 
 `Tools/examples/map_recipe_road_endpoints.json` demonstrates the maintained example with two road endpoints: `west_entrance` at the west edge and `east_exit` at the east edge.
 
+## Minimal template expansion
+
+Templates are expanded before ordinary recipe validation and generation. The first supported form is intentionally small: a template defines relative `levels`, each placement supplies an origin and `rotation: 0`, and every template operation is translated into an ordinary root operation. Template operations omit `z`; the generator resolves `absolute z = placement.origin.z + level.dz`. Horizontal coordinates are translated by `placement.origin.at` without rotation.
+
+```json
+{
+  "templates": {
+    "small_cabin": {
+      "levels": [
+        {"dz": 0, "operations": [
+          {"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}}
+        ]},
+        {"dz": 2, "operations": [
+          {"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}}
+        ]}
+      ]
+    }
+  },
+  "placements": [
+    {"template": "small_cabin", "origin": {"at": [10, 10], "z": 0}, "rotation": 0}
+  ]
+}
+```
+
+The minimal expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, non-zero rotations, unknown templates, duplicate relative `dz` levels, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout, nested templates, parameters, anchor-to-anchor composition, or automatic rotation. The generated map contains only the expanded ordinary recipe output; `templates` and `placements` are not serialized.
+
+`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion and relative `dz` placement.
 ## Logical levels
 
 Map level-array index `10` is logical ground level `z: 0`. The conversion is:

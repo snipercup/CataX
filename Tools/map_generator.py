@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import random
@@ -135,11 +136,117 @@ RECIPE_FIELDS = {
     "connections",
     "road_endpoints",
     "road_paths",
+    "templates",
+    "placements",
 }
 
 
 class RecipeError(ValueError):
     """Raised when a map recipe is invalid."""
+
+
+def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
+    templates = recipe.get("templates")
+    placements = recipe.get("placements")
+    if templates is None and placements is None:
+        return recipe
+    if not isinstance(templates, dict) or not templates:
+        raise RecipeError("templates must be a non-empty object")
+    if not isinstance(placements, list) or not placements:
+        raise RecipeError("placements must be a non-empty array")
+    if "levels" in recipe:
+        raise RecipeError("templates cannot be combined with recipe.levels in the minimal template expansion")
+
+    expanded = copy.deepcopy(recipe)
+    expanded.pop("templates", None)
+    expanded.pop("placements", None)
+    expanded_operations = expanded.setdefault("operations", [])
+    if not isinstance(expanded_operations, list):
+        raise RecipeError("operations must be an array when templates are used")
+
+    for template_id, template in templates.items():
+        context = f"templates.{template_id}"
+        if not isinstance(template_id, str) or DEFINITION_NAME_PATTERN.fullmatch(template_id) is None:
+            raise RecipeError(f"{context} must use a valid template ID")
+        if not isinstance(template, dict) or set(template) != {"levels"}:
+            raise RecipeError(f"{context} must define only levels")
+        levels = template["levels"]
+        if not isinstance(levels, list) or not levels:
+            raise RecipeError(f"{context}.levels must be a non-empty array")
+        seen_dz: set[int] = set()
+        for level_index, level in enumerate(levels):
+            level_context = f"{context}.levels[{level_index}]"
+            if not isinstance(level, dict) or set(level) != {"dz", "operations"}:
+                raise RecipeError(f"{level_context} must define dz and operations")
+            dz = level["dz"]
+            if type(dz) is not int or not MIN_LOGICAL_Z <= dz <= MAX_LOGICAL_Z:
+                raise RecipeError(f"{level_context}.dz must be an integer between -10 and 10")
+            if dz in seen_dz:
+                raise RecipeError(f"{level_context}.dz duplicates relative level {dz}")
+            seen_dz.add(dz)
+            if not isinstance(level["operations"], list):
+                raise RecipeError(f"{level_context}.operations must be an array")
+
+    for placement_index, placement in enumerate(placements):
+        context = f"placements[{placement_index}]"
+        if not isinstance(placement, dict) or set(placement) != {"template", "origin", "rotation"}:
+            raise RecipeError(f"{context} must define template, origin, and rotation")
+        template_id = placement["template"]
+        if not isinstance(template_id, str) or template_id not in templates:
+            raise RecipeError(f"{context}.template references unknown template '{template_id}'")
+        origin = placement["origin"]
+        if (
+            not isinstance(origin, dict)
+            or set(origin) != {"at", "z"}
+            or not isinstance(origin.get("at"), list)
+            or len(origin["at"]) != 2
+            or any(type(value) is not int for value in origin["at"])
+            or type(origin.get("z")) is not int
+        ):
+            raise RecipeError(f"{context}.origin must define a two-integer at and integer z")
+        if placement["rotation"] != 0:
+            raise RecipeError(f"{context}.rotation only supports 0 in the minimal template expansion")
+        for level in templates[template_id]["levels"]:
+            absolute_z = origin["z"] + level["dz"]
+            if not MIN_LOGICAL_Z <= absolute_z <= MAX_LOGICAL_Z:
+                raise RecipeError(f"{context} places relative level dz {level['dz']} outside logical z bounds")
+            for operation_index, operation in enumerate(level["operations"]):
+                operation_context = f"{context}.{template_id}.levels[{level['dz']}].operations[{operation_index}]"
+                if not isinstance(operation, dict) or "type" not in operation:
+                    raise RecipeError(f"{operation_context} must be an operation object")
+                if "z" in operation:
+                    raise RecipeError(f"{operation_context}.z must be omitted; use the enclosing relative level dz")
+                translated = copy.deepcopy(operation)
+                operation_type = translated["type"]
+                if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
+                    if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
+                        raise RecipeError(f"{operation_context} requires integer x and y")
+                    translated["x"] += origin["at"][0]
+                    translated["y"] += origin["at"][1]
+                elif operation_type in {"scatter", "furniture_scatter"}:
+                    region = translated.get("region")
+                    if not isinstance(region, dict) or not isinstance(region.get("x"), int) or not isinstance(region.get("y"), int):
+                        raise RecipeError(f"{operation_context}.region requires integer x and y")
+                    region["x"] += origin["at"][0]
+                    region["y"] += origin["at"][1]
+                elif operation_type == "line":
+                    for endpoint in ("from", "to"):
+                        point = translated.get(endpoint)
+                        if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
+                            raise RecipeError(f"{operation_context}.{endpoint} must be a two-integer coordinate")
+                        point[0] += origin["at"][0]
+                        point[1] += origin["at"][1]
+                elif operation_type == "pattern":
+                    point = translated.get("at")
+                    if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
+                        raise RecipeError(f"{operation_context}.at must be a two-integer coordinate")
+                    point[0] += origin["at"][0]
+                    point[1] += origin["at"][1]
+                else:
+                    raise RecipeError(f"{operation_context}.type '{operation_type}' is not supported by minimal templates")
+                translated["z"] = absolute_z
+                expanded_operations.append(translated)
+    return expanded
 
 
 def _validate_unicode(value: str, context: str) -> None:
@@ -2980,6 +3087,7 @@ def generate_map(
     """Validate a recipe and return map data matching DMap's saved format."""
     if not isinstance(recipe, dict):
         raise RecipeError("recipe must be a JSON object")
+    recipe = _expand_templates(recipe)
     unknown_fields = sorted(set(recipe) - RECIPE_FIELDS)
     if unknown_fields:
         raise RecipeError(f"unknown recipe field '{unknown_fields[0]}'")
