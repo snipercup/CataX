@@ -82,6 +82,40 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][13][13 * 32 + 11], {"id": "concrete_00"})
         self.assertEqual(first["levels"][12], [])
 
+    def test_template_rotation_transforms_footprints_anchors_and_facing_without_changing_dz(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "rotated_segment": {
+                "anchors": {
+                    "entry": {"at": [0, 0], "z": 0, "facing": "north"},
+                    "exit": {"at": [2, 0], "z": 0, "facing": "east"},
+                },
+                "levels": [
+                    {"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": 3, "height": 2, "tile": {"id": "dirt_light_00", "rotation": 0}}]},
+                    {"dz": 1, "operations": [{"type": "set", "x": 2, "y": 1, "tile": {"id": "concrete_00"}}]},
+                ],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "rotated_segment", "origin": {"at": [10, 10], "z": 0}, "rotation": 90},
+            {"template": "rotated_segment", "anchor_to": {"placement": 0, "anchor": "exit"}, "at_anchor": "entry", "rotation": 180},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        # The 3×2 footprint becomes a 2×3 footprint at x=9..10, y=10..12.
+        self.assertEqual(generated["levels"][10][10 * 32 + 9]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][10 * 32 + 9]["rotation"], 90)
+        self.assertEqual(generated["levels"][10][12 * 32 + 10]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][12 * 32 + 10]["rotation"], 180)
+        self.assertEqual(generated["levels"][10][10 * 32 + 11]["id"], "grass_plain_01")
+        # Relative dz is preserved: the local [2,1] feature moves to [9,12] at z1.
+        self.assertEqual(generated["levels"][11][12 * 32 + 9], {"id": "concrete_00"})
+        # The first exit rotates east→south and resolves at [10,12]; the 180° entry aligns there.
+        self.assertEqual(generated["levels"][10][12 * 32 + 10]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][12 * 32 + 10]["rotation"], 180)
+        self.assertEqual(generated["levels"][11][11 * 32 + 8], {"id": "concrete_00"})
+
     def test_template_parameters_apply_defaults_and_placement_variants(self):
         recipe = valid_recipe()
         recipe["templates"] = {
@@ -279,10 +313,10 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][10][10 * 32 + 14]["id"], "dirt_light_01")
         self.assertEqual(first["levels"][11][10 * 32 + 14]["id"], "metal_wall_00")
         self.assertEqual(first["levels"][12][10 * 32 + 17], {})
-        self.assertEqual(first["levels"][10][16 * 32 + 10]["id"], "dirt_light_00")
-        self.assertEqual(first["levels"][11][16 * 32 + 14]["id"], "brick_wall_00")
-        self.assertEqual(first["levels"][12][18 * 32 + 14]["id"], "concrete_00")
-        self.assertEqual(first["levels"][12][18 * 32 + 15], {})
+        self.assertEqual(first["levels"][10][16 * 32 + 8]["id"], "dirt_light_00")
+        self.assertEqual(first["levels"][11][20 * 32 + 8]["id"], "brick_wall_00")
+        self.assertEqual(first["levels"][12][20 * 32 + 10]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][20 * 32 + 11], {})
         self.assertEqual(first["levels"][12][10 * 32 + 18], {})
 
     def test_legacy_regions_and_every_operation_can_target_logical_z(self):
