@@ -6,6 +6,10 @@
 	"base_tile": {"id": "grass_plain_01"},
 	"templates": {
 		"small_cabin": {
+			"anchors": {
+				"entrance": {"at": [0, 1], "z": 0, "facing": "west"},
+				"exit": {"at": [4, 1], "z": 0, "facing": "east"}
+			},
 			"levels": [
 				{
 					"dz": 0,
@@ -33,6 +37,12 @@
 		{
 			"template": "small_cabin",
 			"origin": {"at": [10, 10], "z": 0},
+			"rotation": 0
+		},
+		{
+			"template": "small_cabin",
+			"anchor_to": {"placement": 0, "anchor": "exit"},
+			"at_anchor": "entrance",
 			"rotation": 0
 		}
 	]

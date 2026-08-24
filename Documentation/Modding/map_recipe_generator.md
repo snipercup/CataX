@@ -38,8 +38,8 @@ The root must be a JSON object with these fields:
 | `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
 | `road_endpoints` | array | Authored road endpoint anchors at map edges. Optional; defaults to `[]`. |
 | `road_paths` | array | Authored cardinal routes between road endpoints. Optional; defaults to `[]`; a path may paint a map-local route with `tile`. |
-| `templates` | object | Minimal reusable template definitions with relative `levels`. Optional; requires `placements` when present. |
-| `placements` | array | Unrotated template placements with an origin and relative-level expansion. Optional; requires `templates` when present. |
+| `templates` | object | Reusable template definitions with relative `levels` and optional named `anchors`. Optional; requires `placements` when present. |
+| `placements` | array | Template placements with a literal `origin` or anchor-to-anchor alignment through `anchor_to` and `at_anchor`. |
 | `building_surfaces` | array | Authored per-building floor, ceiling, and roof surface semantics. Optional; defaults to `[]`. |
 | `building_supports` | array | Authored multi-level structural support paths. Optional; defaults to `[]`. |
 
@@ -133,31 +133,40 @@ Each path requires `id`, `from`, `to`, and `waypoints`; `tile` is optional for b
 
 ## Minimal template expansion
 
-Templates are expanded before ordinary recipe validation and generation. The first supported form is intentionally small: a template defines relative `levels`, each placement supplies an origin and `rotation: 0`, and every template operation is translated into an ordinary root operation. Template operations omit `z`; the generator resolves `absolute z = placement.origin.z + level.dz`. Horizontal coordinates are translated by `placement.origin.at` without rotation.
+Templates are expanded before ordinary recipe validation and generation. A template defines relative `levels` and may define named anchors as `{ "at": [x, y], "z": dz, "facing": "north" }`. Anchors are relative to the placement origin and are not serialized into the generated map. A placement may use a literal `origin`, or align its `at_anchor` to an anchor on a prior placement using `anchor_to`.
 
 ```json
 {
   "templates": {
     "small_cabin": {
+      "anchors": {
+        "entrance": {"at": [0, 1], "z": 0, "facing": "west"},
+        "exit": {"at": [4, 1], "z": 0, "facing": "east"}
+      },
       "levels": [
         {"dz": 0, "operations": [
-          {"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}}
-        ]},
-        {"dz": 2, "operations": [
           {"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}}
         ]}
       ]
     }
   },
   "placements": [
-    {"template": "small_cabin", "origin": {"at": [10, 10], "z": 0}, "rotation": 0}
+    {"template": "small_cabin", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+    {
+      "template": "small_cabin",
+      "anchor_to": {"placement": 0, "anchor": "exit"},
+      "at_anchor": "entrance",
+      "rotation": 0
+    }
   ]
 }
 ```
 
-The minimal expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, non-zero rotations, unknown templates, duplicate relative `dz` levels, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout, nested templates, parameters, anchor-to-anchor composition, or automatic rotation. The generated map contains only the expanded ordinary recipe output; `templates` and `placements` are not serialized.
+For anchor-to-anchor placement, the referenced placement must appear earlier in the `placements` array. The generator computes the new origin so the placed template's `at_anchor` has the same absolute `[x, y, z]` as the referenced anchor. To place separate structures side by side, author connection anchors on the exterior edge immediately beyond each footprint (for example, a 4×4 template can use west `[0, 1]` and east `[4, 1]` anchors); interior anchors intentionally produce overlapping geometry when coincident. Anchor `facing` is preserved as metadata for future rotation-aware composition; it does not yet rotate or enforce a facing relationship.
 
-`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion and relative `dz` placement.
+The minimal expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, non-zero rotations, unknown templates or anchors, duplicate relative `dz` levels, forward anchor references, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout, nested templates, parameters, or automatic rotation. The generated map contains only expanded ordinary recipe output; `templates` and `placements` are not serialized.
+
+`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion, relative `dz` placement, and anchor-to-anchor alignment.
 ## Logical levels
 
 Map level-array index `10` is logical ground level `z: 0`. The conversion is:
