@@ -8,12 +8,17 @@
 		"small_cabin": {
 			"parameters": {
 				"floor_tile": {"type": "tile_id", "default": "concrete_00"},
-				"support_tile": {"type": "tile_id", "default": "dirt_light_00"},
-				"wall_material": {"type": "enum", "values": ["brick", "metal"], "default": "brick"},
+				"style": {
+					"type": "object",
+					"properties": {
+						"support_tile": {"type": "tile_id", "default": "dirt_light_00"},
+						"wall_tile": {"type": "tile_id", "default": "brick_wall_00"},
+						"roof_tile": {"type": "tile_id", "default": "concrete_00"},
+						"include_roof": {"type": "boolean", "default": true}
+					}
+				},
 				"width": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4},
-				"height": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4},
-				"features": {"type": "string_list", "values": ["roof"], "default": ["roof"]},
-				"roof_tile": {"type": "tile_id", "default": "concrete_00"}
+				"height": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4}
 			},
 			"anchors": {
 				"entrance": {"at": [0, 1], "z": 0, "facing": "west"},
@@ -24,20 +29,19 @@
 					"dz": 0,
 					"operations": [
 						{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$floor_tile"}},
-						{"type": "rectangle_outline", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$support_tile"}}
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$style.support_tile"}}
 					]
 				},
 				{
 					"dz": 1,
 					"operations": [
-						{"type": "rectangle_outline", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "brick_wall_00"}, "when": {"parameter": "wall_material", "equals": "brick"}},
-						{"type": "rectangle_outline", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "metal_wall_00"}, "when": {"parameter": "wall_material", "equals": "metal"}}
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$style.wall_tile"}}
 					]
 				},
 				{
 					"dz": 2,
 					"operations": [
-						{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$roof_tile"}, "when": {"parameter": "features", "contains": "roof"}}
+						{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$style.roof_tile"}, "when": "$style.include_roof"}
 					]
 				}
 			]
@@ -53,7 +57,7 @@
 			"template": "small_cabin",
 			"anchor_to": {"placement": 0, "anchor": "exit"},
 			"at_anchor": "entrance",
-			"parameters": {"support_tile": "dirt_light_01", "wall_material": "metal", "features": []},
+			"parameters": {"style": {"support_tile": "dirt_light_01", "wall_tile": "metal_wall_00", "include_roof": false}},
 			"rotation": "auto"
 		},
 		{
