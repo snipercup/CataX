@@ -254,6 +254,69 @@ def _include_template_operation(
     return condition["contains"] in value
 
 
+def _rotate_template_point(point: list[int], rotation: int) -> list[int]:
+    x, y = point
+    if rotation == 0:
+        return [x, y]
+    if rotation == 90:
+        return [-y, x]
+    if rotation == 180:
+        return [-x, -y]
+    return [y, -x]
+
+
+def _rotate_template_rectangle(operation: dict[str, Any], rotation: int) -> None:
+    x = operation["x"]
+    y = operation["y"]
+    width = operation["width"]
+    height = operation["height"]
+    if rotation == 90:
+        operation["x"] = -(y + height - 1)
+        operation["y"] = x
+        operation["width"] = height
+        operation["height"] = width
+    elif rotation == 180:
+        operation["x"] = -(x + width - 1)
+        operation["y"] = -(y + height - 1)
+    elif rotation == 270:
+        operation["x"] = y
+        operation["y"] = -(x + width - 1)
+        operation["width"] = height
+        operation["height"] = width
+
+
+def _rotate_template_facing(facing: str, rotation: int) -> str:
+    directions = ["north", "east", "south", "west"]
+    return directions[(directions.index(facing) + rotation // 90) % len(directions)]
+
+
+def _rotate_template_operation(operation: dict[str, Any], rotation: int, context: str) -> None:
+    if rotation == 0:
+        return
+    operation_type = operation["type"]
+    if operation_type in {"set", "furniture"}:
+        operation["x"], operation["y"] = _rotate_template_point([operation["x"], operation["y"]], rotation)
+    elif operation_type in {"rectangle", "rectangle_outline", "area_rectangle", "room_rectangle"}:
+        _rotate_template_rectangle(operation, rotation)
+    elif operation_type in {"scatter", "furniture_scatter"}:
+        region = operation["region"]
+        rectangle = {"x": region["x"], "y": region["y"], "width": region["width"], "height": region["height"]}
+        _rotate_template_rectangle(rectangle, rotation)
+        region.update(rectangle)
+    elif operation_type == "line":
+        operation["from"] = _rotate_template_point(operation["from"], rotation)
+        operation["to"] = _rotate_template_point(operation["to"], rotation)
+    elif operation_type == "pattern":
+        operation["at"] = _rotate_template_point(operation["at"], rotation)
+    else:
+        raise RecipeError(f"{context}.type '{operation_type}' is not supported by templates")
+    if type(operation.get("rotation")) is int:
+        operation["rotation"] = (operation["rotation"] + rotation) % 360
+    tile = operation.get("tile")
+    if isinstance(tile, dict) and type(tile.get("rotation")) is int:
+        tile["rotation"] = (tile["rotation"] + rotation) % 360
+
+
 def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
     templates = recipe.get("templates")
     placements = recipe.get("placements")
@@ -324,8 +387,9 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
         template_id = placement["template"]
         if not isinstance(template_id, str) or template_id not in templates:
             raise RecipeError(f"{context}.template references unknown template '{template_id}'")
-        if placement["rotation"] != 0:
-            raise RecipeError(f"{context}.rotation only supports 0 in the minimal template expansion")
+        rotation = placement["rotation"]
+        if type(rotation) is not int or rotation not in {0, 90, 180, 270}:
+            raise RecipeError(f"{context}.rotation must be one of 0, 90, 180, or 270")
         parameters = _resolve_template_parameters(
             templates[template_id].get("parameters"), placement.get("parameters"), context
         )
@@ -356,7 +420,8 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 raise RecipeError(f"{context}.at_anchor must reference an anchor on the placed template")
             target = resolved_anchors[anchor_to["placement"]][anchor_to["anchor"]]
             local = template_anchors[at_anchor]
-            origin_at = [target["at"][0] - local["at"][0], target["at"][1] - local["at"][1]]
+            rotated_at = _rotate_template_point(local["at"], rotation)
+            origin_at = [target["at"][0] - rotated_at[0], target["at"][1] - rotated_at[1]]
             origin_z = target["z"] - local["z"]
         for level in templates[template_id]["levels"]:
             absolute_z = origin_z + level["dz"]
@@ -376,6 +441,7 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                     copy.deepcopy(operation), parameters, operation_context
                 )
                 translated.pop("when", None)
+                _rotate_template_operation(translated, rotation, operation_context)
                 operation_type = translated["type"]
                 if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
                     if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
@@ -407,10 +473,11 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 expanded_operations.append(translated)
         resolved_template_anchors: dict[str, dict[str, Any]] = {}
         for anchor_id, anchor in template_anchors.items():
+            rotated_at = _rotate_template_point(anchor["at"], rotation)
             resolved_anchor = {
-                "at": [origin_at[0] + anchor["at"][0], origin_at[1] + anchor["at"][1]],
+                "at": [origin_at[0] + rotated_at[0], origin_at[1] + rotated_at[1]],
                 "z": origin_z + anchor["z"],
-                **({"facing": anchor["facing"]} if "facing" in anchor else {}),
+                **({"facing": _rotate_template_facing(anchor["facing"], rotation)} if "facing" in anchor else {}),
             }
             if not (0 <= resolved_anchor["at"][0] < MAP_WIDTH and 0 <= resolved_anchor["at"][1] < MAP_HEIGHT):
                 raise RecipeError(f"{context}.{anchor_id} resolves outside map bounds")
