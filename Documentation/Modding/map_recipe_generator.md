@@ -142,6 +142,14 @@ Templates are expanded before ordinary recipe validation and generation. A templ
       "parameters": {
         "floor_tile": {"type": "tile_id", "default": "concrete_00"},
         "wall_material": {"type": "enum", "values": ["brick", "metal"], "default": "brick"},
+        "style": {
+          "type": "object",
+          "properties": {
+            "support_tile": {"type": "tile_id", "default": "dirt_light_00"},
+            "wall_tile": {"type": "tile_id", "default": "brick_wall_00"},
+            "include_roof": {"type": "boolean", "default": true}
+          }
+        },
         "width": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4},
         "height": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4},
         "features": {"type": "string_list", "values": ["roof"], "default": ["roof"]}
@@ -163,7 +171,7 @@ Templates are expanded before ordinary recipe validation and generation. A templ
       "template": "small_cabin",
       "anchor_to": {"placement": 0, "anchor": "exit"},
       "at_anchor": "entrance",
-      "parameters": {"wall_material": "metal", "features": []},
+      "parameters": {"style": {"wall_tile": "metal_wall_00", "include_roof": false}},
       "rotation": 0
     }
   ]
@@ -172,11 +180,11 @@ Templates are expanded before ordinary recipe validation and generation. A templ
 
 For anchor-to-anchor placement, the referenced placement must appear earlier in the `placements` array. `rotation` accepts `0`, `90`, `180`, or `270` degrees clockwise around the template origin. It rotates all local horizontal operation coordinates, rectangular footprints, line endpoints, scatter regions, patterns, anchors, anchor `facing`, and explicit tile/furniture/pattern rotations; it never changes relative `dz`. Set `rotation` to `"auto"` only with `anchor_to` and `at_anchor` to derive the quarter-turn that makes the placed anchor face opposite the referenced anchor. Auto rotation requires both connected anchors to declare cardinal `facing` values; it resolves the placed `at_anchor` after rotation before aligning it to the prior anchor. To place separate structures side by side, author connection anchors on the exterior edge immediately beyond each footprint (for example, a 4×4 template can use west `[0, 1]` and east `[4, 1]` anchors); interior anchors intentionally produce overlapping geometry when coincident.
 
-Templates may declare typed `parameters`. `tile_id` values substitute exact `$parameter_name` strings before normal operation validation and may provide a string `default`; without a default they are required on every placement. `boolean` values may provide a boolean `default` and control a template operation with `"when": "$parameter_name"`. `enum` values require a non-empty, unique string `values` array and may provide a default from that array; they select semantic operation variants with `"when": {"parameter": "material", "equals": "metal"}`. `integer` values require inclusive integer `minimum` and `maximum` bounds and can substitute operation coordinates, dimensions, or counts. `string_list` values require an allowed non-empty, unique string `values` array; each resolved list is unique and may be empty, and `"when": {"parameter": "features", "contains": "roof"}` conditionally includes an operation. Placements override declared values through `parameters`. Unknown overrides, missing required values, malformed declarations, invalid enum/list values, out-of-range integers, unresolved `$` references, and invalid conditions are rejected. Substituted tile IDs then follow the same tile-database validation as literal tile IDs.
+Templates may declare typed `parameters`. `tile_id` values substitute exact `$parameter_name` strings before normal operation validation and may provide a string `default`; without a default they are required on every placement. `boolean` values may provide a boolean `default` and control a template operation with `"when": "$parameter_name"`. `enum` values require a non-empty, unique string `values` array and may provide a default from that array; they select semantic operation variants with `"when": {"parameter": "material", "equals": "metal"}`. `integer` values require inclusive integer `minimum` and `maximum` bounds and can substitute operation coordinates, dimensions, or counts. `string_list` values require an allowed non-empty, unique string `values` array; each resolved list is unique and may be empty, and `"when": {"parameter": "features", "contains": "roof"}` conditionally includes an operation. `object` values require a non-empty declared `properties` object; each property uses any supported parameter schema, resolves its own default or required value, and rejects unknown fields. Use an exact dotted reference such as `$style.wall_tile` or `$style.include_roof` to substitute a declared object field. Placements override declared values through `parameters`. Unknown overrides, missing required values, malformed declarations, invalid enum/list values, out-of-range integers, unresolved `$` references, and invalid conditions are rejected. Substituted tile IDs then follow the same tile-database validation as literal tile IDs.
 
-The expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, unsupported rotations, automatic rotation without a connected facing anchor pair, unknown templates or anchors, duplicate relative `dz` levels, forward anchor references, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout, nested templates, numeric collections, or structured object parameters. The generated map contains only expanded ordinary recipe output; `templates` and `placements` are not serialized.
+The expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, unsupported rotations, automatic rotation without a connected facing anchor pair, unknown templates or anchors, duplicate relative `dz` levels, forward anchor references, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout or nested templates. The generated map contains only expanded ordinary recipe output; `templates` and `placements` are not serialized.
 
-`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion, relative `dz` placement, anchor-to-anchor alignment, automatic facing-compatible rotation, tile variants, collection-selected roof inclusion, bounded integer footprint dimensions, and a rotated 5×3 footprint.
+`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion, relative `dz` placement, anchor-to-anchor alignment, automatic facing-compatible rotation, structured style-object overrides, bounded integer footprint dimensions, and a rotated 5×3 footprint.
 ## Logical levels
 
 Map level-array index `10` is logical ground level `z: 0`. The conversion is:

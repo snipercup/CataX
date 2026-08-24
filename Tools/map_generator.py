@@ -175,9 +175,21 @@ def _resolve_template_parameters(
             "enum": {"type", "values", "default"},
             "integer": {"type", "minimum", "maximum", "default"},
             "string_list": {"type", "values", "default"},
+            "object": {"type", "properties"},
         }
         if parameter_type not in allowed_fields or set(definition) - allowed_fields[parameter_type]:
             raise RecipeError(f"{parameter_context} has an unsupported parameter definition")
+        if parameter_type == "object":
+            properties = definition.get("properties")
+            if not isinstance(properties, dict) or not properties:
+                raise RecipeError(f"{parameter_context}.properties must be a non-empty object")
+            value = overrides.get(parameter_id, {})
+            if not isinstance(value, dict):
+                raise RecipeError(f"{parameter_context} requires an object value")
+            resolved[parameter_id] = _resolve_template_parameters(
+                properties, value, parameter_context, require_values=require_values
+            )
+            continue
         if parameter_type in {"enum", "string_list"}:
             values = definition.get("values")
             if not isinstance(values, list) or not values or any(not isinstance(value, str) or not value for value in values) or len(set(values)) != len(values):
@@ -216,10 +228,16 @@ def _resolve_template_parameters(
 
 def _substitute_template_parameters(value: Any, parameters: dict[str, Any], context: str) -> Any:
     if isinstance(value, str) and value.startswith("$"):
-        parameter_id = value[1:]
+        reference = value[1:].split(".")
+        parameter_id = reference.pop(0)
         if parameter_id not in parameters:
             raise RecipeError(f"{context} references unknown template parameter '{parameter_id}'")
-        return parameters[parameter_id]
+        resolved = parameters[parameter_id]
+        for property_id in reference:
+            if not isinstance(resolved, dict) or property_id not in resolved:
+                raise RecipeError(f"{context} references unknown object parameter field '{value[1:]}'")
+            resolved = resolved[property_id]
+        return resolved
     if isinstance(value, list):
         return [_substitute_template_parameters(entry, parameters, context) for entry in value]
     if isinstance(value, dict):

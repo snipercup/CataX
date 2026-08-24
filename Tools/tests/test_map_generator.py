@@ -287,6 +287,69 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "contains requires a string_list parameter"):
             generate_map(recipe, TILES_PATH)
 
+    def test_template_object_parameter_resolves_declared_fields_and_placement_overrides(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "styled_cell": {
+                "parameters": {
+                    "style": {
+                        "type": "object",
+                        "properties": {
+                            "ground": {"type": "tile_id", "default": "dirt_light_00"},
+                            "top": {"type": "tile_id", "default": "concrete_00"},
+                            "include_top": {"type": "boolean", "default": True},
+                        },
+                    },
+                },
+                "levels": [
+                    {"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "$style.ground"}}]},
+                    {"dz": 1, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "$style.top"}, "when": "$style.include_top"}]},
+                ],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "styled_cell", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {
+                "template": "styled_cell",
+                "origin": {"at": [11, 10], "z": 0},
+                "parameters": {"style": {"ground": "dirt_light_01", "include_top": False}},
+                "rotation": 0,
+            },
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 10], {"id": "concrete_00"})
+        self.assertEqual(generated["levels"][10][10 * 32 + 11], {"id": "dirt_light_01"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 11], {})
+
+    def test_template_object_parameters_reject_invalid_values_and_references(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "styled_cell": {
+                "parameters": {
+                    "style": {
+                        "type": "object",
+                        "properties": {"ground": {"type": "tile_id"}},
+                    },
+                },
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "$style.ground"}}]}],
+            }
+        }
+        recipe["placements"] = [{"template": "styled_cell", "origin": {"at": [10, 10], "z": 0}, "parameters": {"style": {}}, "rotation": 0}]
+        with self.assertRaisesRegex(RecipeError, "requires a value"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {"style": {"ground": "dirt_light_00", "extra": "concrete_00"}}
+        with self.assertRaisesRegex(RecipeError, "unknown parameter 'extra'"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {"style": {"ground": "dirt_light_00"}}
+        recipe["templates"]["styled_cell"]["levels"][0]["operations"][0]["tile"]["id"] = "$style.missing"
+        with self.assertRaisesRegex(RecipeError, "unknown object parameter field 'style.missing'"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_parameters_reject_missing_unknown_and_unresolved_values(self):
         recipe = valid_recipe()
         recipe["templates"] = {
