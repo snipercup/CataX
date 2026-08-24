@@ -82,6 +82,40 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][13][13 * 32 + 11], {"id": "concrete_00"})
         self.assertEqual(first["levels"][12], [])
 
+    def test_template_anchors_align_a_later_placement_to_a_prior_placement(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "segment": {
+                "anchors": {
+                    "entry": {"at": [0, 0], "z": 0, "facing": "east"},
+                    "exit": {"at": [2, 0], "z": 1},
+                },
+                "levels": [
+                    {"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "dirt_light_00"}}]},
+                    {"dz": 1, "operations": [{"type": "set", "x": 2, "y": 0, "tile": {"id": "concrete_00"}}]},
+                ],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "segment", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "segment", "anchor_to": {"placement": 0, "anchor": "exit"}, "at_anchor": "entry", "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 12], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][10][10 * 32 + 12], {"id": "grass_plain_01"})
+        self.assertEqual(generated["levels"][12][10 * 32 + 14], {"id": "concrete_00"})
+
+    def test_template_anchor_placement_requires_a_prior_anchor(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {"segment": {"anchors": {"entry": {"at": [0, 0], "z": 0}}, "levels": [{"dz": 0, "operations": []}]}}
+        recipe["placements"] = [{"template": "segment", "anchor_to": {"placement": 0, "anchor": "entry"}, "at_anchor": "entry", "rotation": 0}]
+
+        with self.assertRaisesRegex(RecipeError, "must reference a prior placement"):
+            generate_map(recipe, TILES_PATH)
+
     def test_small_cabin_template_example_generates(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_small_cabin_template.json"
         first = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
@@ -91,6 +125,10 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][10][10 * 32 + 10]["id"], "dirt_light_00")
         self.assertEqual(first["levels"][11][10 * 32 + 10]["id"], "brick_wall_00")
         self.assertEqual(first["levels"][12][10 * 32 + 10]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][10 * 32 + 13]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][10 * 32 + 14]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][10 * 32 + 17]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][10 * 32 + 18], {})
 
     def test_legacy_regions_and_every_operation_can_target_logical_z(self):
         recipe = valid_recipe()

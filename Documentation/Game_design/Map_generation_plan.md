@@ -746,7 +746,7 @@ Generate a standalone map with one or more road edge connections and a continuou
 
 ## Phase 8 — Templates and compositional generation
 
-**Status: in progress; minimal deterministic unrotated template expansion complete**
+**Status: in progress; deterministic unrotated template expansion and anchor-to-anchor placement complete**
 
 The first Phase 8 slice adds reusable template definitions without creating a second generation pipeline. Templates expand into ordinary root operations before the existing recipe validation and map generation stages.
 
@@ -754,14 +754,15 @@ The first Phase 8 slice adds reusable template definitions without creating a se
 
 * named template definitions with relative `dz` level sections;
 * unrotated placements with translated horizontal origins and `origin.z + dz` resolution;
+* named template anchors with absolute anchor resolution; exterior connection anchors place distinct footprints adjacently while coincident interior anchors intentionally overlap;
+* anchor-to-anchor placement against prior placements;
 * expansion into existing ordinary root operations before normal validation;
 * deterministic maintained `small_cabin` example and regression coverage.
 
 ### Remaining Phase 8 work
 
-* template anchors and anchor-to-anchor placement;
 * parameters and reusable variants;
-* automatic rotation;
+* automatic rotation and facing-aware anchor composition;
 * nested templates;
 * complete three-dimensional footprint validation and richer compositional locations.
 

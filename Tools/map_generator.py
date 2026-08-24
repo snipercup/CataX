@@ -168,8 +168,8 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
         context = f"templates.{template_id}"
         if not isinstance(template_id, str) or DEFINITION_NAME_PATTERN.fullmatch(template_id) is None:
             raise RecipeError(f"{context} must use a valid template ID")
-        if not isinstance(template, dict) or set(template) != {"levels"}:
-            raise RecipeError(f"{context} must define only levels")
+        if not isinstance(template, dict) or set(template) - {"levels", "anchors"} or "levels" not in template:
+            raise RecipeError(f"{context} must define levels and may define anchors")
         levels = template["levels"]
         if not isinstance(levels, list) or not levels:
             raise RecipeError(f"{context}.levels must be a non-empty array")
@@ -186,28 +186,67 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
             seen_dz.add(dz)
             if not isinstance(level["operations"], list):
                 raise RecipeError(f"{level_context}.operations must be an array")
+        anchors = template.get("anchors", {})
+        if not isinstance(anchors, dict):
+            raise RecipeError(f"{context}.anchors must be an object")
+        for anchor_id, anchor in anchors.items():
+            anchor_context = f"{context}.anchors.{anchor_id}"
+            if not isinstance(anchor_id, str) or DEFINITION_NAME_PATTERN.fullmatch(anchor_id) is None:
+                raise RecipeError(f"{anchor_context} must use a valid anchor ID")
+            if not isinstance(anchor, dict) or set(anchor) - {"at", "z", "facing"} or not {"at", "z"}.issubset(anchor):
+                raise RecipeError(f"{anchor_context} must define at and z, with optional facing")
+            if not isinstance(anchor["at"], list) or len(anchor["at"]) != 2 or any(type(value) is not int for value in anchor["at"]):
+                raise RecipeError(f"{anchor_context}.at must be a two-integer coordinate")
+            if type(anchor["z"]) is not int or not MIN_LOGICAL_Z <= anchor["z"] <= MAX_LOGICAL_Z:
+                raise RecipeError(f"{anchor_context}.z must be an integer between -10 and 10")
+            if "facing" in anchor and anchor["facing"] not in CONNECTION_DIRECTIONS:
+                raise RecipeError(f"{anchor_context}.facing must be a cardinal direction")
 
+    resolved_anchors: list[dict[str, dict[str, Any]]] = []
     for placement_index, placement in enumerate(placements):
         context = f"placements[{placement_index}]"
-        if not isinstance(placement, dict) or set(placement) != {"template", "origin", "rotation"}:
-            raise RecipeError(f"{context} must define template, origin, and rotation")
+        if not isinstance(placement, dict) or set(placement) - {"template", "origin", "anchor_to", "at_anchor", "rotation"}:
+            raise RecipeError(f"{context} contains unknown placement fields")
+        if set(placement) & {"origin", "anchor_to", "at_anchor"} not in ({"origin"}, {"anchor_to", "at_anchor"}):
+            raise RecipeError(f"{context} must define either origin or anchor_to with at_anchor")
         template_id = placement["template"]
         if not isinstance(template_id, str) or template_id not in templates:
             raise RecipeError(f"{context}.template references unknown template '{template_id}'")
-        origin = placement["origin"]
-        if (
-            not isinstance(origin, dict)
-            or set(origin) != {"at", "z"}
-            or not isinstance(origin.get("at"), list)
-            or len(origin["at"]) != 2
-            or any(type(value) is not int for value in origin["at"])
-            or type(origin.get("z")) is not int
-        ):
-            raise RecipeError(f"{context}.origin must define a two-integer at and integer z")
+        if "template" not in placement or "rotation" not in placement:
+            raise RecipeError(f"{context} must define template and rotation")
         if placement["rotation"] != 0:
             raise RecipeError(f"{context}.rotation only supports 0 in the minimal template expansion")
+        template_anchors = templates[template_id].get("anchors", {})
+        if "origin" in placement:
+            origin = placement["origin"]
+            if (
+                not isinstance(origin, dict)
+                or set(origin) != {"at", "z"}
+                or not isinstance(origin.get("at"), list)
+                or len(origin["at"]) != 2
+                or any(type(value) is not int for value in origin["at"])
+                or type(origin.get("z")) is not int
+            ):
+                raise RecipeError(f"{context}.origin must define a two-integer at and integer z")
+            origin_at = origin["at"]
+            origin_z = origin["z"]
+        else:
+            anchor_to = placement["anchor_to"]
+            at_anchor = placement["at_anchor"]
+            if not isinstance(anchor_to, dict) or set(anchor_to) != {"placement", "anchor"}:
+                raise RecipeError(f"{context}.anchor_to must define placement and anchor")
+            if type(anchor_to["placement"]) is not int or not 0 <= anchor_to["placement"] < placement_index:
+                raise RecipeError(f"{context}.anchor_to.placement must reference a prior placement")
+            if not isinstance(anchor_to["anchor"], str) or anchor_to["anchor"] not in resolved_anchors[anchor_to["placement"]]:
+                raise RecipeError(f"{context}.anchor_to.anchor must reference an anchor on the prior placement")
+            if not isinstance(at_anchor, str) or at_anchor not in template_anchors:
+                raise RecipeError(f"{context}.at_anchor must reference an anchor on the placed template")
+            target = resolved_anchors[anchor_to["placement"]][anchor_to["anchor"]]
+            local = template_anchors[at_anchor]
+            origin_at = [target["at"][0] - local["at"][0], target["at"][1] - local["at"][1]]
+            origin_z = target["z"] - local["z"]
         for level in templates[template_id]["levels"]:
-            absolute_z = origin["z"] + level["dz"]
+            absolute_z = origin_z + level["dz"]
             if not MIN_LOGICAL_Z <= absolute_z <= MAX_LOGICAL_Z:
                 raise RecipeError(f"{context} places relative level dz {level['dz']} outside logical z bounds")
             for operation_index, operation in enumerate(level["operations"]):
@@ -221,31 +260,44 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
                     if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
                         raise RecipeError(f"{operation_context} requires integer x and y")
-                    translated["x"] += origin["at"][0]
-                    translated["y"] += origin["at"][1]
+                    translated["x"] += origin_at[0]
+                    translated["y"] += origin_at[1]
                 elif operation_type in {"scatter", "furniture_scatter"}:
                     region = translated.get("region")
                     if not isinstance(region, dict) or not isinstance(region.get("x"), int) or not isinstance(region.get("y"), int):
                         raise RecipeError(f"{operation_context}.region requires integer x and y")
-                    region["x"] += origin["at"][0]
-                    region["y"] += origin["at"][1]
+                    region["x"] += origin_at[0]
+                    region["y"] += origin_at[1]
                 elif operation_type == "line":
                     for endpoint in ("from", "to"):
                         point = translated.get(endpoint)
                         if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
                             raise RecipeError(f"{operation_context}.{endpoint} must be a two-integer coordinate")
-                        point[0] += origin["at"][0]
-                        point[1] += origin["at"][1]
+                        point[0] += origin_at[0]
+                        point[1] += origin_at[1]
                 elif operation_type == "pattern":
                     point = translated.get("at")
                     if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
                         raise RecipeError(f"{operation_context}.at must be a two-integer coordinate")
-                    point[0] += origin["at"][0]
-                    point[1] += origin["at"][1]
+                    point[0] += origin_at[0]
+                    point[1] += origin_at[1]
                 else:
                     raise RecipeError(f"{operation_context}.type '{operation_type}' is not supported by minimal templates")
                 translated["z"] = absolute_z
                 expanded_operations.append(translated)
+        resolved_template_anchors: dict[str, dict[str, Any]] = {}
+        for anchor_id, anchor in template_anchors.items():
+            resolved_anchor = {
+                "at": [origin_at[0] + anchor["at"][0], origin_at[1] + anchor["at"][1]],
+                "z": origin_z + anchor["z"],
+                **({"facing": anchor["facing"]} if "facing" in anchor else {}),
+            }
+            if not (0 <= resolved_anchor["at"][0] < MAP_WIDTH and 0 <= resolved_anchor["at"][1] < MAP_HEIGHT):
+                raise RecipeError(f"{context}.{anchor_id} resolves outside map bounds")
+            if not MIN_LOGICAL_Z <= resolved_anchor["z"] <= MAX_LOGICAL_Z:
+                raise RecipeError(f"{context}.{anchor_id} resolves outside logical z bounds")
+            resolved_template_anchors[anchor_id] = resolved_anchor
+        resolved_anchors.append(resolved_template_anchors)
     return expanded
 
 
