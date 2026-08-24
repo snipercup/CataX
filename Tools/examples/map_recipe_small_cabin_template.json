@@ -1,10 +1,21 @@
 {
 	"id": "generated_small_cabin_template",
 	"name": "Generated Small Cabin Template",
-	"description": "A minimal unrotated small cabin template expanded into ordinary map operations.",
+	"description": "A compositional cabin template with nested roof-panel expansion.",
 	"seed": 20260824,
 	"base_tile": {"id": "grass_plain_01"},
 	"templates": {
+		"roof_panel": {
+			"parameters": {
+				"tile": {"type": "tile_id", "default": "concrete_00"},
+				"enabled": {"type": "boolean", "default": true},
+				"width": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4},
+				"height": {"type": "integer", "minimum": 3, "maximum": 6, "default": 4}
+			},
+			"levels": [
+				{"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$tile"}, "when": "$enabled"}]}
+			]
+		},
 		"small_cabin": {
 			"parameters": {
 				"floor_tile": {"type": "tile_id", "default": "concrete_00"},
@@ -24,6 +35,14 @@
 				"entrance": {"at": [0, 1], "z": 0, "facing": "west"},
 				"exit": {"at": [4, 1], "z": 0, "facing": "east"}
 			},
+			"placements": [
+				{
+					"template": "roof_panel",
+					"origin": {"at": [0, 0], "z": 2},
+					"parameters": {"tile": "$style.roof_tile", "enabled": "$style.include_roof", "width": "$width", "height": "$height"},
+					"rotation": 0
+				}
+			],
 			"levels": [
 				{
 					"dz": 0,
@@ -36,12 +55,6 @@
 					"dz": 1,
 					"operations": [
 						{"type": "rectangle_outline", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$style.wall_tile"}}
-					]
-				},
-				{
-					"dz": 2,
-					"operations": [
-						{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$style.roof_tile"}, "when": "$style.include_roof"}
 					]
 				}
 			]
