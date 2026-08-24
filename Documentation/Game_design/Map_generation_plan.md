@@ -595,7 +595,7 @@ Generate an outdoor map with trees, rocks, vegetation, and simple interactable o
 
 ## Phase 6 — Areas, rooms, and buildings
 
-**Status: in progress; authored area/room/building foundations and a fully enclosed physical multi-level building slice complete**
+**Status: complete; authored area/room/building foundations and a physically generated, enterable multi-level building slice complete**
 
 The generator needs semantic areas before it can create convincing buildings.
 
@@ -655,11 +655,11 @@ An opted-in `overhead_validation: "complete"` requires that a validated single-l
 
 `staircases` now adds authored physical transition semantics to that foundation. Each staircase names `lower_at` and `upper_at` coordinates plus editor-facing rotations, and validation requires matching slope tiles (any tile-database `shape: "slope"` tile) at the lower coordinate on `z: 1` and upper coordinate on `z: 2` — exactly the two slope blocks required for player ascent. Straight stairs use two cardinally adjacent slopes with the same rotation; corner stairs insert one flat landing block at `z: 1` between the slopes so the upper slope turns the corner (`upper_rotation`). Slopes never stack: the upper slope is always horizontally offset from the lower slope. `Tools/examples/map_recipe_multi_level_building_foundation.json` demonstrates the corner formation with a landing block; the straight formation remains covered by focused tests.
 
-`building_surfaces` now authors per-floor ceiling/floor surfaces for multi-level buildings in addition to single-level roofs/ceilings. For a building with `building_levels`, `z` must name a declared occupied level and `kind` may be `floor`, `ceiling`, or `roof`; a multi-level `roof` must be at the highest declared occupied level. This models the top-down vertical story directly — `z: 0` ground-floor surface, `z: 1` air gap that is never a surface, `z: 2` first-floor surface, and the roof at the highest occupied level. The maintained multi-level recipe now authors `floor` at `z: 0`, `floor` at `z: 2`, and `roof` at `z: 2`; a ground-level `ceiling` is rejected only for single-level buildings, while multi-level buildings may classify the ground floor as both floor and ceiling. `building_supports` adds authored structural support paths from lower to upper occupied levels.
+`building_surfaces` now authors per-floor floor and roof surfaces for multi-level buildings in addition to single-level roof/ceiling semantics. For a building with `building_levels`, `z` must name a declared occupied level and `kind` may be `floor`, `ceiling`, or `roof`; a multi-level `roof` must be at the highest declared occupied level. The maintained multi-level recipe authors `floor` at `z: 0`, `floor` at `z: 2`, and `roof` at `z: 2`; the physical generator materializes the roof tile across the building footprint at the level immediately above the highest occupied floor, making the roof a standable surface. Ceiling remains metadata-only and is intentionally omitted from physical generation. `building_supports` adds authored structural support paths from lower to upper occupied levels.
 
-The generator, standalone map validator, and `DMap` save/load path validate or preserve these contracts. An opt-in `building_geometry` record now generates physical floors on declared occupied levels, wall tiles from authored room boundaries, and support tiles from authored support paths. Walls materialize one logical level above their authored boundary z, and dirt support is placed beneath them at z0 when the lower cell is otherwise empty; implicit wall `set` operations follow the same dirt-below-wall convention. Existing doors and staircase slopes remain authored operations. Lower staircase slope and landing cells reserve empty headroom on the directly overhead z2 floor so the player is not blocked by the upper floor. The generated geometry uses the existing Chunk collision/navigation pipeline; a focused Godot test verifies the maintained building's multi-level route through its authored slopes.
+The generator, standalone map validator, and `DMap` save/load path validate or preserve these contracts. An opt-in `building_geometry` record now generates physical floors on declared occupied levels, wall tiles from authored room boundaries, support tiles from authored support paths, and a standable roof tile above the highest occupied floor when a roof surface is authored. Walls materialize one logical level above their authored boundary z, and dirt support is placed beneath them at z0 when the lower cell is otherwise empty; implicit wall `set` operations follow the same dirt-below-wall convention. Existing doors and staircase slopes remain authored operations. Lower staircase slope and landing cells reserve empty headroom on the directly overhead z2 floor so the player is not blocked by the upper floor. The generated geometry uses the existing Chunk collision/navigation pipeline; focused tests verify the maintained building's multi-level route and roof geometry.
 
-This slice intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, roof/ceiling generation, automatic door or staircase generation, or generalized templates.
+This slice intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, automatic door or staircase generation, or generalized templates.
 
 Capabilities:
 
@@ -672,7 +672,7 @@ Capabilities:
 * reusable building footprints;
 * furniture anchors;
 * multi-level building geometry using logical z coordinates;
-* occupied-floor, wall, ceiling, roof, and intentional-air-space semantics;
+* occupied-floor, wall, roof, and intentional-air-space semantics;
 * vertical transition anchors.
 
 Example concept:
@@ -707,7 +707,7 @@ Important checks:
 
 ### Success criterion
 
-Generate one small, enterable building that loads correctly and has a reachable interior. The generated structure must exercise physical floor and wall geometry, include at least two reachable occupied floors, valid generated support, an authored working vertical transition, and correctly scoped rooms and furniture. The maintained multi-level building recipe now provides the first evidence for this criterion; remaining roof/ceiling and generalized building-generation work stays outside this slice.
+Generate one small, enterable building that loads correctly and has a reachable interior. The generated structure must exercise physical floor, wall, support, and standable roof geometry, include at least two reachable occupied floors, valid generated support, an authored working vertical transition, and correctly scoped rooms and furniture. The maintained multi-level building recipe provides the evidence for this criterion.
 
 ## Phase 7 — Roads and map connections
 
@@ -855,9 +855,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is in progress.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, authored staircase evidence, and enclosed maintained building geometry are complete for the first narrow building slice. Recent refinements materialize walls one logical level above their authored boundaries with dirt support beneath, add `target_at`/`room_at` decoupling for wall and door placement, and keep the map editor's tile tooltip showing coordinates for inspection. Manual player traversal of the maintained enclosed generated building is complete. The remaining Phase 6 decision is whether roof/ceiling geometry belongs in this phase's narrow scope or should be deferred as a later extension. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Its next optional contribution is a concrete map-to-map compatibility contract, but it should not introduce a second overmap settlement or city-routing system.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Its next optional contribution is a concrete map-to-map compatibility contract, but it should not introduce a second overmap settlement or city-routing system.
 
-Do not yet generate doors, roofs/ceilings, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads.
+Do not yet generate doors, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -923,12 +923,13 @@ Do not commit or push unless explicitly requested.
 [Complete] Multi-level building navigation test through authored slope geometry
 [Complete] Enclosed maintained building geometry with walls one level up and dirt below
 [Complete] Manual player traversal of the maintained enclosed generated building
+[Complete] Physical standable roof generation for the maintained multi-level building
 [Complete] Wall and door placement decoupling via `target_at`/`room_at`
 [Complete] Map-local road route painting between declared endpoints
 [Complete] Runtime navigation validation for a painted local road route
 [Next]     Explicit map-to-map edge compatibility
-[In Progress]  Rooms and buildings
-[In Progress]  Roads and map connections
+[Complete] Rooms and buildings
+[In Progress] Roads and map connections
 [Planned]  Multi-level reusable templates and richer composition
 [Planned]  3D connectivity and gameplay validation
 [Target]   Agent-generated playable maps
