@@ -173,13 +173,20 @@ def _resolve_template_parameters(
             "tile_id": {"type", "default"},
             "boolean": {"type", "default"},
             "enum": {"type", "values", "default"},
+            "integer": {"type", "minimum", "maximum", "default"},
+            "string_list": {"type", "values", "default"},
         }
         if parameter_type not in allowed_fields or set(definition) - allowed_fields[parameter_type]:
             raise RecipeError(f"{parameter_context} has an unsupported parameter definition")
-        if parameter_type == "enum":
+        if parameter_type in {"enum", "string_list"}:
             values = definition.get("values")
             if not isinstance(values, list) or not values or any(not isinstance(value, str) or not value for value in values) or len(set(values)) != len(values):
                 raise RecipeError(f"{parameter_context}.values must be a non-empty array of unique strings")
+        if parameter_type == "integer":
+            minimum = definition.get("minimum")
+            maximum = definition.get("maximum")
+            if type(minimum) is not int or type(maximum) is not int or minimum > maximum:
+                raise RecipeError(f"{parameter_context} must define integer minimum and maximum bounds")
         value = overrides.get(parameter_id, definition.get("default"))
         if value is None and not require_values:
             continue
@@ -191,6 +198,17 @@ def _resolve_template_parameters(
             raise RecipeError(f"{parameter_context} requires a boolean value")
         if parameter_type == "enum" and value not in definition["values"]:
             raise RecipeError(f"{parameter_context} must be one of its declared enum values")
+        if parameter_type == "integer" and (
+            type(value) is not int
+            or not definition["minimum"] <= value <= definition["maximum"]
+        ):
+            raise RecipeError(f"{parameter_context} must be an integer within its declared bounds")
+        if parameter_type == "string_list" and (
+            not isinstance(value, list)
+            or any(not isinstance(entry, str) or entry not in definition["values"] for entry in value)
+            or len(set(value)) != len(value)
+        ):
+            raise RecipeError(f"{parameter_context} must be a unique list of declared string values")
         resolved[parameter_id] = value
 
     return resolved
@@ -223,12 +241,17 @@ def _include_template_operation(
         if type(value) is not bool:
             raise RecipeError(f"{context}.when must resolve to a boolean parameter")
         return value
-    if not isinstance(condition, dict) or set(condition) != {"parameter", "equals"}:
-        raise RecipeError(f"{context}.when must be '$boolean_parameter' or define parameter and equals")
+    if not isinstance(condition, dict) or set(condition) not in ({"parameter", "equals"}, {"parameter", "contains"}):
+        raise RecipeError(f"{context}.when must be '$boolean_parameter' or define parameter with equals or contains")
     parameter_id = condition["parameter"]
     if not isinstance(parameter_id, str) or parameter_id not in parameters:
         raise RecipeError(f"{context}.when references unknown template parameter '{parameter_id}'")
-    return parameters[parameter_id] == condition["equals"]
+    if "equals" in condition:
+        return parameters[parameter_id] == condition["equals"]
+    value = parameters[parameter_id]
+    if not isinstance(value, list) or not isinstance(condition["contains"], str):
+        raise RecipeError(f"{context}.when contains requires a string_list parameter and string value")
+    return condition["contains"] in value
 
 
 def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
