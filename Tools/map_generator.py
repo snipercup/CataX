@@ -145,6 +145,55 @@ class RecipeError(ValueError):
     """Raised when a map recipe is invalid."""
 
 
+def _resolve_template_parameters(
+    definitions: Any, overrides: Any, context: str, require_values: bool = True
+) -> dict[str, str]:
+    if definitions is None:
+        definitions = {}
+    if not isinstance(definitions, dict):
+        raise RecipeError(f"{context}.parameters must be an object")
+    if overrides is None:
+        overrides = {}
+    if not isinstance(overrides, dict):
+        raise RecipeError(f"{context}.parameters must be an object")
+
+    unknown_overrides = sorted(set(overrides) - set(definitions))
+    if unknown_overrides:
+        raise RecipeError(f"{context}.parameters contains unknown parameter '{unknown_overrides[0]}'")
+
+    resolved: dict[str, str] = {}
+    for parameter_id, definition in definitions.items():
+        parameter_context = f"{context}.parameters.{parameter_id}"
+        if not isinstance(parameter_id, str) or DEFINITION_NAME_PATTERN.fullmatch(parameter_id) is None:
+            raise RecipeError(f"{parameter_context} must use a valid parameter ID")
+        if not isinstance(definition, dict) or set(definition) - {"type", "default"} or definition.get("type") != "tile_id":
+            raise RecipeError(f"{parameter_context} must define type 'tile_id' with optional default")
+        value = overrides.get(parameter_id, definition.get("default"))
+        if value is None and not require_values:
+            continue
+        if not isinstance(value, str) or not value:
+            raise RecipeError(f"{parameter_context} requires a non-empty tile_id value")
+        resolved[parameter_id] = value
+
+    return resolved
+
+
+def _substitute_template_parameters(value: Any, parameters: dict[str, str], context: str) -> Any:
+    if isinstance(value, str) and value.startswith("$"):
+        parameter_id = value[1:]
+        if parameter_id not in parameters:
+            raise RecipeError(f"{context} references unknown template parameter '{parameter_id}'")
+        return parameters[parameter_id]
+    if isinstance(value, list):
+        return [_substitute_template_parameters(entry, parameters, context) for entry in value]
+    if isinstance(value, dict):
+        return {
+            key: _substitute_template_parameters(entry, parameters, context)
+            for key, entry in value.items()
+        }
+    return value
+
+
 def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
     templates = recipe.get("templates")
     placements = recipe.get("placements")
@@ -168,8 +217,9 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
         context = f"templates.{template_id}"
         if not isinstance(template_id, str) or DEFINITION_NAME_PATTERN.fullmatch(template_id) is None:
             raise RecipeError(f"{context} must use a valid template ID")
-        if not isinstance(template, dict) or set(template) - {"levels", "anchors"} or "levels" not in template:
-            raise RecipeError(f"{context} must define levels and may define anchors")
+        if not isinstance(template, dict) or set(template) - {"levels", "anchors", "parameters"} or "levels" not in template:
+            raise RecipeError(f"{context} must define levels and may define anchors or parameters")
+        _resolve_template_parameters(template.get("parameters"), {}, context, require_values=False)
         levels = template["levels"]
         if not isinstance(levels, list) or not levels:
             raise RecipeError(f"{context}.levels must be a non-empty array")
@@ -205,17 +255,20 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
     resolved_anchors: list[dict[str, dict[str, Any]]] = []
     for placement_index, placement in enumerate(placements):
         context = f"placements[{placement_index}]"
-        if not isinstance(placement, dict) or set(placement) - {"template", "origin", "anchor_to", "at_anchor", "rotation"}:
+        if not isinstance(placement, dict) or set(placement) - {"template", "origin", "anchor_to", "at_anchor", "rotation", "parameters"}:
             raise RecipeError(f"{context} contains unknown placement fields")
+        if "template" not in placement or "rotation" not in placement:
+            raise RecipeError(f"{context} must define template and rotation")
         if set(placement) & {"origin", "anchor_to", "at_anchor"} not in ({"origin"}, {"anchor_to", "at_anchor"}):
             raise RecipeError(f"{context} must define either origin or anchor_to with at_anchor")
         template_id = placement["template"]
         if not isinstance(template_id, str) or template_id not in templates:
             raise RecipeError(f"{context}.template references unknown template '{template_id}'")
-        if "template" not in placement or "rotation" not in placement:
-            raise RecipeError(f"{context} must define template and rotation")
         if placement["rotation"] != 0:
             raise RecipeError(f"{context}.rotation only supports 0 in the minimal template expansion")
+        parameters = _resolve_template_parameters(
+            templates[template_id].get("parameters"), placement.get("parameters"), context
+        )
         template_anchors = templates[template_id].get("anchors", {})
         if "origin" in placement:
             origin = placement["origin"]
@@ -255,7 +308,9 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                     raise RecipeError(f"{operation_context} must be an operation object")
                 if "z" in operation:
                     raise RecipeError(f"{operation_context}.z must be omitted; use the enclosing relative level dz")
-                translated = copy.deepcopy(operation)
+                translated = _substitute_template_parameters(
+                    copy.deepcopy(operation), parameters, operation_context
+                )
                 operation_type = translated["type"]
                 if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
                     if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
