@@ -102,6 +102,59 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
         self.assertEqual(generated["levels"][10][10 * 32 + 11], {"id": "concrete_00"})
 
+    def test_template_boolean_and_enum_parameters_select_semantic_variants(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "variant": {
+                "parameters": {
+                    "include_top": {"type": "boolean", "default": True},
+                    "material": {"type": "enum", "values": ["dirt", "concrete"], "default": "dirt"},
+                },
+                "levels": [
+                    {"dz": 0, "operations": [
+                        {"type": "set", "x": 0, "y": 0, "tile": {"id": "dirt_light_00"}, "when": {"parameter": "material", "equals": "dirt"}},
+                        {"type": "set", "x": 0, "y": 0, "tile": {"id": "concrete_00"}, "when": {"parameter": "material", "equals": "concrete"}},
+                    ]},
+                    {"dz": 1, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "concrete_00"}, "when": "$include_top"}]},
+                ],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "variant", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "variant", "origin": {"at": [11, 10], "z": 0}, "parameters": {"material": "concrete", "include_top": False}, "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 10], {"id": "concrete_00"})
+        self.assertEqual(generated["levels"][10][10 * 32 + 11], {"id": "concrete_00"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 11], {})
+
+    def test_template_boolean_and_enum_parameters_reject_invalid_values_and_conditions(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "variant": {
+                "parameters": {
+                    "enabled": {"type": "boolean", "default": True},
+                    "style": {"type": "enum", "values": ["brick", "metal"], "default": "brick"},
+                },
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "dirt_light_00"}, "when": "$enabled"}]}],
+            }
+        }
+        recipe["placements"] = [{"template": "variant", "origin": {"at": [10, 10], "z": 0}, "parameters": {"enabled": "yes"}, "rotation": 0}]
+        with self.assertRaisesRegex(RecipeError, "requires a boolean value"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {"style": "wood"}
+        with self.assertRaisesRegex(RecipeError, "must be one of its declared enum values"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {}
+        recipe["templates"]["variant"]["levels"][0]["operations"][0]["when"] = "$style"
+        with self.assertRaisesRegex(RecipeError, "when must resolve to a boolean parameter"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_parameters_reject_missing_unknown_and_unresolved_values(self):
         recipe = valid_recipe()
         recipe["templates"] = {
@@ -111,7 +164,7 @@ class MapGeneratorTests(unittest.TestCase):
             }
         }
         recipe["placements"] = [{"template": "required_tile", "origin": {"at": [10, 10], "z": 0}, "rotation": 0}]
-        with self.assertRaisesRegex(RecipeError, "requires a non-empty tile_id value"):
+        with self.assertRaisesRegex(RecipeError, "requires a value"):
             generate_map(recipe, TILES_PATH)
 
         recipe["placements"][0]["parameters"] = {"unknown": "concrete_00"}
@@ -168,10 +221,10 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][11][10 * 32 + 10]["id"], "brick_wall_00")
         self.assertEqual(first["levels"][12][10 * 32 + 10]["id"], "concrete_00")
         self.assertEqual(first["levels"][12][10 * 32 + 13]["id"], "concrete_00")
-        self.assertEqual(first["levels"][12][10 * 32 + 14]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][10 * 32 + 14], {})
         self.assertEqual(first["levels"][10][10 * 32 + 14]["id"], "dirt_light_01")
-        self.assertEqual(first["levels"][11][10 * 32 + 14]["id"], "brick_wall_01")
-        self.assertEqual(first["levels"][12][10 * 32 + 17]["id"], "concrete_00")
+        self.assertEqual(first["levels"][11][10 * 32 + 14]["id"], "metal_wall_00")
+        self.assertEqual(first["levels"][12][10 * 32 + 17], {})
         self.assertEqual(first["levels"][12][10 * 32 + 18], {})
 
     def test_legacy_regions_and_every_operation_can_target_logical_z(self):

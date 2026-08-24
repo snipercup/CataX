@@ -147,7 +147,7 @@ class RecipeError(ValueError):
 
 def _resolve_template_parameters(
     definitions: Any, overrides: Any, context: str, require_values: bool = True
-) -> dict[str, str]:
+) -> dict[str, Any]:
     if definitions is None:
         definitions = {}
     if not isinstance(definitions, dict):
@@ -161,24 +161,42 @@ def _resolve_template_parameters(
     if unknown_overrides:
         raise RecipeError(f"{context}.parameters contains unknown parameter '{unknown_overrides[0]}'")
 
-    resolved: dict[str, str] = {}
+    resolved: dict[str, Any] = {}
     for parameter_id, definition in definitions.items():
         parameter_context = f"{context}.parameters.{parameter_id}"
         if not isinstance(parameter_id, str) or DEFINITION_NAME_PATTERN.fullmatch(parameter_id) is None:
             raise RecipeError(f"{parameter_context} must use a valid parameter ID")
-        if not isinstance(definition, dict) or set(definition) - {"type", "default"} or definition.get("type") != "tile_id":
-            raise RecipeError(f"{parameter_context} must define type 'tile_id' with optional default")
+        if not isinstance(definition, dict) or "type" not in definition:
+            raise RecipeError(f"{parameter_context} must define a parameter type")
+        parameter_type = definition["type"]
+        allowed_fields = {
+            "tile_id": {"type", "default"},
+            "boolean": {"type", "default"},
+            "enum": {"type", "values", "default"},
+        }
+        if parameter_type not in allowed_fields or set(definition) - allowed_fields[parameter_type]:
+            raise RecipeError(f"{parameter_context} has an unsupported parameter definition")
+        if parameter_type == "enum":
+            values = definition.get("values")
+            if not isinstance(values, list) or not values or any(not isinstance(value, str) or not value for value in values) or len(set(values)) != len(values):
+                raise RecipeError(f"{parameter_context}.values must be a non-empty array of unique strings")
         value = overrides.get(parameter_id, definition.get("default"))
         if value is None and not require_values:
             continue
-        if not isinstance(value, str) or not value:
+        if value is None:
+            raise RecipeError(f"{parameter_context} requires a value")
+        if parameter_type == "tile_id" and (not isinstance(value, str) or not value):
             raise RecipeError(f"{parameter_context} requires a non-empty tile_id value")
+        if parameter_type == "boolean" and type(value) is not bool:
+            raise RecipeError(f"{parameter_context} requires a boolean value")
+        if parameter_type == "enum" and value not in definition["values"]:
+            raise RecipeError(f"{parameter_context} must be one of its declared enum values")
         resolved[parameter_id] = value
 
     return resolved
 
 
-def _substitute_template_parameters(value: Any, parameters: dict[str, str], context: str) -> Any:
+def _substitute_template_parameters(value: Any, parameters: dict[str, Any], context: str) -> Any:
     if isinstance(value, str) and value.startswith("$"):
         parameter_id = value[1:]
         if parameter_id not in parameters:
@@ -192,6 +210,25 @@ def _substitute_template_parameters(value: Any, parameters: dict[str, str], cont
             for key, entry in value.items()
         }
     return value
+
+
+def _include_template_operation(
+    operation: dict[str, Any], parameters: dict[str, Any], context: str
+) -> bool:
+    if "when" not in operation:
+        return True
+    condition = operation["when"]
+    if isinstance(condition, str) and condition.startswith("$"):
+        value = _substitute_template_parameters(condition, parameters, context)
+        if type(value) is not bool:
+            raise RecipeError(f"{context}.when must resolve to a boolean parameter")
+        return value
+    if not isinstance(condition, dict) or set(condition) != {"parameter", "equals"}:
+        raise RecipeError(f"{context}.when must be '$boolean_parameter' or define parameter and equals")
+    parameter_id = condition["parameter"]
+    if not isinstance(parameter_id, str) or parameter_id not in parameters:
+        raise RecipeError(f"{context}.when references unknown template parameter '{parameter_id}'")
+    return parameters[parameter_id] == condition["equals"]
 
 
 def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
@@ -308,9 +345,14 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                     raise RecipeError(f"{operation_context} must be an operation object")
                 if "z" in operation:
                     raise RecipeError(f"{operation_context}.z must be omitted; use the enclosing relative level dz")
+                if "when" in operation and not _include_template_operation(
+                    operation, parameters, operation_context
+                ):
+                    continue
                 translated = _substitute_template_parameters(
                     copy.deepcopy(operation), parameters, operation_context
                 )
+                translated.pop("when", None)
                 operation_type = translated["type"]
                 if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
                     if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
