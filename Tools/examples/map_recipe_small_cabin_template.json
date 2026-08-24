@@ -54,7 +54,7 @@
 			"anchor_to": {"placement": 0, "anchor": "exit"},
 			"at_anchor": "entrance",
 			"parameters": {"support_tile": "dirt_light_01", "wall_material": "metal", "features": []},
-			"rotation": 0
+			"rotation": "auto"
 		},
 		{
 			"template": "small_cabin",
