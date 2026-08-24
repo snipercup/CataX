@@ -155,6 +155,60 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "when must resolve to a boolean parameter"):
             generate_map(recipe, TILES_PATH)
 
+    def test_template_integer_and_string_list_parameters_drive_geometry_and_features(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "sized_feature": {
+                "parameters": {
+                    "width": {"type": "integer", "minimum": 2, "maximum": 4, "default": 2},
+                    "features": {"type": "string_list", "values": ["top"], "default": ["top"]},
+                },
+                "levels": [
+                    {"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": 1, "tile": {"id": "dirt_light_00"}}]},
+                    {"dz": 1, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": 1, "tile": {"id": "concrete_00"}, "when": {"parameter": "features", "contains": "top"}}]},
+                ],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "sized_feature", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "sized_feature", "origin": {"at": [10, 12], "z": 0}, "parameters": {"width": 4, "features": []}, "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 11], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 11], {"id": "concrete_00"})
+        self.assertEqual(generated["levels"][10][12 * 32 + 13], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][11][12 * 32 + 13], {})
+
+    def test_template_integer_and_string_list_parameters_reject_invalid_values(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "sized_feature": {
+                "parameters": {
+                    "width": {"type": "integer", "minimum": 2, "maximum": 4, "default": 2},
+                    "features": {"type": "string_list", "values": ["top"], "default": ["top"]},
+                },
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "dirt_light_00"}}]}],
+            }
+        }
+        recipe["placements"] = [{"template": "sized_feature", "origin": {"at": [10, 10], "z": 0}, "parameters": {"width": 5}, "rotation": 0}]
+        with self.assertRaisesRegex(RecipeError, "integer within its declared bounds"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {"features": ["top", "top"]}
+        with self.assertRaisesRegex(RecipeError, "unique list of declared string values"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {"features": "top"}
+        with self.assertRaisesRegex(RecipeError, "unique list of declared string values"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {}
+        recipe["templates"]["sized_feature"]["levels"][0]["operations"][0]["when"] = {"parameter": "width", "contains": "top"}
+        with self.assertRaisesRegex(RecipeError, "contains requires a string_list parameter"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_parameters_reject_missing_unknown_and_unresolved_values(self):
         recipe = valid_recipe()
         recipe["templates"] = {
@@ -225,6 +279,10 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][10][10 * 32 + 14]["id"], "dirt_light_01")
         self.assertEqual(first["levels"][11][10 * 32 + 14]["id"], "metal_wall_00")
         self.assertEqual(first["levels"][12][10 * 32 + 17], {})
+        self.assertEqual(first["levels"][10][16 * 32 + 10]["id"], "dirt_light_00")
+        self.assertEqual(first["levels"][11][16 * 32 + 14]["id"], "brick_wall_00")
+        self.assertEqual(first["levels"][12][18 * 32 + 14]["id"], "concrete_00")
+        self.assertEqual(first["levels"][12][18 * 32 + 15], {})
         self.assertEqual(first["levels"][12][10 * 32 + 18], {})
 
     def test_legacy_regions_and_every_operation_can_target_logical_z(self):
