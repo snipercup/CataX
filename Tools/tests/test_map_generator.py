@@ -116,6 +116,50 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][10][12 * 32 + 10]["rotation"], 180)
         self.assertEqual(generated["levels"][11][11 * 32 + 8], {"id": "concrete_00"})
 
+    def test_template_auto_rotation_aligns_anchor_facing_and_preserves_dz(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "segment": {
+                "anchors": {
+                    "entry": {"at": [0, 0], "z": 0, "facing": "north"},
+                    "exit": {"at": [2, 0], "z": 0, "facing": "east"},
+                },
+                "levels": [
+                    {"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": 3, "height": 1, "tile": {"id": "dirt_light_00"}}]},
+                    {"dz": 1, "operations": [{"type": "set", "x": 2, "y": 0, "tile": {"id": "concrete_00"}}]},
+                ],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "segment", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "segment", "anchor_to": {"placement": 0, "anchor": "exit"}, "at_anchor": "entry", "rotation": "auto"},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        # First exit faces east. The auto-rotated second entry faces west (270°), aligns at [12,10], and stays at z0/z1.
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][10][8 * 32 + 12], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][10][10 * 32 + 14]["id"], "grass_plain_01")
+        self.assertEqual(generated["levels"][11][10 * 32 + 12], {"id": "concrete_00"})
+        self.assertEqual(generated["levels"][11][8 * 32 + 12], {"id": "concrete_00"})
+
+    def test_template_auto_rotation_requires_facing_anchors(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "segment": {
+                "anchors": {"entry": {"at": [0, 0], "z": 0}},
+                "levels": [{"dz": 0, "operations": []}],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "segment", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "segment", "anchor_to": {"placement": 0, "anchor": "entry"}, "at_anchor": "entry", "rotation": "auto"},
+        ]
+
+        with self.assertRaisesRegex(RecipeError, "requires facing on both connected anchors"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_parameters_apply_defaults_and_placement_variants(self):
         recipe = valid_recipe()
         recipe["templates"] = {

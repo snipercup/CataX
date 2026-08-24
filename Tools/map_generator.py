@@ -290,6 +290,12 @@ def _rotate_template_facing(facing: str, rotation: int) -> str:
     return directions[(directions.index(facing) + rotation // 90) % len(directions)]
 
 
+def _auto_template_rotation(local_facing: str, target_facing: str) -> int:
+    directions = ["north", "east", "south", "west"]
+    opposite_target = directions[(directions.index(target_facing) + 2) % len(directions)]
+    return ((directions.index(opposite_target) - directions.index(local_facing)) % len(directions)) * 90
+
+
 def _rotate_template_operation(operation: dict[str, Any], rotation: int, context: str) -> None:
     if rotation == 0:
         return
@@ -387,14 +393,19 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
         template_id = placement["template"]
         if not isinstance(template_id, str) or template_id not in templates:
             raise RecipeError(f"{context}.template references unknown template '{template_id}'")
-        rotation = placement["rotation"]
-        if type(rotation) is not int or rotation not in {0, 90, 180, 270}:
-            raise RecipeError(f"{context}.rotation must be one of 0, 90, 180, or 270")
+        requested_rotation = placement["rotation"]
+        if requested_rotation != "auto" and (
+            type(requested_rotation) is not int or requested_rotation not in {0, 90, 180, 270}
+        ):
+            raise RecipeError(f"{context}.rotation must be one of 0, 90, 180, 270, or 'auto'")
         parameters = _resolve_template_parameters(
             templates[template_id].get("parameters"), placement.get("parameters"), context
         )
         template_anchors = templates[template_id].get("anchors", {})
         if "origin" in placement:
+            if requested_rotation == "auto":
+                raise RecipeError(f"{context}.rotation 'auto' requires anchor_to and at_anchor")
+            rotation = requested_rotation
             origin = placement["origin"]
             if (
                 not isinstance(origin, dict)
@@ -420,6 +431,12 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 raise RecipeError(f"{context}.at_anchor must reference an anchor on the placed template")
             target = resolved_anchors[anchor_to["placement"]][anchor_to["anchor"]]
             local = template_anchors[at_anchor]
+            if requested_rotation == "auto":
+                if "facing" not in target or "facing" not in local:
+                    raise RecipeError(f"{context}.rotation 'auto' requires facing on both connected anchors")
+                rotation = _auto_template_rotation(local["facing"], target["facing"])
+            else:
+                rotation = requested_rotation
             rotated_at = _rotate_template_point(local["at"], rotation)
             origin_at = [target["at"][0] - rotated_at[0], target["at"][1] - rotated_at[1]]
             origin_z = target["z"] - local["z"]
