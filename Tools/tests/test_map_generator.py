@@ -350,6 +350,48 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "unknown object parameter field 'style.missing'"):
             generate_map(recipe, TILES_PATH)
 
+    def test_nested_template_placement_inherits_origin_rotation_dz_and_parameters(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "floor": {
+                "parameters": {"tile": {"type": "tile_id", "default": "dirt_light_00"}},
+                "levels": [{"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": 2, "height": 1, "tile": {"id": "$tile"}}]}],
+            },
+            "room": {
+                "parameters": {"tile": {"type": "tile_id", "default": "dirt_light_00"}},
+                "levels": [{"dz": 1, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "concrete_00"}}]}],
+                "placements": [
+                    {"template": "floor", "origin": {"at": [1, 0], "z": 0}, "parameters": {"tile": "$tile"}, "rotation": 0},
+                ],
+            },
+        }
+        recipe["placements"] = [
+            {"template": "room", "origin": {"at": [10, 10], "z": 0}, "parameters": {"tile": "dirt_light_01"}, "rotation": 90},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][11 * 32 + 10], {"id": "dirt_light_01"})
+        self.assertEqual(generated["levels"][10][12 * 32 + 10], {"id": "dirt_light_01"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 10], {"id": "concrete_00"})
+
+    def test_nested_template_placement_rejects_cycles(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "a": {
+                "levels": [{"dz": 0, "operations": []}],
+                "placements": [{"template": "b", "origin": {"at": [0, 0], "z": 0}, "rotation": 0}],
+            },
+            "b": {
+                "levels": [{"dz": 0, "operations": []}],
+                "placements": [{"template": "a", "origin": {"at": [0, 0], "z": 0}, "rotation": 0}],
+            },
+        }
+        recipe["placements"] = [{"template": "a", "origin": {"at": [10, 10], "z": 0}, "rotation": 0}]
+
+        with self.assertRaisesRegex(RecipeError, "nested template cycle: a -> b -> a"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_parameters_reject_missing_unknown_and_unresolved_values(self):
         recipe = valid_recipe()
         recipe["templates"] = {

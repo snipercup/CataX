@@ -341,6 +341,96 @@ def _rotate_template_operation(operation: dict[str, Any], rotation: int, context
         tile["rotation"] = (tile["rotation"] + rotation) % 360
 
 
+def _append_expanded_template_operations(
+    templates: dict[str, Any],
+    template_id: str,
+    parameters: dict[str, Any],
+    origin_at: list[int],
+    origin_z: int,
+    rotation: int,
+    context: str,
+    stack: tuple[str, ...],
+    output: list[dict[str, Any]],
+) -> None:
+    if template_id in stack:
+        cycle = " -> ".join((*stack, template_id))
+        raise RecipeError(f"{context} contains nested template cycle: {cycle}")
+    template = templates[template_id]
+    next_stack = (*stack, template_id)
+    for level in template["levels"]:
+        absolute_z = origin_z + level["dz"]
+        if not MIN_LOGICAL_Z <= absolute_z <= MAX_LOGICAL_Z:
+            raise RecipeError(f"{context} places relative level dz {level['dz']} outside logical z bounds")
+        for operation_index, operation in enumerate(level["operations"]):
+            operation_context = f"{context}.{template_id}.levels[{level['dz']}].operations[{operation_index}]"
+            if not isinstance(operation, dict) or "type" not in operation:
+                raise RecipeError(f"{operation_context} must be an operation object")
+            if "z" in operation:
+                raise RecipeError(f"{operation_context}.z must be omitted; use the enclosing relative level dz")
+            if "when" in operation and not _include_template_operation(operation, parameters, operation_context):
+                continue
+            translated = _substitute_template_parameters(copy.deepcopy(operation), parameters, operation_context)
+            translated.pop("when", None)
+            _rotate_template_operation(translated, rotation, operation_context)
+            operation_type = translated["type"]
+            if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
+                if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
+                    raise RecipeError(f"{operation_context} requires integer x and y")
+                translated["x"] += origin_at[0]
+                translated["y"] += origin_at[1]
+            elif operation_type in {"scatter", "furniture_scatter"}:
+                region = translated.get("region")
+                if not isinstance(region, dict) or not isinstance(region.get("x"), int) or not isinstance(region.get("y"), int):
+                    raise RecipeError(f"{operation_context}.region requires integer x and y")
+                region["x"] += origin_at[0]
+                region["y"] += origin_at[1]
+            elif operation_type == "line":
+                for endpoint in ("from", "to"):
+                    point = translated.get(endpoint)
+                    if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
+                        raise RecipeError(f"{operation_context}.{endpoint} must be a two-integer coordinate")
+                    point[0] += origin_at[0]
+                    point[1] += origin_at[1]
+            elif operation_type == "pattern":
+                point = translated.get("at")
+                if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
+                    raise RecipeError(f"{operation_context}.at must be a two-integer coordinate")
+                point[0] += origin_at[0]
+                point[1] += origin_at[1]
+            else:
+                raise RecipeError(f"{operation_context}.type '{operation_type}' is not supported by templates")
+            translated["z"] = absolute_z
+            output.append(translated)
+
+    for nested_index, nested in enumerate(template.get("placements", [])):
+        nested_context = f"{context}.{template_id}.placements[{nested_index}]"
+        if not isinstance(nested, dict) or set(nested) - {"template", "origin", "rotation", "parameters"}:
+            raise RecipeError(f"{nested_context} contains unknown nested placement fields")
+        if not {"template", "origin", "rotation"}.issubset(nested):
+            raise RecipeError(f"{nested_context} must define template, origin, and rotation")
+        nested_template_id = nested["template"]
+        if not isinstance(nested_template_id, str) or nested_template_id not in templates:
+            raise RecipeError(f"{nested_context}.template references unknown template '{nested_template_id}'")
+        nested_origin = _substitute_template_parameters(copy.deepcopy(nested["origin"]), parameters, nested_context)
+        nested_rotation = _substitute_template_parameters(nested["rotation"], parameters, nested_context)
+        nested_overrides = _substitute_template_parameters(copy.deepcopy(nested.get("parameters", {})), parameters, nested_context)
+        if (not isinstance(nested_origin, dict) or set(nested_origin) != {"at", "z"} or not isinstance(nested_origin.get("at"), list)
+                or len(nested_origin["at"]) != 2 or any(type(value) is not int for value in nested_origin["at"])
+                or type(nested_origin.get("z")) is not int):
+            raise RecipeError(f"{nested_context}.origin must define a two-integer at and integer z")
+        if type(nested_rotation) is not int or nested_rotation not in {0, 90, 180, 270}:
+            raise RecipeError(f"{nested_context}.rotation must be one of 0, 90, 180, or 270")
+        local_at = _rotate_template_point(nested_origin["at"], rotation)
+        nested_parameters = _resolve_template_parameters(
+            templates[nested_template_id].get("parameters"), nested_overrides, nested_context
+        )
+        _append_expanded_template_operations(
+            templates, nested_template_id, nested_parameters,
+            [origin_at[0] + local_at[0], origin_at[1] + local_at[1]], origin_z + nested_origin["z"],
+            (rotation + nested_rotation) % 360, nested_context, next_stack, output,
+        )
+
+
 def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
     templates = recipe.get("templates")
     placements = recipe.get("placements")
@@ -364,8 +454,8 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
         context = f"templates.{template_id}"
         if not isinstance(template_id, str) or DEFINITION_NAME_PATTERN.fullmatch(template_id) is None:
             raise RecipeError(f"{context} must use a valid template ID")
-        if not isinstance(template, dict) or set(template) - {"levels", "anchors", "parameters"} or "levels" not in template:
-            raise RecipeError(f"{context} must define levels and may define anchors or parameters")
+        if not isinstance(template, dict) or set(template) - {"levels", "anchors", "parameters", "placements"} or "levels" not in template:
+            raise RecipeError(f"{context} must define levels and may define anchors, parameters, or nested placements")
         _resolve_template_parameters(template.get("parameters"), {}, context, require_values=False)
         levels = template["levels"]
         if not isinstance(levels, list) or not levels:
@@ -458,54 +548,9 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
             rotated_at = _rotate_template_point(local["at"], rotation)
             origin_at = [target["at"][0] - rotated_at[0], target["at"][1] - rotated_at[1]]
             origin_z = target["z"] - local["z"]
-        for level in templates[template_id]["levels"]:
-            absolute_z = origin_z + level["dz"]
-            if not MIN_LOGICAL_Z <= absolute_z <= MAX_LOGICAL_Z:
-                raise RecipeError(f"{context} places relative level dz {level['dz']} outside logical z bounds")
-            for operation_index, operation in enumerate(level["operations"]):
-                operation_context = f"{context}.{template_id}.levels[{level['dz']}].operations[{operation_index}]"
-                if not isinstance(operation, dict) or "type" not in operation:
-                    raise RecipeError(f"{operation_context} must be an operation object")
-                if "z" in operation:
-                    raise RecipeError(f"{operation_context}.z must be omitted; use the enclosing relative level dz")
-                if "when" in operation and not _include_template_operation(
-                    operation, parameters, operation_context
-                ):
-                    continue
-                translated = _substitute_template_parameters(
-                    copy.deepcopy(operation), parameters, operation_context
-                )
-                translated.pop("when", None)
-                _rotate_template_operation(translated, rotation, operation_context)
-                operation_type = translated["type"]
-                if operation_type in {"set", "rectangle", "rectangle_outline", "furniture", "area_rectangle", "room_rectangle"}:
-                    if not isinstance(translated.get("x"), int) or not isinstance(translated.get("y"), int):
-                        raise RecipeError(f"{operation_context} requires integer x and y")
-                    translated["x"] += origin_at[0]
-                    translated["y"] += origin_at[1]
-                elif operation_type in {"scatter", "furniture_scatter"}:
-                    region = translated.get("region")
-                    if not isinstance(region, dict) or not isinstance(region.get("x"), int) or not isinstance(region.get("y"), int):
-                        raise RecipeError(f"{operation_context}.region requires integer x and y")
-                    region["x"] += origin_at[0]
-                    region["y"] += origin_at[1]
-                elif operation_type == "line":
-                    for endpoint in ("from", "to"):
-                        point = translated.get(endpoint)
-                        if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
-                            raise RecipeError(f"{operation_context}.{endpoint} must be a two-integer coordinate")
-                        point[0] += origin_at[0]
-                        point[1] += origin_at[1]
-                elif operation_type == "pattern":
-                    point = translated.get("at")
-                    if not isinstance(point, list) or len(point) != 2 or any(type(value) is not int for value in point):
-                        raise RecipeError(f"{operation_context}.at must be a two-integer coordinate")
-                    point[0] += origin_at[0]
-                    point[1] += origin_at[1]
-                else:
-                    raise RecipeError(f"{operation_context}.type '{operation_type}' is not supported by minimal templates")
-                translated["z"] = absolute_z
-                expanded_operations.append(translated)
+        _append_expanded_template_operations(
+            templates, template_id, parameters, origin_at, origin_z, rotation, context, (), expanded_operations
+        )
         resolved_template_anchors: dict[str, dict[str, Any]] = {}
         for anchor_id, anchor in template_anchors.items():
             rotated_at = _rotate_template_point(anchor["at"], rotation)
