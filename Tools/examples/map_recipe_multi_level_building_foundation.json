@@ -18,7 +18,7 @@
 			"building_geometry": {
 				"floor_tile": {"id": "concrete_00"},
 				"wall_tile": {"id": "brick_wall_00"},
-				"support_tile": {"id": "brick_wall_00"}
+				"support_tile": {"id": "grass_plain_01"}
 			},
 			"building_levels": [
 				{"z": 0, "rooms": ["office", "garage_bay"], "furniture_anchors": ["office_door_anchor", "garage_door_anchor"]},
@@ -46,7 +46,6 @@
 		{"id": "first_floor_roof", "building": "office_building", "kind": "roof", "z": 2}
 	],
 	"building_supports": [
-		{"id": "northwest_column", "building": "office_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "column"},
 		{"id": "southeast_column", "building": "office_building", "at": [13, 11], "from_z": 0, "to_z": 2, "kind": "column"}
 	],
 	"room_connections": [
@@ -69,14 +68,17 @@
 	],
 	"room_boundaries": [
 		{"id": "office_northwest_north", "room": "office", "at": [8, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "office_northwest_corner", "room": "office", "at": [8, 7], "target_at": [7, 7], "room_at": [8, 8], "z": 0, "element": "wall_tile", "side": "south"},
 		{"id": "office_northeast_north", "room": "office", "at": [9, 7], "z": 0, "element": "wall_tile", "side": "south"},
 		{"id": "office_south_west", "room": "office", "at": [8, 10], "room_at": [8, 9], "target_at": [8, 11], "z": 0, "element": "wall_tile", "side": "north"},
 		{"id": "office_south_east", "room": "office", "at": [9, 10], "room_at": [9, 9], "target_at": [9, 11], "z": 0, "element": "wall_tile", "side": "north"},
 		{"id": "office_south_outer_west", "room": "office", "at": [8, 10], "room_at": [8, 9], "target_at": [7, 11], "z": 0, "element": "wall_tile", "side": "north"},
 		{"id": "office_south_outer_east", "room": "office", "at": [9, 10], "room_at": [9, 9], "target_at": [10, 11], "z": 0, "element": "wall_tile", "side": "north"},
 		{"id": "office_west_door", "room": "office", "at": [8, 8], "target_at": [7, 8], "room_at": [8, 8], "z": 0, "element": "door_furniture", "side": "west"},
-		{"id": "office_west_south", "room": "office", "at": [7, 9], "z": 0, "element": "wall_tile", "side": "east"},
-		{"id": "office_north_east", "room": "office", "at": [10, 8], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "office_west_south", "room": "office", "at": [7, 9], "target_at": [7, 10], "room_at": [8, 9], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "office_west_south_door_adjacent", "room": "office", "at": [7, 9], "target_at": [7, 9], "room_at": [8, 9], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "office_north_east", "room": "office", "at": [10, 8], "target_at": [10, 7], "room_at": [9, 8], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "office_north_east_door_adjacent", "room": "office", "at": [10, 8], "target_at": [10, 8], "room_at": [9, 8], "z": 0, "element": "wall_tile", "side": "west"},
 		{"id": "office_south_east_wall", "room": "office", "at": [10, 9], "z": 0, "element": "wall_tile", "side": "west"},
 		{"id": "garage_north_wall_1", "room": "garage_bay", "at": [12, 7], "z": 0, "element": "wall_tile", "side": "south"},
 		{"id": "garage_north_wall_2", "room": "garage_bay", "at": [13, 7], "z": 0, "element": "wall_tile", "side": "south"},
@@ -88,6 +90,10 @@
 		{"type": "rectangle", "x": 8, "y": 8, "width": 2, "height": 2, "tile": {"id": "concrete_00"}},
 		{"type": "room_rectangle", "room": "office", "x": 8, "y": 8, "width": 2, "height": 2},
 		{"type": "rectangle", "x": 11, "y": 8, "width": 3, "height": 3, "tile": {"id": "concrete_00"}},
+		{"type": "set", "x": 12, "y": 10, "z": 0, "tile": {"id": "dirt_light_00"}},
+		{"type": "set", "x": 13, "y": 10, "z": 0, "tile": {"id": "dirt_light_00"}},
+		{"type": "set", "x": 12, "y": 10, "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "set", "x": 13, "y": 10, "z": 1, "tile": {"id": "brick_wall_00"}},
 		{"type": "room_rectangle", "room": "garage_bay", "x": 11, "y": 8, "width": 3, "height": 3},
 		{"type": "set", "x": 10, "y": 10, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 90}},
 		{"type": "set", "x": 11, "y": 10, "z": 1, "tile": {"id": "concrete_00"}},
