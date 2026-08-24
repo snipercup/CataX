@@ -18,7 +18,8 @@
 			"building_geometry": {
 				"floor_tile": {"id": "concrete_00"},
 				"wall_tile": {"id": "brick_wall_00"},
-				"support_tile": {"id": "grass_plain_01"}
+				"support_tile": {"id": "grass_plain_01"},
+				"roof_tile": {"id": "concrete_00"}
 			},
 			"building_levels": [
 				{"z": 0, "rooms": ["office", "garage_bay"], "furniture_anchors": ["office_door_anchor", "garage_door_anchor"]},

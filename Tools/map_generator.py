@@ -109,7 +109,7 @@ BUILDING_SURFACE_KINDS = {"roof", "ceiling", "floor"}
 BUILDING_COMPOSITION_FIELDS = {"id", "building", "required_surfaces"}
 BUILDING_SUPPORT_FIELDS = {"id", "building", "at", "from_z", "to_z", "kind"}
 BUILDING_SUPPORT_KINDS = {"column", "wall"}
-BUILDING_GEOMETRY_FIELDS = {"floor_tile", "wall_tile", "support_tile"}
+BUILDING_GEOMETRY_FIELDS = {"floor_tile", "wall_tile", "support_tile", "roof_tile"}
 TILE_OPERATION_TYPES = {"set", "rectangle", "rectangle_outline", "line", "scatter"}
 LEVEL_FIELDS = {"z", "base_tile", "regions", "operations"}
 RECIPE_FIELDS = {
@@ -1481,7 +1481,7 @@ def _validate_recipe_buildings(
         if building_geometry is not None:
             if not isinstance(building_geometry, dict) or set(building_geometry) != BUILDING_GEOMETRY_FIELDS:
                 raise RecipeError(
-                    f"{context}.building_geometry must define floor_tile, wall_tile, and support_tile"
+                    f"{context}.building_geometry must define floor_tile, wall_tile, support_tile, and roof_tile"
                 )
             validated_building["building_geometry"] = building_geometry
         validated.append(validated_building)
@@ -1664,6 +1664,7 @@ def _apply_building_geometry(
     buildings: list[dict[str, Any]],
     room_boundaries: list[dict[str, Any]],
     building_supports: list[dict[str, Any]],
+    building_surfaces: list[dict[str, Any]],
     levels: list[list[dict[str, Any]]],
     rng: random.Random,
     known_tiles: set[str],
@@ -1686,6 +1687,8 @@ def _apply_building_geometry(
             categories = set(catalog_entry.get("categories", []))
             if field == "floor_tile" and not ({"Ground", "Floor", "Urban"} & categories):
                 raise RecipeError(f"{context}.floor_tile must reference a Ground, Floor, or Urban tile")
+            if field == "roof_tile" and not ({"Ground", "Floor", "Urban"} & categories):
+                raise RecipeError(f"{context}.roof_tile must reference a Ground, Floor, or Urban tile")
             if field == "wall_tile" and "Wall" not in categories:
                 raise RecipeError(f"{context}.{field} must reference a Wall tile")
             if field == "support_tile" and not ({"Wall", "Ground"} & categories):
@@ -1693,6 +1696,20 @@ def _apply_building_geometry(
             tile_specs[field] = tile
 
         footprint = building["footprint"]
+        roof_surfaces = [
+            surface for surface in building_surfaces
+            if surface["building"] == building["id"] and surface["kind"] == "roof"
+        ]
+        for surface in roof_surfaces:
+            roof_level = _get_or_create_level(levels, surface["z"] + 1)
+            for y in range(footprint["y"], footprint["y"] + footprint["height"]):
+                for x in range(footprint["x"], footprint["x"] + footprint["width"]):
+                    index = y * MAP_WIDTH + x
+                    existing = roof_level[index]
+                    if isinstance(existing, dict) and existing.get("feature"):
+                        raise RecipeError(f"{context} cannot place a roof over a feature at [{x}, {y}, {surface['z'] + 1}]")
+                    roof_level[index] = tile_specs["roof_tile"].copy()
+
         occupied_zs = [building["z"]]
         if building.get("building_levels"):
             occupied_zs = [entry["z"] for entry in building["building_levels"]]
@@ -3062,6 +3079,7 @@ def generate_map(
         buildings,
         room_boundaries,
         building_supports,
+        building_surfaces,
         levels,
         rng,
         known_tiles,
