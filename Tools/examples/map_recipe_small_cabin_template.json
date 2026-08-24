@@ -60,7 +60,7 @@
 			"template": "small_cabin",
 			"origin": {"at": [10, 16], "z": 0},
 			"parameters": {"width": 5, "height": 3},
-			"rotation": 0
+			"rotation": 90
 		}
 	]
 }
