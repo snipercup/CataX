@@ -1675,6 +1675,8 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][11][10 * 32 + 10]["id"], "grass_ramp_00")
         # Staircase slope at z2 (corner staircase upper at [11,9])
         self.assertEqual(generated["levels"][12][9 * 32 + 11]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][13][7 * 32 + 7]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][13][10 * 32 + 10]["id"], "concrete_00")
         # Door at z0
         self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
 
