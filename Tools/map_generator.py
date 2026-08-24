@@ -1686,8 +1686,10 @@ def _apply_building_geometry(
             categories = set(catalog_entry.get("categories", []))
             if field == "floor_tile" and not ({"Ground", "Floor", "Urban"} & categories):
                 raise RecipeError(f"{context}.floor_tile must reference a Ground, Floor, or Urban tile")
-            if field in {"wall_tile", "support_tile"} and "Wall" not in categories:
+            if field == "wall_tile" and "Wall" not in categories:
                 raise RecipeError(f"{context}.{field} must reference a Wall tile")
+            if field == "support_tile" and not ({"Wall", "Ground"} & categories):
+                raise RecipeError(f"{context}.{field} must reference a Wall or Ground tile")
             tile_specs[field] = tile
 
         footprint = building["footprint"]
@@ -1723,10 +1725,12 @@ def _apply_building_geometry(
                             raise RecipeError(f"{context} cannot clear staircase headroom over a feature at [{x}, {y}, {z}]")
                         level[index] = {}
                         continue
+                    if existing.get("id") == "dirt_light_00":
+                        continue
                     if existing.get("id") in tile_catalog and tile_catalog[existing["id"]].get("shape") == "slope":
                         continue
-                    # Place dirt (not floor tile) below ground-level wall positions that don't have room membership
-                    if z == building["z"] and (x, y) in wall_support_positions and not existing.get("rooms") and not existing.get("feature"):
+                    # Place dirt below ground-level wall positions unless a feature occupies the support tile.
+                    if z == building["z"] and (x, y) in wall_support_positions and not existing.get("feature"):
                         level[index] = {"id": "dirt_light_00"}
                         continue
                     replacement = tile_specs["floor_tile"].copy()
@@ -1746,7 +1750,7 @@ def _apply_building_geometry(
             # Place dirt support below the wall if z0 is empty
             support_level = _get_or_create_level(levels, boundary["z"])
             support_index = y * MAP_WIDTH + x
-            if not support_level[support_index].get("rooms") and not support_level[support_index].get("feature"):
+            if not support_level[support_index].get("feature"):
                 support_level[support_index] = {"id": "dirt_light_00"}
             wall_level[index] = tile_specs["wall_tile"].copy()
 

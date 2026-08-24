@@ -1657,6 +1657,18 @@ class MapGeneratorTests(unittest.TestCase):
         # Staircase headroom: lower_at [10,10] is cleared on z2
         self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
         # Walls from building_geometry are at z+1 (boundary z=0, walls at z=1)
+        self.assertEqual(generated["levels"][11][10 * 32 + 7]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][7 * 32 + 10]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][10][10 * 32 + 7]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][7 * 32 + 10]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][11][9 * 32 + 7]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][8 * 32 + 10]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][10 * 32 + 12]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][10 * 32 + 13]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][10][9 * 32 + 7]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][8 * 32 + 10]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][10 * 32 + 12]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][10][10 * 32 + 13]["id"], "dirt_light_00")
         self.assertEqual(generated["levels"][11][7 * 32 + 8]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][11][7 * 32 + 9]["id"], "brick_wall_00")
         # Staircase slope at z1
@@ -1733,7 +1745,7 @@ class MapGeneratorTests(unittest.TestCase):
             "required_surfaces": ["roof", "ceiling"],
         }])
         self.assertEqual(generated["levels"][11][7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
 
     def test_building_exterior_context_requires_adjacent_unclassified_terrain(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
@@ -2096,7 +2108,7 @@ class MapGeneratorTests(unittest.TestCase):
         }])
         level = generated["levels"][11]
         self.assertEqual(level[7 * 32 + 8]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
         # The office is fully enclosed: all four corners and both side walls are present.
         for x, y in ((7, 7), (10, 7), (7, 10), (10, 10), (7, 9), (10, 8), (10, 9)):
             self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
@@ -2572,8 +2584,32 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertIn("furniture_anchors", building)
         anchors = building["furniture_anchors"]
         self.assertEqual(len(anchors), 2)
-        self.assertEqual(anchors[0], {"id": "office_door_anchor", "at": [8, 8], "z": 0, "kind": "door"})
+        self.assertEqual(anchors[0], {"id": "office_door_anchor", "at": [7, 8], "z": 0, "kind": "door"})
+        self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"], {
+            "type": "furniture",
+            "id": "door_wood",
+            "rotation": 270,
+            "itemgroups": [],
+        })
         self.assertEqual(anchors[1], {"id": "garage_door_anchor", "at": [11, 8], "z": 0, "kind": "door"})
+
+    def test_example_terrain_corrections(self):
+        expected_concrete = [
+            "room_boundaries",
+            "multi_entrance_building",
+            "single_level_building",
+            "building_surfaces",
+            "furniture_anchors",
+        ]
+        for example_id in expected_concrete:
+            with self.subTest(example_id=example_id):
+                recipe_path = ROOT / "Tools" / "examples" / f"map_recipe_{example_id}.json"
+                generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+                self.assertEqual(generated["levels"][10][8 * 32 + 7]["id"], "concrete_00")
+
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+        self.assertEqual(generated["levels"][10][11 * 32 + 13]["id"], "grass_plain_01")
 
     def test_furniture_anchors_reject_duplicate_ids(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_furniture_anchors.json"
@@ -2847,7 +2883,6 @@ class MapGeneratorTests(unittest.TestCase):
             {"id": "first_floor_roof", "building": "office_building", "kind": "roof", "z": 2},
         ])
         self.assertEqual(generated["building_supports"], [
-            {"id": "northwest_column", "building": "office_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "column"},
             {"id": "southeast_column", "building": "office_building", "at": [13, 11], "from_z": 0, "to_z": 2, "kind": "column"},
         ])
 
@@ -3274,7 +3309,7 @@ class MapValidatorDimensionTests(unittest.TestCase):
         level = generated["levels"][11]
         for x, y in ((7, 7), (8, 7), (9, 7), (10, 7), (7, 9), (8, 10), (9, 10), (10, 10), (7, 10), (10, 8), (10, 9)):
             self.assertEqual(level[y * 32 + x]["id"], "brick_wall_00")
-        self.assertEqual(generated["levels"][10][8 * 32 + 8]["feature"]["id"], "door_wood")
+        self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
     def test_validates_opt_in_enclosed_room_boundary_completeness(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
         complete_map = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
