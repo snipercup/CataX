@@ -746,7 +746,7 @@ Generate a standalone map with one or more road edge connections and a continuou
 
 ## Phase 8 — Templates and compositional generation
 
-**Status: in progress; deterministic unrotated template expansion, anchors, and typed semantic variants complete**
+**Status: in progress; deterministic unrotated template expansion, anchors, and bounded numeric/collection variants complete**
 
 The first Phase 8 slice adds reusable template definitions without creating a second generation pipeline. Templates expand into ordinary root operations before the existing recipe validation and map generation stages.
 
@@ -758,12 +758,14 @@ The first Phase 8 slice adds reusable template definitions without creating a se
 * anchor-to-anchor placement against prior placements;
 * typed `tile_id`, `boolean`, and enum template parameters with required/default resolution and placement-level overrides;
 * conditional template operations for boolean inclusion and enum-selected semantic variants;
-* deterministic reusable cabin variants: brick-roofed and metal open-top;
+* bounded integer parameters for operation coordinates, dimensions, and counts;
+* constrained string-list parameters with conditional operation inclusion;
+* deterministic reusable cabin variants: brick-roofed 4×4, metal open-top 4×4, and a brick-roofed 5×3 footprint;
 * expansion into existing ordinary root operations before normal validation;
 
 ### Remaining Phase 8 work
 
-* numeric or collection parameter types;
+* structured object parameter types;
 * automatic rotation and facing-aware anchor composition;
 * nested templates;
 * complete three-dimensional footprint validation and richer compositional locations.
@@ -871,7 +873,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is in progress**: unrotated template expansion, anchors, and typed semantic variants are complete; remaining work is automatic rotation/facing-aware composition, nested templates, numeric or collection parameter types, and richer 3D composition.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is in progress**: unrotated template expansion, anchors, typed semantic variants, bounded integer parameters, and constrained string-list collections are complete; remaining work is automatic rotation/facing-aware composition, nested templates, structured object parameters, and richer 3D composition.
 
 Do not yet generate towns or generalized compositional locations. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
