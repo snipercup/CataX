@@ -711,7 +711,7 @@ Generate one small, enterable building that loads correctly and has a reachable 
 
 ## Phase 7 — Roads and map connections
 
-**Status: in progress; authored map-edge connections, road endpoints, map-local road painting, and runtime walkability validation complete**
+**Status: complete; authored map-edge connections, road endpoints, map-local road painting, and runtime walkability validation complete**
 
 The prototype previously hardcoded all four edge connections as `"ground"`. These are now authored recipe-level metadata, with named endpoint anchors identifying the exact map-edge cells where roads enter or exit.
 
@@ -738,7 +738,7 @@ Validation should determine:
 * whether every generated route has continuous supporting terrain;
 * whether road paths terminate at their declared endpoints;
 * whether generated Ground cube routes are connected by runtime navigation;
-* whether edge tiles match adjacent-map expectations.
+* whether edge tiles match adjacent-map expectations; this map-to-map compatibility contract is intentionally deferred and may be resumed later.
 
 ### Success criterion
 
@@ -746,13 +746,26 @@ Generate a standalone map with one or more road edge connections and a continuou
 
 ## Phase 8 — Templates and compositional generation
 
-**Status: planned**
+**Status: in progress; minimal deterministic unrotated template expansion complete**
 
-Once primitives and object placement work, add reusable templates.
+The first Phase 8 slice adds reusable template definitions without creating a second generation pipeline. Templates expand into ordinary root operations before the existing recipe validation and map generation stages.
 
-This phase owns richer composition deferred from Phase 4B, including nested patterns, shape-based definitions, complex automatic rotation, and multi-level template composition.
+### Completed foundation
 
-Possible templates:
+* named template definitions with relative `dz` level sections;
+* unrotated placements with translated horizontal origins and `origin.z + dz` resolution;
+* expansion into existing ordinary root operations before normal validation;
+* deterministic maintained `small_cabin` example and regression coverage.
+
+### Remaining Phase 8 work
+
+* template anchors and anchor-to-anchor placement;
+* parameters and reusable variants;
+* automatic rotation;
+* nested templates;
+* complete three-dimensional footprint validation and richer compositional locations.
+
+Candidate templates include:
 
 ```text
 small cabin
@@ -855,9 +868,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 remains in progress** after completing authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Its next optional contribution is a concrete map-to-map compatibility contract, but it should not introduce a second overmap settlement or city-routing system.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. The next planned area is **Phase 8: Templates and compositional generation**. Its first minimal slice is now implemented: deterministic unrotated `small_cabin` expansion with relative `dz`; remaining work is anchors, parameters, rotation, nesting, and richer composition.
 
-Do not yet generate doors, towns, or generalized building templates. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads.
+Do not yet generate towns or generalized compositional locations. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
@@ -927,10 +940,10 @@ Do not commit or push unless explicitly requested.
 [Complete] Wall and door placement decoupling via `target_at`/`room_at`
 [Complete] Map-local road route painting between declared endpoints
 [Complete] Runtime navigation validation for a painted local road route
-[Next]     Explicit map-to-map edge compatibility
+[Deferred] Explicit map-to-map edge compatibility (resume if needed)
 [Complete] Rooms and buildings
-[In Progress] Roads and map connections
-[Planned]  Multi-level reusable templates and richer composition
+[Complete] Roads and map connections
+[In Progress] Multi-level reusable templates and richer composition
 [Planned]  3D connectivity and gameplay validation
 [Target]   Agent-generated playable maps
 ```

@@ -1,0 +1,39 @@
+{
+	"id": "generated_small_cabin_template",
+	"name": "Generated Small Cabin Template",
+	"description": "A minimal unrotated small cabin template expanded into ordinary map operations.",
+	"seed": 20260824,
+	"base_tile": {"id": "grass_plain_01"},
+	"templates": {
+		"small_cabin": {
+			"levels": [
+				{
+					"dz": 0,
+					"operations": [
+						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}},
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "dirt_light_00"}}
+					]
+				},
+				{
+					"dz": 1,
+					"operations": [
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "brick_wall_00"}}
+					]
+				},
+				{
+					"dz": 2,
+					"operations": [
+						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}}
+					]
+				}
+			]
+		}
+	},
+	"placements": [
+		{
+			"template": "small_cabin",
+			"origin": {"at": [10, 10], "z": 0},
+			"rotation": 0
+		}
+	]
+}
