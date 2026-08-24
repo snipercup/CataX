@@ -82,6 +82,48 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][13][13 * 32 + 11], {"id": "concrete_00"})
         self.assertEqual(first["levels"][12], [])
 
+    def test_template_parameters_apply_defaults_and_placement_variants(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "tile_variant": {
+                "parameters": {
+                    "tile": {"type": "tile_id", "default": "dirt_light_00"},
+                },
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "$tile"}}]}],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "tile_variant", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "tile_variant", "origin": {"at": [11, 10], "z": 0}, "parameters": {"tile": "concrete_00"}, "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][10][10 * 32 + 11], {"id": "concrete_00"})
+
+    def test_template_parameters_reject_missing_unknown_and_unresolved_values(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "required_tile": {
+                "parameters": {"tile": {"type": "tile_id"}},
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "$tile"}}]}],
+            }
+        }
+        recipe["placements"] = [{"template": "required_tile", "origin": {"at": [10, 10], "z": 0}, "rotation": 0}]
+        with self.assertRaisesRegex(RecipeError, "requires a non-empty tile_id value"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["placements"][0]["parameters"] = {"unknown": "concrete_00"}
+        with self.assertRaisesRegex(RecipeError, "unknown parameter 'unknown'"):
+            generate_map(recipe, TILES_PATH)
+
+        recipe["templates"]["required_tile"]["parameters"] = {"tile": {"type": "tile_id", "default": "dirt_light_00"}}
+        recipe["templates"]["required_tile"]["levels"][0]["operations"][0]["tile"]["id"] = "$missing"
+        recipe["placements"][0]["parameters"] = {}
+        with self.assertRaisesRegex(RecipeError, "unknown template parameter 'missing'"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_anchors_align_a_later_placement_to_a_prior_placement(self):
         recipe = valid_recipe()
         recipe["templates"] = {
@@ -127,6 +169,8 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][12][10 * 32 + 10]["id"], "concrete_00")
         self.assertEqual(first["levels"][12][10 * 32 + 13]["id"], "concrete_00")
         self.assertEqual(first["levels"][12][10 * 32 + 14]["id"], "concrete_00")
+        self.assertEqual(first["levels"][10][10 * 32 + 14]["id"], "dirt_light_01")
+        self.assertEqual(first["levels"][11][10 * 32 + 14]["id"], "brick_wall_01")
         self.assertEqual(first["levels"][12][10 * 32 + 17]["id"], "concrete_00")
         self.assertEqual(first["levels"][12][10 * 32 + 18], {})
 

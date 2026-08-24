@@ -38,8 +38,8 @@ The root must be a JSON object with these fields:
 | `connections` | object | Authored map-edge connection metadata. Optional; defaults to all `"ground"`. |
 | `road_endpoints` | array | Authored road endpoint anchors at map edges. Optional; defaults to `[]`. |
 | `road_paths` | array | Authored cardinal routes between road endpoints. Optional; defaults to `[]`; a path may paint a map-local route with `tile`. |
-| `templates` | object | Reusable template definitions with relative `levels` and optional named `anchors`. Optional; requires `placements` when present. |
-| `placements` | array | Template placements with a literal `origin` or anchor-to-anchor alignment through `anchor_to` and `at_anchor`. |
+| `templates` | object | Reusable template definitions with relative `levels`, optional named `anchors`, and declared parameter definitions. Optional; requires `placements` when present. |
+| `placements` | array | Template placements with a literal `origin` or anchor-to-anchor alignment through `anchor_to` and `at_anchor`, plus optional parameter overrides. |
 | `building_surfaces` | array | Authored per-building floor, ceiling, and roof surface semantics. Optional; defaults to `[]`. |
 | `building_supports` | array | Authored multi-level structural support paths. Optional; defaults to `[]`. |
 
@@ -139,6 +139,10 @@ Templates are expanded before ordinary recipe validation and generation. A templ
 {
   "templates": {
     "small_cabin": {
+      "parameters": {
+        "floor_tile": {"type": "tile_id", "default": "concrete_00"},
+        "wall_tile": {"type": "tile_id", "default": "brick_wall_00"}
+      },
       "anchors": {
         "entrance": {"at": [0, 1], "z": 0, "facing": "west"},
         "exit": {"at": [4, 1], "z": 0, "facing": "east"}
@@ -156,6 +160,7 @@ Templates are expanded before ordinary recipe validation and generation. A templ
       "template": "small_cabin",
       "anchor_to": {"placement": 0, "anchor": "exit"},
       "at_anchor": "entrance",
+      "parameters": {"wall_tile": "brick_wall_01"},
       "rotation": 0
     }
   ]
@@ -164,9 +169,11 @@ Templates are expanded before ordinary recipe validation and generation. A templ
 
 For anchor-to-anchor placement, the referenced placement must appear earlier in the `placements` array. The generator computes the new origin so the placed template's `at_anchor` has the same absolute `[x, y, z]` as the referenced anchor. To place separate structures side by side, author connection anchors on the exterior edge immediately beyond each footprint (for example, a 4×4 template can use west `[0, 1]` and east `[4, 1]` anchors); interior anchors intentionally produce overlapping geometry when coincident. Anchor `facing` is preserved as metadata for future rotation-aware composition; it does not yet rotate or enforce a facing relationship.
 
-The minimal expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, non-zero rotations, unknown templates or anchors, duplicate relative `dz` levels, forward anchor references, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout, nested templates, parameters, or automatic rotation. The generated map contains only expanded ordinary recipe output; `templates` and `placements` are not serialized.
+Templates may declare `parameters`; this first parameter slice supports only `tile_id` values. Each declaration has `type: "tile_id"` and may provide a string `default`. A declaration without a default is required on every placement. Placements may override declared values through `parameters`, and template operation strings of the exact form `$parameter_name` are replaced before normal operation validation. Unknown overrides, missing required values, malformed parameter declarations, and unresolved `$` references are rejected. The substituted ID then follows the same tile-database validation as a literal tile ID.
 
-`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion, relative `dz` placement, and anchor-to-anchor alignment.
+The expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, non-zero rotations, unknown templates or anchors, duplicate relative `dz` levels, forward anchor references, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout, nested templates, non-`tile_id` parameter types, or automatic rotation. The generated map contains only expanded ordinary recipe output; `templates` and `placements` are not serialized.
+
+`Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion, relative `dz` placement, anchor-to-anchor alignment, and two cabin tile variants.
 ## Logical levels
 
 Map level-array index `10` is logical ground level `z: 0`. The conversion is:

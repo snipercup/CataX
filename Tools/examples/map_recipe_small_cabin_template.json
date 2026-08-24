@@ -6,6 +6,12 @@
 	"base_tile": {"id": "grass_plain_01"},
 	"templates": {
 		"small_cabin": {
+			"parameters": {
+				"floor_tile": {"type": "tile_id", "default": "concrete_00"},
+				"support_tile": {"type": "tile_id", "default": "dirt_light_00"},
+				"wall_tile": {"type": "tile_id", "default": "brick_wall_00"},
+				"roof_tile": {"type": "tile_id", "default": "concrete_00"}
+			},
 			"anchors": {
 				"entrance": {"at": [0, 1], "z": 0, "facing": "west"},
 				"exit": {"at": [4, 1], "z": 0, "facing": "east"}
@@ -14,20 +20,20 @@
 				{
 					"dz": 0,
 					"operations": [
-						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}},
-						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "dirt_light_00"}}
+						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "$floor_tile"}},
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "$support_tile"}}
 					]
 				},
 				{
 					"dz": 1,
 					"operations": [
-						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "brick_wall_00"}}
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "$wall_tile"}}
 					]
 				},
 				{
 					"dz": 2,
 					"operations": [
-						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}}
+						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "$roof_tile"}}
 					]
 				}
 			]
@@ -43,6 +49,7 @@
 			"template": "small_cabin",
 			"anchor_to": {"placement": 0, "anchor": "exit"},
 			"at_anchor": "entrance",
+			"parameters": {"support_tile": "dirt_light_01", "wall_tile": "brick_wall_01"},
 			"rotation": 0
 		}
 	]
