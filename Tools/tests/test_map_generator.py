@@ -538,6 +538,21 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(first["levels"][12][20 * 32 + 11], {})
         self.assertEqual(first["levels"][12][10 * 32 + 18], {})
 
+    def test_village_square_composition_example_generates(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_village_square_composition.json"
+        first = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+        second = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(first, second)
+        self.assertEqual(first["levels"][10][12 * 32 + 12]["id"], "concrete_00")
+        self.assertEqual(first["levels"][10][15 * 32 + 11]["id"], "dirt_light_00")
+        self.assertEqual(first["levels"][10][14 * 32 + 7]["id"], "dirt_light_01")
+        self.assertEqual(first["levels"][11][14 * 32 + 7]["id"], "metal_wall_00")
+        self.assertEqual(first["levels"][12][14 * 32 + 7], {})
+        self.assertEqual(first["levels"][10][14 * 32 + 20]["id"], "dirt_light_00")
+        self.assertEqual(first["levels"][11][14 * 32 + 20]["id"], "brick_wall_00")
+        self.assertEqual(first["levels"][12][14 * 32 + 20]["id"], "concrete_00")
+
     def test_legacy_regions_and_every_operation_can_target_logical_z(self):
         recipe = valid_recipe()
         recipe["base_tile"] = {"id": "grass_plain_01"}

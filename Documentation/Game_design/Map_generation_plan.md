@@ -773,6 +773,16 @@ The first Phase 8 slice adds reusable template definitions without creating a se
 
 The next map-generation work should remain separate from generalized town or overmap composition until a concrete gameplay need requires it.
 
+## Phase 9 — Map-local compositional locations
+
+**Status: in progress; maintained village-square composition slice complete**
+
+The first Phase 9 slice proves map-local composition with `Tools/examples/map_recipe_village_square_composition.json`. It expands a central `village_square` template with nested plaza fixtures and named road anchors, then uses automatic facing-compatible anchor placement to attach a metal open-top cabin and a brick roofed cabin. The generated map remains a standalone tactical-map asset; it does not introduce town, settlement, or overmap-wide composition.
+
+### Next Phase 9 work
+
+Extend maintained compositions only when a concrete gameplay need requires a larger house, shop, warehouse, crossroads, or another authored location type. Preserve deterministic template expansion, three-dimensional footprint validation, and the existing map-local `areas` representation.
+
 Candidate templates include:
 
 ```text
@@ -876,9 +886,9 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with a maintained village-square composition that uses nested plaza fixtures, road anchors, and automatically oriented multi-level cabins. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
-Do not yet generate towns or generalized compositional locations. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
+Do not yet generate towns or overmap-wide composition. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
 Run the complete Python suite, relevant Godot tests or smoke checks, all maintained example generations through `Tools/map_validator.py`, and `git diff --check`.
 
