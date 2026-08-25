@@ -1,0 +1,109 @@
+{
+	"id": "generated_village_square_composition",
+	"name": "Generated Village Square Composition",
+	"description": "A maintained map-local village square composed from a plaza, nested fixtures, and connected multi-level cabins.",
+	"seed": 20260825,
+	"base_tile": {"id": "grass_plain_01"},
+	"templates": {
+		"plaza_bench": {
+			"levels": [
+				{
+					"dz": 0,
+					"operations": [
+						{"type": "furniture", "x": 0, "y": 0, "id": "bench_garden", "rotation": 0}
+					]
+				}
+			]
+		},
+		"village_square": {
+			"locations": {
+				"plaza": {"at": [0, 0], "z": 0, "width": 8, "height": 8}
+			},
+			"anchors": {
+				"west_road": {"at": [-1, 3], "z": 0, "facing": "west"},
+				"east_road": {"at": [8, 3], "z": 0, "facing": "east"}
+			},
+			"placements": [
+				{"template": "plaza_bench", "origin": {"at": [2, 2], "z": 0}, "rotation": 0},
+				{"template": "plaza_bench", "origin": {"at": [5, 5], "z": 0}, "rotation": 180}
+			],
+			"levels": [
+				{
+					"dz": 0,
+					"operations": [
+						{"type": "rectangle", "x": 0, "y": 0, "width": 8, "height": 8, "tile": {"id": "concrete_00"}},
+						{"type": "line", "from": [-4, 3], "to": [-1, 3], "tile": {"id": "dirt_light_00"}},
+						{"type": "line", "from": [8, 3], "to": [11, 3], "tile": {"id": "dirt_light_00"}}
+					]
+				}
+			]
+		},
+		"roof_panel": {
+			"parameters": {
+				"tile": {"type": "tile_id", "default": "concrete_00"},
+				"enabled": {"type": "boolean", "default": true},
+				"width": {"type": "integer", "minimum": 4, "maximum": 4, "default": 4},
+				"height": {"type": "integer", "minimum": 4, "maximum": 4, "default": 4}
+			},
+			"levels": [
+				{"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": "$width", "height": "$height", "tile": {"id": "$tile"}, "when": "$enabled"}]}
+			]
+		},
+		"small_cabin": {
+			"parameters": {
+				"style": {
+					"type": "object",
+					"properties": {
+						"support_tile": {"type": "tile_id", "default": "dirt_light_00"},
+						"wall_tile": {"type": "tile_id", "default": "brick_wall_00"},
+						"roof_tile": {"type": "tile_id", "default": "concrete_00"},
+						"include_roof": {"type": "boolean", "default": true}
+					}
+				}
+			},
+			"anchors": {
+				"entrance": {"at": [0, 1], "z": 0, "facing": "west"},
+				"exit": {"at": [4, 1], "z": 0, "facing": "east"}
+			},
+			"placements": [
+				{
+					"template": "roof_panel",
+					"origin": {"at": [0, 0], "z": 2},
+					"parameters": {"tile": "$style.roof_tile", "enabled": "$style.include_roof"},
+					"rotation": 0
+				}
+			],
+			"levels": [
+				{
+					"dz": 0,
+					"operations": [
+						{"type": "rectangle", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "concrete_00"}},
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "$style.support_tile"}}
+					]
+				},
+				{
+					"dz": 1,
+					"operations": [
+						{"type": "rectangle_outline", "x": 0, "y": 0, "width": 4, "height": 4, "tile": {"id": "$style.wall_tile"}}
+					]
+				}
+			]
+		}
+	},
+	"placements": [
+		{"template": "village_square", "origin": {"at": [12, 12], "z": 0}, "rotation": 0},
+		{
+			"template": "small_cabin",
+			"anchor_to": {"placement": 0, "anchor": "west_road"},
+			"at_anchor": "exit",
+			"parameters": {"style": {"support_tile": "dirt_light_01", "wall_tile": "metal_wall_00", "include_roof": false}},
+			"rotation": "auto"
+		},
+		{
+			"template": "small_cabin",
+			"anchor_to": {"placement": 0, "anchor": "east_road"},
+			"at_anchor": "entrance",
+			"rotation": "auto"
+		}
+	]
+}
