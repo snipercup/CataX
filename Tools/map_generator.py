@@ -431,6 +431,59 @@ def _append_expanded_template_operations(
         )
 
 
+def _rotate_template_location(location: dict[str, Any], rotation: int) -> dict[str, int | list[int]]:
+    rectangle = {"x": location["at"][0], "y": location["at"][1], "width": location["width"], "height": location["height"]}
+    _rotate_template_rectangle(rectangle, rotation)
+    return {"at": [rectangle["x"], rectangle["y"]], "z": location["z"], "width": rectangle["width"], "height": rectangle["height"]}
+
+
+def _template_operation_footprint(operation: dict[str, Any]) -> set[tuple[int, int, int]]:
+    operation_type = operation["type"]
+    z = operation["z"]
+    if operation_type in {"set", "furniture", "pattern"}:
+        x, y = (operation["at"] if operation_type == "pattern" else [operation["x"], operation["y"]])
+        return {(x, y, z)}
+    if operation_type in {"rectangle", "area_rectangle", "room_rectangle"}:
+        x, y, width, height = operation["x"], operation["y"], operation["width"], operation["height"]
+        return {(cell_x, cell_y, z) for cell_x in range(x, x + width) for cell_y in range(y, y + height)}
+    if operation_type == "rectangle_outline":
+        x, y, width, height = operation["x"], operation["y"], operation["width"], operation["height"]
+        return {
+            (cell_x, cell_y, z)
+            for cell_x in range(x, x + width)
+            for cell_y in range(y, y + height)
+            if cell_x in {x, x + width - 1} or cell_y in {y, y + height - 1}
+        }
+    if operation_type in {"scatter", "furniture_scatter"}:
+        region = operation["region"]
+        return {
+            (cell_x, cell_y, z)
+            for cell_x in range(region["x"], region["x"] + region["width"])
+            for cell_y in range(region["y"], region["y"] + region["height"])
+        }
+    if operation_type == "line":
+        start, end = operation["from"], operation["to"]
+        return {
+            (cell_x, cell_y, z)
+            for cell_x in range(min(start[0], end[0]), max(start[0], end[0]) + 1)
+            for cell_y in range(min(start[1], end[1]), max(start[1], end[1]) + 1)
+        }
+    return set()
+
+
+def _validate_template_footprint(
+    operations: list[dict[str, Any]], placement_index: int, occupied: dict[tuple[int, int, int], int], allowed_overlap: set[tuple[int, int, int]],
+) -> None:
+    cells = set().union(*(_template_operation_footprint(operation) for operation in operations)) if operations else set()
+    for x, y, z in sorted(cells):
+        if not (0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT):
+            raise RecipeError(f"placements[{placement_index}] 3D footprint extends outside the {MAP_WIDTH}x{MAP_HEIGHT} map at [{x}, {y}, {z}]")
+        if (x, y, z) in occupied and (x, y, z) not in allowed_overlap:
+            raise RecipeError(f"placements[{placement_index}] 3D footprint overlaps placement {occupied[(x, y, z)]} at [{x}, {y}, {z}]")
+    for cell in cells:
+        occupied.setdefault(cell, placement_index)
+
+
 def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
     templates = recipe.get("templates")
     placements = recipe.get("placements")
@@ -454,8 +507,8 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
         context = f"templates.{template_id}"
         if not isinstance(template_id, str) or DEFINITION_NAME_PATTERN.fullmatch(template_id) is None:
             raise RecipeError(f"{context} must use a valid template ID")
-        if not isinstance(template, dict) or set(template) - {"levels", "anchors", "parameters", "placements"} or "levels" not in template:
-            raise RecipeError(f"{context} must define levels and may define anchors, parameters, or nested placements")
+        if not isinstance(template, dict) or set(template) - {"levels", "anchors", "locations", "parameters", "placements"} or "levels" not in template:
+            raise RecipeError(f"{context} must define levels and may define anchors, locations, parameters, or nested placements")
         _resolve_template_parameters(template.get("parameters"), {}, context, require_values=False)
         levels = template["levels"]
         if not isinstance(levels, list) or not levels:
@@ -488,16 +541,32 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 raise RecipeError(f"{anchor_context}.z must be an integer between -10 and 10")
             if "facing" in anchor and anchor["facing"] not in CONNECTION_DIRECTIONS:
                 raise RecipeError(f"{anchor_context}.facing must be a cardinal direction")
+        locations = template.get("locations", {})
+        if not isinstance(locations, dict):
+            raise RecipeError(f"{context}.locations must be an object")
+        for location_id, location in locations.items():
+            location_context = f"{context}.locations.{location_id}"
+            if not isinstance(location_id, str) or DEFINITION_NAME_PATTERN.fullmatch(location_id) is None:
+                raise RecipeError(f"{location_context} must use a valid location ID")
+            if (not isinstance(location, dict) or set(location) != {"at", "z", "width", "height"}
+                    or not isinstance(location.get("at"), list) or len(location["at"]) != 2
+                    or any(type(value) is not int for value in location["at"])
+                    or type(location.get("z")) is not int or type(location.get("width")) is not int
+                    or type(location.get("height")) is not int or location["width"] <= 0 or location["height"] <= 0):
+                raise RecipeError(f"{location_context} must define at, z, positive width, and positive height")
 
     resolved_anchors: list[dict[str, dict[str, Any]]] = []
+    resolved_locations: list[dict[str, dict[str, Any]]] = []
+    occupied_footprint: dict[tuple[int, int, int], int] = {}
     for placement_index, placement in enumerate(placements):
         context = f"placements[{placement_index}]"
-        if not isinstance(placement, dict) or set(placement) - {"template", "origin", "anchor_to", "at_anchor", "rotation", "parameters"}:
+        if not isinstance(placement, dict) or set(placement) - {"template", "origin", "anchor_to", "at_anchor", "location_to", "at_location", "rotation", "parameters"}:
             raise RecipeError(f"{context} contains unknown placement fields")
         if "template" not in placement or "rotation" not in placement:
             raise RecipeError(f"{context} must define template and rotation")
-        if set(placement) & {"origin", "anchor_to", "at_anchor"} not in ({"origin"}, {"anchor_to", "at_anchor"}):
-            raise RecipeError(f"{context} must define either origin or anchor_to with at_anchor")
+        placement_locations = set(placement) & {"origin", "anchor_to", "at_anchor", "location_to", "at_location"}
+        if placement_locations not in ({"origin"}, {"anchor_to", "at_anchor"}, {"location_to", "at_location"}):
+            raise RecipeError(f"{context} must define origin, anchor_to with at_anchor, or location_to with at_location")
         template_id = placement["template"]
         if not isinstance(template_id, str) or template_id not in templates:
             raise RecipeError(f"{context}.template references unknown template '{template_id}'")
@@ -510,6 +579,7 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
             templates[template_id].get("parameters"), placement.get("parameters"), context
         )
         template_anchors = templates[template_id].get("anchors", {})
+        allowed_overlap: set[tuple[int, int, int]] = set()
         if "origin" in placement:
             if requested_rotation == "auto":
                 raise RecipeError(f"{context}.rotation 'auto' requires anchor_to and at_anchor")
@@ -526,7 +596,7 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 raise RecipeError(f"{context}.origin must define a two-integer at and integer z")
             origin_at = origin["at"]
             origin_z = origin["z"]
-        else:
+        elif "anchor_to" in placement:
             anchor_to = placement["anchor_to"]
             at_anchor = placement["at_anchor"]
             if not isinstance(anchor_to, dict) or set(anchor_to) != {"placement", "anchor"}:
@@ -538,6 +608,7 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(at_anchor, str) or at_anchor not in template_anchors:
                 raise RecipeError(f"{context}.at_anchor must reference an anchor on the placed template")
             target = resolved_anchors[anchor_to["placement"]][anchor_to["anchor"]]
+            allowed_overlap.update(cell for cell, owner in occupied_footprint.items() if owner == anchor_to["placement"])
             local = template_anchors[at_anchor]
             if requested_rotation == "auto":
                 if "facing" not in target or "facing" not in local:
@@ -548,8 +619,38 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
             rotated_at = _rotate_template_point(local["at"], rotation)
             origin_at = [target["at"][0] - rotated_at[0], target["at"][1] - rotated_at[1]]
             origin_z = target["z"] - local["z"]
+        else:
+            location_to = placement["location_to"]
+            at_location = placement["at_location"]
+            if not isinstance(location_to, dict) or set(location_to) != {"placement", "location"}:
+                raise RecipeError(f"{context}.location_to must define placement and location")
+            if type(location_to["placement"]) is not int or not 0 <= location_to["placement"] < placement_index:
+                raise RecipeError(f"{context}.location_to.placement must reference a prior placement")
+            if not isinstance(location_to["location"], str) or location_to["location"] not in resolved_locations[location_to["placement"]]:
+                raise RecipeError(f"{context}.location_to.location must reference a location on the prior placement")
+            template_locations = templates[template_id].get("locations", {})
+            if not isinstance(at_location, str) or at_location not in template_locations:
+                raise RecipeError(f"{context}.at_location must reference a location on the placed template")
+            if requested_rotation == "auto":
+                raise RecipeError(f"{context}.rotation 'auto' requires anchor_to and at_anchor")
+            rotation = requested_rotation
+            target_location = resolved_locations[location_to["placement"]][location_to["location"]]
+            local_location = _rotate_template_location(template_locations[at_location], rotation)
+            if (local_location["width"], local_location["height"]) != (target_location["width"], target_location["height"]):
+                raise RecipeError(f"{context}.at_location footprint must match the referenced location dimensions")
+            origin_at = [target_location["at"][0] - local_location["at"][0], target_location["at"][1] - local_location["at"][1]]
+            origin_z = target_location["z"] - local_location["z"]
+            allowed_overlap.update(
+                (x, y, target_location["z"])
+                for x in range(target_location["at"][0], target_location["at"][0] + target_location["width"])
+                for y in range(target_location["at"][1], target_location["at"][1] + target_location["height"])
+            )
+        operation_start = len(expanded_operations)
         _append_expanded_template_operations(
             templates, template_id, parameters, origin_at, origin_z, rotation, context, (), expanded_operations
+        )
+        _validate_template_footprint(
+            expanded_operations[operation_start:], placement_index, occupied_footprint, allowed_overlap
         )
         resolved_template_anchors: dict[str, dict[str, Any]] = {}
         for anchor_id, anchor in template_anchors.items():
@@ -565,6 +666,23 @@ def _expand_templates(recipe: dict[str, Any]) -> dict[str, Any]:
                 raise RecipeError(f"{context}.{anchor_id} resolves outside logical z bounds")
             resolved_template_anchors[anchor_id] = resolved_anchor
         resolved_anchors.append(resolved_template_anchors)
+        resolved_template_locations: dict[str, dict[str, Any]] = {}
+        for location_id, location in templates[template_id].get("locations", {}).items():
+            rotated_location = _rotate_template_location(location, rotation)
+            resolved_location = {
+                "at": [origin_at[0] + rotated_location["at"][0], origin_at[1] + rotated_location["at"][1]],
+                "z": origin_z + rotated_location["z"],
+                "width": rotated_location["width"],
+                "height": rotated_location["height"],
+            }
+            if (not (0 <= resolved_location["at"][0] < MAP_WIDTH and 0 <= resolved_location["at"][1] < MAP_HEIGHT)
+                    or resolved_location["at"][0] + resolved_location["width"] > MAP_WIDTH
+                    or resolved_location["at"][1] + resolved_location["height"] > MAP_HEIGHT):
+                raise RecipeError(f"{context}.{location_id} resolves outside map bounds")
+            if not MIN_LOGICAL_Z <= resolved_location["z"] <= MAX_LOGICAL_Z:
+                raise RecipeError(f"{context}.{location_id} resolves outside logical z bounds")
+            resolved_template_locations[location_id] = resolved_location
+        resolved_locations.append(resolved_template_locations)
     return expanded
 
 

@@ -392,6 +392,76 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "nested template cycle: a -> b -> a"):
             generate_map(recipe, TILES_PATH)
 
+    def test_template_3d_footprint_validation_rejects_conflicting_root_placements(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "cell": {
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "dirt_light_00"}}]}],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "cell", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "cell", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+        ]
+
+        with self.assertRaisesRegex(RecipeError, r"3D footprint overlaps placement 0 at \[10, 10, 0\]"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_template_3d_footprint_allows_the_same_xy_at_different_z(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "cell": {
+                "levels": [{"dz": 0, "operations": [{"type": "set", "x": 0, "y": 0, "tile": {"id": "dirt_light_00"}}]}],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "cell", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "cell", "origin": {"at": [10, 10], "z": 1}, "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][11][10 * 32 + 10], {"id": "dirt_light_00"})
+
+    def test_template_locations_align_matching_3d_regions_and_allow_intentional_overlap(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "pad": {
+                "locations": {"pad": {"at": [0, 0], "z": 0, "width": 2, "height": 1}},
+                "levels": [{"dz": 0, "operations": [{"type": "rectangle", "x": 0, "y": 0, "width": 2, "height": 1, "tile": {"id": "dirt_light_00"}}]}],
+            }
+        }
+        recipe["placements"] = [
+            {"template": "pad", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "pad", "location_to": {"placement": 0, "location": "pad"}, "at_location": "pad", "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["levels"][10][10 * 32 + 10], {"id": "dirt_light_00"})
+        self.assertEqual(generated["levels"][10][10 * 32 + 11], {"id": "dirt_light_00"})
+
+    def test_template_locations_reject_mismatched_footprints(self):
+        recipe = valid_recipe()
+        recipe["templates"] = {
+            "wide": {
+                "locations": {"pad": {"at": [0, 0], "z": 0, "width": 2, "height": 1}},
+                "levels": [{"dz": 0, "operations": []}],
+            },
+            "narrow": {
+                "locations": {"pad": {"at": [0, 0], "z": 0, "width": 1, "height": 1}},
+                "levels": [{"dz": 0, "operations": []}],
+            },
+        }
+        recipe["placements"] = [
+            {"template": "wide", "origin": {"at": [10, 10], "z": 0}, "rotation": 0},
+            {"template": "narrow", "location_to": {"placement": 0, "location": "pad"}, "at_location": "pad", "rotation": 0},
+        ]
+
+        with self.assertRaisesRegex(RecipeError, "footprint must match the referenced location dimensions"):
+            generate_map(recipe, TILES_PATH)
+
     def test_template_parameters_reject_missing_unknown_and_unresolved_values(self):
         recipe = valid_recipe()
         recipe["templates"] = {
