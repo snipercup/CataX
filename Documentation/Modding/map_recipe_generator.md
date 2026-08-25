@@ -178,13 +178,34 @@ Templates are expanded before ordinary recipe validation and generation. A templ
 }
 ```
 
+Templates can also expose named rectangular `locations` for richer three-dimensional composition:
+
+```json
+"locations": {
+  "roof_pad": {"at": [0, 0], "z": 2, "width": 4, "height": 4}
+}
+```
+
+A root placement may align an equal-sized location on an earlier placement:
+
+```json
+{
+  "template": "roof_module",
+  "location_to": {"placement": 0, "location": "roof_pad"},
+  "at_location": "roof_pad",
+  "rotation": 0
+}
+```
+
+Locations resolve their local rectangle through placement rotation and `origin.z + location.z`. The placed and referenced rotated dimensions must match exactly. Location alignment intentionally permits overlap inside the referenced location volume; ordinary root placements still reject conflicting three-dimensional footprints. Anchor-connected placements likewise permit overlap with their explicitly referenced placement, preserving intentional coincident-anchor composition. Each placement footprint is conservatively derived from its resolved set, rectangle, outline, line, pattern, scatter, furniture, area, room, and nested operations. Out-of-bounds x/y/z cells and unconnected conflicts are rejected before ordinary generation.
+
 Nested templates are declared with a template-local `placements` array. A nested placement uses `{ "template", "origin", "rotation", "parameters" }`; its `origin.at` and `origin.z` are relative to the enclosing template origin, its rotation is added to the enclosing rotation, and its parameter values may reference enclosing parameters. The child template expands recursively into ordinary root operations. Nested placements intentionally use literal local origins in this slice: they cannot use `anchor_to`, `at_anchor`, or `rotation: "auto"`, and child anchors are not re-exported through the parent. Cycles, unknown child templates, malformed local origins, unsupported rotations, unresolved forwarded parameters, and logical-z overflow are rejected.
 
 For anchor-to-anchor placement, the referenced placement must appear earlier in the `placements` array. `rotation` accepts `0`, `90`, `180`, or `270` degrees clockwise around the template origin. It rotates all local horizontal operation coordinates, rectangular footprints, line endpoints, scatter regions, patterns, anchors, anchor `facing`, and explicit tile/furniture/pattern rotations; it never changes relative `dz`. Set `rotation` to `"auto"` only with `anchor_to` and `at_anchor` to derive the quarter-turn that makes the placed anchor face opposite the referenced anchor. Auto rotation requires both connected anchors to declare cardinal `facing` values; it resolves the placed `at_anchor` after rotation before aligning it to the prior anchor. To place separate structures side by side, author connection anchors on the exterior edge immediately beyond each footprint (for example, a 4×4 template can use west `[0, 1]` and east `[4, 1]` anchors); interior anchors intentionally produce overlapping geometry when coincident.
 
 Templates may declare typed `parameters`. `tile_id` values substitute exact `$parameter_name` strings before normal operation validation and may provide a string `default`; without a default they are required on every placement. `boolean` values may provide a boolean `default` and control a template operation with `"when": "$parameter_name"`. `enum` values require a non-empty, unique string `values` array and may provide a default from that array; they select semantic operation variants with `"when": {"parameter": "material", "equals": "metal"}`. `integer` values require inclusive integer `minimum` and `maximum` bounds and can substitute operation coordinates, dimensions, or counts. `string_list` values require an allowed non-empty, unique string `values` array; each resolved list is unique and may be empty, and `"when": {"parameter": "features", "contains": "roof"}` conditionally includes an operation. `object` values require a non-empty declared `properties` object; each property uses any supported parameter schema, resolves its own default or required value, and rejects unknown fields. Use an exact dotted reference such as `$style.wall_tile` or `$style.include_roof` to substitute a declared object field. Placements override declared values through `parameters`. Unknown overrides, missing required values, malformed declarations, invalid enum/list values, out-of-range integers, unresolved `$` references, and invalid conditions are rejected. Substituted tile IDs then follow the same tile-database validation as literal tile IDs.
 
-The expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, unsupported rotations, automatic rotation without a connected facing anchor pair, invalid nested placements, template cycles, unknown templates or anchors, duplicate relative `dz` levels, forward root-anchor references, and placements outside the logical z range. Templates cannot yet be combined with the grouped root `levels` layout. The generated map contains only expanded ordinary recipe output; `templates` and `placements` are not serialized.
+The expansion supports existing `set`, rectangle, outline, line, pattern, scatter, furniture, area-rectangle, room-rectangle, and furniture-scatter operation shapes. It rejects nested operation `z` values, unsupported rotations, automatic rotation without a connected facing anchor pair, invalid nested placements, template cycles, malformed locations, incompatible location dimensions, unknown templates or anchors, duplicate relative `dz` levels, forward root-anchor/location references, out-of-bounds three-dimensional footprints, and unconnected conflicting footprints. Templates cannot yet be combined with the grouped root `levels` layout. The generated map contains only expanded ordinary recipe output; `templates`, `placements`, anchors, and locations are not serialized.
 
 `Tools/examples/map_recipe_small_cabin_template.json` is the maintained example. Its tests verify deterministic expansion, relative `dz` placement, nested roof-panel composition with forwarded style and dimension parameters, anchor-to-anchor alignment, automatic facing-compatible rotation, structured style-object overrides, bounded integer footprint dimensions, and a rotated 5×3 footprint.
 ## Logical levels

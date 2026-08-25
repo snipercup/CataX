@@ -746,7 +746,7 @@ Generate a standalone map with one or more road edge connections and a continuou
 
 ## Phase 8 — Templates and compositional generation
 
-**Status: in progress; deterministic nested and rotation-aware template expansion, facing-compatible anchors, bounded numeric/collection variants, and structured parameter objects complete**
+**Status: Phase 8 complete; deterministic nested and rotation-aware template expansion, validated 3D footprints, compositional locations, facing-compatible anchors, bounded numeric/collection variants, and structured parameter objects complete**
 
 The first Phase 8 slice adds reusable template definitions without creating a second generation pipeline. Templates expand into ordinary root operations before the existing recipe validation and map generation stages.
 
@@ -765,11 +765,13 @@ The first Phase 8 slice adds reusable template definitions without creating a se
 * recursive nested template placements with local origins, cumulative rotation and `dz`, forwarded parameter overrides, and cycle rejection;
 * structured object parameters with declared property schemas, per-property defaults/required values, placement overrides, and dotted references;
 * rotated 5×3 cabin coverage and automatically oriented brick/metal cabin connection coverage;
+* complete three-dimensional template-footprint validation before ordinary generation, with conservative operation coverage, map/logical-z bounds, and unconnected-conflict rejection;
+* named rectangular compositional locations with rotation-aware placement, matching-volume checks, and intentional aligned-volume overlap;
 * expansion into existing ordinary root operations before normal validation;
 
-### Remaining Phase 8 work
+### Phase 8 completion note
 
-* complete three-dimensional footprint validation and richer compositional locations.
+The next map-generation work should remain separate from generalized town or overmap composition until a concrete gameplay need requires it.
 
 Candidate templates include:
 
@@ -874,7 +876,7 @@ An agent can create a new playable, potentially multi-level map from a concise d
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is in progress**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, and automatic facing-compatible anchor rotation are complete; remaining work is richer 3D composition.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
 Do not yet generate towns or generalized compositional locations. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
