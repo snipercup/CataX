@@ -28,6 +28,11 @@
 			"staircases": [
 				{"id": "office_staircase", "lower_at": [10, 10], "upper_at": [11, 9], "landing_at": [11, 10], "rotation": 90, "upper_rotation": 0}
 			],
+			"reachability_validation": {
+				"required_entrances": ["front_entrance", "garage_entrance"],
+				"required_furniture_anchors": ["office_door_anchor", "garage_door_anchor", "upper_bench_anchor"],
+				"required_building_levels": [0, 2]
+			},
 			"exterior_context": {"at": [6, 8], "z": 0},
 			"exterior_access_context": {"connection": "office_front_door"},
 			"entrances": [
