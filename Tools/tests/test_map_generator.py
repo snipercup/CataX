@@ -2581,11 +2581,13 @@ class MapGeneratorTests(unittest.TestCase):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_semantic_two_storey_building.json"
         unreachable_level = json.loads(recipe_path.read_text(encoding="utf-8"))
         unreachable_level["buildings"][0]["reachability_validation"] = {"required_building_levels": [0, 2]}
+        unreachable_level["buildings"][0].pop("staircases", None)
         with self.assertRaisesRegex(RecipeError, "building level z 2 is not reachable from the required entrances"):
             generate_map(unreachable_level, TILES_PATH)
 
         unreachable_anchor = json.loads(recipe_path.read_text(encoding="utf-8"))
         unreachable_anchor["buildings"][0]["reachability_validation"] = {"required_furniture_anchors": ["loft_bench"]}
+        unreachable_anchor["buildings"][0].pop("staircases", None)
         with self.assertRaisesRegex(RecipeError, "furniture anchor 'loft_bench' is not reachable from the required entrances"):
             generate_map(unreachable_anchor, TILES_PATH)
 
@@ -2699,6 +2701,13 @@ class MapGeneratorTests(unittest.TestCase):
             {"z": 2, "rooms": ["loft"], "furniture_anchors": ["loft_bench"]},
         ])
         self.assertEqual({anchor["id"] for anchor in building["furniture_anchors"]}, {"workroom_door", "loft_bench"})
+        self.assertEqual(building["staircases"], [
+            {"id": "workroom_staircase", "lower_at": [10, 10], "upper_at": [10, 9], "rotation": 0},
+        ])
+        self.assertEqual(building["reachability_validation"], {
+            "required_furniture_anchors": ["workroom_door", "loft_bench"],
+            "required_building_levels": [0, 2],
+        })
         lower_wall_cells = ((7, 7), (8, 7), (9, 7), (10, 7), (11, 7), (12, 7), (7, 8), (12, 8), (12, 9), (7, 10), (12, 10), (7, 11), (12, 11), (7, 12), (8, 12), (9, 12), (10, 12), (11, 12), (12, 12))
         for x, y in lower_wall_cells:
             self.assertEqual(generated["levels"][11][y * 32 + x]["id"], "brick_wall_00")
@@ -2711,6 +2720,13 @@ class MapGeneratorTests(unittest.TestCase):
             self.assertEqual(generated["levels"][12][y * 32 + x]["id"], "concrete_00")
         self.assertEqual(generated["levels"][12][8 * 32 + 8]["id"], "concrete_00")
         self.assertEqual(generated["levels"][14][7 * 32 + 7]["id"], "concrete_00")
+        # The authored staircase: lower slope on z1, upper slope on z2 inside the loft,
+        # and cleared z2 headroom above the lower slope. The loft is enclosed but not
+        # boundary_validation-complete, because the stairwell opening breaks its perimeter.
+        self.assertEqual(generated["levels"][11][10 * 32 + 10]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][12][9 * 32 + 10]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][12][9 * 32 + 10]["rooms"], ["loft"])
+        self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
 
     def test_single_level_building_example_preserves_contained_existing_content(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_single_level_building.json"
