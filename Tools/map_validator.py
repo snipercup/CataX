@@ -893,8 +893,8 @@ class MapValidator:
                 self.add_error(file_path, f"{context} has unknown field '{unknown_fields[0]}'.")
             if 'building_geometry' in building:
                 geometry = building['building_geometry']
-                if not isinstance(geometry, dict) or set(geometry) != {'floor_tile', 'wall_tile', 'support_tile', 'roof_tile'}:
-                    self.add_error(file_path, f"{context} building_geometry must define floor_tile, wall_tile, support_tile, and roof_tile.")
+                if not isinstance(geometry, dict) or set(geometry) not in ({'floor_tile', 'wall_tile', 'support_tile'}, {'floor_tile', 'wall_tile', 'support_tile', 'roof_tile'}):
+                    self.add_error(file_path, f"{context} building_geometry must define floor_tile, wall_tile, support_tile, and optional roof_tile.")
                 else:
                     for geometry_key, tile in geometry.items():
                         if not isinstance(tile, dict) or not isinstance(tile.get('id'), str) or not tile.get('id'):
