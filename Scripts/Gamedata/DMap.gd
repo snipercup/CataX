@@ -443,7 +443,7 @@ func _sanitize_buildings(data: Dictionary) -> void:
 					return false
 		if building.has("building_geometry"):
 			var geometry: Variant = building["building_geometry"]
-			if not geometry is Dictionary or geometry.keys().size() != 3:
+			if not geometry is Dictionary or (geometry.keys().size() != 3 and geometry.keys().size() != 4):
 				return false
 			for geometry_key in ["floor_tile", "wall_tile", "support_tile"]:
 				if not geometry.has(geometry_key) or not geometry[geometry_key] is Dictionary \
@@ -451,6 +451,11 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				or not geometry[geometry_key]["id"] is String \
 				or geometry[geometry_key]["id"].is_empty():
 					return false
+			if geometry.has("roof_tile") and (not geometry["roof_tile"] is Dictionary \
+				or not geometry["roof_tile"].has("id") \
+				or not geometry["roof_tile"]["id"] is String \
+				or geometry["roof_tile"]["id"].is_empty()):
+				return false
 		for room_id in building["rooms"]:
 			if not room_id is String or room_id not in valid_room_ids:
 				return false
