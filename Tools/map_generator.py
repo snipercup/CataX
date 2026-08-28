@@ -2314,11 +2314,17 @@ def _apply_building_geometry(
             existing = wall_level[index]
             if isinstance(existing, dict) and existing.get("feature"):
                 raise RecipeError(f"{context} cannot place a wall over a feature at [{x}, {y}, {wall_z}]")
-            # Place support below the wall at its storey's floor level.
+            # Only ground-storey walls receive dirt supports. Elevated walls stand on their storey's floor material.
             support_level = _get_or_create_level(levels, boundary["z"])
             support_index = y * MAP_WIDTH + x
-            if not support_level[support_index].get("feature"):
-                support_level[support_index] = {"id": "dirt_light_00"}
+            support_tile = support_level[support_index]
+            if not support_tile.get("feature"):
+                if boundary["z"] == building["z"]:
+                    support_level[support_index] = {"id": "dirt_light_00"}
+                else:
+                    replacement = tile_specs["floor_tile"].copy()
+                    replacement.update({key: value for key, value in support_tile.items() if key != "id"})
+                    support_level[support_index] = replacement
             wall_level[index] = tile_specs["wall_tile"].copy()
 
         for support in building_supports:

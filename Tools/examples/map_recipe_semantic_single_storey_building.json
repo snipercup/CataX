@@ -1,0 +1,71 @@
+{
+	"id": "generated_semantic_single_storey_building",
+	"name": "Generated Semantic Single-Storey Building",
+	"description": "A canonical one-storey semantic building profile with complete room, door, entrance, floor ownership, and furniture-anchor metadata.",
+	"seed": 20260828,
+	"base_tile": {"id": "grass_plain_01"},
+	"rooms": [
+		{"id": "study", "kind": "enclosed", "boundary_validation": "complete"}
+	],
+	"buildings": [
+		{
+			"id": "study_building",
+			"rooms": ["study"],
+			"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
+			"z": 0,
+			"building_geometry": {
+				"floor_tile": {"id": "concrete_00"},
+				"wall_tile": {"id": "brick_wall_00"},
+				"support_tile": {"id": "dirt_light_00"},
+				"roof_tile": {"id": "concrete_00"}
+			},
+			"building_levels": [
+				{"z": 0, "rooms": ["study"], "furniture_anchors": ["study_door"]}
+			],
+			"access_validation": "complete",
+			"interior_rooms": ["study"],
+			"room_partition_validation": "complete",
+			"exterior_context": {"at": [6, 8], "z": 0},
+			"exterior_access_context": {"connection": "study_front_door"},
+			"entrance": {"connection": "study_front_door", "facing": "east"},
+			"entrance_validation": "complete",
+			"furniture_anchors": [
+				{"id": "study_door", "at": [7, 8], "z": 0, "kind": "door"}
+			]
+		}
+	],
+	"room_connections": [
+		{
+			"id": "study_front_door",
+			"at": [8, 8],
+			"target_at": [7, 8],
+			"z": 0,
+			"from": {"kind": "room", "id": "study"},
+			"to": {"kind": "exterior"}
+		}
+	],
+	"room_boundaries": [
+		{"id": "study_northwest_north", "room": "study", "at": [8, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "study_northeast_north", "room": "study", "at": [9, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "study_southwest_south", "room": "study", "at": [8, 10], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "study_southeast_south", "room": "study", "at": [9, 10], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "study_southwest_west", "room": "study", "at": [7, 9], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "study_northeast_east", "room": "study", "at": [10, 8], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "study_southeast_east", "room": "study", "at": [10, 9], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "study_northwest_corner", "room": "study", "at": [8, 7], "target_at": [7, 7], "room_at": [8, 8], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "study_northeast_corner", "room": "study", "at": [9, 7], "target_at": [10, 7], "room_at": [9, 8], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "study_southwest_corner", "room": "study", "at": [8, 10], "target_at": [7, 10], "room_at": [8, 9], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "study_southeast_corner", "room": "study", "at": [9, 10], "target_at": [10, 10], "room_at": [9, 9], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "study_west_door", "room": "study", "at": [8, 8], "target_at": [7, 8], "room_at": [8, 8], "z": 0, "element": "door_furniture", "side": "west"}
+	],
+	"operations": [
+		{"type": "room_rectangle", "room": "study", "x": 8, "y": 8, "width": 2, "height": 2},
+		{"type": "line", "from": [7, 7], "to": [10, 7], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [7, 10], "to": [10, 10], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [7, 7], "to": [7, 7], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [7, 9], "to": [7, 10], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [10, 7], "to": [10, 10], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "furniture", "id": "door_wood", "x": 7, "y": 8, "rotation": 270},
+		{"type": "rectangle", "x": 7, "y": 7, "width": 4, "height": 4, "z": 2, "tile": {"id": "concrete_00"}}
+	]
+}

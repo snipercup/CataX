@@ -1,0 +1,97 @@
+{
+	"id": "generated_semantic_two_storey_building",
+	"name": "Generated Semantic Two-Storey Building",
+	"description": "A canonical enclosed two-storey semantic building profile with per-floor room and furniture ownership plus an authored interior staircase transition.",
+	"seed": 20260828,
+	"base_tile": {"id": "grass_plain_01"},
+	"rooms": [
+		{"id": "workroom", "kind": "enclosed", "boundary_validation": "complete"},
+		{"id": "loft", "kind": "enclosed", "boundary_validation": "complete"}
+	],
+	"buildings": [
+		{
+			"id": "workroom_building",
+			"rooms": ["workroom", "loft"],
+			"footprint": {"x": 7, "y": 7, "width": 6, "height": 6},
+			"z": 0,
+			"building_geometry": {
+				"floor_tile": {"id": "concrete_00"},
+				"wall_tile": {"id": "brick_wall_00"},
+				"support_tile": {"id": "dirt_light_00"},
+				"roof_tile": {"id": "concrete_00"}
+			},
+			"building_levels": [
+				{"z": 0, "rooms": ["workroom"], "furniture_anchors": ["workroom_door"]},
+				{"z": 2, "rooms": ["loft"], "furniture_anchors": ["loft_bench"]}
+			],
+			"furniture_anchors": [
+				{"id": "workroom_door", "at": [7, 9], "z": 0, "kind": "door"},
+				{"id": "loft_bench", "at": [8, 8], "z": 2, "kind": "workstation"}
+			]
+		}
+	],
+	"building_supports": [
+		{"id": "workroom_northwest_wall_support", "building": "workroom_building", "at": [7, 7], "from_z": 0, "to_z": 2, "kind": "wall"},
+		{"id": "workroom_northeast_wall_support", "building": "workroom_building", "at": [12, 7], "from_z": 0, "to_z": 2, "kind": "wall"},
+		{"id": "workroom_southwest_wall_support", "building": "workroom_building", "at": [7, 12], "from_z": 0, "to_z": 2, "kind": "wall"},
+		{"id": "workroom_southeast_wall_support", "building": "workroom_building", "at": [12, 12], "from_z": 0, "to_z": 2, "kind": "wall"}
+	],
+	"room_connections": [
+		{
+			"id": "workroom_front_door",
+			"at": [8, 9],
+			"target_at": [7, 9],
+			"z": 0,
+			"from": {"kind": "room", "id": "workroom"},
+			"to": {"kind": "exterior"}
+		}
+	],
+	"room_boundaries": [
+		{"id": "workroom_north_0", "room": "workroom", "at": [8, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "workroom_north_1", "room": "workroom", "at": [9, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "workroom_north_2", "room": "workroom", "at": [10, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "workroom_north_3", "room": "workroom", "at": [11, 7], "z": 0, "element": "wall_tile", "side": "south"},
+		{"id": "workroom_south_0", "room": "workroom", "at": [8, 12], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "workroom_south_1", "room": "workroom", "at": [9, 12], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "workroom_south_2", "room": "workroom", "at": [10, 12], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "workroom_south_3", "room": "workroom", "at": [11, 12], "z": 0, "element": "wall_tile", "side": "north"},
+		{"id": "workroom_west_0", "room": "workroom", "at": [7, 8], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "workroom_west_door", "room": "workroom", "at": [8, 9], "target_at": [7, 9], "room_at": [8, 9], "z": 0, "element": "door_furniture", "side": "west"},
+		{"id": "workroom_west_2", "room": "workroom", "at": [7, 10], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "workroom_west_3", "room": "workroom", "at": [7, 11], "z": 0, "element": "wall_tile", "side": "east"},
+		{"id": "workroom_east_0", "room": "workroom", "at": [12, 8], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "workroom_east_1", "room": "workroom", "at": [12, 9], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "workroom_east_2", "room": "workroom", "at": [12, 10], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "workroom_east_3", "room": "workroom", "at": [12, 11], "z": 0, "element": "wall_tile", "side": "west"},
+		{"id": "loft_north_0", "room": "loft", "at": [8, 7], "z": 2, "element": "wall_tile", "side": "south"},
+		{"id": "loft_north_1", "room": "loft", "at": [9, 7], "z": 2, "element": "wall_tile", "side": "south"},
+		{"id": "loft_north_2", "room": "loft", "at": [10, 7], "z": 2, "element": "wall_tile", "side": "south"},
+		{"id": "loft_north_3", "room": "loft", "at": [11, 7], "z": 2, "element": "wall_tile", "side": "south"},
+		{"id": "loft_south_0", "room": "loft", "at": [8, 12], "z": 2, "element": "wall_tile", "side": "north"},
+		{"id": "loft_south_1", "room": "loft", "at": [9, 12], "z": 2, "element": "wall_tile", "side": "north"},
+		{"id": "loft_south_2", "room": "loft", "at": [10, 12], "z": 2, "element": "wall_tile", "side": "north"},
+		{"id": "loft_south_3", "room": "loft", "at": [11, 12], "z": 2, "element": "wall_tile", "side": "north"},
+		{"id": "loft_west_0", "room": "loft", "at": [7, 8], "z": 2, "element": "wall_tile", "side": "east"},
+		{"id": "loft_west_1", "room": "loft", "at": [7, 9], "z": 2, "element": "wall_tile", "side": "east"},
+		{"id": "loft_west_2", "room": "loft", "at": [7, 10], "z": 2, "element": "wall_tile", "side": "east"},
+		{"id": "loft_west_3", "room": "loft", "at": [7, 11], "z": 2, "element": "wall_tile", "side": "east"},
+		{"id": "loft_east_0", "room": "loft", "at": [12, 8], "z": 2, "element": "wall_tile", "side": "west"},
+		{"id": "loft_east_1", "room": "loft", "at": [12, 9], "z": 2, "element": "wall_tile", "side": "west"},
+		{"id": "loft_east_2", "room": "loft", "at": [12, 10], "z": 2, "element": "wall_tile", "side": "west"},
+		{"id": "loft_east_3", "room": "loft", "at": [12, 11], "z": 2, "element": "wall_tile", "side": "west"}
+	],
+	"operations": [
+		{"type": "room_rectangle", "room": "workroom", "x": 8, "y": 8, "width": 4, "height": 4},
+		{"type": "line", "from": [7, 7], "to": [12, 7], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [7, 12], "to": [12, 12], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [7, 7], "to": [7, 8], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [7, 10], "to": [7, 12], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [12, 7], "to": [12, 12], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "rectangle", "x": 8, "y": 8, "width": 4, "height": 4, "z": 2, "tile": {"id": "concrete_00"}},
+		{"type": "rectangle_outline", "x": 7, "y": 7, "width": 6, "height": 6, "z": 3, "tile": {"id": "brick_wall_00"}},
+		{"type": "room_rectangle", "room": "loft", "x": 8, "y": 8, "width": 4, "height": 4, "z": 2},
+		{"type": "furniture", "id": "door_wood", "x": 7, "y": 9, "rotation": 270},
+		{"type": "furniture", "id": "bench_garden", "x": 8, "y": 8, "z": 2, "rotation": 0},
+		{"type": "rectangle", "x": 7, "y": 7, "width": 6, "height": 6, "z": 4, "tile": {"id": "concrete_00"}}
+	]
+}
