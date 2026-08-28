@@ -90,7 +90,7 @@ ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "target_at", "room_at", "z", "element", "side"}
 ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
-BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors", "building_geometry"}
+BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors", "building_geometry", "reachability_validation"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_LEVEL_FIELDS = {"z", "rooms", "furniture_anchors"}
 BUILDING_STAIRCASE_FIELDS = {"id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at"}
@@ -102,6 +102,7 @@ BUILDING_ENTRANCE_FACINGS = {"north", "east", "south", "west"}
 BUILDING_ENTRANCE_VALIDATIONS = {"complete"}
 BUILDING_FURNITURE_ANCHOR_FIELDS = {"id", "at", "z", "kind"}
 BUILDING_ACCESS_VALIDATIONS = {"complete"}
+BUILDING_REACHABILITY_FIELDS = {"required_entrances", "required_furniture_anchors", "required_building_levels"}
 BUILDING_ROOM_PARTITION_VALIDATIONS = {"complete"}
 BUILDING_OVERHEAD_VALIDATIONS = {"complete"}
 BUILDING_FOOTPRINT_FIELDS = {"x", "y", "width", "height"}
@@ -1989,6 +1990,49 @@ def _validate_recipe_buildings(
                         raise RecipeError(f"{context}.building_levels furniture_anchors must assign every building anchor exactly once")
                     if len(assigned_anchor_ids) != len(set(assigned_anchor_ids)):
                         raise RecipeError(f"{context}.building_levels furniture_anchors must not assign an anchor to multiple levels")
+        reachability_validation = building.get("reachability_validation")
+        if reachability_validation is not None:
+            context_rv = f"{context}.reachability_validation"
+            if not isinstance(reachability_validation, dict):
+                raise RecipeError(f"{context_rv} must be an object")
+            unknown_rv_fields = sorted(set(reachability_validation) - BUILDING_REACHABILITY_FIELDS)
+            if unknown_rv_fields:
+                raise RecipeError(f"unknown {context_rv} field '{unknown_rv_fields[0]}'")
+            if not reachability_validation:
+                raise RecipeError(f"{context_rv} must define at least one requirement")
+            for requirement_name in ("required_entrances", "required_furniture_anchors", "required_building_levels"):
+                if requirement_name not in reachability_validation:
+                    continue
+                requirement = reachability_validation[requirement_name]
+                if not isinstance(requirement, list) or not requirement:
+                    raise RecipeError(f"{context_rv} {requirement_name} must be a non-empty array")
+                if len(requirement) != len(set(requirement)):
+                    raise RecipeError(f"{context_rv} {requirement_name} must not duplicate entries")
+                if requirement_name == "required_building_levels":
+                    if any(type(value) is not int for value in requirement):
+                        raise RecipeError(f"{context_rv} {requirement_name} must contain integers")
+                else:
+                    if any(not isinstance(value, str) or not value.strip() for value in requirement):
+                        raise RecipeError(f"{context_rv} {requirement_name} must contain non-empty strings")
+                    _validate_unicode(requirement[0], f"{context_rv}.{requirement_name}")
+            if "required_entrances" in reachability_validation:
+                declared_entrance_ids = {
+                    entry["id"] for entry in building.get("entrances", []) or []
+                    if isinstance(entry, dict) and isinstance(entry.get("id"), str)
+                }
+                for entrance_id in reachability_validation["required_entrances"]:
+                    if entrance_id not in declared_entrance_ids:
+                        raise RecipeError(f"{context_rv}.required_entrances references unknown entrance '{entrance_id}'")
+            if "required_furniture_anchors" in reachability_validation:
+                declared_anchor_ids = {anchor["id"] for anchor in building.get("furniture_anchors") or [] if isinstance(anchor, dict) and isinstance(anchor.get("id"), str)}
+                for anchor_id in reachability_validation["required_furniture_anchors"]:
+                    if anchor_id not in declared_anchor_ids:
+                        raise RecipeError(f"{context_rv}.required_furniture_anchors references unknown furniture anchor '{anchor_id}'")
+            if "required_building_levels" in reachability_validation:
+                declared_level_zs = {level_definition["z"] for level_definition in building_levels or []} or {z}
+                for level_z in reachability_validation["required_building_levels"]:
+                    if level_z not in declared_level_zs:
+                        raise RecipeError(f"{context_rv}.required_building_levels references undeclared building level z {level_z}")
         validated_building = {
             "id": building_id,
             "rooms": room_ids,
@@ -2021,6 +2065,8 @@ def _validate_recipe_buildings(
             validated_building["entrance_validation"] = entrance_validation
         if furniture_anchors is not None:
             validated_building["furniture_anchors"] = furniture_anchors
+        if reachability_validation is not None:
+            validated_building["reachability_validation"] = reachability_validation
         building_geometry = building.get("building_geometry")
         if building_geometry is not None:
             if not isinstance(building_geometry, dict) or set(building_geometry) != BUILDING_GEOMETRY_FIELDS:
@@ -2718,6 +2764,88 @@ def _validate_building_targets(
                     raise RecipeError(
                         f"{context} room '{room_id}' has no route to exterior through owned room_connections"
                     )
+        if building.get("reachability_validation") is not None:
+            reachability = building["reachability_validation"]
+            level_of_room = {room_id: z for room_id in building["rooms"]}
+            for level_definition in building.get("building_levels", []) or []:
+                for room_id in level_definition.get("rooms", []):
+                    level_of_room[room_id] = level_definition["z"]
+            room_nodes = {(room_id, level_of_room[room_id]) for room_id in building["rooms"]}
+            room_graph = {node: set() for node in room_nodes}
+            seed_nodes: set[tuple[str, int]] = set()
+            required_entrance_ids = reachability.get("required_entrances")
+            entrance_records = building.get("entrances") or []
+            if required_entrance_ids is not None:
+                entrance_records = [entry for entry in entrance_records if entry["id"] in set(required_entrance_ids)]
+            for entrance_entry in entrance_records:
+                connection = next(
+                    (conn for conn in room_connections if conn["id"] == entrance_entry["connection"]),
+                    None,
+                )
+                if connection is None:
+                    continue
+                named_rooms = [endpoint["id"] for endpoint in (connection["from"], connection["to"]) if endpoint["kind"] == "room"]
+                for room_id in named_rooms:
+                    if room_id in level_of_room and connection["z"] == level_of_room[room_id]:
+                        seed_nodes.add((room_id, level_of_room[room_id]))
+            for connection in room_connections:
+                endpoints = (connection["from"], connection["to"])
+                room_endpoints = [endpoint["id"] for endpoint in endpoints if endpoint["kind"] == "room"]
+                if any(endpoint["kind"] == "exterior" for endpoint in endpoints):
+                    if required_entrance_ids is None:
+                        for room_id in room_endpoints:
+                            if room_id in level_of_room and connection["z"] == level_of_room[room_id]:
+                                seed_nodes.add((room_id, level_of_room[room_id]))
+                elif len(room_endpoints) == 2 and all(room_id in level_of_room for room_id in room_endpoints):
+                    left_level = level_of_room[room_endpoints[0]]
+                    right_level = level_of_room[room_endpoints[1]]
+                    if left_level == right_level and connection["z"] == left_level:
+                        left_node = (room_endpoints[0], left_level)
+                        right_node = (room_endpoints[1], right_level)
+                        room_graph[left_node].add(right_node)
+                        room_graph[right_node].add(left_node)
+            for staircase in building.get("staircases", []):
+                staircase_levels = [0, 2]
+                lower_node = next((node for node in room_nodes if node[1] == staircase_levels[0]), None)
+                upper_node = next((node for node in room_nodes if node[1] == staircase_levels[1]), None)
+                if lower_node is not None and upper_node is not None:
+                    room_graph[lower_node].add(upper_node)
+                    room_graph[upper_node].add(lower_node)
+            reachable_nodes = set(seed_nodes)
+            frontier = list(seed_nodes)
+            while frontier:
+                node = frontier.pop()
+                for connected_node in room_graph[node]:
+                    if connected_node not in reachable_nodes:
+                        reachable_nodes.add(connected_node)
+                        frontier.append(connected_node)
+            reachable_levels = {node[1] for node in reachable_nodes}
+            if "required_entrances" in reachability:
+                for entrance_entry in entrance_records:
+                    connection = next(
+                        (conn for conn in room_connections if conn["id"] == entrance_entry["connection"]),
+                        None,
+                    )
+                    if connection is None:
+                        continue
+                    named_rooms = [endpoint["id"] for endpoint in (connection["from"], connection["to"]) if endpoint["kind"] == "room"]
+                    if not any((room_id, level_of_room.get(room_id)) in reachable_nodes for room_id in named_rooms):
+                        raise RecipeError(
+                            f"{context}.reachability_validation entrance '{entrance_entry['id']}' is not reachable"
+                        )
+            if "required_furniture_anchors" in reachability:
+                anchor_level = {anchor["id"]: anchor["z"] for anchor in building.get("furniture_anchors") or [] if isinstance(anchor, dict)}
+                for anchor_id in reachability["required_furniture_anchors"]:
+                    if not any(node[1] == anchor_level.get(anchor_id) for node in reachable_nodes):
+                        raise RecipeError(
+                            f"{context}.reachability_validation furniture anchor '{anchor_id}' is not reachable from the required entrances"
+                        )
+            if "required_building_levels" in reachability:
+                for level_z in reachability["required_building_levels"]:
+                    if level_z not in reachable_levels:
+                        raise RecipeError(
+                            f"{context}.reachability_validation building level z {level_z} is not reachable from the required entrances"
+                        )
 
 
 def _validate_room_connection_endpoint(

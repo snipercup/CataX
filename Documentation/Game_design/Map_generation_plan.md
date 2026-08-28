@@ -812,9 +812,9 @@ Both canonical recipes generate deterministically and validate with `Tools/map_v
 
 This exposed and fixed one real compatibility gap: Godot JSON parsing represents numeric literals as floats, while DMap semantic sanitizers require integers for coordinates, z levels, and rotations. `Scripts/Helper/json_helper.gd` now recursively normalizes whole-number JSON floats to integers before returning parsed dictionaries or arrays; non-integral floats remain floats. Do not duplicate this generic boundary coverage for farmland.
 
-#### 9.3 Generic required-route contract
+#### 9.3 Generic required-route contract — complete
 
-Add an optional building-level `reachability_validation` record:
+Buildings may declare an optional `reachability_validation` record:
 
 ```json
 {
@@ -824,9 +824,7 @@ Add an optional building-level `reachability_validation` record:
 }
 ```
 
-It may name only existing entrances, furniture anchors, and declared occupied levels. It must not store coordinates, tile IDs, or precomputed paths. Static validation must reject unknown targets, undeclared levels, unreachable semantic rooms, and missing vertical graph links. Vertical graph edges may be derived only from already-valid authored staircases. Python must not simulate runtime collision or navigation.
-
-Implement this contract independently in `Tools/map_generator.py`, `Tools/map_validator.py`, and `Scripts/Gamedata/DMap.gd`, with focused negative and positive tests in `Tools/tests/test_map_generator.py` and only necessary GUT preservation coverage.
+It names only existing entrances, furniture anchors, and declared occupied levels. It stores no coordinates, tile IDs, or precomputed paths. Static validation rejects unknown targets, undeclared levels, unreachable semantic rooms, and missing vertical graph links. Vertical graph edges derive only from already-valid authored staircases; the link is floor-granular because staircase slopes occupy the intentional open gap with no room membership. The contract is implemented independently in `Tools/map_generator.py`, `Tools/map_validator.py`, and `Scripts/Gamedata/DMap.gd`, with focused negative and positive tests in `Tools/tests/test_map_generator.py` and DMap preservation coverage in `Tests/Unit/test_dmap_sanitization.gd`. Python does not simulate runtime collision or navigation; runtime proof remains Phase 9.4. The maintained multi-level foundation demonstrates the full cross-storey record, and the canonical single-storey fixture opts in with ground-floor requirements; the canonical two-storey fixture also opts in with ground-floor requirements only until a validated staircase is authored into it.
 
 #### 9.4 Reusable runtime navigation fixture
 
@@ -963,7 +961,7 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures and independent data-boundary validation. The immediate next task is **Phase 9.3: add the generic `reachability_validation` contract**, keeping its static checks limited to semantic rooms, declared entrances/anchors/levels, and already-valid staircases. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures, independent data-boundary validation, and the generic `reachability_validation` contract. The immediate next task is **Phase 9.4: extract the reusable Godot runtime navigation fixture** and prove it with the semantic single-storey and two-storey navigation tests plus the existing road and multi-level navigation tests. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
 Use this execution order: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → defer generalized `wall_height` until Phase 11. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
@@ -1043,8 +1041,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Multi-level reusable templates and richer composition
 [Complete] Phase 9.1 generic semantic single-storey and two-storey building profiles
 [Complete] Phase 9.2 independent validator and DMap preservation for generic profiles
-[In Progress] Phase 9.3 generic required-route/static reachability contract
-[Planned] Phase 9.4 reusable Godot runtime navigation fixture
+[Complete] Phase 9.3 generic required-route/static reachability contract
+[In Progress] Phase 9.4 reusable Godot runtime navigation fixture
 [Planned] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
 [Planned] Phase 10 static authored quality and gameplay validation
 [Deferred] Phase 11 generalized tall-storey `wall_height`

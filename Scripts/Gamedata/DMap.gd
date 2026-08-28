@@ -559,6 +559,53 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				if anchor["id"] in seen_anchor_ids:
 					return false
 				seen_anchor_ids.append(anchor["id"])
+		if building.has("reachability_validation"):
+			var reachability: Variant = building["reachability_validation"]
+			if not reachability is Dictionary or reachability.is_empty():
+				return false
+			var declared_rv_fields: Array[String] = ["required_entrances", "required_furniture_anchors", "required_building_levels"]
+			for rv_key in reachability.keys():
+				if rv_key is String and rv_key not in declared_rv_fields:
+					return false
+			var declared_entrance_ids: Array[String] = []
+			if building.has("entrances") and building["entrances"] is Array:
+				for entrance_entry in building["entrances"]:
+					if entrance_entry is Dictionary and entrance_entry.has("id") and entrance_entry["id"] is String:
+						declared_entrance_ids.append(entrance_entry["id"])
+			var declared_anchor_ids: Array[String] = []
+			if building.has("furniture_anchors") and building["furniture_anchors"] is Array:
+				for anchor in building["furniture_anchors"]:
+					if anchor is Dictionary and anchor.has("id") and anchor["id"] is String:
+						declared_anchor_ids.append(anchor["id"])
+			var declared_level_zs: Array = []
+			if building.has("building_levels") and building["building_levels"] is Array:
+				for level_definition in building["building_levels"]:
+					if level_definition is Dictionary and level_definition.has("z") and level_definition["z"] is int:
+						declared_level_zs.append(level_definition["z"])
+			elif building.has("z") and building["z"] is int:
+				declared_level_zs.append(building["z"])
+			for rv_key in ["required_entrances", "required_furniture_anchors", "required_building_levels"]:
+				if not reachability.has(rv_key):
+					continue
+				var requirement: Variant = reachability[rv_key]
+				if not requirement is Array or requirement.is_empty():
+					return false
+				var seen_requirement_values: Array = []
+				for value in requirement:
+					if not value is String and not value is int:
+						return false
+					if value in seen_requirement_values:
+						return false
+					seen_requirement_values.append(value)
+					if rv_key == "required_building_levels":
+						if not value is int or not value in declared_level_zs:
+							return false
+					elif not value is String or (value as String).is_empty():
+						return false
+					elif rv_key == "required_entrances" and not value in declared_entrance_ids:
+						return false
+					elif rv_key == "required_furniture_anchors" and not value in declared_anchor_ids:
+						return false
 		return true
 	)
 	if data["buildings"].is_empty():

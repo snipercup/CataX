@@ -25,6 +25,10 @@
 			"access_validation": "complete",
 			"interior_rooms": ["study"],
 			"room_partition_validation": "complete",
+			"reachability_validation": {
+				"required_furniture_anchors": ["study_door"],
+				"required_building_levels": [0]
+			},
 			"exterior_context": {"at": [6, 8], "z": 0},
 			"exterior_access_context": {"connection": "study_front_door"},
 			"entrance": {"connection": "study_front_door", "facing": "east"},
