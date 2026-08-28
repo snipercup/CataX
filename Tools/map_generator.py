@@ -2240,18 +2240,24 @@ def _apply_building_geometry(
             tile_specs[field] = tile
 
         footprint = building["footprint"]
+        occupied_zs = [building["z"]]
+        if building.get("building_levels"):
+            occupied_zs = [entry["z"] for entry in building["building_levels"]]
+        # Occupied roof surfaces reuse the existing floor layer; an otherwise empty roof surface gets roof tiles at its authored z.
         roof_surfaces = [
             surface for surface in building_surfaces
             if surface["building"] == building["id"] and surface["kind"] == "roof"
         ]
         for surface in roof_surfaces:
-            roof_level = _get_or_create_level(levels, surface["z"] + 1)
+            if surface["z"] in occupied_zs:
+                continue
+            roof_level = _get_or_create_level(levels, surface["z"])
             for y in range(footprint["y"], footprint["y"] + footprint["height"]):
                 for x in range(footprint["x"], footprint["x"] + footprint["width"]):
                     index = y * MAP_WIDTH + x
                     existing = roof_level[index]
                     if isinstance(existing, dict) and existing.get("feature"):
-                        raise RecipeError(f"{context} cannot place a roof over a feature at [{x}, {y}, {surface['z'] + 1}]")
+                        raise RecipeError(f"{context} cannot place a roof over a feature at [{x}, {y}, {surface['z']}]")
                     roof_level[index] = tile_specs["roof_tile"].copy()
 
         occupied_zs = [building["z"]]
@@ -2308,7 +2314,7 @@ def _apply_building_geometry(
             existing = wall_level[index]
             if isinstance(existing, dict) and existing.get("feature"):
                 raise RecipeError(f"{context} cannot place a wall over a feature at [{x}, {y}, {wall_z}]")
-            # Place dirt support below the wall if z0 is empty
+            # Place support below the wall at its storey's floor level.
             support_level = _get_or_create_level(levels, boundary["z"])
             support_index = y * MAP_WIDTH + x
             if not support_level[support_index].get("feature"):

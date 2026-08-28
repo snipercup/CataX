@@ -2168,8 +2168,11 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][11][10 * 32 + 10]["id"], "grass_ramp_00")
         # Staircase slope at z2 (corner staircase upper at [11,9])
         self.assertEqual(generated["levels"][12][9 * 32 + 11]["id"], "grass_ramp_00")
-        self.assertEqual(generated["levels"][13][7 * 32 + 7]["id"], "concrete_00")
-        self.assertEqual(generated["levels"][13][10 * 32 + 10]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][7 * 32 + 7]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
+        # No authored upper-floor boundary means no stray z3 wall or support.
+        self.assertFalse(any(cell.get("id") == "brick_wall_00" for cell in generated["levels"][13] if isinstance(cell, dict)))
+        self.assertFalse(any(cell.get("id") == "dirt_light_00" for cell in generated["levels"][12] if isinstance(cell, dict)))
         # Door at z0
         self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
 
