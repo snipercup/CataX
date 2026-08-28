@@ -541,7 +541,7 @@ Every owned room must have membership only at the building level and wholly insi
 }
 ```
 
-`floor_tile` and `roof_tile` must be known `Ground`, `Floor`, or `Urban` tiles; `wall_tile` and `support_tile` must be known `Wall` or `Ground` tiles. The generator fills every declared occupied building level, materializes `wall_tile` boundaries one logical level above their boundary z, materializes `support_tile` at `building_supports.from_z`, and materializes `roof_tile` at the authored roof surface z. Existing features are preserved, existing slope tiles are preserved, lower staircase slope coordinates reserve empty headroom on the directly overhead z2 floor, and generated geometry rejects feature overwrites. There is no independent wall elevation property; a future `wall_height` feature is deferred until genuinely tall storeys are required. Doors and staircase slopes remain authored operations; collision and navigation are verified by Godot tests rather than inferred by Python.
+`floor_tile` and `roof_tile` must be known `Ground`, `Floor`, or `Urban` tiles; `wall_tile` and `support_tile` must be known `Wall` or `Ground` tiles. The generator fills every declared occupied building level, materializes `wall_tile` boundaries one logical level above their boundary z, materializes `support_tile` at `building_supports.from_z`, and materializes `roof_tile` at the authored roof surface z. Ground-level wall boundaries receive `dirt_light_00` beneath them; elevated wall boundaries retain their declared `floor_tile` beneath them. Existing features are preserved, existing slope tiles are preserved, lower staircase slope coordinates reserve empty headroom on the directly overhead z2 floor, and generated geometry rejects feature overwrites. There is no independent wall elevation property; a future `wall_height` feature is deferred until genuinely tall storeys are required. Doors and staircase slopes remain authored operations; collision and navigation are verified by Godot tests rather than inferred by Python.
 
 A building may declare a multi-level footprint foundation with `building_levels`:
 
@@ -684,11 +684,19 @@ A building may author named furniture anchor metadata with `furniture_anchors`:
 {"id": "office_building", "rooms": ["office", "garage_bay"], "footprint": {"x": 7, "y": 7, "width": 5, "height": 4}, "z": 0, "furniture_anchors": [{"id": "office_door_anchor", "at": [8, 9], "z": 0, "kind": "door"}, {"id": "garage_door_anchor", "at": [11, 8], "z": 0, "kind": "door"}]}
 ```
 
-`furniture_anchors` is a non-empty array of anchor records. Each entry has exactly `id`, `at`, `z`, and `kind`. `id` is unique within the building and follows the same naming pattern as other authored IDs. `at` is a two-integer `[x, y]` coordinate within map bounds. `z` is a logical level from `-10` through `10` and must match the building's own `z`. `kind` is a non-empty semantic label (e.g. `"door"`, `"storage"`, `"workstation"`) — it is free-form text, not an enumerated set, and carries no runtime behavior.
+`furniture_anchors` is a non-empty array of anchor records. Each entry has exactly `id`, `at`, `z`, and `kind`. `id` is unique within the building and follows the same naming pattern as other authored IDs. `at` is a two-integer `[x, y]` coordinate within map bounds. `z` is a logical level from `-10` through `10` and must match the building's own `z` or one of its declared `building_levels`. `kind` is a non-empty semantic label (e.g. `"door"`, `"storage"`, `"workstation"`) — it is free-form text, not an enumerated set, and carries no runtime behavior.
 
 Each anchor must reference a tile inside the building footprint that has an existing furniture feature at the authored `[x, y, z]`. The anchor does not generate furniture, modify terrain, infer walkability, check furniture category or function, or alter collision, navigation, lighting, weather, or runtime behavior. It is a data-only authored reference point — a named semantic label for existing furniture that future template composition and gameplay validation can use as an anchor.
 
 `Tools/examples/map_recipe_furniture_anchors.json` demonstrates the maintained office building with two furniture anchors: `office_door_anchor` and `garage_door_anchor`, each pointing to an existing `door_wood` feature inside the footprint.
+
+### Canonical semantic-building fixtures
+
+`Tools/examples/map_recipe_semantic_single_storey_building.json` is the canonical complete one-storey profile. It combines physical `building_geometry`, one complete enclosed room, required z1 perimeter walls including every corner, a clear z1 headroom cell above its room-to-exterior door, dirt support beneath every remaining lower wall, per-floor room/anchor ownership, `access_validation`, interior/partition classification, exterior and entrance semantics, entrance validation, and a door furniture anchor. Its generated artifact is `Mods/Dimensionfall/Maps/generated_semantic_single_storey_building.json`.
+
+`Tools/examples/map_recipe_semantic_two_storey_building.json` is the canonical ordinary two-storey profile. It assigns a complete `workroom` at z0 and a complete `loft` at z2, gives each one furniture-anchor ownership, explicitly paints the required z1/z3 perimeter walls of its 6×6 footprint, and authors a concrete roof at z4. The z1 cell above its lower door is deliberately empty; all other z1 walls, including the corners, are supported by `dirt_light_00` at z0. Its generated artifact is `Mods/Dimensionfall/Maps/generated_semantic_two_storey_building.json`. The maintained multi-level foundation remains the focused staircase fixture; this canonical semantic fixture intentionally has no staircase until the generic cross-floor reachability contract is introduced. The explicit z4 roof remains recipe geometry until a future generalized `wall_height` contract can derive a roof surface from the upper wall span.
+
+The current `access_validation` contract intentionally follows only same-z `room_connections`. Therefore the two-storey fixture does not opt into it yet: generic cross-floor semantic routes will be added by the planned `reachability_validation` contract, which may add graph edges only through already-valid `staircases`. Neither fixture replaces Godot navigation checks; collision and real traversal remain runtime responsibilities.
 
 ### `building_surfaces`
 
@@ -707,7 +715,7 @@ Each record has exactly `id`, `building`, `kind`, and `z`. `id` is unique; `buil
 
 For a single-level building (no `building_levels`), `z` is the logical level immediately above the building footprint (`building.z + 1`), and only `roof` and `ceiling` kinds are allowed. `roof` and `ceiling` are separate authored classifications and may both be present for one building.
 
-For a multi-level building (with `building_levels`), `z` must name a declared occupied building level, and only `floor` and `ceiling` kinds are allowed (`roof` for multi-level buildings is not yet supported). This models the top-down vertical story directly:
+For a multi-level building (with `building_levels`), `z` must name a declared occupied building level. `floor` and `ceiling` may target declared occupied levels, while `roof` is allowed only at the highest declared occupied level. This models the top-down vertical story directly:
 
 ```text
 z: 0  ground-floor surface      -> kind "floor"
