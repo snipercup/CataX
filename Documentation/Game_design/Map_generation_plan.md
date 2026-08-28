@@ -775,118 +775,193 @@ The next map-generation work should remain separate from generalized town or ove
 
 ## Phase 9 — Map-local compositional locations
 
-**Status: in progress; maintained village-square composition slice complete**
+**Status: in progress; maintained village-square and farmland slices complete**
 
-The first Phase 9 slice proves map-local composition with `Tools/examples/map_recipe_village_square_composition.json`. It expands a central `village_square` template with nested plaza fixtures and named road anchors, then uses automatic facing-compatible anchor placement to attach a metal open-top cabin and a brick roofed cabin. The generated map remains a standalone tactical-map asset; it does not introduce town, settlement, or overmap-wide composition.
+The first Phase 9 slice proves map-local composition with `Tools/examples/map_recipe_village_square_composition.json`. It expands a central `village_square` template with nested plaza fixtures and named road anchors, then uses automatic facing-compatible anchor placement to attach a metal open-top cabin and a brick roofed cabin. `Tools/examples/map_recipe_field_farmland.json` is the second maintained slice: it composes parameterized `farm_plot` and `farmhouse` templates into a deterministic 32×32 farmland map modeled after `field_farmland`. The farmhouse preserves the source footprint at x3…18/y19…29 with floors at z0/z2, simple z+1 wall layers at z1/z3, and one authored concrete roof at z4. Its roof and upper wall sections are explicit template geometry because `wall_height` remains deliberately deferred. Both generated maps remain standalone tactical-map assets; neither introduces town, settlement, or overmap-wide composition.
 
-### Next Phase 9 work
+### Phase 9 execution milestones
 
-Extend maintained compositions only when a concrete gameplay need requires a larger house, shop, warehouse, crossroads, or another authored location type. Preserve deterministic template expansion, three-dimensional footprint validation, and the existing map-local `areas` representation.
+Phase 9 is implemented in generic slices. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
-Candidate templates include:
+#### 9.1 Generic semantic building profile
 
-```text
-small cabin
-large house
-shop
-warehouse
-crossroads
-road bend
-pond
-farm plot
-forest clearing
-camp
-ruin
-village square
-```
+Create small canonical fixtures before enriching farmland:
 
-Templates should be:
+* `Tools/examples/map_recipe_semantic_single_storey_building.json`;
+* `Tools/examples/map_recipe_semantic_two_storey_building.json`;
+* corresponding generator tests in `Tools/tests/test_map_generator.py`.
 
-* parameterized;
-* deterministic;
-* validated independently;
-* composable;
-* able to expose anchors such as entrances, road connections, floors, roofs, and vertical transitions;
-* able to contain level-relative sections using `dz` offsets;
-* validated across their complete three-dimensional extent before placement.
+The canonical profile uses existing fields in this order:
 
-Example:
+1. physical floor, wall, roof, and transition geometry;
+2. root `rooms` plus `room_rectangle` memberships;
+3. complete `room_boundaries` and door evidence;
+4. `room_connections` and building ownership;
+5. `building_levels` room/anchor assignment;
+6. `interior_rooms`, `open_space_rooms`, and `room_partition_validation`;
+7. `exterior_context`, `exterior_access_context`, `entrance`, and `entrance_validation`;
+8. `furniture_anchors` and maintained target objects.
 
-```json
-{
-  "placements": [
-    {
-      "template": "village_square",
-      "origin": {
-        "at": [16, 16],
-        "z": 0
-      },
-      "rotation": 0
-    },
-    {
-      "template": "small_house",
-      "anchor": "square.north",
-      "entrance_facing": "south"
-    }
-  ]
-}
-```
+A valid profile must prove that room membership is inside the footprint, complete enclosed rooms have complete boundaries, doors connect declared endpoints, every room/anchor is assigned to one intended level, and semantic access validation passes. `access_validation` remains semantic graph validation; it is not a collision or navigation proof.
 
-Multi-level templates should describe relative level sections rather than embedding absolute level-array indices:
+#### 9.2 Independent data-boundary validation
+
+For each canonical fixture, run the generator, `Tools/map_validator.py`, and DMap/GUT sanitization. Modify `Tools/map_validator.py`, `Scripts/Gamedata/DMap.gd`, or `Tests/Unit/test_dmap_sanitization.gd` only when a real consistency gap is found. Do not duplicate generic tests merely for farmland.
+
+#### 9.3 Generic required-route contract
+
+Add an optional building-level `reachability_validation` record:
 
 ```json
 {
-  "template": "small_cabin",
-  "levels": [
-    {"dz": 0, "operations": []},
-    {"dz": 1, "operations": []},
-    {"dz": 2, "operations": []}
-  ]
+  "required_entrances": ["front_entrance"],
+  "required_furniture_anchors": ["workbench"],
+  "required_building_levels": [0, 2]
 }
 ```
 
-Placement resolves each section with `absolute z = origin z + dz`. Rotation must transform horizontal offsets and transition orientation without changing `dz`.
+It may name only existing entrances, furniture anchors, and declared occupied levels. It must not store coordinates, tile IDs, or precomputed paths. Static validation must reject unknown targets, undeclared levels, unreachable semantic rooms, and missing vertical graph links. Vertical graph edges may be derived only from already-valid authored staircases. Python must not simulate runtime collision or navigation.
 
-### Success criterion
+Implement this contract independently in `Tools/map_generator.py`, `Tools/map_validator.py`, and `Scripts/Gamedata/DMap.gd`, with focused negative and positive tests in `Tools/tests/test_map_generator.py` and only necessary GUT preservation coverage.
 
-Generate a complete map-local location, such as a house, workshop, crossroads, or village-square map, by composing reusable templates rather than manually specifying every wall, road, object, and populated level. Templates can include validated multi-level structures and expose usable horizontal and vertical anchors. The resulting map remains an individual map asset that can be registered in a tactical map or overmap area by the existing game systems.
+#### 9.4 Reusable runtime navigation fixture
+
+Extract or establish a reusable GUT helper around the existing Chunk setup, navigation baking, grid-to-world conversion, and `NavigationServer3D.map_get_path()` assertions. Keep the helper generic: it receives endpoint coordinates and labels; it does not know farmland or room semantics.
+
+Prove it with:
+
+* `Tests/Unit/test_semantic_single_storey_navigation.gd`;
+* `Tests/Unit/test_semantic_two_storey_navigation.gd`;
+* existing road and multi-level building navigation tests.
+
+Required runtime checks are exterior-to-ground target and, for two-storey fixtures, ground-to-upper target. Runtime tests prove collision/navigation behavior; Python tests do not replace them.
+
+#### 9.5 Apply the generic profile to farmland
+
+Only after the canonical fixtures and runtime helper pass, enrich `Tools/examples/map_recipe_field_farmland.json` with representative semantic rooms, building ownership, entrances, anchors, and `reachability_validation`. Keep the farmhouse footprint x3…18/y19…29, floors z0/z2, ordinary walls at floor z+1, and one roof at z4. Add `Tests/Unit/test_field_farmland_navigation.gd` using the generic helper.
+
+The farmland fixture need not reproduce every legacy room in `Mods/Dimensionfall/Maps/field_farmland.json`; begin with a representative kitchen/ground-room/upper-room layout and expand only for a concrete gameplay requirement.
+
+#### 9.6 Execution workflow and validation
+
+Every implementation slice follows the same test-first sequence:
+
+1. add one behavior-focused failing test;
+2. run only that test and confirm the failure is caused by the missing contract, not a test error;
+3. implement the smallest change in the generator;
+4. mirror the contract in the standalone validator and DMap only when that data boundary handles the field;
+5. rerun the focused test, then the complete Python suite;
+6. regenerate the maintained JSON artifact;
+7. run `Tools/map_validator.py`, relevant GUT tests, and `git diff --check`.
+
+Primary files by responsibility:
+
+* generator and recipe tests: `Tools/map_generator.py`, `Tools/tests/test_map_generator.py`;
+* independent static validation: `Tools/map_validator.py`;
+* runtime serialization/sanitization: `Scripts/Gamedata/DMap.gd`, `Tests/Unit/test_dmap_sanitization.gd`;
+* runtime navigation: `Tests/Unit/test_semantic_single_storey_navigation.gd`, `Tests/Unit/test_semantic_two_storey_navigation.gd`, and `Tests/Unit/test_field_farmland_navigation.gd`;
+* maintained recipes/artifacts: `Tools/examples/` and `Mods/Dimensionfall/Maps/`;
+* documentation: this roadmap and `Documentation/Modding/map_recipe_generator.md`.
+
+The focused commands are:
+
+```bash
+PYTHONPATH=. python3 -m unittest discover -s Tools/tests -p "test_*.py"
+python3 -m py_compile Tools/map_generator.py Tools/map_validator.py Tools/tests/test_map_generator.py
+python3 Tools/map_generator.py <recipe> <generated-map> --overwrite
+python3 Tools/map_validator.py <generated-map>
+/usr/local/bin/godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://Tests/Unit -gexit
+git diff --check
+```
+
+#### 9.7 Phase 9 success criterion
+
+A new map-local location can be composed from reusable templates and authored with the generic semantic profile, statically validated, generated deterministically, and checked through real runtime navigation. The resulting map remains an individual tactical-map/overmap asset. Generalized settlement generation and map-to-map edge compatibility remain deferred.
 
 ## Phase 10 — Quality and gameplay validation
 
-**Status: long-term requirement**
+**Status: planned; first generic semantic and runtime slices are defined below**
 
-Structural validity is not enough. Generated maps eventually need higher-level checks:
+Phase 10 converts structural validity into explicit acceptance checks. Implement the checks in this order:
 
-* all required locations and occupied floors are reachable;
-* edge connections are usable;
+### 10.1 Static authored checks
+
+Add focused checks for:
+
+* every required entrance names an existing entrance/connection and has a valid exterior approach;
+* every required furniture anchor exists, belongs to the building, and is assigned to a declared floor;
+* every required occupied floor is declared;
+* every semantic room has an authored route to an exterior connection or a valid vertical transition;
+* every staircase endpoint is inside the footprint, has valid terrain and matching slope evidence, and reaches a declared target floor;
+* doors, stairs, and important targets are not hidden by incompatible authored geometry;
+* all logical z values remain within `-10` through `+10`;
+* deterministic regeneration produces byte-equivalent output.
+
+These checks belong in `Tools/map_generator.py` and `Tools/map_validator.py`; they must report the building, room/target ID, floor, and missing relation in failures.
+
+### 10.2 Runtime gameplay checks
+
+Add focused GUT coverage for the actual generated cells:
+
+* exterior approach → ground-floor target;
+* ground-floor target → upper-floor target;
+* exterior approach → required upper-floor target;
+* reverse traversal where the movement model permits it;
 * doors are not blocked;
-* buildings have interiors;
-* every vertical transition has a valid destination;
-* stairs, ramps, and transition endpoints are not blocked;
-* upper geometry has valid support according to established runtime rules;
-* no feature intersects incompatible geometry above or below;
-* roofs and ceilings do not occupy walkable interior cells incorrectly;
-* required underground sections have a route to the surface;
-* all generated logical elevations remain within `-10` through `+10`;
-* paths do not end unexpectedly;
-* important objects are accessible;
-* no impossible overlaps occur;
-* minimum walkable-space requirements are met;
-* map density remains within useful ranges;
-* visual variety is adequate;
-* deterministic regeneration works.
+* staircase endpoints have valid navigation destinations;
+* roof and ceiling geometry do not incorrectly block intended walkable cells;
+* unsupported or incompatible geometry does not create an unintended route.
 
-Some checks can be implemented in Python. Others may need Godot or project runtime logic.
+Use real Chunk navigation baking and `NavigationServer3D`; do not introduce a Python pathfinder.
 
-### Final success criterion
+### 10.3 Maintained acceptance fixtures
 
-An agent can create a new playable, potentially multi-level map from a concise design request, run all relevant checks, and produce a map that needs refinement rather than structural repair.
+Keep generic single-storey and two-storey semantic fixtures, the maintained multi-level foundation, the village-square composition, and `field_farmland` generated and validated in CI or the maintained example workflow. A fixture is complete only when generator tests, standalone validation, deterministic regeneration, and relevant GUT runtime checks agree.
+
+### 10.4 Phase 10 success criterion
+
+An agent can produce a new map from a concise request and receive actionable failures for missing semantic links, invalid structure, or failed runtime traversal. A passing result guarantees refinement is needed only for content quality, not structural repair.
+
+## Phase 11 — Generalized tall-storey wall height
+
+**Status: deferred until Phase 9 semantic and Phase 10 reachability slices are green**
+
+Do not reintroduce `wall_z`. Ordinary storeys always derive walls as `floor_z + 1`.
+
+When a real tall-room requirement exists, add the smallest generic `wall_height` contract:
+
+```json
+{"z": 0, "wall_height": 2, "rooms": ["tall_hall"]}
+```
+
+This means:
+
+```text
+floor z0
+wall layers z1 and z2
+roof surface z3
+```
+
+Required constraints:
+
+* omitted `wall_height` means `1`;
+* it is a positive integer;
+* every derived wall layer remains within logical bounds;
+* a wall span ends strictly below the next occupied floor;
+* the roof surface is derived from the highest wall layer;
+* wall boundaries materialize across every derived wall layer;
+* supports remain at the owning floor and are not duplicated vertically;
+* multi-layer door/window openings are rejected initially unless an explicit opening-span design exists.
+
+Implement this only with test-first coverage in `Tools/tests/test_map_generator.py`, then mirror validation in `Tools/map_validator.py` and `Scripts/Gamedata/DMap.gd`. Add a minimal `Tools/examples/map_recipe_tall_storey_building.json` and focused GUT navigation/collision coverage before applying it to farmland or any other maintained map.
 
 ---
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with a maintained village-square composition that uses nested plaza fixtures, road anchors, and automatically oriented multi-level cabins. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions. The immediate next task is **Phase 9.1: create generic single-storey and two-storey semantic building fixtures**, then implement the generic required-route contract and reusable runtime navigation fixture described in the Phase 9 execution milestones. Do not start `wall_height` until those ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+
+Use this execution order: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → defer generalized `wall_height` until Phase 11. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
 Do not yet generate towns or overmap-wide composition. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
@@ -961,9 +1036,15 @@ Do not commit or push unless explicitly requested.
 [Deferred] Explicit map-to-map edge compatibility (resume if needed)
 [Complete] Rooms and buildings
 [Complete] Roads and map connections
-[In Progress] Multi-level reusable templates and richer composition
-[Planned]  3D connectivity and gameplay validation
-[Target]   Agent-generated playable maps
+[Complete] Multi-level reusable templates and richer composition
+[In Progress] Phase 9.1 generic semantic single-storey and two-storey building profiles
+[Planned] Phase 9.2 independent validator and DMap preservation for generic profiles
+[Planned] Phase 9.3 generic required-route/static reachability contract
+[Planned] Phase 9.4 reusable Godot runtime navigation fixture
+[Planned] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
+[Planned] Phase 10 static authored quality and gameplay validation
+[Deferred] Phase 11 generalized tall-storey `wall_height`
+[Target] Agent-generated playable maps
 ```
 
 You are no longer experimenting with whether maps can be generated safely. That part is established. The project is now at the point of expanding the generator’s vocabulary until it can express an actual location.
