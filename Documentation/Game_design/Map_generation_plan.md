@@ -806,9 +806,11 @@ The canonical profile uses existing fields in this order:
 
 A valid profile must prove that room membership is inside the footprint, complete enclosed rooms have complete boundaries, doors connect declared endpoints, and every room/anchor is assigned to one intended level. The single-storey profile also proves current same-z semantic access validation. Cross-floor semantic access is intentionally deferred to 9.3, where validated staircases become vertical graph edges. `access_validation` remains semantic graph validation; it is not a collision or navigation proof.
 
-#### 9.2 Independent data-boundary validation — next
+#### 9.2 Independent data-boundary validation — complete
 
-For each canonical fixture, run the generator, `Tools/map_validator.py`, and DMap/GUT sanitization. Modify `Tools/map_validator.py`, `Scripts/Gamedata/DMap.gd`, or `Tests/Unit/test_dmap_sanitization.gd` only when a real consistency gap is found. Do not duplicate generic tests merely for farmland.
+Both canonical recipes generate deterministically and validate with `Tools/map_validator.py`. `Tests/Unit/test_dmap_sanitization.gd` loads both recipe sources through the production JSON helper and proves that room, connection, boundary, building, and support metadata round-trips through DMap sanitization.
+
+This exposed and fixed one real compatibility gap: Godot JSON parsing represents numeric literals as floats, while DMap semantic sanitizers require integers for coordinates, z levels, and rotations. `Scripts/Helper/json_helper.gd` now recursively normalizes whole-number JSON floats to integers before returning parsed dictionaries or arrays; non-integral floats remain floats. Do not duplicate this generic boundary coverage for farmland.
 
 #### 9.3 Generic required-route contract
 
@@ -961,7 +963,7 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures. The immediate next task is **Phase 9.2: independently verify the new generic profiles through `Tools/map_validator.py` and DMap/GUT sanitization**, changing those boundaries only if real consistency gaps are found. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures and independent data-boundary validation. The immediate next task is **Phase 9.3: add the generic `reachability_validation` contract**, keeping its static checks limited to semantic rooms, declared entrances/anchors/levels, and already-valid staircases. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
 Use this execution order: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → defer generalized `wall_height` until Phase 11. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
@@ -1040,8 +1042,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Roads and map connections
 [Complete] Multi-level reusable templates and richer composition
 [Complete] Phase 9.1 generic semantic single-storey and two-storey building profiles
-[In Progress] Phase 9.2 independent validator and DMap preservation for generic profiles
-[Planned] Phase 9.3 generic required-route/static reachability contract
+[Complete] Phase 9.2 independent validator and DMap preservation for generic profiles
+[In Progress] Phase 9.3 generic required-route/static reachability contract
 [Planned] Phase 9.4 reusable Godot runtime navigation fixture
 [Planned] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
 [Planned] Phase 10 static authored quality and gameplay validation

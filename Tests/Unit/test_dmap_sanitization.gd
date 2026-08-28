@@ -388,6 +388,44 @@ func test_dmap_road_paths_roundtrip_and_sanitization():
 	assert_eq(data["road_paths"], [{"id": "valid_route", "from": "west", "to": "east", "waypoints": [], "tile": {"id": "dirt_light_00"}}])
 
 
+func test_json_helper_normalizes_integral_json_numbers_only():
+	var JsonHelper = load("res://Scripts/Helper/json_helper.gd")
+	var normalized = JsonHelper.new()._normalize_json_numbers({
+		"coordinate": 8.0,
+		"level": 2.0,
+		"density": 0.5,
+		"nested": [3.0, 0.25],
+	})
+	assert_eq(typeof(normalized["coordinate"]), TYPE_INT)
+	assert_eq(typeof(normalized["level"]), TYPE_INT)
+	assert_eq(typeof(normalized["nested"][0]), TYPE_INT)
+	assert_eq(typeof(normalized["density"]), TYPE_FLOAT)
+	assert_eq(typeof(normalized["nested"][1]), TYPE_FLOAT)
+
+
+func test_dmap_semantic_fixture_metadata_roundtrip():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var JsonHelper = load("res://Scripts/Helper/json_helper.gd")
+	var json_helper = JsonHelper.new()
+	for fixture_path in [
+		"res://Tools/examples/map_recipe_semantic_single_storey_building.json",
+		"res://Tools/examples/map_recipe_semantic_two_storey_building.json",
+	]:
+		var fixture = json_helper.load_json_dictionary_file(fixture_path)
+		assert_false(fixture.is_empty(), "Fixture must parse: %s" % fixture_path)
+		if fixture.is_empty():
+			continue
+		var map = DMap.new(fixture["id"], "/tmp/", null)
+		map.set_data(fixture)
+		var data = map.get_data()
+		assert_eq(data["rooms"], fixture["rooms"], "Rooms must round-trip: %s" % fixture_path)
+		assert_eq(data["room_connections"], fixture["room_connections"], "Connections must round-trip: %s" % fixture_path)
+		assert_eq(data["room_boundaries"], fixture["room_boundaries"], "Boundaries must round-trip: %s" % fixture_path)
+		assert_eq(data["buildings"], fixture["buildings"], "Buildings must round-trip: %s" % fixture_path)
+		if fixture.has("building_supports"):
+			assert_eq(data["building_supports"], fixture["building_supports"], "Supports must round-trip: %s" % fixture_path)
+
+
 func test_dmap_building_compositions_roundtrip_and_sanitization():
 	var DMap = load("res://Scripts/Gamedata/DMap.gd")
 	var map = DMap.new("test_building_compositions", "/tmp/", null)
