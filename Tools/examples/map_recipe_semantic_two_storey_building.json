@@ -6,7 +6,7 @@
 	"base_tile": {"id": "grass_plain_01"},
 	"rooms": [
 		{"id": "workroom", "kind": "enclosed", "boundary_validation": "complete"},
-		{"id": "loft", "kind": "enclosed", "boundary_validation": "complete"}
+		{"id": "loft", "kind": "enclosed"}
 	],
 	"buildings": [
 		{
@@ -24,9 +24,12 @@
 				{"z": 0, "rooms": ["workroom"], "furniture_anchors": ["workroom_door"]},
 				{"z": 2, "rooms": ["loft"], "furniture_anchors": ["loft_bench"]}
 			],
+			"staircases": [
+				{"id": "workroom_staircase", "lower_at": [10, 10], "upper_at": [10, 9], "rotation": 0}
+			],
 			"reachability_validation": {
-				"required_furniture_anchors": ["workroom_door"],
-				"required_building_levels": [0]
+				"required_furniture_anchors": ["workroom_door", "loft_bench"],
+				"required_building_levels": [0, 2]
 			},
 			"furniture_anchors": [
 				{"id": "workroom_door", "at": [7, 9], "z": 0, "kind": "door"},
@@ -92,6 +95,8 @@
 		{"type": "line", "from": [7, 10], "to": [7, 12], "z": 1, "tile": {"id": "brick_wall_00"}},
 		{"type": "line", "from": [12, 7], "to": [12, 12], "z": 1, "tile": {"id": "brick_wall_00"}},
 		{"type": "rectangle", "x": 8, "y": 8, "width": 4, "height": 4, "z": 2, "tile": {"id": "concrete_00"}},
+		{"type": "set", "x": 10, "y": 10, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 0}},
+		{"type": "set", "x": 10, "y": 9, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 0}},
 		{"type": "rectangle_outline", "x": 7, "y": 7, "width": 6, "height": 6, "z": 3, "tile": {"id": "brick_wall_00"}},
 		{"type": "room_rectangle", "room": "loft", "x": 8, "y": 8, "width": 4, "height": 4, "z": 2},
 		{"type": "furniture", "id": "door_wood", "x": 7, "y": 9, "rotation": 270},

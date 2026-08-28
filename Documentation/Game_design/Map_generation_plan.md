@@ -826,17 +826,17 @@ Buildings may declare an optional `reachability_validation` record:
 
 It names only existing entrances, furniture anchors, and declared occupied levels. It stores no coordinates, tile IDs, or precomputed paths. Static validation rejects unknown targets, undeclared levels, unreachable semantic rooms, and missing vertical graph links. Vertical graph edges derive only from already-valid authored staircases; the link is floor-granular because staircase slopes occupy the intentional open gap with no room membership. The contract is implemented independently in `Tools/map_generator.py`, `Tools/map_validator.py`, and `Scripts/Gamedata/DMap.gd`, with focused negative and positive tests in `Tools/tests/test_map_generator.py` and DMap preservation coverage in `Tests/Unit/test_dmap_sanitization.gd`. Python does not simulate runtime collision or navigation; runtime proof remains Phase 9.4. The maintained multi-level foundation demonstrates the full cross-storey record, and the canonical single-storey fixture opts in with ground-floor requirements; the canonical two-storey fixture also opts in with ground-floor requirements only until a validated staircase is authored into it.
 
-#### 9.4 Reusable runtime navigation fixture
+#### 9.4 Reusable runtime navigation fixture — complete
 
-Extract or establish a reusable GUT helper around the existing Chunk setup, navigation baking, grid-to-world conversion, and `NavigationServer3D.map_get_path()` assertions. Keep the helper generic: it receives endpoint coordinates and labels; it does not know farmland or room semantics.
+`Tests/Unit/helpers/map_navigation_fixture.gd` provides the reusable GUT helper around the existing Chunk setup, navigation baking, grid-to-world conversion, and `NavigationServer3D.map_get_path()` assertions. The helper is generic: it receives endpoint coordinates, shapes, and labels; it does not know farmland, room semantics, or any maintained recipe.
 
-Prove it with:
+Proven with:
 
-* `Tests/Unit/test_semantic_single_storey_navigation.gd`;
-* `Tests/Unit/test_semantic_two_storey_navigation.gd`;
-* existing road and multi-level building navigation tests.
+* `Tests/Unit/test_semantic_single_storey_navigation.gd` — exterior-to-interior and return on the canonical single-storey geometry;
+* `Tests/Unit/test_semantic_two_storey_navigation.gd` — exterior-to-ground, ground-to-upper through the authored staircase, and both returns;
+* `Tests/Unit/test_chunk_road_navigation.gd` and `Tests/Unit/test_multi_level_building_navigation.gd`, refactored onto the same helper with unchanged coverage.
 
-Required runtime checks are exterior-to-ground target and, for two-storey fixtures, ground-to-upper target. Runtime tests prove collision/navigation behavior; Python tests do not replace them.
+Required runtime checks are exterior-to-ground target and, for two-storey fixtures, ground-to-upper target. Runtime tests prove collision/navigation behavior; Python tests do not replace them. To make the two-storey proof possible, the canonical two-storey fixture now authors `workroom_staircase` (lower slope [10, 10] on z1, upper slope [10, 9] on z2) and upgrades its `reachability_validation` to require `loft_bench` and level z2; the loft is `enclosed` but intentionally not `boundary_validation: complete` because the stairwell opening breaks its perimeter, mirroring the maintained multi-level foundation.
 
 #### 9.5 Apply the generic profile to farmland
 
@@ -961,7 +961,7 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures, independent data-boundary validation, and the generic `reachability_validation` contract. The immediate next task is **Phase 9.4: extract the reusable Godot runtime navigation fixture** and prove it with the semantic single-storey and two-storey navigation tests plus the existing road and multi-level navigation tests. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures (the two-storey fixture now includes its authored staircase), independent data-boundary validation, the generic `reachability_validation` contract, and the reusable Godot runtime navigation fixture. The immediate next task is **Phase 9.5: apply the generic profile to `field_farmland`** by enriching `Tools/examples/map_recipe_field_farmland.json` with representative semantic rooms, building ownership, entrances, anchors, and `reachability_validation`, and adding `Tests/Unit/test_field_farmland_navigation.gd` using the generic helper. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
 Use this execution order: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → defer generalized `wall_height` until Phase 11. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
@@ -1042,8 +1042,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Phase 9.1 generic semantic single-storey and two-storey building profiles
 [Complete] Phase 9.2 independent validator and DMap preservation for generic profiles
 [Complete] Phase 9.3 generic required-route/static reachability contract
-[In Progress] Phase 9.4 reusable Godot runtime navigation fixture
-[Planned] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
+[Complete] Phase 9.4 reusable Godot runtime navigation fixture
+[In Progress] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
 [Planned] Phase 10 static authored quality and gameplay validation
 [Deferred] Phase 11 generalized tall-storey `wall_height`
 [Target] Agent-generated playable maps
