@@ -10,7 +10,7 @@ func load_json_array_file(source: String) -> Array:
 	var data_json: Array = []
 	var file = FileAccess.open(source, FileAccess.READ)
 	if file:
-		var parsed_data = JSON.parse_string(file.get_as_text())
+		var parsed_data = _normalize_json_numbers(JSON.parse_string(file.get_as_text()))
 		if typeof(parsed_data) == TYPE_ARRAY:
 			data_json = parsed_data
 		else:
@@ -22,16 +22,31 @@ func load_json_dictionary_file(source: String) -> Dictionary:
 	var data_json: Dictionary = {}
 	var file = FileAccess.open(source, FileAccess.READ)
 	if file:
-		var parsed_data = JSON.parse_string(file.get_as_text())
+		var parsed_data = _normalize_json_numbers(JSON.parse_string(file.get_as_text()))
 		if typeof(parsed_data) == TYPE_DICTIONARY:
 			data_json = parsed_data
 		else:
 			print_debug("The file does not contain a JSON dictionary: " + source)
 	return data_json
 
-# This function lists all the files in a specified directory. 
-# It takes two arguments: `dir_name` (the path of the directory to list files from)
-# and `extension_filter` (an optional array of file extensions to filter by).
+
+func _normalize_json_numbers(value: Variant) -> Variant:
+	if value is Dictionary:
+		var normalized: Dictionary = {}
+		for key in value:
+			normalized[key] = _normalize_json_numbers(value[key])
+		return normalized
+	if value is Array:
+		var normalized: Array = []
+		for entry in value:
+			normalized.append(_normalize_json_numbers(entry))
+		return normalized
+	if value is float and value == floor(value):
+		return int(value)
+	return value
+
+# This function lists all the files in a specified directory.
+# It takes two arguments: `dir_name` (the path to a directory) and `extension_filter` (an optional array of file extensions).
 # If the `extension_filter` is empty, all filenames will be returned. 
 # If not, it will only return filenames whose file extension is in `extension_filter`.
 func file_names_in_dir(dir_name: String, extension_filter: Array = []) -> Array:
