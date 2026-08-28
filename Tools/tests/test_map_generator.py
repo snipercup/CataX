@@ -2533,6 +2533,76 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "room 'office' has no route to exterior"):
             generate_map(missing_exterior_route, TILES_PATH)
 
+    def test_reachability_validation_echoes_declared_requirements(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        validation = {
+            "required_entrances": ["front_entrance", "garage_entrance"],
+            "required_furniture_anchors": ["office_door_anchor", "garage_door_anchor", "upper_bench_anchor"],
+            "required_building_levels": [0, 2],
+        }
+        recipe["buildings"][0]["reachability_validation"] = validation
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["buildings"][0]["reachability_validation"], validation)
+
+        single_path = ROOT / "Tools" / "examples" / "map_recipe_semantic_single_storey_building.json"
+        single = json.loads(single_path.read_text(encoding="utf-8"))
+        single["buildings"][0]["reachability_validation"] = {
+            "required_furniture_anchors": ["study_door"],
+            "required_building_levels": [0],
+        }
+        self.assertEqual(
+            generate_map(single, TILES_PATH)["buildings"][0]["reachability_validation"],
+            {"required_furniture_anchors": ["study_door"], "required_building_levels": [0]},
+        )
+
+    def test_reachability_validation_rejects_unknown_targets_and_malformed_requirements(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        invalid_cases = [
+            ({"required_entrances": ["missing_entrance"]}, "required_entrances references unknown entrance 'missing_entrance'"),
+            ({"required_furniture_anchors": ["missing_anchor"]}, "required_furniture_anchors references unknown furniture anchor 'missing_anchor'"),
+            ({"required_building_levels": [4]}, "required_building_levels references undeclared building level z 4"),
+            ({"required_building_levels": ["0"]}, "required_building_levels must contain integers"),
+            ({}, "reachability_validation must define at least one requirement"),
+            ({"required_entrances": []}, "reachability_validation required_entrances must be a non-empty array"),
+            ({"required_entrances": ["front_entrance", "front_entrance"]}, "reachability_validation required_entrances must not duplicate entries"),
+            ({"required_entrances": ["front_entrance"], "extra": True}, r"unknown buildings\[0\]\.reachability_validation field 'extra'"),
+        ]
+        for validation, message in invalid_cases:
+            with self.subTest(validation=validation):
+                recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+                recipe["buildings"][0]["reachability_validation"] = validation
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(recipe, TILES_PATH)
+
+    def test_reachability_validation_requires_cross_floor_routes_through_staircases(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_semantic_two_storey_building.json"
+        unreachable_level = json.loads(recipe_path.read_text(encoding="utf-8"))
+        unreachable_level["buildings"][0]["reachability_validation"] = {"required_building_levels": [0, 2]}
+        with self.assertRaisesRegex(RecipeError, "building level z 2 is not reachable from the required entrances"):
+            generate_map(unreachable_level, TILES_PATH)
+
+        unreachable_anchor = json.loads(recipe_path.read_text(encoding="utf-8"))
+        unreachable_anchor["buildings"][0]["reachability_validation"] = {"required_furniture_anchors": ["loft_bench"]}
+        with self.assertRaisesRegex(RecipeError, "furniture anchor 'loft_bench' is not reachable from the required entrances"):
+            generate_map(unreachable_anchor, TILES_PATH)
+
+    def test_reachability_validation_positive_cross_floor_route_through_authored_staircase(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["reachability_validation"] = {
+            "required_entrances": ["front_entrance", "garage_entrance"],
+            "required_furniture_anchors": ["office_door_anchor", "garage_door_anchor", "upper_bench_anchor"],
+            "required_building_levels": [0, 2],
+        }
+        generated = generate_map(recipe, TILES_PATH)
+        self.assertEqual(
+            generated["buildings"][0]["reachability_validation"]["required_building_levels"],
+            [0, 2],
+        )
+
     def test_building_compositions_require_declared_surface_kinds(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
@@ -4157,6 +4227,43 @@ class MapValidatorDimensionTests(unittest.TestCase):
         missing_exterior_route["room_connections"][0]["to"] = {"kind": "room", "id": "garage"}
         errors = self.validate(missing_exterior_route)
         self.assertTrue(any("room 'office' has no route to exterior" in error for error in errors))
+
+    def test_validates_reachability_validation_contract(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_multi_level_building_foundation.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["buildings"][0]["reachability_validation"] = {
+            "required_entrances": ["front_entrance", "garage_entrance"],
+            "required_furniture_anchors": ["office_door_anchor", "garage_door_anchor", "upper_bench_anchor"],
+            "required_building_levels": [0, 2],
+        }
+        valid_map = generate_map(recipe, TILES_PATH)
+        self.assertEqual(self.validate(valid_map), [])
+
+        unreachable_level = json.loads(json.dumps(valid_map))
+        unreachable_level["buildings"][0]["reachability_validation"] = {"required_building_levels": [0, 2]}
+        unreachable_level["buildings"][0]["staircases"] = []
+        errors = self.validate(unreachable_level)
+        self.assertTrue(any("building level z 2 is not reachable from the required entrances" in error for error in errors))
+
+        unknown_entrance = json.loads(json.dumps(valid_map))
+        unknown_entrance["buildings"][0]["reachability_validation"] = {"required_entrances": ["missing_entrance"]}
+        errors = self.validate(unknown_entrance)
+        self.assertTrue(any("required_entrances references unknown entrance 'missing_entrance'" in error for error in errors))
+
+        unknown_anchor = json.loads(json.dumps(valid_map))
+        unknown_anchor["buildings"][0]["reachability_validation"] = {"required_furniture_anchors": ["missing_anchor"]}
+        errors = self.validate(unknown_anchor)
+        self.assertTrue(any("required_furniture_anchors references unknown furniture anchor 'missing_anchor'" in error for error in errors))
+
+        undeclared_level = json.loads(json.dumps(valid_map))
+        undeclared_level["buildings"][0]["reachability_validation"] = {"required_building_levels": [4]}
+        errors = self.validate(undeclared_level)
+        self.assertTrue(any("required_building_levels references undeclared building level z 4" in error for error in errors))
+
+        empty_record = json.loads(json.dumps(valid_map))
+        empty_record["buildings"][0]["reachability_validation"] = {}
+        errors = self.validate(empty_record)
+        self.assertTrue(any("reachability_validation must define at least one requirement" in error for error in errors))
 
     def test_validates_building_composition_constraints(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_building_surfaces.json"

@@ -263,6 +263,92 @@ func test_dmap_buildings_roundtrip_and_sanitization():
 	}])
 
 
+func test_dmap_reachability_validation_roundtrip_and_sanitization():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_reachability_validation", "/tmp/", null)
+	map.set_data({
+		"name": "Reachability validation",
+		"description": "Preserve authored reachability requirements.",
+		"rooms": [
+			{"id": "office", "kind": "enclosed", "boundary_validation": "complete"},
+			{"id": "office_upper", "kind": "enclosed"},
+		],
+		"room_connections": [{
+			"id": "office_front_door",
+			"at": [8, 9],
+			"z": 0,
+			"from": {"kind": "room", "id": "office"},
+			"to": {"kind": "exterior"},
+		}],
+		"buildings": [
+			{
+				"id": "office_building",
+				"rooms": ["office", "office_upper"],
+				"footprint": {"x": 7, "y": 7, "width": 5, "height": 4},
+				"z": 0,
+				"building_levels": [{"z": 0}, {"z": 2}],
+				"entrances": [
+					{"id": "front_entrance", "connection": "office_front_door", "facing": "east"},
+				],
+				"exterior_context": {"at": [6, 8], "z": 0},
+				"furniture_anchors": [
+					{"id": "office_door_anchor", "at": [7, 8], "z": 0, "kind": "door"},
+					{"id": "upper_bench_anchor", "at": [8, 8], "z": 2, "kind": "workstation"},
+				],
+				"reachability_validation": {
+					"required_entrances": ["front_entrance"],
+					"required_furniture_anchors": ["office_door_anchor", "upper_bench_anchor"],
+					"required_building_levels": [0, 2],
+				},
+			},
+			{
+				"id": "bad_unknown_entrance",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 7, "width": 4, "height": 4},
+				"z": 0,
+				"reachability_validation": {"required_entrances": ["missing_entrance"]},
+			},
+			{
+				"id": "bad_unknown_anchor",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 12, "width": 4, "height": 4},
+				"z": 0,
+				"reachability_validation": {"required_furniture_anchors": ["missing_anchor"]},
+			},
+			{
+				"id": "bad_undeclared_level",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 17, "width": 4, "height": 4},
+				"z": 0,
+				"reachability_validation": {"required_building_levels": [4]},
+			},
+			{
+				"id": "bad_empty_record",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 22, "width": 4, "height": 4},
+				"z": 0,
+				"reachability_validation": {},
+			},
+			{
+				"id": "bad_wrong_type",
+				"rooms": ["office"],
+				"footprint": {"x": 16, "y": 27, "width": 4, "height": 4},
+				"z": 0,
+				"reachability_validation": {"required_building_levels": ["0"]},
+			},
+		],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["buildings"].size(), 1)
+	assert_eq(data["buildings"][0]["reachability_validation"], {
+		"required_entrances": ["front_entrance"],
+		"required_furniture_anchors": ["office_door_anchor", "upper_bench_anchor"],
+		"required_building_levels": [0, 2],
+	})
+
+
 func test_dmap_building_levels_roundtrip_and_sanitization():
 	var DMap = load("res://Scripts/Gamedata/DMap.gd")
 	var map = DMap.new("test_building_levels", "/tmp/", null)

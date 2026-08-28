@@ -676,7 +676,7 @@ For an opted-in building, `entrance_validation` requires `entrance` or `entrance
 
 This validates authored orientation and alignment only: it does not generate or modify geometry, infer a walkable path, check collision or navigation, require the context tile and door to be cardinally adjacent, or alter runtime behavior.
 
-`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, declared open-space rooms, malformed exterior context, stale exterior-access connection, stale entrance connection, malformed entrances array, stale entrance connection in the entrances array, malformed entrance validation, or malformed furniture anchors becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead/exterior-context/exterior-access-context/entrance/entrances/entrance-validation/furniture-anchors checks.
+`DMap` preserves building records through editor save/load and removes records whose room list, declared interior rooms, declared open-space rooms, malformed exterior context, stale exterior-access connection, stale entrance connection, malformed entrances array, stale entrance connection in the entrances array, malformed entrance validation, malformed furniture anchors, or malformed `reachability_validation` requirements becomes stale. The standalone validator performs strict shape, containment, same-level overlap, complete-enclosed-room, opted-in access, and authored interior/open-space/partition/overhead/exterior-context/exterior-access-context/entrance/entrances/entrance-validation/furniture-anchors checks.
 
 A building may author named furniture anchor metadata with `furniture_anchors`:
 
@@ -690,13 +690,39 @@ Each anchor must reference a tile inside the building footprint that has an exis
 
 `Tools/examples/map_recipe_furniture_anchors.json` demonstrates the maintained office building with two furniture anchors: `office_door_anchor` and `garage_door_anchor`, each pointing to an existing `door_wood` feature inside the footprint.
 
+### `reachability_validation`
+
+A building may opt in to static semantic reachability requirements with `reachability_validation`:
+
+```json
+{
+  "reachability_validation": {
+    "required_entrances": ["front_entrance", "garage_entrance"],
+    "required_furniture_anchors": ["office_door_anchor", "garage_door_anchor", "upper_bench_anchor"],
+    "required_building_levels": [0, 2]
+  }
+}
+```
+
+The record is optional, must be an object, and must define at least one of exactly three keys:
+
+- `required_entrances` names entries of the building's `entrances` array by their `id`. A singular `entrance` has no ID and cannot be referenced.
+- `required_furniture_anchors` names entries of the building's `furniture_anchors` by `id`.
+- `required_building_levels` names declared `building_levels` z values (or the building's own `z` when no `building_levels` are declared).
+
+Every requirement is a non-empty array without duplicate entries; entrance and anchor names are non-empty strings, and levels are integers. The record must not store coordinates, tile IDs, or precomputed paths — it names only existing entrances, anchors, and declared levels.
+
+Validation is a static breadth-first search over authored semantic facts, never a collision or navigation simulation. Graph nodes are `(room, level)` pairs; a room's level comes from its `building_levels` assignment, or the building `z` when levels are undeclared. Seed nodes are the rooms behind room-to-exterior connections whose connection `z` equals the room's level — restricted to the named entrances when `required_entrances` is declared, or all owned exterior connections otherwise. Same-level edges come from room-to-room `room_connections` where both rooms share the room's level and the connection `z` matches. Vertical edges are derived only from already-valid authored `staircases`: a validated staircase connects the declared `z: 0` and `z: 2` floor levels bidirectionally, and the connection is floor-granular because staircase slopes occupy the intentional open gap where no room membership exists. The search must reach the room behind every required entrance, the level of every required furniture anchor, and at least one room node on every required building level. Unknown targets, undeclared levels, and unreachable requirements are rejected; Python never simulates runtime collision or navigation — Godot runtime tests own that proof (Phase 9.4).
+
+The generator validates the record shape, echoes it into the building record, and rejects unreachable requirements while authoring. `Tools/map_validator.py` performs the same checks independently on generated maps. `DMap` preserves valid records through editor save/load and removes buildings whose record references stale entrances, anchors, or undeclared levels, or whose requirements are malformed. The maintained `map_recipe_multi_level_building_foundation.json` demonstrates the full record across both storeys through its authored staircase; the canonical two-storey semantic fixture opts in with ground-floor requirements only, because its loft route becomes provable only when a validated staircase is authored into that fixture.
+
 ### Canonical semantic-building fixtures
 
 `Tools/examples/map_recipe_semantic_single_storey_building.json` is the canonical complete one-storey profile. It combines physical `building_geometry`, one complete enclosed room, required z1 perimeter walls including every corner, a clear z1 headroom cell above its room-to-exterior door, dirt support beneath every remaining lower wall, per-floor room/anchor ownership, `access_validation`, interior/partition classification, exterior and entrance semantics, entrance validation, and a door furniture anchor. Its generated artifact is `Mods/Dimensionfall/Maps/generated_semantic_single_storey_building.json`.
 
-`Tools/examples/map_recipe_semantic_two_storey_building.json` is the canonical ordinary two-storey profile. It assigns a complete `workroom` at z0 and a complete `loft` at z2, gives each one furniture-anchor ownership, explicitly paints the required z1/z3 perimeter walls of its 6×6 footprint, and authors a concrete roof at z4. The z1 cell above its lower door is deliberately empty; all other z1 walls, including the corners, are supported by `dirt_light_00` at z0. Its generated artifact is `Mods/Dimensionfall/Maps/generated_semantic_two_storey_building.json`. The maintained multi-level foundation remains the focused staircase fixture; this canonical semantic fixture intentionally has no staircase until the generic cross-floor reachability contract is introduced. The explicit z4 roof remains recipe geometry until a future generalized `wall_height` contract can derive a roof surface from the upper wall span.
+`Tools/examples/map_recipe_semantic_two_storey_building.json` is the canonical ordinary two-storey profile. It assigns a complete `workroom` at z0 and a complete `loft` at z2, gives each one furniture-anchor ownership, explicitly paints the required z1/z3 perimeter walls of its 6×6 footprint, and authors a concrete roof at z4. The z1 cell above its lower door is deliberately empty; all other z1 walls, including the corners, are supported by `dirt_light_00` at z0. Its generated artifact is `Mods/Dimensionfall/Maps/generated_semantic_two_storey_building.json`. The maintained multi-level foundation remains the focused staircase fixture; this canonical semantic fixture intentionally has no staircase, so its `reachability_validation` opts in with ground-floor requirements only. The explicit z4 roof remains recipe geometry until a future generalized `wall_height` contract can derive a roof surface from the upper wall span.
 
-The current `access_validation` contract intentionally follows only same-z `room_connections`. Therefore the two-storey fixture does not opt into it yet: generic cross-floor semantic routes will be added by the planned `reachability_validation` contract, which may add graph edges only through already-valid `staircases`. Neither fixture replaces Godot navigation checks; collision and real traversal remain runtime responsibilities.
+The `access_validation` contract follows only same-z `room_connections`. The two-storey fixture therefore does not opt into it: generic cross-floor semantic routes are expressed by `reachability_validation`, which adds graph edges only through already-valid `staircases`. Neither contract replaces Godot navigation checks; collision and real traversal remain runtime responsibilities.
 
 ### `building_surfaces`
 

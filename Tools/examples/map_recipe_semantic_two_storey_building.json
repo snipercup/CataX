@@ -24,6 +24,10 @@
 				{"z": 0, "rooms": ["workroom"], "furniture_anchors": ["workroom_door"]},
 				{"z": 2, "rooms": ["loft"], "furniture_anchors": ["loft_bench"]}
 			],
+			"reachability_validation": {
+				"required_furniture_anchors": ["workroom_door"],
+				"required_building_levels": [0]
+			},
 			"furniture_anchors": [
 				{"id": "workroom_door", "at": [7, 9], "z": 0, "kind": "door"},
 				{"id": "loft_bench", "at": [8, 8], "z": 2, "kind": "workstation"}
