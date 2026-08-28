@@ -2593,6 +2593,55 @@ class MapGeneratorTests(unittest.TestCase):
                 with self.assertRaisesRegex(RecipeError, message):
                     generate_map(invalid_recipe, TILES_PATH)
 
+    def test_semantic_single_storey_fixture_generates_complete_profile(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_semantic_single_storey_building.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(generated["id"], "generated_semantic_single_storey_building")
+        building = generated["buildings"][0]
+        self.assertEqual(building["building_levels"], [{
+            "z": 0,
+            "rooms": ["study"],
+            "furniture_anchors": ["study_door"],
+        }])
+        self.assertEqual(building["access_validation"], "complete")
+        self.assertEqual(building["interior_rooms"], ["study"])
+        self.assertEqual(building["room_partition_validation"], "complete")
+        self.assertEqual(building["entrance"], {"connection": "study_front_door", "facing": "east"})
+        self.assertEqual(building["furniture_anchors"], [{
+            "id": "study_door", "at": [7, 8], "z": 0, "kind": "door",
+        }])
+        lower_wall_cells = ((7, 7), (8, 7), (9, 7), (10, 7), (7, 9), (10, 8), (10, 9), (7, 10), (8, 10), (9, 10), (10, 10))
+        for x, y in lower_wall_cells:
+            self.assertEqual(generated["levels"][11][y * 32 + x]["id"], "brick_wall_00")
+            self.assertEqual(generated["levels"][10][y * 32 + x]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][11][8 * 32 + 7], {})
+        self.assertEqual(generated["levels"][10][8 * 32 + 7]["feature"]["id"], "door_wood")
+
+    def test_semantic_two_storey_fixture_assigns_rooms_and_anchors_to_levels(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_semantic_two_storey_building.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(generated["id"], "generated_semantic_two_storey_building")
+        building = generated["buildings"][0]
+        self.assertEqual(building["building_levels"], [
+            {"z": 0, "rooms": ["workroom"], "furniture_anchors": ["workroom_door"]},
+            {"z": 2, "rooms": ["loft"], "furniture_anchors": ["loft_bench"]},
+        ])
+        self.assertEqual({anchor["id"] for anchor in building["furniture_anchors"]}, {"workroom_door", "loft_bench"})
+        lower_wall_cells = ((7, 7), (8, 7), (9, 7), (10, 7), (11, 7), (12, 7), (7, 8), (12, 8), (12, 9), (7, 10), (12, 10), (7, 11), (12, 11), (7, 12), (8, 12), (9, 12), (10, 12), (11, 12), (12, 12))
+        for x, y in lower_wall_cells:
+            self.assertEqual(generated["levels"][11][y * 32 + x]["id"], "brick_wall_00")
+            self.assertEqual(generated["levels"][10][y * 32 + x]["id"], "dirt_light_00")
+        self.assertEqual(generated["levels"][11][9 * 32 + 7], {})
+        self.assertEqual(generated["levels"][10][9 * 32 + 7]["feature"]["id"], "door_wood")
+        upper_wall_cells = ((7, 7), (8, 7), (9, 7), (10, 7), (11, 7), (12, 7), (7, 8), (12, 8), (7, 9), (12, 9), (7, 10), (12, 10), (7, 11), (12, 11), (7, 12), (8, 12), (9, 12), (10, 12), (11, 12), (12, 12))
+        for x, y in upper_wall_cells:
+            self.assertEqual(generated["levels"][13][y * 32 + x]["id"], "brick_wall_00")
+            self.assertEqual(generated["levels"][12][y * 32 + x]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][8 * 32 + 8]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][14][7 * 32 + 7]["id"], "concrete_00")
+
     def test_single_level_building_example_preserves_contained_existing_content(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_single_level_building.json"
         generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)

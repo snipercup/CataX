@@ -657,7 +657,7 @@ An opted-in `overhead_validation: "complete"` requires that a validated single-l
 
 `building_surfaces` now authors per-floor floor and roof surfaces for multi-level buildings in addition to single-level roof/ceiling semantics. For a building with `building_levels`, `z` must name a declared occupied level and `kind` may be `floor`, `ceiling`, or `roof`; a multi-level `roof` must be at the highest declared occupied level. The physical generator materializes the roof tile at the authored roof surface z. If that z is already an occupied floor level, the existing floor layer is reused as the roof and no second roof layer is generated. Ceiling remains metadata-only and is intentionally omitted from physical generation. `building_supports` adds authored structural support paths from lower to upper occupied levels.
 
-The generator, standalone map validator, and `DMap` save/load path validate or preserve these contracts. An opt-in `building_geometry` record now generates physical floors on declared occupied levels, wall tiles from authored room boundaries, support tiles from authored support paths, and the authored roof tile at the roof surface z when a roof surface is authored. Walls materialize at `boundary_z + 1`, and dirt support is placed beneath them at that storey's floor z; implicit wall `set` operations follow the same dirt-below-wall convention. Existing doors and staircase slopes remain authored operations. Lower staircase slope and landing cells reserve empty headroom on the directly overhead z2 floor so the player is not blocked by the upper floor. The generated geometry uses the existing Chunk collision/navigation pipeline; focused tests verify the maintained building's multi-level route and roof geometry.
+The generator, standalone map validator, and `DMap` save/load path validate or preserve these contracts. An opt-in `building_geometry` record now generates physical floors on declared occupied levels, wall tiles from authored room boundaries, support tiles from authored support paths, and the authored roof tile at the roof surface z when a roof surface is authored. Walls materialize at `boundary_z + 1`. Only walls whose boundary is on the building ground level receive `dirt_light_00` beneath them; upper-storey walls retain the declared `floor_tile` beneath them. Implicit wall `set` operations follow the same dirt-below-wall convention. Existing doors and staircase slopes remain authored operations. Lower staircase slope and landing cells reserve empty headroom on the directly overhead z2 floor so the player is not blocked by the upper floor. The generated geometry uses the existing Chunk collision/navigation pipeline; focused tests verify the maintained building's multi-level route and roof geometry.
 
 This slice intentionally does **not** yet define polygons, topology-derived room boundaries, indoor/outdoor runtime behavior, automatic door or staircase generation, or generalized templates.
 
@@ -783,13 +783,15 @@ The first Phase 9 slice proves map-local composition with `Tools/examples/map_re
 
 Phase 9 is implemented in generic slices. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
-#### 9.1 Generic semantic building profile
+#### 9.1 Generic semantic building profile — complete
 
-Create small canonical fixtures before enriching farmland:
+Canonical fixtures now provide a generic authoring reference before farmland enrichment:
 
-* `Tools/examples/map_recipe_semantic_single_storey_building.json`;
-* `Tools/examples/map_recipe_semantic_two_storey_building.json`;
-* corresponding generator tests in `Tools/tests/test_map_generator.py`.
+* `Tools/examples/map_recipe_semantic_single_storey_building.json` and `Mods/Dimensionfall/Maps/generated_semantic_single_storey_building.json`;
+* `Tools/examples/map_recipe_semantic_two_storey_building.json` and `Mods/Dimensionfall/Maps/generated_semantic_two_storey_building.json`;
+* focused generator coverage in `Tools/tests/test_map_generator.py`.
+
+The single-storey fixture exercises the complete existing same-level semantic profile. Both canonical fixtures explicitly paint all required footprint-perimeter wall cells, including all four corners. The lower storey omits the wall at its authored door coordinate so the doorway has clear z1 headroom; every remaining z1 wall, including every corner, has a dirt support tile at z0. The two-storey fixture adds complete room/boundary evidence, per-floor room and furniture-anchor ownership, ordinary z1/z3 wall geometry, and an explicit z4 roof. It intentionally does not include a staircase: the maintained multi-level foundation remains the focused staircase fixture, while generic cross-floor semantic routes belong to 9.3 rather than an untrue fixture claim. The explicit roof remains recipe geometry until the deferred generalized `wall_height` contract defines derived tall-storey roof metadata.
 
 The canonical profile uses existing fields in this order:
 
@@ -802,9 +804,9 @@ The canonical profile uses existing fields in this order:
 7. `exterior_context`, `exterior_access_context`, `entrance`, and `entrance_validation`;
 8. `furniture_anchors` and maintained target objects.
 
-A valid profile must prove that room membership is inside the footprint, complete enclosed rooms have complete boundaries, doors connect declared endpoints, every room/anchor is assigned to one intended level, and semantic access validation passes. `access_validation` remains semantic graph validation; it is not a collision or navigation proof.
+A valid profile must prove that room membership is inside the footprint, complete enclosed rooms have complete boundaries, doors connect declared endpoints, and every room/anchor is assigned to one intended level. The single-storey profile also proves current same-z semantic access validation. Cross-floor semantic access is intentionally deferred to 9.3, where validated staircases become vertical graph edges. `access_validation` remains semantic graph validation; it is not a collision or navigation proof.
 
-#### 9.2 Independent data-boundary validation
+#### 9.2 Independent data-boundary validation — next
 
 For each canonical fixture, run the generator, `Tools/map_validator.py`, and DMap/GUT sanitization. Modify `Tools/map_validator.py`, `Scripts/Gamedata/DMap.gd`, or `Tests/Unit/test_dmap_sanitization.gd` only when a real consistency gap is found. Do not duplicate generic tests merely for farmland.
 
@@ -959,7 +961,7 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions. The immediate next task is **Phase 9.1: create generic single-storey and two-storey semantic building fixtures**, then implement the generic required-route contract and reusable runtime navigation fixture described in the Phase 9 execution milestones. Do not start `wall_height` until those ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is in progress** with maintained village-square and farmland compositions, plus complete generic semantic single-storey and two-storey fixtures. The immediate next task is **Phase 9.2: independently verify the new generic profiles through `Tools/map_validator.py` and DMap/GUT sanitization**, changing those boundaries only if real consistency gaps are found. Do not start `wall_height` until ordinary-storey semantic and reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
 Use this execution order: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → defer generalized `wall_height` until Phase 11. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
@@ -1037,8 +1039,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Rooms and buildings
 [Complete] Roads and map connections
 [Complete] Multi-level reusable templates and richer composition
-[In Progress] Phase 9.1 generic semantic single-storey and two-storey building profiles
-[Planned] Phase 9.2 independent validator and DMap preservation for generic profiles
+[Complete] Phase 9.1 generic semantic single-storey and two-storey building profiles
+[In Progress] Phase 9.2 independent validator and DMap preservation for generic profiles
 [Planned] Phase 9.3 generic required-route/static reachability contract
 [Planned] Phase 9.4 reusable Godot runtime navigation fixture
 [Planned] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
