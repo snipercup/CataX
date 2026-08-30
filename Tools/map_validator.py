@@ -48,7 +48,7 @@ ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors', 'building_geometry', 'reachability_validation'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
 BUILDING_LEVEL_FIELDS = {'z', 'rooms', 'furniture_anchors'}
-BUILDING_STAIRCASE_FIELDS = {'id', 'lower_at', 'upper_at', 'rotation', 'upper_rotation', 'landing_at'}
+BUILDING_STAIRCASE_FIELDS = {'id', 'lower_at', 'upper_at', 'rotation', 'upper_rotation', 'landing_at', 'upper_clearance_at'}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {'at', 'z'}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {'connection'}
 BUILDING_ENTRANCE_FIELDS = {'connection', 'facing'}
@@ -1252,9 +1252,14 @@ class MapValidator:
                         upper_rotation = staircase.get('upper_rotation', rotation)
                         if type(upper_rotation) is not int or upper_rotation not in {0, 90, 180, 270}:
                             self.add_error(file_path, f"{staircase_context} upper_rotation must be 0, 90, 180, or 270.")
-                        landing_at = staircase.get('landing_at')
-                        if landing_at is not None and (not isinstance(landing_at, list) or len(landing_at) != 2 or not all(type(value) is int for value in landing_at)):
-                            self.add_error(file_path, f"{staircase_context} landing_at must be a two-integer coordinate.")
+                        for coordinate_name in ('landing_at', 'upper_clearance_at'):
+                            coordinate = staircase.get(coordinate_name)
+                            if coordinate is not None and (
+                                not isinstance(coordinate, list)
+                                or len(coordinate) != 2
+                                or not all(type(value) is int for value in coordinate)
+                            ):
+                                self.add_error(file_path, f"{staircase_context} {coordinate_name} must be a two-integer coordinate.")
                     declared_level_zs = {level_definition.get('z') for level_definition in building_levels if isinstance(level_definition, dict)} if isinstance(building_levels, list) else set()
                     if not {0, 2} <= declared_level_zs:
                         self.add_error(file_path, f"{context} staircases require declared building levels z 0 and z 2.")
@@ -1636,6 +1641,7 @@ class MapValidator:
                     lower_x, lower_y = lower_at
                     upper_x, upper_y = upper_at
                     landing_at = staircase.get('landing_at')
+                    upper_clearance_at = staircase.get('upper_clearance_at')
                     if not (footprint['x'] <= lower_x < footprint['x'] + footprint['width'] and footprint['y'] <= lower_y < footprint['y'] + footprint['height'] and footprint['x'] <= upper_x < footprint['x'] + footprint['width'] and footprint['y'] <= upper_y < footprint['y'] + footprint['height']):
                         self.add_error(file_path, f"{staircase_context} slope coordinates must be inside building footprint.")
                     if (lower_x, lower_y) == (upper_x, upper_y):
@@ -1655,6 +1661,15 @@ class MapValidator:
                             self.add_error(file_path, f"{staircase_context} landing_at must be cardinally adjacent to lower_at.")
                         if abs(upper_x - landing_x) + abs(upper_y - landing_y) != 1:
                             self.add_error(file_path, f"{staircase_context} landing_at must be cardinally adjacent to upper_at.")
+                    if upper_clearance_at is not None and isinstance(upper_clearance_at, list) and len(upper_clearance_at) == 2 and all(type(value) is int for value in upper_clearance_at):
+                        clearance_x, clearance_y = upper_clearance_at
+                        if not (footprint['x'] <= clearance_x < footprint['x'] + footprint['width'] and footprint['y'] <= clearance_y < footprint['y'] + footprint['height']):
+                            self.add_error(file_path, f"{staircase_context} upper_clearance_at must be inside building footprint.")
+                        else:
+                            clearance_level = levels[12] if isinstance(levels, list) and len(levels) > 12 else []
+                            clearance_tile = clearance_level[clearance_y * MAP_WIDTH + clearance_x] if isinstance(clearance_level, list) and len(clearance_level) == POPULATED_LEVEL_TILE_COUNT else {}
+                            if clearance_tile != {}:
+                                self.add_error(file_path, f"{staircase_context} upper_clearance_at must be empty on z 2.")
                     if not {0, 2}.issubset(declared_level_zs):
                         continue
                     for slope_z, coordinate, slope_rotation in ((1, lower_at, lower_rotation), (2, upper_at, upper_rotation)):

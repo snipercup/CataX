@@ -2871,7 +2871,7 @@ class MapGeneratorTests(unittest.TestCase):
             {"z": 2, "rooms": ["farmhouse_upper_room"], "furniture_anchors": ["farmhouse_upper_bench"]},
         ])
         self.assertEqual(building["staircases"], [
-            {"id": "farmhouse_staircase", "lower_at": [10, 25], "upper_at": [10, 24], "rotation": 0},
+            {"id": "farmhouse_staircase", "lower_at": [10, 25], "upper_at": [10, 24], "upper_clearance_at": [10, 26], "rotation": 0},
         ])
         self.assertEqual(building["reachability_validation"], {
             "required_entrances": ["farmhouse_front_entrance"],
@@ -2894,9 +2894,19 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(wall_level[24 * 32 + 3], {})
         self.assertEqual(wall_level[24 * 32 + 7], {})
         self.assertEqual(generated["levels"][10][23 * 32 + 7]["rooms"], ["farmhouse_ground_room"])
+        self.assertEqual(generated["levels"][10][24 * 32 + 7]["feature"]["rotation"], 90)
+        outer_wall_cells = (
+            *((x, 19) for x in range(3, 19)),
+            *((x, 29) for x in range(3, 19)),
+            *((3, y) for y in range(20, 29) if y != 24),
+            *((18, y) for y in range(20, 29)),
+        )
+        for x, y in outer_wall_cells:
+            self.assertEqual(generated["levels"][10][y * 32 + x]["id"], "dirt_light_00")
         self.assertEqual(generated["levels"][11][25 * 32 + 10]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][24 * 32 + 10]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][25 * 32 + 10], {})
+        self.assertEqual(generated["levels"][12][26 * 32 + 10], {})
 
     def test_generated_room_connection_rejects_diagonal_opening(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_field_farmland.json"
