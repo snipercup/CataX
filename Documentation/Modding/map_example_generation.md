@@ -34,6 +34,7 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_furniture_anchors.json` | `Mods/Dimensionfall/Maps/generated_furniture_anchors.json` | A validated building with authored furniture-anchor metadata pointing at existing furniture inside its footprint. |
 | `Tools/examples/map_recipe_multi_entrance_building.json` | `Mods/Dimensionfall/Maps/generated_multi_entrance_building.json` | A validated building with two authored entrances: the office front door facing east and the garage opening facing west. |
 | `Tools/examples/map_recipe_multi_level_building_foundation.json` | `Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json` | A generated two-floor building with physical floors and walls, authored supports, per-floor surfaces, stairs, a ground floor at `z: 0`, an open gap at `z: 1`, and a first floor at `z: 2`. |
+| `Tools/examples/map_recipe_field_farmland.json` | `Mods/Dimensionfall/Maps/generated_field_farmland.json` | A representative semantic `field_farmland` farmhouse on the legacy x3…18/y19…29 footprint: complete kitchen, ground room, upper room, exterior and interior doors, per-floor building ownership, furniture anchors, `reachability_validation`, and an authored z1→z2 staircase. |
 | `Tools/examples/map_recipe_road_connections.json` | `Mods/Dimensionfall/Maps/generated_road_connections.json` | A simple outdoor map demonstrating authored map-edge connection metadata with roads entering from east and west. |
 | `Tools/examples/map_recipe_road_endpoints.json` | `Mods/Dimensionfall/Maps/generated_road_endpoints.json` | An outdoor map with authored road-endpoint anchors at the east and west edges, identifying where roads enter the map. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
@@ -114,6 +115,11 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_multi_level_building_foundation.json \
   Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json
 
+# Semantic field_farmland farmhouse with entrance, anchors, and stairs
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_field_farmland.json \
+  Mods/Dimensionfall/Maps/generated_field_farmland.json
+
 # Ground-level authored map-edge road connection metadata
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_road_connections.json \
@@ -162,6 +168,7 @@ for recipe in \
   Tools/examples/map_recipe_furniture_anchors.json \
   Tools/examples/map_recipe_multi_entrance_building.json \
   Tools/examples/map_recipe_multi_level_building_foundation.json \
+  Tools/examples/map_recipe_field_farmland.json \
   Tools/examples/map_recipe_road_connections.json \
   Tools/examples/map_recipe_road_endpoints.json \
   Tools/examples/map_recipe_two_level_hill.json \
@@ -191,6 +198,7 @@ rm Mods/Dimensionfall/Maps/generated_building_surfaces.json
 rm Mods/Dimensionfall/Maps/generated_furniture_anchors.json
 rm Mods/Dimensionfall/Maps/generated_multi_entrance_building.json
 rm Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json
+rm Mods/Dimensionfall/Maps/generated_field_farmland.json
 rm Mods/Dimensionfall/Maps/generated_road_connections.json
 rm Mods/Dimensionfall/Maps/generated_road_endpoints.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json

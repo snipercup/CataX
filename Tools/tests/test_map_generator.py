@@ -2728,6 +2728,30 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][12][9 * 32 + 10]["rooms"], ["loft"])
         self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
 
+    def test_field_farmland_fixture_applies_generic_semantic_building_profile(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_field_farmland.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(generated["id"], "generated_field_farmland")
+        building = generated["buildings"][0]
+        self.assertEqual(building["id"], "field_farmland_farmhouse")
+        self.assertEqual(building["footprint"], {"x": 3, "y": 19, "width": 16, "height": 11})
+        self.assertEqual(building["building_levels"], [
+            {"z": 0, "rooms": ["farmhouse_kitchen", "farmhouse_ground_room"], "furniture_anchors": ["farmhouse_front_door", "farmhouse_kitchen_bench"]},
+            {"z": 2, "rooms": ["farmhouse_upper_room"], "furniture_anchors": ["farmhouse_upper_bench"]},
+        ])
+        self.assertEqual(building["staircases"], [
+            {"id": "farmhouse_staircase", "lower_at": [10, 25], "upper_at": [10, 24], "rotation": 0},
+        ])
+        self.assertEqual(building["reachability_validation"], {
+            "required_entrances": ["farmhouse_front_entrance"],
+            "required_furniture_anchors": ["farmhouse_kitchen_bench", "farmhouse_upper_bench"],
+            "required_building_levels": [0, 2],
+        })
+        self.assertEqual(generated["levels"][11][25 * 32 + 10]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][12][24 * 32 + 10]["id"], "grass_ramp_00")
+        self.assertEqual(generated["levels"][12][25 * 32 + 10], {})
+
     def test_single_level_building_example_preserves_contained_existing_content(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_single_level_building.json"
         generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
