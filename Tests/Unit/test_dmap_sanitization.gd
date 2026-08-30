@@ -388,7 +388,7 @@ func test_dmap_building_levels_roundtrip_and_sanitization():
 				"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 				"z": 0,
 				"building_levels": [{"z": 0}, {"z": 2}],
-				"staircases": [{"id": "corner_stairs", "lower_at": [8, 9], "upper_at": [9, 8], "landing_at": [9, 9], "rotation": 90, "upper_rotation": 0}],
+				"staircases": [{"id": "corner_stairs", "lower_at": [8, 9], "upper_at": [9, 8], "landing_at": [9, 9], "upper_clearance_at": [8, 8], "rotation": 90, "upper_rotation": 0}],
 			},
 			{
 				"id": "bad_levels",
@@ -419,7 +419,7 @@ func test_dmap_building_levels_roundtrip_and_sanitization():
 		"footprint": {"x": 7, "y": 7, "width": 4, "height": 4},
 		"z": 0,
 		"building_levels": [{"z": 0}, {"z": 2}],
-		"staircases": [{"id": "corner_stairs", "lower_at": [8, 9], "upper_at": [9, 8], "landing_at": [9, 9], "rotation": 90, "upper_rotation": 0}],
+		"staircases": [{"id": "corner_stairs", "lower_at": [8, 9], "upper_at": [9, 8], "landing_at": [9, 9], "upper_clearance_at": [8, 8], "rotation": 90, "upper_rotation": 0}],
 	}])
 
 

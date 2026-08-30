@@ -94,7 +94,7 @@ ROOM_BOUNDARY_ELEMENTS = {"wall_tile", "door_furniture"}
 BUILDING_FIELDS = {"id", "rooms", "footprint", "z", "building_levels", "staircases", "access_validation", "interior_rooms", "open_space_rooms", "room_partition_validation", "overhead_validation", "exterior_context", "exterior_access_context", "entrance", "entrances", "entrance_validation", "furniture_anchors", "building_geometry", "reachability_validation"}
 BUILDING_REQUIRED_FIELDS = {"id", "rooms", "footprint", "z"}
 BUILDING_LEVEL_FIELDS = {"z", "rooms", "furniture_anchors"}
-BUILDING_STAIRCASE_FIELDS = {"id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at"}
+BUILDING_STAIRCASE_FIELDS = {"id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at", "upper_clearance_at"}
 BUILDING_EXTERIOR_CONTEXT_FIELDS = {"at", "z"}
 BUILDING_EXTERIOR_ACCESS_CONTEXT_FIELDS = {"connection"}
 BUILDING_ENTRANCE_FIELDS = {"connection", "facing"}
@@ -1804,15 +1804,18 @@ def _validate_recipe_buildings(
                 upper_rotation = staircase.get("upper_rotation", rotation)
                 if type(upper_rotation) is not int or upper_rotation not in VALID_ROTATIONS:
                     raise RecipeError(f"{staircase_context}.upper_rotation must be 0, 90, 180, or 270")
-                landing_at = staircase.get("landing_at")
-                if landing_at is not None and (
-                    not isinstance(landing_at, list)
-                    or len(landing_at) != 2
-                    or any(type(value) is not int for value in landing_at)
-                    or not 0 <= landing_at[0] < MAP_WIDTH
-                    or not 0 <= landing_at[1] < MAP_HEIGHT
-                ):
-                    raise RecipeError(f"{staircase_context}.landing_at must be within map bounds as a two-integer array")
+                for coordinate_name in ("landing_at", "upper_clearance_at"):
+                    coordinate = staircase.get(coordinate_name)
+                    if coordinate is None:
+                        continue
+                    if (
+                        not isinstance(coordinate, list)
+                        or len(coordinate) != 2
+                        or any(type(value) is not int for value in coordinate)
+                        or not 0 <= coordinate[0] < MAP_WIDTH
+                        or not 0 <= coordinate[1] < MAP_HEIGHT
+                    ):
+                        raise RecipeError(f"{staircase_context}.{coordinate_name} must be within map bounds as a two-integer array")
             declared_level_zs = {level_definition["z"] for level_definition in building_levels or []}
             if not {0, 2} <= declared_level_zs:
                 raise RecipeError(f"{context}.staircases require declared building levels z 0 and z 2")
@@ -2329,6 +2332,9 @@ def _apply_building_geometry(
         for staircase in building.get("staircases", []):
             lower_at = tuple(staircase["lower_at"])
             upper_floor_clearance.add(lower_at)
+            upper_clearance_at = staircase.get("upper_clearance_at")
+            if upper_clearance_at is not None:
+                upper_floor_clearance.add(tuple(upper_clearance_at))
             landing_at = staircase.get("landing_at")
             if landing_at is not None:
                 landing = tuple(landing_at)
@@ -2344,6 +2350,13 @@ def _apply_building_geometry(
             for (generated_room_id, generated_z), (walls, _openings) in generated_perimeters.items():
                 if generated_room_id == room_id:
                     wall_support_positions.update((generated_z, x, y) for x, y in walls)
+        ground_wall_level = levels[_level_index(building["z"] + 1)]
+        if len(ground_wall_level) == MAP_WIDTH * MAP_HEIGHT:
+            for y in range(footprint["y"], footprint["y"] + footprint["height"]):
+                for x in range(footprint["x"], footprint["x"] + footprint["width"]):
+                    wall_tile = ground_wall_level[y * MAP_WIDTH + x]
+                    if isinstance(wall_tile, dict) and wall_tile.get("id") == tile_specs["wall_tile"]["id"]:
+                        wall_support_positions.add((building["z"], x, y))
         for z in occupied_zs:
             level = levels[_level_index(z)]
             for y in range(footprint["y"], footprint["y"] + footprint["height"]):
@@ -2705,6 +2718,7 @@ def _validate_building_targets(
                 lower_x, lower_y = staircase["lower_at"]
                 upper_x, upper_y = staircase["upper_at"]
                 landing_at = staircase.get("landing_at")
+                upper_clearance_at = staircase.get("upper_clearance_at")
                 if not _point_in_building_footprint(lower_x, lower_y, footprint) or not _point_in_building_footprint(upper_x, upper_y, footprint):
                     raise RecipeError(f"{staircase_context} slope coordinates must be inside building footprint")
                 if (lower_x, lower_y) == (upper_x, upper_y):
@@ -2722,6 +2736,10 @@ def _validate_building_targets(
                         raise RecipeError(f"{staircase_context} landing_at must be cardinally adjacent to lower_at")
                     if abs(upper_x - landing_x) + abs(upper_y - landing_y) != 1:
                         raise RecipeError(f"{staircase_context} landing_at must be cardinally adjacent to upper_at")
+                if upper_clearance_at is not None:
+                    clearance_x, clearance_y = upper_clearance_at
+                    if not _point_in_building_footprint(clearance_x, clearance_y, footprint):
+                        raise RecipeError(f"{staircase_context}.upper_clearance_at must be inside building footprint")
                 for slope_z, coordinate, slope_rotation in (
                     (1, staircase["lower_at"], lower_rotation),
                     (2, staircase["upper_at"], upper_rotation),
