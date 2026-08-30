@@ -2111,6 +2111,61 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["rooms"], recipe["rooms"])
         self.assertEqual(generated["room_boundaries"], recipe["room_boundaries"])
 
+    def test_generated_complete_room_walls_create_ring_and_leave_exterior_connection_open(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "grass_plain_01"}
+        recipe["rooms"] = [{
+            "id": "test_room",
+            "kind": "enclosed",
+            "boundary_validation": "complete",
+            "boundary_generation": "walls",
+        }]
+        recipe["room_connections"] = [{
+            "id": "test_room_front_door",
+            "at": [8, 9],
+            "target_at": [7, 9],
+            "z": 0,
+            "from": {"kind": "room", "id": "test_room"},
+            "to": {"kind": "exterior"},
+        }]
+        recipe["buildings"] = [{
+            "id": "test_building",
+            "rooms": ["test_room"],
+            "footprint": {"x": 7, "y": 7, "width": 5, "height": 5},
+            "z": 0,
+            "building_geometry": {
+                "floor_tile": {"id": "concrete_00"},
+                "wall_tile": {"id": "brick_wall_00"},
+                "support_tile": {"id": "dirt_light_00"},
+                "roof_tile": {"id": "concrete_00"},
+            },
+        }]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "test_room", "x": 8, "y": 8, "width": 3, "height": 3},
+            {"type": "furniture", "id": "door_wood", "x": 7, "y": 9, "rotation": 270},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        wall_level = generated["levels"][11]
+        expected_walls = {
+            *{(x, 7) for x in range(7, 12)},
+            *{(x, 11) for x in range(7, 12)},
+            *{(7, y) for y in (8, 10)},
+            *{(11, y) for y in range(8, 11)},
+        }
+        self.assertEqual(
+            {
+                (x, y)
+                for y in range(7, 12)
+                for x in range(7, 12)
+                if wall_level[y * 32 + x].get("id") == "brick_wall_00"
+            },
+            expected_walls,
+        )
+        self.assertEqual(wall_level[9 * 32 + 7], {})
+        self.assertEqual(generated["levels"][10][9 * 32 + 7]["feature"]["id"], "door_wood")
+
     def test_buildings_validate_strict_schema_and_preserve_authored_record(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
@@ -3676,6 +3731,41 @@ class MapValidatorDimensionTests(unittest.TestCase):
             validator = MapValidator()
             validator.validate_map(str(map_path))
             return validator.errors
+
+    def test_accepts_generated_complete_room_wall_ring(self):
+        recipe = valid_recipe()
+        recipe["rooms"] = [{
+            "id": "test_room",
+            "kind": "enclosed",
+            "boundary_validation": "complete",
+            "boundary_generation": "walls",
+        }]
+        recipe["room_connections"] = [{
+            "id": "test_room_front_door",
+            "at": [8, 9],
+            "target_at": [7, 9],
+            "z": 0,
+            "from": {"kind": "room", "id": "test_room"},
+            "to": {"kind": "exterior"},
+        }]
+        recipe["buildings"] = [{
+            "id": "test_building",
+            "rooms": ["test_room"],
+            "footprint": {"x": 7, "y": 7, "width": 5, "height": 5},
+            "z": 0,
+            "building_geometry": {
+                "floor_tile": {"id": "concrete_00"},
+                "wall_tile": {"id": "brick_wall_00"},
+                "support_tile": {"id": "dirt_light_00"},
+                "roof_tile": {"id": "concrete_00"},
+            },
+        }]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "test_room", "x": 8, "y": 8, "width": 3, "height": 3},
+            {"type": "furniture", "id": "door_wood", "x": 7, "y": 9, "rotation": 270},
+        ]
+
+        self.assertEqual(self.validate(generate_map(recipe, TILES_PATH)), [])
 
     def test_rejects_nonstandard_map_width(self):
         map_data = generate_map(valid_recipe(), TILES_PATH)

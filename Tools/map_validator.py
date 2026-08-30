@@ -15,6 +15,7 @@ ROAD_PATH_FIELDS = {'id', 'from', 'to', 'waypoints'}
 ROAD_PATH_OPTIONAL_FIELDS = {'tile'}
 ROOM_KINDS = {'enclosed', 'covered_open', 'ruin'}
 ROOM_BOUNDARY_VALIDATIONS = {'complete'}
+ROOM_BOUNDARY_GENERATIONS = {'walls'}
 CARDINAL_SIDES = {
     'north': (0, -1),
     'east': (1, 0),
@@ -387,7 +388,7 @@ class MapValidator:
             if not isinstance(room, dict):
                 self.add_error(file_path, f"Room at index {idx} is not an object.")
                 continue
-            unknown_fields = sorted(set(room) - {'id', 'kind', 'boundary_validation'})
+            unknown_fields = sorted(set(room) - {'id', 'kind', 'boundary_validation', 'boundary_generation'})
             if unknown_fields:
                 self.add_error(file_path, f"Room at index {idx} has unknown field '{unknown_fields[0]}'.")
             for field in ('id', 'kind'):
@@ -409,6 +410,12 @@ class MapValidator:
                     self.add_error(file_path, f"Room at index {idx} has unsupported boundary validation '{boundary_validation}'.")
                 elif kind != 'enclosed':
                     self.add_error(file_path, f"Room at index {idx} boundary validation is only supported for enclosed rooms.")
+            boundary_generation = room.get('boundary_generation')
+            if boundary_generation is not None:
+                if boundary_generation not in ROOM_BOUNDARY_GENERATIONS:
+                    self.add_error(file_path, f"Room at index {idx} has unsupported boundary generation '{boundary_generation}'.")
+                elif kind != 'enclosed' or boundary_validation != 'complete':
+                    self.add_error(file_path, f"Room at index {idx} boundary generation requires an enclosed room with complete boundary validation.")
 
         validated_room_connections = []
         seen_connection_ids: Set[str] = set()
@@ -798,12 +805,83 @@ class MapValidator:
             if not matches_connection:
                 self.add_error(file_path, f"Room boundary '{boundary['id']}' must match a room connection for room '{room_id}'.")
 
+        automatic_room_ids = {
+            room['id']
+            for room in rooms
+            if isinstance(room, dict)
+            and room.get('kind') == 'enclosed'
+            and room.get('boundary_validation') == 'complete'
+            and room.get('boundary_generation') == 'walls'
+            and isinstance(room.get('id'), str)
+        }
+        for boundary in validated_room_boundaries:
+            if boundary['room'] in automatic_room_ids:
+                self.add_error(file_path, f"Room boundary '{boundary['id']}' must not target room '{boundary['room']}' with boundary_generation 'walls'.")
+
+        for room_id in automatic_room_ids:
+            owner = next(
+                (
+                    building for building in buildings
+                    if isinstance(building, dict)
+                    and room_id in building.get('rooms', [])
+                    and isinstance(building.get('building_geometry'), dict)
+                    and isinstance(building['building_geometry'].get('wall_tile'), dict)
+                    and isinstance(building['building_geometry']['wall_tile'].get('id'), str)
+                ),
+                None,
+            )
+            if owner is None:
+                self.add_error(file_path, f"Generated boundary room '{room_id}' requires an owning building with building_geometry.wall_tile.")
+                continue
+            wall_id = owner['building_geometry']['wall_tile']['id']
+            for level_index, level in enumerate(levels if isinstance(levels, list) else []):
+                if not isinstance(level, list) or len(level) != POPULATED_LEVEL_TILE_COUNT:
+                    continue
+                z = level_index - 10
+                room_cells = {
+                    (x, y)
+                    for y in range(MAP_HEIGHT)
+                    for x in range(MAP_WIDTH)
+                    if isinstance(level[y * MAP_WIDTH + x], dict)
+                    and level[y * MAP_WIDTH + x].get('rooms') == [room_id]
+                }
+                if not room_cells:
+                    continue
+                perimeter = {
+                    (neighbor_x, neighbor_y)
+                    for x, y in room_cells
+                    for delta_x in (-1, 0, 1)
+                    for delta_y in (-1, 0, 1)
+                    if (delta_x or delta_y)
+                    and 0 <= (neighbor_x := x + delta_x) < MAP_WIDTH
+                    and 0 <= (neighbor_y := y + delta_y) < MAP_HEIGHT
+                    and (neighbor_x, neighbor_y) not in room_cells
+                }
+                openings = set()
+                for connection in validated_room_connections:
+                    endpoints = (connection['from'], connection['to'])
+                    if connection['z'] != z or not any(endpoint.get('kind') == 'room' and endpoint.get('id') == room_id for endpoint in endpoints):
+                        continue
+                    room_at = tuple(connection['at'])
+                    target_at = tuple(connection.get('target_at', connection['at']))
+                    if room_at not in room_cells or target_at not in perimeter:
+                        self.add_error(file_path, f"Room connection '{connection['id']}' must cross the perimeter of generated room '{room_id}' at z {z}.")
+                        continue
+                    openings.add(target_at)
+                wall_level_index = z + 11
+                wall_level = levels[wall_level_index] if 0 <= wall_level_index < len(levels) else []
+                for x, y in perimeter - openings:
+                    tile = wall_level[y * MAP_WIDTH + x] if isinstance(wall_level, list) and len(wall_level) == POPULATED_LEVEL_TILE_COUNT else {}
+                    if not isinstance(tile, dict) or tile.get('id') != wall_id:
+                        self.add_error(file_path, f"Generated boundary room '{room_id}' is missing wall '{wall_id}' at z {z + 1} [{x}, {y}].")
+
         complete_room_ids = {
             room['id']
             for room in rooms
             if isinstance(room, dict)
             and room.get('kind') == 'enclosed'
             and room.get('boundary_validation') == 'complete'
+            and room.get('boundary_generation') != 'walls'
             and isinstance(room.get('id'), str)
         }
         declared_edges: Dict[tuple, Set[tuple]] = {}
