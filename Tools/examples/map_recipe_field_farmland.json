@@ -5,7 +5,7 @@
 	"seed": 20260829,
 	"base_tile": {"id": "grass_plain_01"},
 	"rooms": [
-		{"id": "farmhouse_kitchen", "kind": "enclosed", "boundary_validation": "complete"},
+		{"id": "farmhouse_kitchen", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
 		{"id": "farmhouse_ground_room", "kind": "enclosed"},
 		{"id": "farmhouse_upper_room", "kind": "enclosed"}
 	],
@@ -63,30 +63,14 @@
 			"to": {"kind": "room", "id": "farmhouse_ground_room"}
 		}
 	],
-	"room_boundaries": [
-		{"id": "farmhouse_kitchen_north_0", "room": "farmhouse_kitchen", "at": [4, 22], "z": 0, "element": "wall_tile", "side": "south"},
-		{"id": "farmhouse_kitchen_north_1", "room": "farmhouse_kitchen", "at": [5, 22], "z": 0, "element": "wall_tile", "side": "south"},
-		{"id": "farmhouse_kitchen_north_2", "room": "farmhouse_kitchen", "at": [6, 22], "z": 0, "element": "wall_tile", "side": "south"},
-		{"id": "farmhouse_kitchen_south_0", "room": "farmhouse_kitchen", "at": [4, 26], "z": 0, "element": "wall_tile", "side": "north"},
-		{"id": "farmhouse_kitchen_south_1", "room": "farmhouse_kitchen", "at": [5, 26], "z": 0, "element": "wall_tile", "side": "north"},
-		{"id": "farmhouse_kitchen_south_2", "room": "farmhouse_kitchen", "at": [6, 26], "z": 0, "element": "wall_tile", "side": "north"},
-		{"id": "farmhouse_kitchen_west_0", "room": "farmhouse_kitchen", "at": [3, 23], "z": 0, "element": "wall_tile", "side": "east"},
-		{"id": "farmhouse_kitchen_front_door", "room": "farmhouse_kitchen", "at": [4, 24], "target_at": [3, 24], "room_at": [4, 24], "z": 0, "element": "door_furniture", "side": "west"},
-		{"id": "farmhouse_kitchen_west_2", "room": "farmhouse_kitchen", "at": [3, 25], "z": 0, "element": "wall_tile", "side": "east"},
-		{"id": "farmhouse_kitchen_east_0", "room": "farmhouse_kitchen", "at": [7, 23], "z": 0, "element": "wall_tile", "side": "west"},
-		{"id": "farmhouse_kitchen_ground_door", "room": "farmhouse_kitchen", "at": [6, 24], "target_at": [7, 24], "room_at": [6, 24], "z": 0, "element": "door_furniture", "side": "east"},
-		{"id": "farmhouse_kitchen_east_2", "room": "farmhouse_kitchen", "at": [7, 25], "z": 0, "element": "wall_tile", "side": "west"}
-	],
 	"operations": [
 		{"type": "room_rectangle", "room": "farmhouse_kitchen", "x": 4, "y": 23, "width": 3, "height": 3},
 		{"type": "room_rectangle", "room": "farmhouse_ground_room", "x": 7, "y": 20, "width": 11, "height": 9},
 		{"type": "line", "from": [3, 19], "to": [18, 19], "z": 1, "tile": {"id": "brick_wall_00"}},
 		{"type": "line", "from": [3, 29], "to": [18, 29], "z": 1, "tile": {"id": "brick_wall_00"}},
-		{"type": "line", "from": [3, 19], "to": [3, 23], "z": 1, "tile": {"id": "brick_wall_00"}},
-		{"type": "line", "from": [3, 25], "to": [3, 29], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [3, 19], "to": [3, 21], "z": 1, "tile": {"id": "brick_wall_00"}},
+		{"type": "line", "from": [3, 27], "to": [3, 29], "z": 1, "tile": {"id": "brick_wall_00"}},
 		{"type": "line", "from": [18, 19], "to": [18, 29], "z": 1, "tile": {"id": "brick_wall_00"}},
-		{"type": "line", "from": [7, 23], "to": [7, 23], "z": 1, "tile": {"id": "brick_wall_00"}},
-		{"type": "line", "from": [7, 25], "to": [7, 25], "z": 1, "tile": {"id": "brick_wall_00"}},
 		{"type": "rectangle", "x": 3, "y": 19, "width": 16, "height": 11, "z": 2, "tile": {"id": "concrete_00"}},
 		{"type": "set", "x": 10, "y": 25, "z": 1, "tile": {"id": "grass_ramp_00", "rotation": 0}},
 		{"type": "set", "x": 10, "y": 24, "z": 2, "tile": {"id": "grass_ramp_00", "rotation": 0}},

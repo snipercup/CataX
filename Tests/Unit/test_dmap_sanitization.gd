@@ -99,6 +99,29 @@ func test_dmap_room_semantics_roundtrip_and_sanitization():
 	assert_false(data["levels"][0][1].has("rooms"), "Stale room references should be removed")
 
 
+func test_dmap_preserves_generated_room_boundary_mode():
+	var DMap = load("res://Scripts/Gamedata/DMap.gd")
+	var map = DMap.new("test_generated_room_boundary", "/tmp/", null)
+	map.set_data({
+		"name": "Generated room boundary",
+		"description": "Preserve compact automatic wall generation.",
+		"rooms": [
+			{"id": "kitchen", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+			{"id": "invalid_room", "kind": "enclosed", "boundary_generation": "windows"},
+		],
+		"levels": [[
+			{"id": "concrete_00", "rooms": ["kitchen"]},
+		]],
+	})
+
+	var data = map.get_data()
+
+	assert_eq(data["rooms"], [
+		{"id": "kitchen", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+		{"id": "invalid_room", "kind": "enclosed"},
+	])
+
+
 func test_dmap_room_connections_roundtrip_and_sanitization():
 	var DMap = load("res://Scripts/Gamedata/DMap.gd")
 	var map = DMap.new("test_room_connections", "/tmp/", null)

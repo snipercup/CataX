@@ -60,11 +60,16 @@ func add_block(position: Vector3, shape: String = "cube", tile_rotation: int = 0
 
 ## Bakes the recorded geometry asynchronously. Must be awaited.
 func bake() -> bool:
+	var previous_iteration := NavigationServer3D.map_get_iteration_id(chunk.navigation_map_id)
 	chunk.update_navigation_mesh()
 	var baked: bool = await gut.wait_for_signal(chunk.navigation_mesh_baked, 5)
-	if baked:
-		await gut.wait_physics_frames(2)
-	return baked
+	if not baked:
+		return false
+	return await gut.wait_until(
+		func(): return NavigationServer3D.map_get_iteration_id(chunk.navigation_map_id) > previous_iteration,
+		5,
+		0.05
+	)
 
 
 ## Converts a map-grid column to the world-space walking point on top of a
