@@ -34,6 +34,16 @@ def _physical_at(record):
 
 def _room_at(record):
     return record.get('room_at', record['at'])
+
+
+def _generated_room_connection_opening(connection, room_id):
+    at = tuple(connection['at'])
+    target_at = tuple(connection.get('target_at', connection['at']))
+    if connection['from'] == {'kind': 'room', 'id': room_id}:
+        return at, target_at, target_at
+    if connection['to'] == {'kind': 'room', 'id': room_id}:
+        return target_at, at, target_at
+    return None
 ROOM_BOUNDARY_ELEMENTS = {'wall_tile', 'door_furniture'}
 BUILDING_FIELDS = {'id', 'rooms', 'footprint', 'z', 'building_levels', 'staircases', 'access_validation', 'interior_rooms', 'open_space_rooms', 'room_partition_validation', 'overhead_validation', 'exterior_context', 'exterior_access_context', 'entrance', 'entrances', 'entrance_validation', 'furniture_anchors', 'building_geometry', 'reachability_validation'}
 BUILDING_REQUIRED_FIELDS = {'id', 'rooms', 'footprint', 'z'}
@@ -859,20 +869,34 @@ class MapValidator:
                 }
                 openings = set()
                 for connection in validated_room_connections:
-                    endpoints = (connection['from'], connection['to'])
-                    if connection['z'] != z or not any(endpoint.get('kind') == 'room' and endpoint.get('id') == room_id for endpoint in endpoints):
+                    if connection['z'] != z:
                         continue
-                    room_at = tuple(connection['at'])
-                    target_at = tuple(connection.get('target_at', connection['at']))
-                    if room_at not in room_cells or target_at not in perimeter:
-                        self.add_error(file_path, f"Room connection '{connection['id']}' must cross the perimeter of generated room '{room_id}' at z {z}.")
+                    opening = _generated_room_connection_opening(connection, room_id)
+                    if opening is None:
                         continue
-                    openings.add(target_at)
+                    room_at, opening_at, door_at = opening
+                    if room_at not in room_cells or abs(room_at[0] - opening_at[0]) + abs(room_at[1] - opening_at[1]) != 1 or opening_at not in perimeter:
+                        self.add_error(file_path, f"Room connection '{connection['id']}' must cross a cardinal perimeter edge of generated room '{room_id}' at z {z}.")
+                        continue
+                    openings.add(opening_at)
                 wall_level_index = z + 11
                 wall_level = levels[wall_level_index] if 0 <= wall_level_index < len(levels) else []
                 for x, y in perimeter - openings:
                     tile = wall_level[y * MAP_WIDTH + x] if isinstance(wall_level, list) and len(wall_level) == POPULATED_LEVEL_TILE_COUNT else {}
-                    if not isinstance(tile, dict) or tile.get('id') != wall_id:
+                    has_wall = isinstance(tile, dict) and tile.get('id') == wall_id
+                    if not has_wall:
+                        neighbor_room_id = level[y * MAP_WIDTH + x].get('rooms', [None])[0]
+                        if neighbor_room_id in automatic_room_ids and room_id > neighbor_room_id:
+                            for delta_x, delta_y in CARDINAL_SIDES.values():
+                                room_x, room_y = x + delta_x, y + delta_y
+                                if not 0 <= room_x < MAP_WIDTH or not 0 <= room_y < MAP_HEIGHT:
+                                    continue
+                                room_tile = level[room_y * MAP_WIDTH + room_x]
+                                if isinstance(room_tile, dict) and room_tile.get('rooms') == [room_id]:
+                                    canonical_tile = wall_level[room_y * MAP_WIDTH + room_x] if isinstance(wall_level, list) and len(wall_level) == POPULATED_LEVEL_TILE_COUNT else {}
+                                    has_wall = isinstance(canonical_tile, dict) and canonical_tile.get('id') == wall_id
+                                    break
+                    if not has_wall:
                         self.add_error(file_path, f"Generated boundary room '{room_id}' is missing wall '{wall_id}' at z {z + 1} [{x}, {y}].")
 
         complete_room_ids = {

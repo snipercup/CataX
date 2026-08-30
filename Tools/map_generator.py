@@ -3149,6 +3149,19 @@ def _required_room_edges(room_id: str, level: list[dict[str, Any]]) -> set[tuple
     return required
 
 
+def _generated_room_connection_opening(
+    connection: dict[str, Any], room_id: str
+) -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]] | None:
+    """Return a room cell, that room's wall-gap cell, and the physical door target."""
+    at = tuple(connection["at"])
+    target_at = _physical_at(connection)
+    if connection["from"] == {"kind": "room", "id": room_id}:
+        return at, target_at, target_at
+    if connection["to"] == {"kind": "room", "id": room_id}:
+        return target_at, at, target_at
+    return None
+
+
 def _generated_room_wall_positions(
     room_id: str,
     z: int,
@@ -3178,19 +3191,25 @@ def _generated_room_wall_positions(
     }
     openings: set[tuple[int, int]] = set()
     for connection in room_connections:
-        if connection["z"] != z or not _room_connection_names_room(connection, room_id):
+        if connection["z"] != z:
             continue
-        room_at = tuple(connection["at"])
-        target_at = _physical_at(connection)
+        opening = _generated_room_connection_opening(connection, room_id)
+        if opening is None:
+            continue
+        room_at, opening_at, _door_at = opening
         if room_at not in room_cells:
             raise RecipeError(
                 f"room connection '{connection['id']}' must start on generated room '{room_id}' at z {z}"
             )
-        if target_at not in wall_positions:
+        if abs(room_at[0] - opening_at[0]) + abs(room_at[1] - opening_at[1]) != 1:
+            raise RecipeError(
+                f"room connection '{connection['id']}' must cross a cardinal edge of generated room '{room_id}' at z {z}"
+            )
+        if opening_at not in wall_positions:
             raise RecipeError(
                 f"room connection '{connection['id']}' must cross the perimeter of generated room '{room_id}' at z {z}"
             )
-        openings.add(target_at)
+        openings.add(opening_at)
     return wall_positions - openings, openings
 
 
@@ -3213,6 +3232,36 @@ def _generated_room_perimeters(
                 walls, openings = _generated_room_wall_positions(room_id, z, levels, room_connections)
                 if walls or openings:
                     perimeters[(room_id, z)] = walls, openings
+
+    for level_index, level in enumerate(levels):
+        if not level:
+            continue
+        z = level_index - 10
+        for y in range(MAP_HEIGHT):
+            for x in range(MAP_WIDTH):
+                room_id = level[y * MAP_WIDTH + x].get("rooms", [None])[0]
+                left_key = (room_id, z)
+                if left_key not in perimeters:
+                    continue
+                for delta_x, delta_y in ((1, 0), (0, 1)):
+                    neighbor_x, neighbor_y = x + delta_x, y + delta_y
+                    if not 0 <= neighbor_x < MAP_WIDTH or not 0 <= neighbor_y < MAP_HEIGHT:
+                        continue
+                    neighbor_id = level[neighbor_y * MAP_WIDTH + neighbor_x].get("rooms", [None])[0]
+                    right_key = (neighbor_id, z)
+                    if neighbor_id == room_id or right_key not in perimeters:
+                        continue
+                    left_walls, left_openings = perimeters[left_key]
+                    right_walls, right_openings = perimeters[right_key]
+                    left_cell = (x, y)
+                    right_cell = (neighbor_x, neighbor_y)
+                    if right_cell in left_openings or left_cell in right_openings:
+                        continue
+                    canonical_wall = right_cell if room_id < neighbor_id else left_cell
+                    left_walls.discard(right_cell)
+                    right_walls.discard(left_cell)
+                    left_walls.add(canonical_wall)
+                    right_walls.add(canonical_wall)
     return perimeters
 
 
@@ -3321,12 +3370,19 @@ def _validate_room_boundary_targets(
                 raise RecipeError(
                     f"generated boundary for room '{room_id}' requires a Wall-category tile at z {z + 1} [{x}, {y}]"
                 )
-        for x, y in openings:
-            tile = levels[_level_index(z)][y * MAP_WIDTH + x]
+        for connection in room_connections:
+            if connection["z"] != z:
+                continue
+            opening = _generated_room_connection_opening(connection, room_id)
+            if opening is None:
+                continue
+            _room_at, _opening_at, door_at = opening
+            door_x, door_y = door_at
+            tile = levels[_level_index(z)][door_y * MAP_WIDTH + door_x]
             feature = tile.get("feature") if isinstance(tile, dict) else None
             if not isinstance(feature, dict) or feature.get("id") not in door_furniture_ids:
                 raise RecipeError(
-                    f"generated boundary opening for room '{room_id}' requires door-capable furniture at z {z} [{x}, {y}]"
+                    f"generated boundary opening for room '{room_id}' requires door-capable furniture at z {z} [{door_x}, {door_y}]"
                 )
         directed_edges[(room_id, z)] = _required_room_edges(room_id, levels[_level_index(z)])
 
