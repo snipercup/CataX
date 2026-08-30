@@ -2166,6 +2166,81 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(wall_level[9 * 32 + 7], {})
         self.assertEqual(generated["levels"][10][9 * 32 + 7]["feature"]["id"], "door_wood")
 
+    def test_generated_complete_room_walls_open_both_sides_of_room_connection(self):
+        recipe = valid_recipe()
+        recipe["rooms"] = [
+            {"id": "left_room", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+            {"id": "right_room", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+        ]
+        recipe["room_connections"] = [{
+            "id": "connecting_door",
+            "at": [10, 9],
+            "target_at": [11, 9],
+            "z": 0,
+            "from": {"kind": "room", "id": "left_room"},
+            "to": {"kind": "room", "id": "right_room"},
+        }]
+        recipe["buildings"] = [{
+            "id": "paired_rooms",
+            "rooms": ["left_room", "right_room"],
+            "footprint": {"x": 7, "y": 7, "width": 8, "height": 5},
+            "z": 0,
+            "building_geometry": {
+                "floor_tile": {"id": "concrete_00"},
+                "wall_tile": {"id": "brick_wall_00"},
+                "support_tile": {"id": "dirt_light_00"},
+                "roof_tile": {"id": "concrete_00"},
+            },
+        }]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "left_room", "x": 8, "y": 8, "width": 3, "height": 3},
+            {"type": "room_rectangle", "room": "right_room", "x": 11, "y": 8, "width": 3, "height": 3},
+            {"type": "furniture", "id": "door_wood", "x": 11, "y": 9, "rotation": 0},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        wall_level = generated["levels"][11]
+        self.assertEqual(wall_level[9 * 32 + 10], {})
+        self.assertEqual(wall_level[9 * 32 + 11], {})
+        self.assertEqual(generated["levels"][10][9 * 32 + 11]["feature"]["id"], "door_wood")
+
+    def test_generated_adjacent_rooms_share_one_deterministic_partition_wall(self):
+        recipe = valid_recipe()
+        recipe["rooms"] = [
+            {"id": "left_room", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+            {"id": "right_room", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+        ]
+        recipe["buildings"] = [{
+            "id": "paired_rooms",
+            "rooms": ["left_room", "right_room"],
+            "footprint": {"x": 7, "y": 7, "width": 8, "height": 5},
+            "z": 0,
+            "building_geometry": {
+                "floor_tile": {"id": "concrete_00"},
+                "wall_tile": {"id": "brick_wall_00"},
+                "support_tile": {"id": "dirt_light_00"},
+                "roof_tile": {"id": "concrete_00"},
+            },
+        }]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "left_room", "x": 8, "y": 8, "width": 3, "height": 3},
+            {"type": "room_rectangle", "room": "right_room", "x": 11, "y": 8, "width": 3, "height": 3},
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        wall_level = generated["levels"][11]
+        for y in range(8, 11):
+            self.assertEqual(wall_level[y * 32 + 10], {})
+            self.assertEqual(wall_level[y * 32 + 11]["id"], "brick_wall_00")
+        with tempfile.TemporaryDirectory() as directory:
+            map_path = Path(directory) / "shared_wall_map.json"
+            map_path.write_text(json.dumps(generated), encoding="utf-8")
+            validator = MapValidator()
+            validator.validate_map(str(map_path))
+            self.assertEqual(validator.errors, [])
+
     def test_buildings_validate_strict_schema_and_preserve_authored_record(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_room_boundaries.json"
         recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
@@ -2803,9 +2878,37 @@ class MapGeneratorTests(unittest.TestCase):
             "required_furniture_anchors": ["farmhouse_kitchen_bench", "farmhouse_upper_bench"],
             "required_building_levels": [0, 2],
         })
+        self.assertEqual(
+            generated["rooms"][0],
+            {
+                "id": "farmhouse_kitchen",
+                "kind": "enclosed",
+                "boundary_validation": "complete",
+                "boundary_generation": "walls",
+            },
+        )
+        self.assertNotIn("room_boundaries", generated)
+        wall_level = generated["levels"][11]
+        self.assertEqual(wall_level[22 * 32 + 7]["id"], "brick_wall_00")
+        self.assertEqual(wall_level[26 * 32 + 7]["id"], "brick_wall_00")
+        self.assertEqual(wall_level[24 * 32 + 3], {})
+        self.assertEqual(wall_level[24 * 32 + 7], {})
+        self.assertEqual(generated["levels"][10][23 * 32 + 7]["rooms"], ["farmhouse_ground_room"])
         self.assertEqual(generated["levels"][11][25 * 32 + 10]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][24 * 32 + 10]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][25 * 32 + 10], {})
+
+    def test_generated_room_connection_rejects_diagonal_opening(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_field_farmland.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["room_connections"][0]["target_at"] = [3, 23]
+        for operation in recipe["operations"]:
+            if operation.get("type") == "furniture" and operation.get("id") == "door_wood" and operation["x"] == 3:
+                operation["y"] = 23
+                break
+
+        with self.assertRaisesRegex(RecipeError, "must cross a cardinal edge"):
+            generate_map(recipe, TILES_PATH)
 
     def test_single_level_building_example_preserves_contained_existing_content(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_single_level_building.json"

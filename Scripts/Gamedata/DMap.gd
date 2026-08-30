@@ -203,6 +203,7 @@ func get_data() -> Dictionary:
 	
 	# Sanitize tile-level area references to remove stale editor artifacts
 	_sanitize_area_references(mydata)
+	_sanitize_room_definitions(mydata)
 	_sanitize_room_references(mydata)
 	_sanitize_room_connections(mydata)
 	_sanitize_room_boundaries(mydata)
@@ -261,6 +262,16 @@ func _sanitize_area_references(data: Dictionary) -> void:
 	
 	if removed_count > 0:
 		print("[DMap] Sanitized %d stale area references during data retrieval" % removed_count)
+
+
+func _sanitize_room_definitions(data: Dictionary) -> void:
+	if not data.has("rooms") or not data["rooms"] is Array:
+		return
+	for room in data["rooms"]:
+		if not room is Dictionary:
+			continue
+		if room.get("boundary_generation") != "walls":
+			room.erase("boundary_generation")
 
 
 func _sanitize_room_references(data: Dictionary) -> void:
