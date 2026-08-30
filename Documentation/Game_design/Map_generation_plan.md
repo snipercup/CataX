@@ -619,7 +619,7 @@ Authored room semantics use a separate map-level `rooms` array plus exclusive ti
 
 `room_connections` adds explicit authored door intent without topology inference. Each root connection names a unique `id`, an `[x, y]` coordinate, required logical `z`, and two distinct endpoints: a known room or `exterior`. An optional `target_at` may name the physical door-furniture tile separately from the authored `at` coordinate, decoupling the room-edge anchor from the door tile. The target must be an existing terrain tile with catalog-recognized door-capable furniture; current evidence uses the runtime-native `door_wood` feature. This covers both room-to-exterior and room-to-room doors while preserving existing door opening, collision, and rotation behavior. `Tools/examples/map_recipe_room_connections.json` carries both cases. The generator and independent validator reject malformed endpoints, unknown rooms, duplicate door targets, or non-door targets; `DMap` preserves valid connections and removes links that name deleted rooms.
 
-`room_boundaries` now provides authored physical evidence without generating a building. Each record identifies one room, exact `[x, y, z]`, and either `wall_tile` or `door_furniture`; a directional `side` may identify its cardinal edge. Optional `target_at` and `room_at` fields may name the physical wall/door tile and the room-membership tile explicitly, so an authored boundary can reference a wall tile that is not the room tile itself. Wall records use the room's logical z while their existing `Wall`-category tile is materialized one level above it, with implicit dirt support at z0; door records point outward from their existing door-capable furniture tile and require a same-location `room_connections` endpoint naming the room. A room cannot duplicate a target, but one wall tile can be declared for different rooms. `Tools/examples/map_recipe_room_boundaries.json` now demonstrates a complete opt-in `office` enclosure with eleven `brick_wall_00` segments and one existing `door_wood` opening, while retaining deliberately partial `covered_open` garage and `ruin` records.
+`room_boundaries` provides the explicit compatibility path for authored physical evidence without generating a building perimeter. Each record identifies one room, exact `[x, y, z]`, and either `wall_tile` or `door_furniture`; a directional `side` may identify its cardinal edge. Optional `target_at` and `room_at` fields may name the physical wall/door tile and the room-membership tile explicitly, so an authored boundary can reference a wall tile that is not the room tile itself. Wall records use the room's logical z while their existing `Wall`-category tile is materialized one level above it, with implicit dirt support at z0; door records point outward from their existing door-capable furniture tile and require a same-location `room_connections` endpoint naming the room. A room cannot duplicate a target, but one wall tile can be declared for different rooms. `Tools/examples/map_recipe_room_boundaries.json` demonstrates a complete opt-in `office` enclosure with eleven `brick_wall_00` segments and one existing `door_wood` opening, while retaining deliberately partial `covered_open` garage and `ruin` records.
 
 An `enclosed` room may add `boundary_validation: "complete"`. Only this opt-in mode requires directional evidence and validates every exposed cardinal edge of every room-membership tile: exactly one wall or connected-door boundary must map to each edge. Missing, incorrectly oriented, duplicate, and non-exposed declarations are rejected. `covered_open` and `ruin` cannot opt in, so their intentional openings and damage remain valid without blanket enclosure requirements.
 
@@ -882,7 +882,7 @@ A new map-local location can be composed from reusable templates and authored wi
 
 ## Phase 10 — Quality and gameplay validation
 
-**Status: planned; first generic semantic and runtime slices are defined below**
+**Status: in progress; the first automatic wall-ring slice is complete**
 
 Phase 10 converts structural validity into explicit acceptance checks. Implement the checks in this order:
 
@@ -901,7 +901,7 @@ Add focused checks for:
 
 These checks belong in `Tools/map_generator.py` and `Tools/map_validator.py`; they must report the building, room/target ID, floor, and missing relation in failures.
 
-#### 10.1.1 Room-boundary reliability and concise authoring
+#### 10.1.1 Room-boundary reliability and concise authoring — first vertical slice complete
 
 The current `room_boundaries` contract is an explicit compatibility path: each record supplies authored physical evidence for one wall edge or door. It must continue to support existing recipes, irregular geometry, ruins, intentional openings, and unusual wall materials. It must not remain the only way to author an ordinary complete enclosed room.
 
@@ -928,6 +928,8 @@ Implement this slice in the following order:
 6. Mirror the resolver and diagnostics in `Tools/map_validator.py`; preserve and sanitize the room-level field in `Scripts/Gamedata/DMap.gd` when that data boundary handles it.
 7. Migrate the `field_farmland` kitchen to the concise room-level declaration and remove its redundant per-wall records and duplicate kitchen wall operations. Verify that the generated perimeter includes the missing corner cells `[7,22]` and `[7,26]`, while connection openings remain open.
 8. Document the compact declaration, the explicit-boundary escape hatch, connection-derived openings, and conflict rules in `Documentation/Modding/map_recipe_generator.md` and `Documentation/Modding/map_example_generation.md`.
+
+The first vertical slice is implemented and proven by `test_generated_complete_room_walls_create_ring_and_leave_exterior_connection_open`: a generated 3×3 complete room creates its complete 5×5 exterior wall ring—including all four corner caps—while a valid exterior `room_connection` remains the only opening. The generator and standalone validator independently validate this contract. The remaining items are follow-up slices; do not migrate `field_farmland` until their targeted tests are green.
 
 This slice belongs in Phase 10.1 because it improves generic authored diagnostics and structural reliability. It is not farmland-specific and must not introduce a farmland conditional in the generator or validator.
 
