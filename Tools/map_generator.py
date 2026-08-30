@@ -74,8 +74,9 @@ AREA_TILE_FIELDS = {"id", "count"}
 AREA_ENTITY_FIELDS = {"id", "type", "count"}
 AREA_ENTITY_TYPES = {"furniture", "mob", "mobgroup", "itemgroup"}
 ROOM_DEFINITION_REQUIRED_FIELDS = {"id", "kind"}
-ROOM_DEFINITION_FIELDS = ROOM_DEFINITION_REQUIRED_FIELDS | {"boundary_validation"}
+ROOM_DEFINITION_FIELDS = ROOM_DEFINITION_REQUIRED_FIELDS | {"boundary_validation", "boundary_generation"}
 ROOM_BOUNDARY_VALIDATIONS = {"complete"}
+ROOM_BOUNDARY_GENERATIONS = {"walls"}
 CARDINAL_SIDES = {
     "north": (0, -1),
     "east": (1, 0),
@@ -1656,9 +1657,19 @@ def _validate_recipe_rooms(rooms: Any) -> list[dict[str, str]]:
                 raise RecipeError(f"{context}.boundary_validation has unsupported value '{boundary_validation}'")
             if kind != "enclosed":
                 raise RecipeError(f"{context}.boundary_validation is only supported for enclosed rooms")
+        boundary_generation = room.get("boundary_generation")
+        if boundary_generation is not None:
+            if boundary_generation not in ROOM_BOUNDARY_GENERATIONS:
+                raise RecipeError(f"{context}.boundary_generation has unsupported value '{boundary_generation}'")
+            if kind != "enclosed" or boundary_validation != "complete":
+                raise RecipeError(
+                    f"{context}.boundary_generation requires an enclosed room with boundary_validation 'complete'"
+                )
         validated_room = {"id": room_id, "kind": kind}
         if boundary_validation is not None:
             validated_room["boundary_validation"] = boundary_validation
+        if boundary_generation is not None:
+            validated_room["boundary_generation"] = boundary_generation
         validated.append(validated_room)
     return validated
 
@@ -2252,6 +2263,8 @@ def _footprints_overlap(left: dict[str, int], right: dict[str, int]) -> bool:
 
 def _apply_building_geometry(
     buildings: list[dict[str, Any]],
+    rooms: list[dict[str, Any]],
+    room_connections: list[dict[str, Any]],
     room_boundaries: list[dict[str, Any]],
     building_supports: list[dict[str, Any]],
     building_surfaces: list[dict[str, Any]],
@@ -2261,6 +2274,9 @@ def _apply_building_geometry(
     palette: dict[str, list[dict[str, Any]]],
     tile_catalog: dict[str, dict[str, Any]],
 ) -> None:
+    generated_perimeters = _generated_room_perimeters(
+        rooms, buildings, levels, room_connections
+    )
     for building in buildings:
         geometry = building.get("building_geometry")
         if geometry is None:
@@ -2317,12 +2333,17 @@ def _apply_building_geometry(
             if landing_at is not None:
                 landing = tuple(landing_at)
                 upper_floor_clearance.add(landing)
-        # Collect positions that will have walls at z+1 so the floor fill can place dirt below them
-        wall_support_positions: set[tuple[int, int]] = set()
+        # Collect positions that will have walls at z+1 so the floor fill can place supports below them.
         owned_rooms = set(building["rooms"])
-        for boundary in room_boundaries:
-            if boundary["room"] in owned_rooms and boundary["element"] == "wall_tile":
-                wall_support_positions.add(tuple(_physical_at(boundary)))
+        wall_support_positions: set[tuple[int, int, int]] = {
+            (boundary["z"], *_physical_at(boundary))
+            for boundary in room_boundaries
+            if boundary["room"] in owned_rooms and boundary["element"] == "wall_tile"
+        }
+        for room_id in owned_rooms:
+            for (generated_room_id, generated_z), (walls, _openings) in generated_perimeters.items():
+                if generated_room_id == room_id:
+                    wall_support_positions.update((generated_z, x, y) for x, y in walls)
         for z in occupied_zs:
             level = levels[_level_index(z)]
             for y in range(footprint["y"], footprint["y"] + footprint["height"]):
@@ -2342,9 +2363,11 @@ def _apply_building_geometry(
                         continue
                     if existing.get("id") in tile_catalog and tile_catalog[existing["id"]].get("shape") == "slope":
                         continue
-                    # Place dirt below ground-level wall positions unless a feature occupies the support tile.
-                    if z == building["z"] and (x, y) in wall_support_positions and not existing.get("feature"):
-                        level[index] = {"id": "dirt_light_00"}
+                    # Place support below ground-level wall positions without dropping room/area metadata.
+                    if z == building["z"] and (z, x, y) in wall_support_positions and not existing.get("feature"):
+                        replacement = {"id": "dirt_light_00"}
+                        replacement.update({key: value for key, value in existing.items() if key != "id"})
+                        level[index] = replacement
                         continue
                     replacement = tile_specs["floor_tile"].copy()
                     replacement.update({key: value for key, value in existing.items() if key != "id"})
@@ -2366,12 +2389,26 @@ def _apply_building_geometry(
             support_tile = support_level[support_index]
             if not support_tile.get("feature"):
                 if boundary["z"] == building["z"]:
-                    support_level[support_index] = {"id": "dirt_light_00"}
+                    replacement = {"id": "dirt_light_00"}
+                    replacement.update({key: value for key, value in support_tile.items() if key != "id"})
+                    support_level[support_index] = replacement
                 else:
                     replacement = tile_specs["floor_tile"].copy()
                     replacement.update({key: value for key, value in support_tile.items() if key != "id"})
                     support_level[support_index] = replacement
             wall_level[index] = tile_specs["wall_tile"].copy()
+
+        for room_id in owned_rooms:
+            for (generated_room_id, wall_z), (wall_positions, _openings) in generated_perimeters.items():
+                if generated_room_id != room_id:
+                    continue
+                wall_level = _get_or_create_level(levels, wall_z + 1)
+                for x, y in wall_positions:
+                    index = y * MAP_WIDTH + x
+                    existing = wall_level[index]
+                    if isinstance(existing, dict) and existing.get("feature"):
+                        raise RecipeError(f"{context} cannot place a wall over a feature at [{x}, {y}, {wall_z + 1}]")
+                    wall_level[index] = tile_specs["wall_tile"].copy()
 
         for support in building_supports:
             if support["building"] != building["id"]:
@@ -3112,8 +3149,89 @@ def _required_room_edges(room_id: str, level: list[dict[str, Any]]) -> set[tuple
     return required
 
 
+def _generated_room_wall_positions(
+    room_id: str,
+    z: int,
+    levels: list[list[dict[str, Any]]],
+    room_connections: list[dict[str, Any]],
+) -> tuple[set[tuple[int, int]], set[tuple[int, int]]]:
+    """Return wall-ring cells and connection openings for one generated room perimeter."""
+    level = levels[_level_index(z)]
+    room_cells = {
+        (x, y)
+        for y in range(MAP_HEIGHT)
+        for x in range(MAP_WIDTH)
+        if level[y * MAP_WIDTH + x].get("rooms") == [room_id]
+    }
+    if not room_cells:
+        return set(), set()
+
+    wall_positions = {
+        (neighbor_x, neighbor_y)
+        for x, y in room_cells
+        for delta_x in (-1, 0, 1)
+        for delta_y in (-1, 0, 1)
+        if (delta_x or delta_y)
+        and 0 <= (neighbor_x := x + delta_x) < MAP_WIDTH
+        and 0 <= (neighbor_y := y + delta_y) < MAP_HEIGHT
+        and (neighbor_x, neighbor_y) not in room_cells
+    }
+    openings: set[tuple[int, int]] = set()
+    for connection in room_connections:
+        if connection["z"] != z or not _room_connection_names_room(connection, room_id):
+            continue
+        room_at = tuple(connection["at"])
+        target_at = _physical_at(connection)
+        if room_at not in room_cells:
+            raise RecipeError(
+                f"room connection '{connection['id']}' must start on generated room '{room_id}' at z {z}"
+            )
+        if target_at not in wall_positions:
+            raise RecipeError(
+                f"room connection '{connection['id']}' must cross the perimeter of generated room '{room_id}' at z {z}"
+            )
+        openings.add(target_at)
+    return wall_positions - openings, openings
+
+
+def _generated_room_perimeters(
+    rooms: list[dict[str, Any]],
+    buildings: list[dict[str, Any]],
+    levels: list[list[dict[str, Any]]],
+    room_connections: list[dict[str, Any]],
+) -> dict[tuple[str, int], tuple[set[tuple[int, int]], set[tuple[int, int]]]]:
+    room_definitions = {room["id"]: room for room in rooms}
+    perimeters: dict[tuple[str, int], tuple[set[tuple[int, int]], set[tuple[int, int]]]] = {}
+    for building in buildings:
+        for room_id in building["rooms"]:
+            if room_definitions[room_id].get("boundary_generation") != "walls":
+                continue
+            for level_index, level in enumerate(levels):
+                if not level:
+                    continue
+                z = level_index - 10
+                walls, openings = _generated_room_wall_positions(room_id, z, levels, room_connections)
+                if walls or openings:
+                    perimeters[(room_id, z)] = walls, openings
+    return perimeters
+
+
+def _validate_generated_room_perimeter_declarations(
+    rooms: list[dict[str, Any]], room_boundaries: list[dict[str, Any]]
+) -> None:
+    generated_room_ids = {
+        room["id"] for room in rooms if room.get("boundary_generation") == "walls"
+    }
+    for index, boundary in enumerate(room_boundaries):
+        if boundary["room"] in generated_room_ids:
+            raise RecipeError(
+                f"room_boundaries[{index}] must not target room '{boundary['room']}' with boundary_generation 'walls'"
+            )
+
+
 def _validate_room_boundary_targets(
     boundaries: list[dict[str, Any]],
+    buildings: list[dict[str, Any]],
     levels: list[list[dict[str, Any]]],
     wall_tile_ids: set[str],
     door_furniture_ids: set[str],
@@ -3192,6 +3310,25 @@ def _validate_room_boundary_targets(
         ):
             raise RecipeError(f"{context} must match a room connection for room '{room_id}'")
         record_complete_edge(boundary, level, context)
+
+    for (room_id, z), (walls, openings) in _generated_room_perimeters(
+        rooms, buildings, levels, room_connections
+    ).items():
+        wall_level = levels[_level_index(z + 1)]
+        for x, y in walls:
+            tile = wall_level[y * MAP_WIDTH + x] if wall_level else {}
+            if not isinstance(tile, dict) or tile.get("id") not in wall_tile_ids:
+                raise RecipeError(
+                    f"generated boundary for room '{room_id}' requires a Wall-category tile at z {z + 1} [{x}, {y}]"
+                )
+        for x, y in openings:
+            tile = levels[_level_index(z)][y * MAP_WIDTH + x]
+            feature = tile.get("feature") if isinstance(tile, dict) else None
+            if not isinstance(feature, dict) or feature.get("id") not in door_furniture_ids:
+                raise RecipeError(
+                    f"generated boundary opening for room '{room_id}' requires door-capable furniture at z {z} [{x}, {y}]"
+                )
+        directed_edges[(room_id, z)] = _required_room_edges(room_id, levels[_level_index(z)])
 
     for room_id in complete_room_ids:
         for level_index, level in enumerate(levels):
@@ -3747,6 +3884,7 @@ def generate_map(
     room_boundaries = _validate_recipe_room_boundaries(
         recipe.get("room_boundaries", []), known_room_ids
     )
+    _validate_generated_room_perimeter_declarations(rooms, room_boundaries)
     rng = random.Random(seed)
     levels = _generate_levels(
         recipe,
@@ -3762,6 +3900,8 @@ def generate_map(
     )
     _apply_building_geometry(
         buildings,
+        rooms,
+        room_connections,
         room_boundaries,
         building_supports,
         building_surfaces,
@@ -3774,6 +3914,7 @@ def generate_map(
     _validate_room_connection_targets(room_connections, levels, door_furniture_ids)
     _validate_room_boundary_targets(
         room_boundaries,
+        buildings,
         levels,
         wall_tile_ids,
         door_furniture_ids,

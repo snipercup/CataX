@@ -503,9 +503,22 @@ Connections are semantic metadata only. They preserve their authored `from`/`to`
 
 A room cannot name the same target coordinate twice, but one wall tile may deliberately bound different rooms through separate records. `side`, when present, is `north`, `east`, `south`, or `west`. For `wall_tile`, it points from the wall tile toward its room; for `door_furniture`, it points outward from the room tile through that door.
 
-An `enclosed` room may opt in to strict completeness by adding `"boundary_validation": "complete"` to its root definition. For such a room, every exposed cardinal edge of every labelled room tile must have exactly one directed boundary record. Its records therefore require `side`: a wall must point to the matching room edge, and a door must start on the matching room tile and retain its required `room_connections` endpoint. Missing, wrongly oriented, duplicate, or non-exposed records are rejected. `covered_open` and `ruin` rooms cannot opt in and continue to allow partial boundary evidence.
+An `enclosed` room may opt in to strict completeness by adding `"boundary_validation": "complete"` to its root definition. The legacy explicit mode requires every exposed cardinal edge of every labelled room tile to have exactly one directed `room_boundaries` record. Its records therefore require `side`: a wall must point to the matching room edge, and a door must start on the matching room tile and retain its required `room_connections` endpoint. Missing, wrongly oriented, duplicate, or non-exposed records are rejected. `covered_open` and `ruin` rooms cannot opt in and continue to allow partial boundary evidence.
 
-Boundary metadata preserves existing terrain, furniture, rotation, collision, and runtime door behavior. `DMap` preserves it through content-editor save/load and removes records naming deleted rooms. It does not create walls or openings, infer a door from rotation, change navigation, or add indoor/outdoor effects.
+For a normal generated enclosure, add `"boundary_generation": "walls"` alongside `boundary_validation` instead of enumerating each wall:
+
+```json
+{
+  "id": "kitchen",
+  "kind": "enclosed",
+  "boundary_validation": "complete",
+  "boundary_generation": "walls"
+}
+```
+
+This mode requires an owning building with `building_geometry.wall_tile`. After final room membership is painted, the generator derives a one-tile wall ring at `floor_z + 1`, including diagonal corner caps. Every named same-z `room_connections` target that crosses the room perimeter becomes an opening in that ring and must retain door-capable furniture. Explicit `room_boundaries` for a generated room are rejected, so a recipe cannot mix competing wall-ownership modes. The standalone validator independently checks the resulting wall ring and openings against the building's declared wall tile. `room_rectangle` remains membership-only; it does not directly place walls.
+
+Generated ground-storey wall supports use `dirt_light_00` while preserving existing room, area, and compatible tile metadata. Boundary generation does not create door furniture, infer connections, change navigation, or add indoor/outdoor effects.
 
 ### `buildings`
 
