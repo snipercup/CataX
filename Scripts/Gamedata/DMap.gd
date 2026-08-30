@@ -408,7 +408,7 @@ func _sanitize_buildings(data: Dictionary) -> void:
 			var staircase_ids: Array = []
 			for staircase in building["staircases"]:
 				if not staircase is Dictionary \
-				or not staircase.keys().all(func(key): return key in ["id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at"]) \
+				or not staircase.keys().all(func(key): return key in ["id", "lower_at", "upper_at", "rotation", "upper_rotation", "landing_at", "upper_clearance_at"]) \
 				or not staircase.has("id") \
 				or not staircase["id"] is String \
 				or staircase["id"].is_empty() \
@@ -429,6 +429,9 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				if staircase.has("landing_at") \
 				and (not staircase["landing_at"] is Array or staircase["landing_at"].size() != 2):
 					return false
+				if staircase.has("upper_clearance_at") \
+				and (not staircase["upper_clearance_at"] is Array or staircase["upper_clearance_at"].size() != 2):
+					return false
 				staircase_ids.append(staircase["id"])
 			if not (0 in building["building_levels"].map(func(level): return level.get("z")) and 2 in building["building_levels"].map(func(level): return level.get("z"))):
 				return false
@@ -442,6 +445,11 @@ func _sanitize_buildings(data: Dictionary) -> void:
 				or upper_at[0] < building["footprint"]["x"] or upper_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
 				or upper_at[1] < building["footprint"]["y"] or upper_at[1] >= building["footprint"]["y"] + building["footprint"]["height"]:
 					return false
+				if staircase.has("upper_clearance_at"):
+					var upper_clearance_at: Array = staircase["upper_clearance_at"]
+					if upper_clearance_at[0] < building["footprint"]["x"] or upper_clearance_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
+					or upper_clearance_at[1] < building["footprint"]["y"] or upper_clearance_at[1] >= building["footprint"]["y"] + building["footprint"]["height"]:
+						return false
 				if staircase.has("landing_at"):
 					var landing_at: Array = staircase["landing_at"]
 					if landing_at[0] < building["footprint"]["x"] or landing_at[0] >= building["footprint"]["x"] + building["footprint"]["width"] \
