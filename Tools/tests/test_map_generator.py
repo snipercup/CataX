@@ -12,6 +12,29 @@ FURNITURES_PATH = ROOT / "Mods" / "Dimensionfall" / "Furniture" / "Furniture.jso
 MOBS_PATH = ROOT / "Mods" / "Dimensionfall" / "Mobs" / "Mobs.json"
 MOBGROUPS_PATH = ROOT / "Mods" / "Dimensionfall" / "Mobgroups" / "Mobgroups.json"
 ITEMGROUPS_PATH = ROOT / "Mods" / "Dimensionfall" / "Itemgroups" / "Itemgroups.json"
+MAINTAINED_RECIPE_FILENAMES = (
+    "map_recipe.json",
+    "map_recipe_furniture_outdoor.json",
+    "map_recipe_area_meadow.json",
+    "map_recipe_area_entity_clearing.json",
+    "map_recipe_room_semantics.json",
+    "map_recipe_room_connections.json",
+    "map_recipe_room_boundaries.json",
+    "map_recipe_single_level_building.json",
+    "map_recipe_building_surfaces.json",
+    "map_recipe_furniture_anchors.json",
+    "map_recipe_multi_entrance_building.json",
+    "map_recipe_multi_level_building_foundation.json",
+    "map_recipe_field_farmland.json",
+    "map_recipe_road_connections.json",
+    "map_recipe_road_endpoints.json",
+    "map_recipe_two_level_hill.json",
+    "map_recipe_two_level_depression.json",
+    "map_recipe_small_cabin_template.json",
+    "map_recipe_village_square_composition.json",
+    "map_recipe_semantic_single_storey_building.json",
+    "map_recipe_semantic_two_storey_building.json",
+)
 
 
 def valid_recipe():
@@ -2857,6 +2880,34 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][12][9 * 32 + 10]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][9 * 32 + 10]["rooms"], ["loft"])
         self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
+
+    def test_maintained_recipe_suite_generates_validates_and_is_deterministic(self):
+        recipes_dir = ROOT / "Tools" / "examples"
+        recipe_paths = [recipes_dir / filename for filename in MAINTAINED_RECIPE_FILENAMES]
+        self.assertEqual(
+            sorted(path.name for path in recipes_dir.glob("map_recipe*.json")),
+            sorted(MAINTAINED_RECIPE_FILENAMES),
+            "Update the maintained acceptance suite when adding or removing a recipe.",
+        )
+
+        with (
+            tempfile.TemporaryDirectory() as first_directory,
+            tempfile.TemporaryDirectory() as second_directory,
+        ):
+            for recipe_path in recipe_paths:
+                with self.subTest(recipe=recipe_path.name):
+                    recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+                    filename = f"{recipe['id']}.json"
+                    first_path = Path(first_directory) / filename
+                    second_path = Path(second_directory) / filename
+
+                    write_map(recipe_path, first_path, TILES_PATH)
+                    write_map(recipe_path, second_path, TILES_PATH)
+
+                    self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
+                    validator = MapValidator()
+                    validator.validate_map(str(first_path))
+                    self.assertEqual(validator.errors, [])
 
     def test_field_farmland_fixture_applies_generic_semantic_building_profile(self):
         recipe_path = ROOT / "Tools" / "examples" / "map_recipe_field_farmland.json"
