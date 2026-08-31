@@ -940,15 +940,22 @@ Phase 10.2 is complete for the migrated `field_farmland` farmhouse runtime trave
 * exterior approach → kitchen through the west door;
 * kitchen → ground room through the declared room connection;
 * bidirectional ground room ↔ upper room traversal through the authored staircase;
-* navigation baking completes only after the NavigationServer map iteration advances.
+* navigation baking completes only after the `NavigationServer3D` map iteration advances and two further physics frames settle the newly attached region.
 
 Runtime wall-blocking is not claimed by this slice: the current fixture contributes block top faces to navigation source geometry, so a one-block wall can itself be represented as an elevated navigation surface. A follow-up collision/navigation-fixture change is required before asserting that automatic wall cells block crossings. Dynamic door state, combat, and full player-input traversal remain outside this phase.
 
 Use real Chunk navigation baking and `NavigationServer3D`; do not introduce a Python pathfinder.
 
-### 10.3 Maintained acceptance fixtures
+### 10.3 Maintained acceptance fixtures — complete
 
-Keep generic single-storey and two-storey semantic fixtures, the maintained multi-level foundation, the village-square composition, and `field_farmland` generated and validated in CI or the maintained example workflow. A fixture is complete only when generator tests, standalone validation, deterministic regeneration, and relevant GUT runtime checks agree.
+The maintained acceptance suite is complete. `MapGeneratorTests.test_maintained_recipe_suite_generates_validates_and_is_deterministic` enumerates every maintained `Tools/examples/map_recipe*.json` recipe, including the generic single-storey and two-storey semantic fixtures, the multi-level foundation, village-square composition, and `field_farmland`. For each recipe it:
+
+* generates two independently written artifacts;
+* validates each artifact through `write_map`'s publication validation and a fresh standalone `MapValidator` instance;
+* requires byte-identical output from both regenerations; and
+* fails when a recipe is added or removed without updating the explicit maintained suite.
+
+Relevant GUT runtime coverage remains focused by geometry class: semantic single-storey, semantic two-storey, and `field_farmland` run real `Chunk` baking and `NavigationServer3D` navigation checks. Keep this suite green whenever maintained examples or map-generation behavior change; add an equivalent focused runtime test only when a fixture introduces gameplay geometry not already covered.
 
 ### 10.4 Phase 10 success criterion
 
@@ -991,9 +998,9 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is complete** with maintained village-square composition and the `field_farmland` semantic acceptance fixture, generic single-storey and two-storey fixtures, independent data-boundary validation, static `reachability_validation`, and the reusable Godot runtime navigation fixture. The immediate next task is **Phase 10.2: runtime gameplay checks** — add focused GUT coverage for the migrated `field_farmland` automatic kitchen wall ring, proving exterior→kitchen and kitchen→ground-room routes remain traversable through the two declared openings while the generated walls block unintended crossings. Do not start `wall_height` until Phase 10 reachability slices are green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is complete** with maintained village-square composition and the `field_farmland` semantic acceptance fixture, generic single-storey and two-storey fixtures, independent data-boundary validation, static `reachability_validation`, and the reusable Godot runtime navigation fixture. **Phase 10.2 and 10.3 are complete**: focused Godot navigation coverage proves the farmhouse's declared traversal routes, while the explicit maintained-recipe acceptance suite generates, independently validates, and deterministically regenerates every maintained recipe. The immediate work is to uphold the **Phase 10.4 success criterion** as new map vocabulary is added: require concise authored inputs, actionable static and runtime diagnostics, and the same maintained-fixture acceptance matrix. Do not start `wall_height` until a genuine tall-storey requirement exists and Phase 10 acceptance remains green. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
-The completed execution order was: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → implement and independently validate automatic room-boundary generation → migrate the farmland kitchen. The remaining execution order is: complete Phase 10 runtime/fixture acceptance checks → defer generalized `wall_height` until Phase 11. `field_farmland` is an acceptance fixture, not a special-case implementation.
+The completed execution order was: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → implement and independently validate automatic room-boundary generation → migrate the farmland kitchen → complete focused runtime navigation coverage → establish the maintained-fixture acceptance suite. The ongoing order is: preserve the Phase 10.4 success criterion for new vocabulary → defer generalized `wall_height` until Phase 11 and a concrete tall-storey requirement. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
 Do not yet generate towns or overmap-wide composition. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
@@ -1075,7 +1082,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Phase 9.4 reusable Godot runtime navigation fixture
 [Complete] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
 [Complete] Phase 10.2 focused `field_farmland` runtime gameplay checks
-[In Progress] Phase 10 remaining authored quality and gameplay validation
+[Complete] Phase 10.3 maintained-fixture generation, standalone validation, and deterministic regeneration acceptance suite
+[In Progress] Phase 10.4 authored-quality and gameplay-validation success criterion
 [Deferred] Phase 11 generalized tall-storey `wall_height`
 [Target] Agent-generated playable maps
 ```

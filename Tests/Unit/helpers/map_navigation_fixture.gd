@@ -65,11 +65,15 @@ func bake() -> bool:
 	var baked: bool = await gut.wait_for_signal(chunk.navigation_mesh_baked, 5)
 	if not baked:
 		return false
-	return await gut.wait_until(
+	var synchronized: bool = await gut.wait_until(
 		func(): return NavigationServer3D.map_get_iteration_id(chunk.navigation_map_id) > previous_iteration,
 		5,
 		0.05
 	)
+	if not synchronized:
+		return false
+	await gut.wait_physics_frames(2)
+	return true
 
 
 ## Converts a map-grid column to the world-space walking point on top of a
