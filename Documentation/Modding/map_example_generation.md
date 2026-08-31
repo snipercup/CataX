@@ -388,7 +388,7 @@ Run the focused Godot farmhouse runtime navigation regression suite from the rep
 godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://Tests/Unit -gprefix=test_field_farmland_navigation -gexit
 ```
 
-This verifies the migrated automatic kitchen wall ring with real Chunk baking and `NavigationServer3D`: declared farmhouse routes remain traversable through the authored west door, interior connection, and staircase. Runtime wall-blocking remains a follow-up because the current fixture's one-block top-face geometry is itself treated as walkable source geometry.
+This verifies the migrated automatic kitchen wall ring with real Chunk baking and `NavigationServer3D`: declared farmhouse routes remain traversable through the authored west door, interior connection, and staircase, while bounded checks reject north/south wall, non-door east partition, and both generated corner-cap crossings.
 
 Run the focused Godot slope geometry and baked-navigation regression suites:
 
