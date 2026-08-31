@@ -58,6 +58,23 @@ func add_block(position: Vector3, shape: String = "cube", tile_rotation: int = 0
 	chunk.add_mesh_to_navigation_data(position, runtime_rotation, shape)
 
 
+func add_wall_obstacle(position: Vector3, height: float = 2.0) -> void:
+	var center := position + Vector3(0.5, 0.5, 0.5)
+	var bottom := -0.5
+	var top := bottom + height
+	var sides := PackedVector3Array([
+		Vector3(-0.5, bottom, -0.5), Vector3(0.5, bottom, -0.5), Vector3(0.5, top, -0.5),
+		Vector3(-0.5, bottom, -0.5), Vector3(0.5, top, -0.5), Vector3(-0.5, top, -0.5),
+		Vector3(0.5, bottom, 0.5), Vector3(-0.5, bottom, 0.5), Vector3(-0.5, top, 0.5),
+		Vector3(0.5, bottom, 0.5), Vector3(-0.5, top, 0.5), Vector3(0.5, top, 0.5),
+		Vector3(-0.5, bottom, 0.5), Vector3(-0.5, bottom, -0.5), Vector3(-0.5, top, -0.5),
+		Vector3(-0.5, bottom, 0.5), Vector3(-0.5, top, -0.5), Vector3(-0.5, top, 0.5),
+		Vector3(0.5, bottom, -0.5), Vector3(0.5, bottom, 0.5), Vector3(0.5, top, 0.5),
+		Vector3(0.5, bottom, -0.5), Vector3(0.5, top, 0.5), Vector3(0.5, top, -0.5),
+	])
+	chunk.source_geometry_data.add_faces(sides, Transform3D(Basis(), center))
+
+
 ## Bakes the recorded geometry asynchronously. Must be awaited.
 func bake() -> bool:
 	var previous_iteration := NavigationServer3D.map_get_iteration_id(chunk.navigation_map_id)
@@ -99,6 +116,14 @@ func assert_path_connects(start: Vector3, finish: Vector3, label: String, tolera
 		tolerance,
 		"%s path should end near its destination." % label
 	)
+
+
+func assert_path_does_not_connect(start: Vector3, finish: Vector3, label: String, tolerance: float = 0.6) -> void:
+	var path := NavigationServer3D.map_get_path(chunk.navigation_map_id, start, finish, true)
+	var reaches_finish := path.size() > 1
+	if reaches_finish:
+		reaches_finish = path[path.size() - 1].distance_to(finish) < tolerance
+	gut.assert_false(reaches_finish, "%s should be blocked." % label)
 
 
 ## Asserts a navigation path exists and spans the two storey surfaces.
