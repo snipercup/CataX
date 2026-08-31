@@ -39,6 +39,8 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_road_endpoints.json` | `Mods/Dimensionfall/Maps/generated_road_endpoints.json` | An outdoor map with authored road-endpoint anchors at the east and west edges, identifying where roads enter the map. |
 | `Tools/examples/map_recipe_two_level_hill.json` | `Mods/Dimensionfall/Maps/generated_two_level_hill.json` | Ground level `z: 0`, raised terrain at `z: 1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
+| `Tools/examples/map_recipe_small_cabin_template.json` | `Mods/Dimensionfall/Maps/generated_small_cabin_template.json` | A reusable nested cabin template with relative levels, rotations, anchors, and composed placement. |
+| `Tools/examples/map_recipe_village_square_composition.json` | `Mods/Dimensionfall/Maps/generated_village_square_composition.json` | A maintained village square composed from reusable plaza and cabin templates. |
 
 For both multi-level examples, slope rotations use the map editor convention: `0` has its high edge north, `90` east, `180` south, and `270` west. The generator writes those values directly; Godot performs the slope-specific runtime conversion when loading a newly generated map.
 
@@ -172,7 +174,9 @@ for recipe in \
   Tools/examples/map_recipe_road_connections.json \
   Tools/examples/map_recipe_road_endpoints.json \
   Tools/examples/map_recipe_two_level_hill.json \
-  Tools/examples/map_recipe_two_level_depression.json; do
+  Tools/examples/map_recipe_two_level_depression.json \
+  Tools/examples/map_recipe_small_cabin_template.json \
+  Tools/examples/map_recipe_village_square_composition.json; do
   id=$(python3 -c "import json,sys;print(json.load(open('$recipe'))['id'])")
   python3 Tools/map_generator.py \
     "$recipe" \
@@ -203,6 +207,8 @@ rm Mods/Dimensionfall/Maps/generated_road_connections.json
 rm Mods/Dimensionfall/Maps/generated_road_endpoints.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
 rm Mods/Dimensionfall/Maps/generated_two_level_depression.json
+rm Mods/Dimensionfall/Maps/generated_small_cabin_template.json
+rm Mods/Dimensionfall/Maps/generated_village_square_composition.json
 ```
 
 Only run the removal command for a file you actually generated. These maintained IDs are intended for development examples; do not overwrite a map with the same ID if it has been repurposed as project content.
