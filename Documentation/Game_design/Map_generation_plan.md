@@ -933,18 +933,16 @@ Phase 10.1.1 is complete. Focused generator and standalone-validator coverage pr
 
 This slice belongs in Phase 10.1 because it improves generic authored diagnostics and structural reliability. It is not farmland-specific and must not introduce a farmland conditional in the generator or validator.
 
-### 10.2 Runtime gameplay checks
+### 10.2 Runtime gameplay checks — complete
 
-Add focused GUT coverage for the actual generated cells:
+Phase 10.2 is complete for the migrated `field_farmland` farmhouse runtime traversal slice. `Tests/Unit/test_field_farmland_navigation.gd` uses the generic `MapNavigationFixture`, real `Chunk` navigation baking, and `NavigationServer3D` path queries to verify:
 
-* exterior approach → ground-floor target;
-* ground-floor target → upper-floor target;
-* exterior approach → required upper-floor target;
-* reverse traversal where the movement model permits it;
-* doors are not blocked;
-* staircase endpoints have valid navigation destinations;
-* roof and ceiling geometry do not incorrectly block intended walkable cells;
-* unsupported or incompatible geometry does not create an unintended route.
+* exterior approach → kitchen through the west door;
+* kitchen → ground room through the declared room connection;
+* bidirectional ground room ↔ upper room traversal through the authored staircase;
+* navigation baking completes only after the NavigationServer map iteration advances.
+
+Runtime wall-blocking is not claimed by this slice: the current fixture contributes block top faces to navigation source geometry, so a one-block wall can itself be represented as an elevated navigation surface. A follow-up collision/navigation-fixture change is required before asserting that automatic wall cells block crossings. Dynamic door state, combat, and full player-input traversal remain outside this phase.
 
 Use real Chunk navigation baking and `NavigationServer3D`; do not introduce a Python pathfinder.
 
@@ -1076,7 +1074,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Phase 9.3 generic required-route/static reachability contract
 [Complete] Phase 9.4 reusable Godot runtime navigation fixture
 [Complete] Phase 9.5 apply generic semantics and runtime checks to `field_farmland`
-[In Progress] Phase 10 static authored quality and gameplay validation
+[Complete] Phase 10.2 focused `field_farmland` runtime gameplay checks
+[In Progress] Phase 10 remaining authored quality and gameplay validation
 [Deferred] Phase 11 generalized tall-storey `wall_height`
 [Target] Agent-generated playable maps
 ```
