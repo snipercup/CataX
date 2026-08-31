@@ -60,7 +60,9 @@ func test_generated_field_farmland_connects_exterior_rooms_and_upper_storey() ->
 	var ground_room: Vector3 = fixture.grid_to_world(12, 25, 1.5)
 	var upper_room: Vector3 = fixture.grid_to_world(10, 24, 3.5)
 	fixture.assert_path_connects(exterior, kitchen, "Exterior to farmhouse kitchen")
+	fixture.assert_path_connects(kitchen, exterior, "Farmhouse kitchen to exterior")
 	fixture.assert_path_connects(kitchen, ground_room, "Kitchen to farmhouse ground room")
+	fixture.assert_path_connects(ground_room, kitchen, "Farmhouse ground room to kitchen")
 	fixture.assert_path_crosses_levels(
 		ground_room, upper_room, "Farmhouse ground room to upper room", 1.5, 3.1
 	)
