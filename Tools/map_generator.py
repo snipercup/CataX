@@ -2861,8 +2861,40 @@ def _validate_building_targets(
                         room_graph[right_node].add(left_node)
             for staircase in building.get("staircases", []):
                 staircase_levels = [0, 2]
-                lower_node = next((node for node in room_nodes if node[1] == staircase_levels[0]), None)
-                upper_node = next((node for node in room_nodes if node[1] == staircase_levels[1]), None)
+                lower_at = staircase["lower_at"]
+                upper_at = staircase["upper_at"]
+                lower_tile = levels[_level_index(staircase_levels[0])][
+                    lower_at[1] * MAP_WIDTH + lower_at[0]
+                ]
+                upper_tile = levels[_level_index(staircase_levels[1])][
+                    upper_at[1] * MAP_WIDTH + upper_at[0]
+                ]
+                lower_room_ids = lower_tile.get("rooms", []) if isinstance(lower_tile, dict) else []
+                upper_room_ids = upper_tile.get("rooms", []) if isinstance(upper_tile, dict) else []
+                lower_node = next(
+                    (
+                        (room_id, staircase_levels[0])
+                        for room_id in lower_room_ids
+                        if (room_id, staircase_levels[0]) in room_nodes
+                    ),
+                    None,
+                )
+                upper_node = next(
+                    (
+                        (room_id, staircase_levels[1])
+                        for room_id in upper_room_ids
+                        if (room_id, staircase_levels[1]) in room_nodes
+                    ),
+                    None,
+                )
+                if lower_node is None:
+                    lower_node = next(
+                        (node for node in sorted(room_nodes) if node[1] == staircase_levels[0]), None
+                    )
+                if upper_node is None:
+                    upper_node = next(
+                        (node for node in sorted(room_nodes) if node[1] == staircase_levels[1]), None
+                    )
                 if lower_node is not None and upper_node is not None:
                     room_graph[lower_node].add(upper_node)
                     room_graph[upper_node].add(lower_node)

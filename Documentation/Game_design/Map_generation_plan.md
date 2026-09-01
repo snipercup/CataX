@@ -955,15 +955,15 @@ The maintained acceptance suite is complete. `MapGeneratorTests.test_maintained_
 * requires byte-identical output from both regenerations; and
 * fails when a recipe is added or removed without updating the explicit maintained suite.
 
-Relevant GUT runtime coverage remains focused by geometry class: semantic single-storey, semantic two-storey, and `field_farmland` run real `Chunk` baking and `NavigationServer3D` navigation checks. Keep this suite green whenever maintained examples or map-generation behavior change; add an equivalent focused runtime test only when a fixture introduces gameplay geometry not already covered.
+Relevant GUT runtime coverage remains focused by geometry class: semantic single-storey, semantic two-storey, `field_farmland`, and Pine Hollow Outpost run real `Chunk` baking and `NavigationServer3D` navigation checks. Keep this suite green whenever maintained examples or map-generation behavior change; add an equivalent focused runtime test only when a fixture introduces gameplay geometry not already covered.
 
 ### 10.4 Phase 10 success criterion — complete
 
 The Phase 10 success criterion is complete for the maintained fixture set. The generator, standalone validator, DMap persistence, and runtime navigation tests now provide actionable coverage for authored structure and traversal: intended farmhouse doors, room connections, and stairs are reachable, while bounded runtime checks reject unintended crossings through the automatic kitchen walls and generated corner caps. The generic `MapNavigationFixture` models walls as vertical navigation obstacles rather than walkable top surfaces, so these checks exercise the same navigation-server path query used by gameplay.
 
-### 10.5 New authored location: Pine Hollow Outpost — next
+### 10.5 New authored location: Pine Hollow Outpost — implemented; manual visual inspection pending
 
-**Status: next; new-map authoring slice for visual/runtime-equivalent procedural locations**
+**Status: automated acceptance complete; inspect the generated map in the Godot editor before marking visual review complete**
 
 Phase 10.5 shifts the primary acceptance target from reproducing an existing authored map to creating a new location from a concise design request. `field_farmland` remains a behavioral and visual reference, but the new fixture must not copy its coordinates, operation sequence, or complete tile/feature layout.
 
@@ -993,13 +993,61 @@ The generated Pine Hollow Outpost must:
 
 Decorative details, exact terrain scatter, minor prop placement, and other non-gameplay-critical differences from `field_farmland` are intentionally allowed. Phase 10.5 should add comparison/reporting only where it clarifies structural or visual equivalence; it must not turn the new recipe into a byte-equivalent snapshot of the authored farmhouse.
 
+The implementation is `Tools/examples/map_recipe_pine_hollow_outpost.json`. It is a new composition with a west/east road route that approaches rather than overwrites the cabin door, an automatic-wall caretaker cabin, an intentionally open lean-to, dirt-and-grass work-yard area membership, storage crates, two destroyed-fence markers, a `wood_stairs` loft transition, and a standable roof. `MapGeneratorTests.test_pine_hollow_outpost_fixture_creates_a_new_rural_two_level_location` asserts its generated semantic profile, door opening, wall caps, stair/headroom cells, road endpoint, open-space room, and representative storage feature. The maintained recipe suite independently validates and deterministically regenerates it alongside every other maintained recipe. The generator and standalone validator both bind staircase reachability to the rooms owning each staircase's authored lower/upper coordinates, rather than selecting an unordered same-level room; this keeps multi-room buildings such as the cabin plus lean-to deterministic.
+
+`Tests/Unit/test_pine_hollow_outpost_navigation.gd` uses real `Chunk` baking and `NavigationServer3D` path queries to verify the road-to-cabin and cabin-to-lean-to routes, bidirectional lower-to-loft traversal, and an isolated north-wall pocket that cannot be crossed. This completes the automated structural/runtime portion of Phase 10.5. Generate the map with the documented command and inspect it in the Godot content editor before declaring the visual review complete; automated navigation does not replace an in-editor art and composition review.
+
 The implementation order is:
 
-1. author `Tools/examples/map_recipe_pine_hollow_outpost.json` from the location concept;
-2. add focused generator and standalone-validator coverage for the new composition;
-3. add or extend focused GUT runtime navigation coverage for the declared routes and blocked wall crossings;
-4. generate and inspect the map through the existing Godot/editor workflow;
-5. update the modding example documentation and mark this phase complete only after the listed validation passes.
+1. ~~author `Tools/examples/map_recipe_pine_hollow_outpost.json` from the location concept;~~
+2. ~~add focused generator and standalone-validator coverage for the new composition;~~
+3. ~~add or extend focused GUT runtime navigation coverage for the declared routes and blocked wall crossings;~~
+4. generate the map and inspect it through the existing Godot/editor workflow;
+5. mark the visual review complete only after that inspection confirms the intended rural outpost composition.
+
+### 10.6 Room-derived surface operations — next
+
+**Status: next; schema simplification for room-owned physical geometry**
+
+Phase 10.6 addresses a clarity and correctness gap exposed by Pine Hollow Outpost. A room is currently declared in the root `rooms` registry, assigned to a building, assigned to a building level, and then represented again by independent coordinate-based floor and roof operations. This makes it difficult to see which physical surfaces belong to `outpost_loft`, and it allows a building-wide floor operation to cover areas such as the adjacent lean-to unintentionally.
+
+Keep the root `rooms` registry as the definition source, keep `buildings[].rooms` as the ownership relationship for backwards compatibility, and keep `building_levels[].rooms` as the per-floor ownership relationship. Do not merge those concepts. Instead, add room-derived physical operations whose geometry is computed from room membership:
+
+```json
+{"type": "room_surface", "room": "outpost_loft", "z": 2, "tile": {"id": "concrete_00"}}
+{"type": "room_surface", "room": "outpost_loft", "z": 4, "tile": {"id": "concrete_00"}, "outline_padding": 1}
+```
+
+The first implementation should support a known room, a logical z, a tile, and an optional cardinal outline padding. It should derive the affected cells from the final room membership rather than duplicating coordinates. A later compatible operation may derive wall outlines, but Phase 10.6 must not infer doors or openings from topology: declared `room_connections` remain authoritative.
+
+For multi-level physical buildings, `building_geometry` floor materialization should be corrected or extended so that declared room-owned floor surfaces do not automatically fill the entire building footprint on every occupied level. Building-wide geometry remains available where intentionally required, but a room-derived operation must be able to express the narrower loft floor and roof envelope. In Pine Hollow Outpost, the intended relationship is:
+
+```text
+outpost_loft membership: x12..17, y11..16 (6×6)
+loft wall envelope:       x11..18, y10..17 (8×8)
+loft roof:               x11..18, y10..17 (8×8)
+lean-to:                 remains outside the loft roof coverage
+```
+
+The current Pine Hollow recipe applies the immediate safe correction by changing its z4 roof rectangle to `width: 8`, `height: 8`. Migration to `room_surface` should follow only after the operation is implemented and independently validated.
+
+#### 10.6 success criterion
+
+* room-derived floors and roofs follow final room membership deterministically;
+* padded roof coverage is explicit and does not cover adjacent open-space rooms;
+* room-derived operations reject unknown rooms, invalid levels, unsupported tiles, and feature overwrites;
+* generated room metadata, features, room connections, staircase cells, and area membership survive surface materialization;
+* generator validation, standalone `MapValidator`, `DMap` persistence where applicable, deterministic regeneration, and focused runtime navigation remain aligned;
+* Pine Hollow Outpost's cabin, lean-to, loft, and roof geometry remain visually and physically coherent.
+
+Implementation order:
+
+1. add test-first generator coverage for one room-derived loft surface and the padded roof case;
+2. implement the minimal generator operation;
+3. mirror operation validation in `Tools/map_validator.py` and persistence handling in `Scripts/Gamedata/DMap.gd` if the generated schema requires it;
+4. migrate Pine Hollow's explicit loft floor/roof operations and verify the lean-to remains uncovered;
+5. add focused runtime navigation/collision coverage and rerun the Phase 10 acceptance matrix;
+6. update the modding documentation and mark Phase 10.6 complete.
 
 ## Phase 11 — Generalized tall-storey wall height
 
@@ -1038,9 +1086,9 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 6 is complete.** Its runtime-compatible area foundation, room semantics, authored building constraints, multi-level footprint metadata, physical floor/wall/support generation, standable roof generation, authored staircase evidence, enclosed maintained building geometry, and manual player traversal verification are complete for the first narrow building slice. **Phase 7 is complete** with authored map-edge metadata, endpoint anchoring, route metadata, deterministic map-local route painting, and runtime walkability validation. Explicit map-to-map edge compatibility is intentionally deferred as an optional future follow-up. **Phase 8 is complete**: template expansion, nested templates, anchors, typed semantic variants, bounded integer parameters, constrained string-list collections, structured object parameters, explicit quarter-turn placement rotation, automatic facing-compatible anchor rotation, complete three-dimensional footprint validation, and named compositional locations are complete. **Phase 9 is complete** with maintained village-square composition and the `field_farmland` semantic acceptance fixture, generic single-storey and two-storey fixtures, independent data-boundary validation, static `reachability_validation`, and the reusable Godot runtime navigation fixture. **Phase 10 is complete**: maintained recipes have generation, independent validation, deterministic regeneration, and focused runtime structural-quality coverage, including blocked unintended farmhouse wall crossings. **Phase 10.5 is next**: author a new Pine Hollow Outpost recipe from a concise location concept and validate visual/runtime-equivalent structure without copying an existing authored map. `field_farmland` remains a reference and acceptance fixture, not a source template. Defer Phase 11 `wall_height` until a genuine tall-storey gameplay requirement exists. Do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 10.5 is implemented:** Pine Hollow Outpost is a maintained new-map recipe authored from a location concept rather than a legacy-map copy. Its automated generator, standalone-validator, deterministic-regeneration, and real-navigation acceptance are green. The immediate remaining acceptance action is a manual Godot content-editor inspection of the generated map's rural composition. **Phase 10.6 is next:** implement room-derived surface operations and correct room-owned multi-level coverage before considering Phase 11 `wall_height`. Do not begin generalized settlement composition until it serves a concrete gameplay need.
 
-The completed execution order was: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → implement and independently validate automatic room-boundary generation → migrate the farmland kitchen → complete focused runtime navigation coverage → establish the maintained-fixture acceptance suite → implement runtime structural-quality validation. The next order is: author and validate Pine Hollow Outpost as a new map → preserve the Phase 10 acceptance matrix for its vocabulary and composition → defer generalized `wall_height` until Phase 11 and a concrete tall-storey requirement. `field_farmland` is an acceptance fixture, not a special-case implementation.
+The completed execution order was: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → implement and independently validate automatic room-boundary generation → migrate the farmland kitchen → complete focused runtime navigation coverage → establish the maintained-fixture acceptance suite → implement runtime structural-quality validation → author and automate Pine Hollow Outpost acceptance. The next order is: complete Pine Hollow's manual visual inspection → implement and validate room-derived surface operations in Phase 10.6 → preserve the Phase 10 acceptance matrix → defer generalized `wall_height` until Phase 11 and a concrete tall-storey requirement. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
 Do not yet generate towns or overmap-wide composition. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
@@ -1124,7 +1172,8 @@ Do not commit or push unless explicitly requested.
 [Complete] Phase 10.2 focused `field_farmland` runtime gameplay checks
 [Complete] Phase 10.3 maintained-fixture generation, standalone validation, and deterministic regeneration acceptance suite
 [Complete] Phase 10.4 runtime structural-quality validation and Phase 10 success criterion
-[Next] Phase 10.5 new authored Pine Hollow Outpost location and visual/runtime-equivalence acceptance
+[In Progress] Phase 10.5 Pine Hollow Outpost automated acceptance complete; manual visual review pending
+[Next] Phase 10.6 room-derived surface operations and room-owned multi-level geometry
 [Deferred] Phase 11 generalized tall-storey `wall_height`
 [Target] Agent-generated playable maps
 ```
