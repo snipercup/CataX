@@ -41,6 +41,7 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_small_cabin_template.json` | `Mods/Dimensionfall/Maps/generated_small_cabin_template.json` | A reusable nested cabin template with relative levels, rotations, anchors, and composed placement. |
 | `Tools/examples/map_recipe_village_square_composition.json` | `Mods/Dimensionfall/Maps/generated_village_square_composition.json` | A maintained village square composed from reusable plaza and cabin templates. |
+| `Tools/examples/map_recipe_pine_hollow_outpost.json` | `Mods/Dimensionfall/Maps/generated_pine_hollow_outpost.json` | A new rural survival outpost authored without a hand-made source map: road approach, automatic-wall caretaker cabin, open lean-to, work-yard area, storage, destroyed fencing, and a `wood_stairs` loft. |
 
 For both multi-level examples, slope rotations use the map editor convention: `0` has its high edge north, `90` east, `180` south, and `270` west. The generator writes those values directly; Godot performs the slope-specific runtime conversion when loading a newly generated map.
 
@@ -122,6 +123,11 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_field_farmland.json \
   Mods/Dimensionfall/Maps/generated_field_farmland.json
 
+# New authored Pine Hollow Outpost with road approach, cabin, lean-to, and loft
+python3 Tools/map_generator.py \
+  Tools/examples/map_recipe_pine_hollow_outpost.json \
+  Mods/Dimensionfall/Maps/generated_pine_hollow_outpost.json
+
 # Ground-level authored map-edge road connection metadata
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_road_connections.json \
@@ -171,6 +177,7 @@ for recipe in \
   Tools/examples/map_recipe_multi_entrance_building.json \
   Tools/examples/map_recipe_multi_level_building_foundation.json \
   Tools/examples/map_recipe_field_farmland.json \
+  Tools/examples/map_recipe_pine_hollow_outpost.json \
   Tools/examples/map_recipe_road_connections.json \
   Tools/examples/map_recipe_road_endpoints.json \
   Tools/examples/map_recipe_two_level_hill.json \
@@ -203,6 +210,7 @@ rm Mods/Dimensionfall/Maps/generated_furniture_anchors.json
 rm Mods/Dimensionfall/Maps/generated_multi_entrance_building.json
 rm Mods/Dimensionfall/Maps/generated_multi_level_building_foundation.json
 rm Mods/Dimensionfall/Maps/generated_field_farmland.json
+rm Mods/Dimensionfall/Maps/generated_pine_hollow_outpost.json
 rm Mods/Dimensionfall/Maps/generated_road_connections.json
 rm Mods/Dimensionfall/Maps/generated_road_endpoints.json
 rm Mods/Dimensionfall/Maps/generated_two_level_hill.json
@@ -389,6 +397,14 @@ godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://Tests/Unit -gpr
 ```
 
 This verifies the migrated automatic kitchen wall ring with real Chunk baking and `NavigationServer3D`: declared farmhouse routes remain traversable through the authored west door, interior connection, and staircase, while bounded checks reject north/south wall, non-door east partition, and both generated corner-cap crossings.
+
+Run the focused Pine Hollow Outpost runtime navigation acceptance from the repository root:
+
+```bash
+godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://Tests/Unit -gprefix=test_pine_hollow_outpost_navigation -gexit
+```
+
+This bakes the new outpost geometry through real `Chunk` and `NavigationServer3D` code. It verifies road-to-cabin, cabin-to-open-lean-to, and bidirectional cabin-to-loft traversal, and rejects an isolated north-wall crossing. Generate `generated_pine_hollow_outpost.json` with the command above and review it in the content editor for the remaining visual-composition acceptance.
 
 Run the focused Godot slope geometry and baked-navigation regression suites:
 

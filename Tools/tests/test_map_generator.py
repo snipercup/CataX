@@ -34,6 +34,7 @@ MAINTAINED_RECIPE_FILENAMES = (
     "map_recipe_village_square_composition.json",
     "map_recipe_semantic_single_storey_building.json",
     "map_recipe_semantic_two_storey_building.json",
+    "map_recipe_pine_hollow_outpost.json",
 )
 
 
@@ -2880,6 +2881,39 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][12][9 * 32 + 10]["id"], "grass_ramp_00")
         self.assertEqual(generated["levels"][12][9 * 32 + 10]["rooms"], ["loft"])
         self.assertEqual(generated["levels"][12][10 * 32 + 10], {})
+
+    def test_pine_hollow_outpost_fixture_creates_a_new_rural_two_level_location(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_pine_hollow_outpost.json"
+        generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
+
+        self.assertEqual(generated["id"], "generated_pine_hollow_outpost")
+        self.assertEqual(generated["connections"]["west"], "road")
+        self.assertEqual(generated["road_endpoints"][0], {
+            "id": "outpost_west_road", "direction": "west", "at": [0, 14], "z": 0,
+        })
+        building = generated["buildings"][0]
+        self.assertEqual(building["id"], "pine_hollow_caretaker_cabin")
+        self.assertEqual(building["building_levels"], [
+            {"z": 0, "rooms": ["outpost_cabin", "outpost_lean_to"], "furniture_anchors": ["outpost_front_door", "outpost_work_crate"]},
+            {"z": 2, "rooms": ["outpost_loft"], "furniture_anchors": ["outpost_loft_crate"]},
+        ])
+        self.assertEqual(building["open_space_rooms"], ["outpost_lean_to"])
+        self.assertEqual(building["staircases"], [{
+            "id": "outpost_loft_staircase", "lower_at": [15, 15], "upper_at": [15, 14], "upper_clearance_at": [15, 16], "rotation": 0,
+        }])
+        self.assertEqual(generated["rooms"][0], {
+            "id": "outpost_cabin", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls",
+        })
+        self.assertEqual(generated["rooms"][1], {"id": "outpost_lean_to", "kind": "covered_open"})
+        wall_level = generated["levels"][11]
+        self.assertEqual(wall_level[14 * 32 + 11], {})
+        self.assertEqual(generated["levels"][10][14 * 32 + 11]["feature"]["id"], "door_wood")
+        self.assertEqual(wall_level[10 * 32 + 11]["id"], "brick_wall_00")
+        self.assertEqual(wall_level[17 * 32 + 18]["id"], "brick_wall_00")
+        self.assertEqual(generated["levels"][11][15 * 32 + 15]["id"], "wood_stairs")
+        self.assertEqual(generated["levels"][12][14 * 32 + 15]["id"], "wood_stairs")
+        self.assertEqual(generated["levels"][12][16 * 32 + 15], {})
+        self.assertEqual(generated["levels"][10][13 * 32 + 20]["feature"]["id"], "crate_wood")
 
     def test_maintained_recipe_suite_generates_validates_and_is_deterministic(self):
         recipes_dir = ROOT / "Tools" / "examples"
