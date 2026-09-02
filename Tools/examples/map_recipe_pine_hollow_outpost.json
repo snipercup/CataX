@@ -89,7 +89,8 @@
 		{"type": "area_rectangle", "area": "outpost_yard", "x": 8, "y": 10, "width": 15, "height": 8, "z": 0, "rotation": 0},
 		{"type": "room_rectangle", "room": "outpost_cabin", "x": 12, "y": 11, "width": 6, "height": 6},
 		{"type": "room_rectangle", "room": "outpost_lean_to", "x": 19, "y": 12, "width": 3, "height": 5},
-		{"type": "rectangle", "x": 12, "y": 11, "width": 6, "height": 6, "z": 2, "tile": {"id": "concrete_00"}},
+		{"type": "set", "x": 11, "y": 14, "z": 0, "tile": {"id": "concrete_00"}},
+		{"type": "room_surface", "room": "outpost_loft", "z": 2, "tile": {"id": "concrete_00"}},
 		{"type": "set", "x": 15, "y": 15, "z": 1, "tile": {"id": "wood_stairs", "rotation": 0}},
 		{"type": "set", "x": 15, "y": 14, "z": 2, "tile": {"id": "wood_stairs", "rotation": 0}},
 		{"type": "rectangle_outline", "x": 11, "y": 10, "width": 8, "height": 8, "z": 3, "tile": {"id": "brick_wall_00"}},
@@ -99,6 +100,6 @@
 		{"type": "furniture", "id": "crate_wood_long", "x": 13, "y": 12, "z": 2, "rotation": 0},
 		{"type": "furniture", "id": "destroyed_fence", "x": 9, "y": 11, "rotation": 0},
 		{"type": "furniture", "id": "destroyed_fence", "x": 9, "y": 17, "rotation": 0},
-		{"type": "rectangle", "x": 11, "y": 10, "width": 8, "height": 8, "z": 4, "tile": {"id": "concrete_00"}}
+		{"type": "room_surface", "room": "outpost_loft", "z": 4, "tile": {"id": "concrete_00"}, "outline_padding": 1}
 	]
 }

@@ -2006,6 +2006,86 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, r"requires supporting terrain at \[0, 0\]"):
             generate_map(recipe, TILES_PATH)
 
+    def test_room_surface_derives_tiles_from_final_membership_and_padded_envelope(self):
+        recipe = valid_recipe()
+        recipe["rooms"] = [{"id": "loft", "kind": "enclosed"}]
+        recipe["operations"] = [
+            {
+                "type": "room_surface",
+                "room": "loft",
+                "z": 4,
+                "tile": {"id": "concrete_00"},
+                "outline_padding": 1,
+            },
+            {
+                "type": "room_surface",
+                "room": "loft",
+                "z": 2,
+                "tile": {"id": "concrete_00"},
+            },
+            {
+                "type": "room_rectangle",
+                "room": "loft",
+                "x": 12,
+                "y": 11,
+                "width": 2,
+                "height": 2,
+                "z": 2,
+            },
+        ]
+
+        generated = generate_map(recipe, TILES_PATH)
+        loft_floor = generated["levels"][12]
+        loft_roof = generated["levels"][14]
+
+        for y in range(11, 13):
+            for x in range(12, 14):
+                self.assertEqual(loft_floor[y * 32 + x]["id"], "concrete_00")
+                self.assertEqual(loft_floor[y * 32 + x]["rooms"], ["loft"])
+        self.assertEqual(loft_floor[10 * 32 + 11], {})
+        for y in range(10, 14):
+            for x in range(11, 15):
+                self.assertEqual(loft_roof[y * 32 + x]["id"], "concrete_00")
+        self.assertEqual(loft_roof[9 * 32 + 10], {})
+
+    def test_room_surface_rejects_invalid_definitions(self):
+        valid_rooms = [{"id": "loft", "kind": "enclosed"}]
+        cases = [
+            (
+                [{"type": "room_surface", "room": "unknown", "z": 2, "tile": {"id": "concrete_00"}}],
+                "references unknown room 'unknown'",
+            ),
+            (
+                [{"type": "room_surface", "room": "loft", "z": 2, "tile": {"id": "concrete_00"}, "outline_padding": -1}],
+                "outline_padding must be a non-negative integer",
+            ),
+            (
+                [{"type": "room_surface", "room": "loft", "z": 2, "tile": {"id": "missing_tile"}}],
+                "references unknown tile 'missing_tile'",
+            ),
+            (
+                [{"type": "room_surface", "room": "loft", "z": 2, "tile": {"id": "concrete_00"}}],
+                "requires authored membership for room 'loft'",
+            ),
+        ]
+        for operations, expected_message in cases:
+            with self.subTest(operations=operations):
+                recipe = valid_recipe()
+                recipe["rooms"] = valid_rooms
+                recipe["operations"] = operations
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH)
+
+        recipe = valid_recipe()
+        recipe["rooms"] = valid_rooms
+        recipe["operations"] = [
+            {"type": "rectangle", "x": 0, "y": 0, "width": 1, "height": 1, "z": 2, "tile": {"id": "concrete_00"}},
+            {"type": "room_rectangle", "room": "loft", "x": 0, "y": 0, "width": 1, "height": 1, "z": 2},
+            {"type": "room_surface", "room": "loft", "z": 4, "tile": {"id": "concrete_00"}, "outline_padding": 1},
+        ]
+        with self.assertRaisesRegex(RecipeError, r"derives out-of-bounds cell \[-1, -1\]"):
+            generate_map(recipe, TILES_PATH)
+
     def test_room_connections_preserve_existing_door_features(self):
         recipe = valid_recipe()
         recipe["base_tile"] = {"id": "concrete_00"}
@@ -2906,13 +2986,20 @@ class MapGeneratorTests(unittest.TestCase):
         })
         self.assertEqual(generated["rooms"][1], {"id": "outpost_lean_to", "kind": "covered_open"})
         wall_level = generated["levels"][11]
-        self.assertEqual(wall_level[14 * 32 + 11], {})
+        self.assertEqual(generated["levels"][11][14 * 32 + 11], {})
+        self.assertEqual(generated["levels"][10][14 * 32 + 11]["id"], "concrete_00")
         self.assertEqual(generated["levels"][10][14 * 32 + 11]["feature"]["id"], "door_wood")
         self.assertEqual(wall_level[10 * 32 + 11]["id"], "brick_wall_00")
         self.assertEqual(wall_level[17 * 32 + 18]["id"], "brick_wall_00")
         self.assertEqual(generated["levels"][11][15 * 32 + 15]["id"], "wood_stairs")
         self.assertEqual(generated["levels"][12][14 * 32 + 15]["id"], "wood_stairs")
         self.assertEqual(generated["levels"][12][16 * 32 + 15], {})
+        self.assertEqual(generated["levels"][12][12 * 32 + 13]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][12 * 32 + 13]["feature"]["id"], "crate_wood_long")
+        self.assertEqual(generated["levels"][12][13 * 32 + 20], {})
+        self.assertEqual(generated["levels"][14][13 * 32 + 20], {})
+        self.assertEqual(generated["levels"][14][10 * 32 + 11]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][14][10 * 32 + 19], {})
         self.assertEqual(generated["levels"][10][13 * 32 + 20]["feature"]["id"], "crate_wood")
 
     def test_maintained_recipe_suite_generates_validates_and_is_deterministic(self):
