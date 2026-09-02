@@ -86,6 +86,7 @@ CARDINAL_SIDES = {
 OPPOSITE_SIDES = {"north": "south", "east": "west", "south": "north", "west": "east"}
 ROOM_KINDS = {"enclosed", "covered_open", "ruin"}
 ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
+ROOM_SURFACE_FIELDS = {"type", "room", "z", "tile", "outline_padding"}
 ROOM_CONNECTION_FIELDS = {"id", "at", "target_at", "z", "from", "to"}
 ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
@@ -324,6 +325,8 @@ def _rotate_template_operation(operation: dict[str, Any], rotation: int, context
         operation["x"], operation["y"] = _rotate_template_point([operation["x"], operation["y"]], rotation)
     elif operation_type in {"rectangle", "rectangle_outline", "area_rectangle", "room_rectangle"}:
         _rotate_template_rectangle(operation, rotation)
+    elif operation_type == "room_surface":
+        pass
     elif operation_type in {"scatter", "furniture_scatter"}:
         region = operation["region"]
         rectangle = {"x": region["x"], "y": region["y"], "width": region["width"], "height": region["height"]}
@@ -380,6 +383,8 @@ def _append_expanded_template_operations(
                     raise RecipeError(f"{operation_context} requires integer x and y")
                 translated["x"] += origin_at[0]
                 translated["y"] += origin_at[1]
+            elif operation_type == "room_surface":
+                pass
             elif operation_type in {"scatter", "furniture_scatter"}:
                 region = translated.get("region")
                 if not isinstance(region, dict) or not isinstance(region.get("x"), int) or not isinstance(region.get("y"), int):
@@ -1424,6 +1429,7 @@ def _apply_furniture(
     operation: dict[str, Any],
     known_furnitures: set[str],
     context: str,
+    allow_pending_surface_support: bool = False,
 ) -> None:
     unknown_fields = sorted(set(operation) - FURNITURE_OPERATION_FIELDS)
     if unknown_fields:
@@ -1442,7 +1448,8 @@ def _apply_furniture(
     if type(rotation) is not int or rotation not in VALID_ROTATIONS:
         raise RecipeError(f"{context}.rotation must be 0, 90, 180, or 270")
     tile = level[y * MAP_WIDTH + x]
-    if not isinstance(tile.get("id"), str) or not tile["id"]:
+    if (not allow_pending_surface_support
+            and (not isinstance(tile.get("id"), str) or not tile["id"])):
         raise RecipeError(
             f"{context} requires supporting terrain at [{x}, {y}] on its target level"
         )
@@ -2350,17 +2357,46 @@ def _apply_building_geometry(
             for (generated_room_id, generated_z), (walls, _openings) in generated_perimeters.items():
                 if generated_room_id == room_id:
                     wall_support_positions.update((generated_z, x, y) for x, y in walls)
-        ground_wall_level = levels[_level_index(building["z"] + 1)]
-        if len(ground_wall_level) == MAP_WIDTH * MAP_HEIGHT:
+        for z in occupied_zs:
+            if z >= MAX_LOGICAL_Z:
+                continue
+            wall_level = levels[_level_index(z + 1)]
+            if len(wall_level) != MAP_WIDTH * MAP_HEIGHT:
+                continue
             for y in range(footprint["y"], footprint["y"] + footprint["height"]):
                 for x in range(footprint["x"], footprint["x"] + footprint["width"]):
-                    wall_tile = ground_wall_level[y * MAP_WIDTH + x]
+                    wall_tile = wall_level[y * MAP_WIDTH + x]
                     if isinstance(wall_tile, dict) and wall_tile.get("id") == tile_specs["wall_tile"]["id"]:
-                        wall_support_positions.add((building["z"], x, y))
+                        wall_support_positions.add((z, x, y))
+        building_level_rooms = {
+            entry["z"]: set(entry["rooms"])
+            for entry in building.get("building_levels", [])
+        }
+        explicit_building_floors = {
+            surface["z"]
+            for surface in building_surfaces
+            if surface["building"] == building["id"] and surface["kind"] == "floor"
+        }
         for z in occupied_zs:
             level = levels[_level_index(z)]
-            for y in range(footprint["y"], footprint["y"] + footprint["height"]):
-                for x in range(footprint["x"], footprint["x"] + footprint["width"]):
+            floor_positions = {
+                (x, y)
+                for y in range(footprint["y"], footprint["y"] + footprint["height"])
+                for x in range(footprint["x"], footprint["x"] + footprint["width"])
+            }
+            if building_level_rooms and z not in explicit_building_floors:
+                floor_positions = {
+                    (index % MAP_WIDTH, index // MAP_WIDTH)
+                    for index, cell in enumerate(level)
+                    if isinstance(cell, dict)
+                    and any(room_id in building_level_rooms[z] for room_id in cell.get("rooms", []))
+                }
+                floor_positions.update(
+                    (x, y)
+                    for wall_z, x, y in wall_support_positions
+                    if wall_z == z
+                )
+            for x, y in sorted(floor_positions, key=lambda cell: (cell[1], cell[0])):
                     index = y * MAP_WIDTH + x
                     existing = level[index]
                     if not isinstance(existing, dict):
@@ -3495,6 +3531,7 @@ def _apply_room_rectangle(
     operation: dict[str, Any],
     known_room_ids: set[str],
     context: str,
+    allow_pending_surface_support: bool = False,
 ) -> None:
     unknown_fields = sorted(set(operation) - ROOM_RECTANGLE_FIELDS)
     if unknown_fields:
@@ -3508,7 +3545,8 @@ def _apply_room_rectangle(
     for y in range(dimensions["y"], dimensions["y"] + dimensions["height"]):
         for x in range(dimensions["x"], dimensions["x"] + dimensions["width"]):
             tile = level[y * MAP_WIDTH + x]
-            if not isinstance(tile.get("id"), str) or not tile["id"]:
+            if (not allow_pending_surface_support
+                    and (not isinstance(tile.get("id"), str) or not tile["id"])):
                 raise RecipeError(f"{context} requires supporting terrain at [{x}, {y}]")
             if tile.get("rooms"):
                 raise RecipeError(f"{context} duplicates room membership at [{x}, {y}]")
@@ -3529,6 +3567,69 @@ def _target_z(
     return _logical_z(spec.get("z", 0), f"{context}.z")
 
 
+def _apply_room_surfaces(
+    levels: list[list[dict[str, Any]]],
+    surfaces: list[tuple[dict[str, Any], str, int]],
+    rng: random.Random,
+    known_tiles: set[str],
+    palette: dict[str, list[dict[str, Any]]],
+    known_room_ids: set[str],
+    slope_tile_ids: set[str],
+) -> None:
+    for operation, context, target_z in surfaces:
+        unknown_fields = sorted(set(operation) - ROOM_SURFACE_FIELDS)
+        if unknown_fields:
+            raise RecipeError(f"unknown {context} field '{unknown_fields[0]}'")
+        if not {"type", "room", "tile"}.issubset(operation):
+            raise RecipeError(f"{context} must define type, room, and tile")
+        room_id = operation["room"]
+        if not isinstance(room_id, str) or room_id not in known_room_ids:
+            raise RecipeError(f"{context}.room references unknown room '{room_id}'")
+        outline_padding = operation.get("outline_padding", 0)
+        if type(outline_padding) is not int or outline_padding < 0:
+            raise RecipeError(f"{context}.outline_padding must be a non-negative integer")
+        _validate_tile_spec(operation["tile"], known_tiles, f"{context}.tile", palette=palette)
+        tile = _make_tile(operation["tile"], rng, known_tiles, f"{context}.tile", palette=palette)
+        if not tile:
+            raise RecipeError(f"{context}.tile must produce a non-empty tile")
+
+        membership: list[tuple[int, int, int]] = []
+        for source_z in range(MIN_LOGICAL_Z, MAX_LOGICAL_Z + 1):
+            source_level = levels[_level_index(source_z)]
+            if len(source_level) != MAP_WIDTH * MAP_HEIGHT:
+                continue
+            for index, cell in enumerate(source_level):
+                if isinstance(cell, dict) and room_id in cell.get("rooms", []):
+                    membership.append((source_z, index % MAP_WIDTH, index // MAP_WIDTH))
+        if not membership:
+            raise RecipeError(f"{context} requires authored membership for room '{room_id}'")
+        source_zs = {source_z for source_z, _x, _y in membership}
+        if len(source_zs) != 1:
+            raise RecipeError(f"{context}.room '{room_id}' must have membership on exactly one logical z")
+
+        derived_cells = {
+            (x + dx, y + dy)
+            for _source_z, x, y in membership
+            for dx in range(-outline_padding, outline_padding + 1)
+            for dy in range(-outline_padding, outline_padding + 1)
+        }
+        for x, y in sorted(derived_cells, key=lambda cell: (cell[1], cell[0])):
+            if not 0 <= x < MAP_WIDTH or not 0 <= y < MAP_HEIGHT:
+                raise RecipeError(f"{context} derives out-of-bounds cell [{x}, {y}]")
+
+        target_level = _get_or_create_level(levels, target_z)
+        for x, y in sorted(derived_cells, key=lambda cell: (cell[1], cell[0])):
+            index = y * MAP_WIDTH + x
+            existing = target_level[index]
+            if (target_z in source_zs and isinstance(existing, dict)
+                    and existing.get("id") in slope_tile_ids):
+                continue
+            replacement = tile.copy()
+            if isinstance(existing, dict):
+                replacement.update({key: value for key, value in existing.items() if key != "id"})
+            target_level[index] = replacement
+
+
 def _apply_layout(
     levels: list[list[dict[str, Any]]],
     regions: Any,
@@ -3542,6 +3643,7 @@ def _apply_layout(
     known_area_ids: set[str],
     known_room_ids: set[str],
     wall_tile_ids: set[str],
+    room_surfaces: list[tuple[dict[str, Any], str, int]],
     context_prefix: str = "",
     inherited_z: int | None = None,
 ) -> None:
@@ -3561,6 +3663,11 @@ def _apply_layout(
     operations_context = f"{context_prefix}operations"
     if not isinstance(operations, list):
         raise RecipeError(f"{operations_context} must be an array")
+    direct_room_surfaces = {
+        (operation.get("room"), _target_z(operation, f"{operations_context}[{index}]", inherited_z))
+        for index, operation in enumerate(operations)
+        if isinstance(operation, dict) and operation.get("type") == "room_surface"
+    }
     for index, operation in enumerate(operations):
         context = f"{operations_context}[{index}]"
         if not isinstance(operation, dict):
@@ -3595,7 +3702,17 @@ def _apply_layout(
                 level, operation, rng, known_tiles, palette, patterns, context
             )
         elif operation_type == "furniture":
-            _apply_furniture(level, operation, known_furnitures, context)
+            existing = level[operation.get("y", -1) * MAP_WIDTH + operation.get("x", -1)] if (
+                type(operation.get("x")) is int and type(operation.get("y")) is int
+                and 0 <= operation["x"] < MAP_WIDTH and 0 <= operation["y"] < MAP_HEIGHT
+            ) else {}
+            _apply_furniture(
+                level,
+                operation,
+                known_furnitures,
+                context,
+                any((room_id, logical_z) in direct_room_surfaces for room_id in existing.get("rooms", [])),
+            )
         elif operation_type == "furniture_scatter":
             _apply_furniture_scatter(
                 level, operation, rng, furniture_palette, context
@@ -3603,7 +3720,15 @@ def _apply_layout(
         elif operation_type == "area_rectangle":
             _apply_area_rectangle(level, operation, known_area_ids, context)
         elif operation_type == "room_rectangle":
-            _apply_room_rectangle(level, operation, known_room_ids, context)
+            _apply_room_rectangle(
+                level,
+                operation,
+                known_room_ids,
+                context,
+                (operation.get("room"), logical_z) in direct_room_surfaces,
+            )
+        elif operation_type == "room_surface":
+            room_surfaces.append((operation, context, logical_z))
         else:
             raise RecipeError(
                 f"{context}.type has unknown operation '{operation_type}'"
@@ -3621,8 +3746,10 @@ def _generate_levels(
     known_area_ids: set[str],
     known_room_ids: set[str],
     wall_tile_ids: set[str],
+    slope_tile_ids: set[str],
 ) -> list[list[dict[str, Any]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
+    room_surfaces: list[tuple[dict[str, Any], str, int]] = []
     if "levels" not in recipe:
         ground_level = _get_or_create_level(levels, 0)
         for index in range(MAP_WIDTH * MAP_HEIGHT):
@@ -3646,6 +3773,10 @@ def _generate_levels(
             known_area_ids,
             known_room_ids,
             wall_tile_ids,
+            room_surfaces,
+        )
+        _apply_room_surfaces(
+            levels, room_surfaces, rng, known_tiles, palette, known_room_ids, slope_tile_ids
         )
         return levels
 
@@ -3702,10 +3833,14 @@ def _generate_levels(
             known_area_ids,
             known_room_ids,
             wall_tile_ids,
+            room_surfaces,
             context_prefix=f"{context}.",
             inherited_z=logical_z,
         )
 
+    _apply_room_surfaces(
+        levels, room_surfaces, rng, known_tiles, palette, known_room_ids, slope_tile_ids
+    )
     for index, level in enumerate(levels):
         if level and not any(level):
             levels[index] = []
@@ -3945,6 +4080,7 @@ def generate_map(
             raise RecipeError("room connections or boundaries require a furniture database")
         door_furniture_ids = _door_furniture_ids(Path(furnitures_path))
     wall_tile_ids = _wall_tile_ids(Path(tiles_path))
+    slope_tile_ids = _slope_tile_ids(Path(tiles_path))
     known_area_entity_ids: dict[str, set[str]] = {
         "furniture": known_furnitures,
         "mob": set(),
@@ -4003,6 +4139,7 @@ def generate_map(
         known_area_ids,
         known_room_ids,
         wall_tile_ids,
+        slope_tile_ids,
     )
     _apply_building_geometry(
         buildings,

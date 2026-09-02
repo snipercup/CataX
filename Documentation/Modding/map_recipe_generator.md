@@ -428,9 +428,22 @@ Adds one authored room label to every terrain tile in a filled rectangle. Fields
 }
 ```
 
-The referenced root room must exist. Every target cell must already contain terrain, and room membership is exclusive: an operation cannot overlap another room label or partially apply. Room definitions and membership consume no RNG.
+The referenced root room must exist. Every target cell must already contain terrain, and room membership is exclusive: an operation cannot overlap another room label or partially apply. A same-z `room_surface` (below) may provide that terrain after membership has been declared. Room definitions and membership consume no RNG.
 
-This slice preserves `rooms` through `DMap`/content-editor save-load paths and validates them independently. It does **not** infer walls, roofs, enclosure, weather, lighting, or indoor gameplay.
+### `room_surface`
+
+Materializes one tile across the final authored membership of a room. It is deliberately separate from generic coordinate operations: use `rectangle` for terrain, roads, yards, and intentional eaves; use `room_surface` when a floor or roof belongs to a room.
+
+```json
+{"type": "room_surface", "room": "outpost_loft", "z": 2, "tile": {"id": "concrete_00"}}
+{"type": "room_surface", "room": "outpost_loft", "z": 4, "tile": {"id": "concrete_00"}, "outline_padding": 1}
+```
+
+Fields are exactly `type`, `room`, root-level `z`, `tile`, and optional `outline_padding`. The room must have authored membership on exactly one logical level. `outline_padding` defaults to `0`; a non-negative value expands every member cell by that Chebyshev radius, producing a one-cell padded `8×8` roof envelope around Pine Hollow's `6×6` loft without naming a duplicate rectangle. Derived cells must stay inside the map.
+
+Room surfaces are deferred until every layout operation has painted room membership, so their result is independent of the order of `room_rectangle` operations. Existing runtime metadata is preserved. Features and authored slope tiles remain authoritative when a same-z room surface materializes beneath them. The operation validates unknown rooms, malformed or unknown tiles, invalid padding, missing room membership, multi-storey room membership, and out-of-bounds derived cells.
+
+This slice preserves `rooms` through `DMap`/content-editor save-load paths and validates generated map output independently. `room_surface` is recipe-only authoring syntax and is not serialized into generated maps, so it requires no new DMap persistence field.
 
 ### `room_connections`
 
