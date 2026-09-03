@@ -449,7 +449,24 @@ This slice preserves `rooms` through `DMap`/content-editor save-load paths and v
 
 ### `room_connections`
 
-`room_connections` explicitly records what existing door furniture connects; the generator never infers it from adjacent floor material, area membership, walls, roofs, or door rotation. Each root entry contains exactly `id`, `at`, `z`, `from`, and `to`:
+`room_connections` currently accepts only the existing fields `id`, `at`, `target_at`, `z`, `from`, and `to`. Phase 10.7 test-first coverage is now present for the proposed optional connection-level `entrance` object. The tests define the intended shape and diagnostics, but they are expected to fail until the generator and standalone validator implement the field.
+
+The proposed form is:
+
+```json
+{
+  "id": "office_front_door",
+  "at": [8, 8],
+  "target_at": [7, 8],
+  "z": 0,
+  "from": {"kind": "room", "id": "office"},
+  "to": {"kind": "exterior"},
+  "entrance": {"exterior_at": [6, 8], "facing": "east"}
+}
+```
+
+Until Phase 10.7 implementation is complete, use the established building-level `entrance`/`entrances`, `exterior_context`, and `exterior_access_context` fields. Do not add `entrance` to a recipe yet merely because the test contract documents it.
+
 
 ```json
 {

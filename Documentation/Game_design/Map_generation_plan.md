@@ -1035,6 +1035,61 @@ Automated coverage verifies final-membership derivation independent of operation
 
 The remaining non-automated Phase 10.5 acceptance item is a manual Godot content-editor visual/compositional review of Pine Hollow's road approach, cabin/lean-to silhouette, work yard, and prop placement.
 
+### 10.7 Canonical doorway and entrance declarations — next
+
+**Status: test-first schema coverage added; RED state verified; generator and validator implementation pending**
+
+Phase 10.7 reduces the duplicated descriptions of a single physical doorway exposed by Pine Hollow. A current exterior door can be described by a root `room_connections` record, a building-level entrance record, `exterior_context`, `exterior_access_context`, a door-kind `furniture_anchor`, a per-floor anchor assignment, and a separate door-furniture operation. These records do not all represent the same concern, but their repeated IDs and coordinates make recipes difficult to author and maintain.
+
+The target model is to make a room connection the canonical identity of a doorway or opening. A room-to-exterior connection may opt into entrance metadata:
+
+```json
+{
+  "id": "outpost_front_door",
+  "at": [12, 14],
+  "target_at": [11, 14],
+  "z": 0,
+  "from": {"kind": "room", "id": "outpost_cabin"},
+  "to": {"kind": "exterior"},
+  "entrance": {
+    "exterior_at": [10, 14],
+    "facing": "east"
+  }
+}
+```
+
+In this model:
+
+* `room_connections[].id` is the stable identity used by building and reachability metadata;
+* `at` remains the semantic room-edge coordinate;
+* `target_at` remains the physical door/opening coordinate, preserving the existing semantic-versus-physical distinction;
+* `entrance.exterior_at` replaces the separate building `exterior_context` for that entrance;
+* `entrance.facing` replaces the separate building `entrance`/`entrances` facing declaration;
+* an entrance is identified by its connection ID, so a separate entrance ID is not required;
+* door-kind furniture anchors and per-floor door-anchor assignments are derived from the connection target rather than authored again;
+* generic furniture anchors remain independent for crates, benches, workstations, storage, and other gameplay targets;
+* internal room-to-room connections remain valid without entrance metadata;
+* `room_connections` remain semantic declarations and do not automatically generate a door feature in the first slice.
+
+The first implementation should preserve backwards compatibility. Recipes using the existing building-level `entrance`, `entrances`, `exterior_context`, `exterior_access_context`, and door furniture anchors remain valid. If legacy and connection-level entrance metadata are both present, the generator and standalone validator must require them to describe the same connection, target, exterior context, and facing. Generated maps should continue to serialize the established runtime-compatible building metadata until consumers can migrate.
+
+Reachability should use all owned room-to-exterior connections with entrance metadata as default seeds. `required_entrances` remains an optional narrowing requirement for buildings with multiple entrances; ordinary one-entrance buildings should not need to repeat the connection ID in a separate requirement list.
+
+Automatic door-feature generation is deliberately deferred. A later slice may allow an entrance connection to declare a door feature and rotation, but that requires explicit conflict, legacy-door, locked-door, window, and non-door opening rules. Phase 10.7 initially canonicalizes identity and validation; it does not infer topology, collision, navigation, or indoor state.
+
+#### 10.7 success criterion
+
+A migrated Pine Hollow-style recipe must describe its exterior doorway with one canonical room-connection ID while preserving the current generated map and runtime behavior. The generator and standalone `MapValidator` must validate connection-level entrance metadata, detect conflicts with legacy declarations, derive default reachability seeds, preserve internal connections and generic furniture anchors, and keep generated output compatible with DMap/runtime consumers. Deterministic generation, maintained-recipe validation, DMap round-trip behavior, and real navigation acceptance must remain green.
+
+#### 10.7 implementation order
+
+1. ~~Add test-first generator and standalone-validator coverage for a connection-level `entrance` block, including default reachability seeding and invalid/conflicting legacy metadata. Keep the initial test red before adding production code.~~ The initial coverage is now in `Tools/tests/test_map_generator.py`; its seven tests are intentionally red because both validators currently reject `room_connections[].entrance` as an unknown field.
+2. Add the smallest backwards-compatible schema validation and normalized internal representation in `Tools/map_generator.py` and `Tools/map_validator.py`.
+3. Migrate Pine Hollow’s exterior door to the new declaration while retaining the legacy form temporarily as an exact-equivalence compatibility test.
+4. Mirror the normalized persisted building metadata in `Scripts/Gamedata/DMap.gd` and add DMap round-trip coverage if serialized fields change.
+5. Remove redundant Pine Hollow door anchor, per-floor door-anchor, and separate entrance/context declarations only after compatibility tests prove equivalent output.
+6. Re-run maintained generation, deterministic comparison, standalone validation, and focused Godot navigation coverage; document the final authoring contract.
+
 ## Phase 11 — Generalized tall-storey wall height
 
 **Status: deferred pending a concrete tall-storey gameplay requirement; Phase 10 acceptance is green**
@@ -1072,9 +1127,9 @@ Implement this only with test-first coverage in `Tools/tests/test_map_generator.
 
 # Recommended immediate next task
 
-**Phase 10.5 is implemented:** Pine Hollow Outpost is a maintained new-map recipe authored from a location concept rather than a legacy-map copy. Its production recipe is now published at `Tools/recipes/pine_hollow_outpost.json`, with runtime asset `Mods/Dimensionfall/Maps/pine_hollow_outpost.json`; the legacy `field_outpost.json` remains unchanged. Its automated generator, standalone-validator, deterministic-regeneration, and real-navigation acceptance are green. **Phase 10.6 is implemented:** `room_surface` derives room-owned floors and padded roofs, and multi-level building geometry now respects level-owned room membership. The immediate remaining acceptance action is a manual Godot content-editor inspection of Pine Hollow's rural composition. Defer Phase 11 `wall_height` until a concrete tall-storey requirement exists; do not begin generalized settlement composition until it serves a concrete gameplay need.
+**Phase 10.5 is implemented:** Pine Hollow Outpost is a maintained new-map recipe authored from a location concept rather than a legacy-map copy. Its production recipe is now published at `Tools/recipes/pine_hollow_outpost.json`, with runtime asset `Mods/Dimensionfall/Maps/pine_hollow_outpost.json`; the legacy `field_outpost.json` remains unchanged. Its automated generator, standalone-validator, deterministic-regeneration, and real-navigation acceptance are green. **Phase 10.6 is implemented:** `room_surface` derives room-owned floors and padded roofs, and multi-level building geometry now respects level-owned room membership. **Phase 10.7 is next:** canonical doorway and entrance declarations will reduce repeated door identity and coordinates while preserving compatibility. The immediate remaining acceptance action is a manual Godot content-editor inspection of Pine Hollow's rural composition. Defer Phase 11 `wall_height` until a concrete tall-storey requirement exists; do not begin generalized settlement composition until it serves a concrete gameplay need.
 
-The completed execution order was: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → implement and independently validate automatic room-boundary generation → migrate the farmland kitchen → complete focused runtime navigation coverage → establish the maintained-fixture acceptance suite → implement runtime structural-quality validation → author and automate Pine Hollow acceptance → implement room-derived surfaces and room-owned multi-level coverage. The next order is: complete Pine Hollow's manual visual inspection → preserve the Phase 10 acceptance matrix for future vocabulary changes → defer generalized `wall_height` until Phase 11 and a concrete tall-storey requirement. `field_farmland` is an acceptance fixture, not a special-case implementation.
+The completed execution order was: generic semantic profile → independent validator/DMap preservation → static required-route validation → reusable Godot navigation fixture → apply the profile to `field_farmland` → implement and independently validate automatic room-boundary generation → migrate the farmland kitchen → complete focused runtime navigation coverage → establish the maintained-fixture acceptance suite → implement runtime structural-quality validation → author and automate Pine Hollow acceptance → implement room-derived surfaces and room-owned multi-level coverage. The next order is: complete Pine Hollow's manual visual inspection → implement Phase 10.7 test-first connection-level entrance metadata and compatibility validation → preserve the Phase 10 acceptance matrix → defer generalized `wall_height` until Phase 11 and a concrete tall-storey requirement. `field_farmland` is an acceptance fixture, not a special-case implementation.
 
 Do not yet generate towns or overmap-wide composition. Preserve the established map-level `areas` plus per-tile area membership representation, keep room semantics independent from runtime areas, and treat overmap areas as the authority for settlement composition and multi-map roads. Explicit map-to-map edge compatibility remains deferred until it becomes useful.
 
@@ -1160,6 +1215,7 @@ Do not commit or push unless explicitly requested.
 [Complete] Phase 10.4 runtime structural-quality validation and Phase 10 success criterion
 [In Progress] Phase 10.5 Pine Hollow Outpost automated acceptance complete; manual visual review pending
 [Complete] Phase 10.6 room-derived surface operations and room-owned multi-level geometry
+[Next] Phase 10.7 canonical doorway and entrance declarations
 [Deferred] Phase 11 generalized tall-storey `wall_height`
 [Target] Agent-generated playable maps
 ```
