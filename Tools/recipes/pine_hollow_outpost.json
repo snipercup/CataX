@@ -1,0 +1,105 @@
+{
+	"id": "pine_hollow_outpost",
+	"name": "Pine Hollow Outpost",
+	"description": "A rural survival location: an abandoned roadside caretaker cabin, loft, covered wood-storage lean-to, work yard, and road approach.",
+	"seed": 20260901,
+	"base_tile": {"id": "grass_plain_01"},
+	"connections": {
+		"north": "ground",
+		"east": "road",
+		"south": "ground",
+		"west": "road"
+	},
+	"road_endpoints": [
+		{"id": "outpost_west_road", "direction": "west", "at": [0, 14], "z": 0},
+		{"id": "outpost_east_road", "direction": "east", "at": [31, 14], "z": 0}
+	],
+	"road_paths": [
+		{
+			"id": "outpost_through_road",
+			"from": "outpost_west_road",
+			"to": "outpost_east_road",
+			"waypoints": [[10, 14], [10, 18], [31, 18]],
+			"tile": {"id": "dirt_light_00"}
+		}
+	],
+	"areas": [
+		{
+			"id": "outpost_yard",
+			"spawn_chance": 100,
+			"rotate_random": false,
+			"pick_one": false,
+			"tiles": [{"id": "grass_dirt_00", "count": 1}],
+			"entities": []
+		}
+	],
+	"rooms": [
+		{"id": "outpost_cabin", "kind": "enclosed", "boundary_validation": "complete", "boundary_generation": "walls"},
+		{"id": "outpost_lean_to", "kind": "covered_open"},
+		{"id": "outpost_loft", "kind": "enclosed"}
+	],
+	"buildings": [
+		{
+			"id": "pine_hollow_caretaker_cabin",
+			"rooms": ["outpost_cabin", "outpost_lean_to", "outpost_loft"],
+			"footprint": {"x": 11, "y": 10, "width": 12, "height": 8},
+			"z": 0,
+			"building_geometry": {
+				"floor_tile": {"id": "concrete_00"},
+				"wall_tile": {"id": "brick_wall_00"},
+				"support_tile": {"id": "dirt_light_00"},
+				"roof_tile": {"id": "concrete_00"}
+			},
+			"building_levels": [
+				{"z": 0, "rooms": ["outpost_cabin", "outpost_lean_to"], "furniture_anchors": ["outpost_front_door", "outpost_work_crate"]},
+				{"z": 2, "rooms": ["outpost_loft"], "furniture_anchors": ["outpost_loft_crate"]}
+			],
+			"interior_rooms": ["outpost_cabin"],
+			"open_space_rooms": ["outpost_lean_to"],
+			"exterior_context": {"at": [10, 14], "z": 0},
+			"exterior_access_context": {"connection": "outpost_front_door"},
+			"entrances": [{"id": "outpost_front_entrance", "connection": "outpost_front_door", "facing": "east"}],
+			"staircases": [
+				{"id": "outpost_loft_staircase", "lower_at": [15, 15], "upper_at": [15, 14], "upper_clearance_at": [15, 16], "rotation": 0}
+			],
+			"reachability_validation": {
+				"required_entrances": ["outpost_front_entrance"],
+				"required_furniture_anchors": ["outpost_work_crate", "outpost_loft_crate"],
+				"required_building_levels": [0, 2]
+			},
+			"furniture_anchors": [
+				{"id": "outpost_front_door", "at": [11, 14], "z": 0, "kind": "door"},
+				{"id": "outpost_work_crate", "at": [20, 13], "z": 0, "kind": "storage"},
+				{"id": "outpost_loft_crate", "at": [13, 12], "z": 2, "kind": "storage"}
+			]
+		}
+	],
+	"room_connections": [
+		{
+			"id": "outpost_front_door",
+			"at": [12, 14],
+			"target_at": [11, 14],
+			"z": 0,
+			"from": {"kind": "room", "id": "outpost_cabin"},
+			"to": {"kind": "exterior"}
+		}
+	],
+	"operations": [
+		{"type": "rectangle", "x": 8, "y": 10, "width": 15, "height": 8, "tile": {"id": "grass_dirt_00"}},
+		{"type": "area_rectangle", "area": "outpost_yard", "x": 8, "y": 10, "width": 15, "height": 8, "z": 0, "rotation": 0},
+		{"type": "room_rectangle", "room": "outpost_cabin", "x": 12, "y": 11, "width": 6, "height": 6},
+		{"type": "room_rectangle", "room": "outpost_lean_to", "x": 19, "y": 12, "width": 3, "height": 5},
+		{"type": "set", "x": 11, "y": 14, "z": 0, "tile": {"id": "concrete_00"}},
+		{"type": "room_surface", "room": "outpost_loft", "z": 2, "tile": {"id": "concrete_00"}},
+		{"type": "set", "x": 15, "y": 15, "z": 1, "tile": {"id": "wood_stairs", "rotation": 0}},
+		{"type": "set", "x": 15, "y": 14, "z": 2, "tile": {"id": "wood_stairs", "rotation": 0}},
+		{"type": "rectangle_outline", "x": 11, "y": 10, "width": 8, "height": 8, "z": 3, "tile": {"id": "brick_wall_00"}},
+		{"type": "room_rectangle", "room": "outpost_loft", "x": 12, "y": 11, "width": 6, "height": 6, "z": 2},
+		{"type": "furniture", "id": "door_wood", "x": 11, "y": 14, "rotation": 270},
+		{"type": "furniture", "id": "crate_wood", "x": 20, "y": 13, "rotation": 90},
+		{"type": "furniture", "id": "crate_wood_long", "x": 13, "y": 12, "z": 2, "rotation": 0},
+		{"type": "furniture", "id": "destroyed_fence", "x": 9, "y": 11, "rotation": 0},
+		{"type": "furniture", "id": "destroyed_fence", "x": 9, "y": 17, "rotation": 0},
+		{"type": "room_surface", "room": "outpost_loft", "z": 4, "tile": {"id": "concrete_00"}, "outline_padding": 1}
+	]
+}
