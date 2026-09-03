@@ -12,6 +12,9 @@ FURNITURES_PATH = ROOT / "Mods" / "Dimensionfall" / "Furniture" / "Furniture.jso
 MOBS_PATH = ROOT / "Mods" / "Dimensionfall" / "Mobs" / "Mobs.json"
 MOBGROUPS_PATH = ROOT / "Mods" / "Dimensionfall" / "Mobgroups" / "Mobgroups.json"
 ITEMGROUPS_PATH = ROOT / "Mods" / "Dimensionfall" / "Itemgroups" / "Itemgroups.json"
+PRODUCTION_RECIPE_PATH = ROOT / "Tools" / "recipes" / "pine_hollow_outpost.json"
+PRODUCTION_MAP_PATH = ROOT / "Mods" / "Dimensionfall" / "Maps" / "pine_hollow_outpost.json"
+
 MAINTAINED_RECIPE_FILENAMES = (
     "map_recipe.json",
     "map_recipe_furniture_outdoor.json",
@@ -3001,6 +3004,23 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][14][10 * 32 + 11]["id"], "concrete_00")
         self.assertEqual(generated["levels"][14][10 * 32 + 19], {})
         self.assertEqual(generated["levels"][10][13 * 32 + 20]["feature"]["id"], "crate_wood")
+
+    def test_pine_hollow_production_recipe_is_a_valid_published_map(self):
+        recipe = json.loads(PRODUCTION_RECIPE_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(recipe["id"], "pine_hollow_outpost")
+        generated = generate_map(recipe, TILES_PATH)
+        self.assertEqual(generated["id"], "pine_hollow_outpost")
+        self.assertEqual(generated["name"], "Pine Hollow Outpost")
+        self.assertEqual(generated["levels"][10][14 * 32 + 11]["id"], "concrete_00")
+        self.assertEqual(
+            generated["levels"][10][14 * 32 + 11]["feature"]["id"], "door_wood"
+        )
+
+        published = json.loads(PRODUCTION_MAP_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(published, generated)
+        validator = MapValidator()
+        validator.validate_map(str(PRODUCTION_MAP_PATH))
+        self.assertEqual(validator.errors, [])
 
     def test_maintained_recipe_suite_generates_validates_and_is_deterministic(self):
         recipes_dir = ROOT / "Tools" / "examples"

@@ -13,6 +13,8 @@ python3 Tools/map_generator.py \
 python3 Tools/map_validator.py /tmp/generated_meadow_prototype.json
 ```
 
+Recipes used for production maps may live under `Tools/recipes/`; small schema fixtures remain under `Tools/examples/`. Both use the same generator and validator contract. The production Pine Hollow recipe is `Tools/recipes/pine_hollow_outpost.json`, and its published map is `Mods/Dimensionfall/Maps/pine_hollow_outpost.json`.
+
 The output filename must be `<id>.json`, matching the map loader's filename-derived ID. Existing output is protected. Pass `--overwrite` only when replacement is intended. Use `--tiles PATH` to validate tile IDs against a tile database other than `Mods/Dimensionfall/Tiles/Tiles.json`. Furniture operations validate against `Furniture/Furniture.json` beside the selected `Tiles` directory by default; use `--furniture PATH` when that database is elsewhere.
 
 For batch generation of deterministic seed variants and instructions for inspecting them in Godot's content editor, see [`map_example_generation.md`](map_example_generation.md).
