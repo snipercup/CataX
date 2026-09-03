@@ -2089,6 +2089,81 @@ class MapGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, r"derives out-of-bounds cell \[-1, -1\]"):
             generate_map(recipe, TILES_PATH)
 
+    def _connection_level_entrance_recipe(self):
+        recipe = valid_recipe()
+        recipe["base_tile"] = {"id": "concrete_00"}
+        recipe["rooms"] = [{"id": "office", "kind": "enclosed"}]
+        recipe["operations"] = [
+            {"type": "room_rectangle", "room": "office", "x": 4, "y": 4, "width": 2, "height": 2},
+            {"type": "set", "x": 3, "y": 4, "tile": {"id": "concrete_00"}},
+            {"type": "furniture", "id": "door_wood", "x": 3, "y": 4, "rotation": 270},
+        ]
+        recipe["room_connections"] = [{
+            "id": "office_front_door",
+            "at": [4, 4],
+            "target_at": [3, 4],
+            "z": 0,
+            "from": {"kind": "room", "id": "office"},
+            "to": {"kind": "exterior"},
+            "entrance": {"exterior_at": [3, 4], "facing": "east"},
+        }]
+        return recipe
+
+    def test_connection_level_entrance_is_the_canonical_external_door_declaration(self):
+        recipe = self._connection_level_entrance_recipe()
+
+        generated = generate_map(recipe, TILES_PATH)
+
+        self.assertEqual(generated["room_connections"], recipe["room_connections"])
+        self.assertNotIn("buildings", generated)
+
+    def test_connection_level_entrance_rejects_room_to_room_connections(self):
+        recipe = self._connection_level_entrance_recipe()
+        recipe["rooms"].append({"id": "garage", "kind": "covered_open"})
+        recipe["room_connections"][0]["to"] = {"kind": "room", "id": "garage"}
+
+        with self.assertRaisesRegex(RecipeError, "entrance metadata requires a room-to-exterior connection"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_connection_level_entrance_rejects_conflicting_legacy_building_metadata(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_semantic_single_storey_building.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        recipe["room_connections"][0]["entrance"] = {
+            "exterior_at": [6, 8],
+            "facing": "west",
+        }
+
+        with self.assertRaisesRegex(RecipeError, "conflicts with legacy building entrance metadata"):
+            generate_map(recipe, TILES_PATH)
+
+    def test_connection_level_entrance_rejects_malformed_metadata(self):
+        invalid_cases = [
+            ({"facing": "east"}, "entrance must define exterior_at and facing"),
+            ({"exterior_at": [3, 4], "facing": "up"}, "entrance.facing must be one of north, east, south, or west"),
+            ("east", "entrance must be an object"),
+        ]
+        for entrance, message in invalid_cases:
+            with self.subTest(entrance=entrance):
+                recipe = self._connection_level_entrance_recipe()
+                recipe["room_connections"][0]["entrance"] = entrance
+                with self.assertRaisesRegex(RecipeError, message):
+                    generate_map(recipe, TILES_PATH)
+
+    def test_standalone_validator_accepts_connection_level_entrance_metadata(self):
+        recipe = self._connection_level_entrance_recipe()
+        generated = generate_map({**recipe, "room_connections": [
+            {key: value for key, value in recipe["room_connections"][0].items() if key != "entrance"}
+        ]}, TILES_PATH)
+        generated["room_connections"][0]["entrance"] = recipe["room_connections"][0]["entrance"]
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as handle:
+            json.dump(generated, handle)
+            handle.flush()
+            validator = MapValidator()
+            validator.validate_map(handle.name)
+
+        self.assertEqual(validator.errors, [])
+
     def test_room_connections_preserve_existing_door_features(self):
         recipe = valid_recipe()
         recipe["base_tile"] = {"id": "concrete_00"}
