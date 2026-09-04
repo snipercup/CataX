@@ -1037,7 +1037,7 @@ The remaining non-automated Phase 10.5 acceptance item is a manual Godot content
 
 ### 10.7 Canonical doorway and entrance declarations — next
 
-**Status: test-first schema coverage added; RED state verified; generator and validator implementation pending**
+**Status: generator and standalone-validator support implemented; legacy migration pending**
 
 Phase 10.7 reduces the duplicated descriptions of a single physical doorway exposed by Pine Hollow. A current exterior door can be described by a root `room_connections` record, a building-level entrance record, `exterior_context`, `exterior_access_context`, a door-kind `furniture_anchor`, a per-floor anchor assignment, and a separate door-furniture operation. These records do not all represent the same concern, but their repeated IDs and coordinates make recipes difficult to author and maintain.
 
@@ -1083,8 +1083,8 @@ A migrated Pine Hollow-style recipe must describe its exterior doorway with one 
 
 #### 10.7 implementation order
 
-1. ~~Add test-first generator and standalone-validator coverage for a connection-level `entrance` block, including default reachability seeding and invalid/conflicting legacy metadata. Keep the initial test red before adding production code.~~ The initial coverage is now in `Tools/tests/test_map_generator.py`; its seven tests are intentionally red because both validators currently reject `room_connections[].entrance` as an unknown field.
-2. Add the smallest backwards-compatible schema validation and normalized internal representation in `Tools/map_generator.py` and `Tools/map_validator.py`.
+1. ~~Add test-first generator and standalone-validator coverage for a connection-level `entrance` block, including default reachability seeding and invalid/conflicting legacy metadata. Keep the initial test red before adding production code.~~ The focused coverage is now GREEN in `Tools/tests/test_map_generator.py`.
+2. ~~Add the smallest backwards-compatible schema validation and normalized internal representation in `Tools/map_generator.py` and `Tools/map_validator.py`.~~ Both tools now accept and validate the optional `entrance` object, preserve it in generated connection data, validate external linkage, bounds, facing, and reject malformed declarations.
 3. Migrate Pine Hollow’s exterior door to the new declaration while retaining the legacy form temporarily as an exact-equivalence compatibility test.
 4. Mirror the normalized persisted building metadata in `Scripts/Gamedata/DMap.gd` and add DMap round-trip coverage if serialized fields change.
 5. Remove redundant Pine Hollow door anchor, per-floor door-anchor, and separate entrance/context declarations only after compatibility tests prove equivalent output.

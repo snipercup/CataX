@@ -23,7 +23,8 @@ CARDINAL_SIDES = {
     'west': (-1, 0),
 }
 OPPOSITE_SIDES = {'north': 'south', 'east': 'west', 'south': 'north', 'west': 'east'}
-ROOM_CONNECTION_FIELDS = {'id', 'at', 'target_at', 'z', 'from', 'to'}
+ROOM_CONNECTION_FIELDS = {'id', 'at', 'target_at', 'z', 'from', 'to', 'entrance'}
+ROOM_CONNECTION_ENTRANCE_FIELDS = {'exterior_at', 'facing'}
 ROOM_CONNECTION_ENDPOINT_KINDS = {'room', 'exterior'}
 ROOM_BOUNDARY_FIELDS = {'id', 'room', 'at', 'target_at', 'room_at', 'z', 'element', 'side'}
 
@@ -498,12 +499,46 @@ class MapValidator:
                 endpoints.append(endpoint)
             if endpoints_valid and len(endpoints) == 2 and endpoints[0] == endpoints[1]:
                 self.add_error(file_path, f"{context} must connect distinct endpoints.")
+            entrance = connection.get('entrance')
+            entrance_valid = entrance is None
+            if entrance is not None:
+                if not isinstance(entrance, dict):
+                    self.add_error(file_path, f"{context} entrance must be an object.")
+                    entrance_valid = False
+                else:
+                    unknown_entrance_fields = sorted(set(entrance) - ROOM_CONNECTION_ENTRANCE_FIELDS)
+                    if unknown_entrance_fields:
+                        self.add_error(file_path, f"{context} entrance has unknown field '{unknown_entrance_fields[0]}'.")
+                        entrance_valid = False
+                    if set(entrance) != ROOM_CONNECTION_ENTRANCE_FIELDS:
+                        self.add_error(file_path, f"{context} entrance must define exterior_at and facing.")
+                        entrance_valid = False
+                    exterior_at = entrance.get('exterior_at')
+                    if (
+                        not isinstance(exterior_at, list)
+                        or len(exterior_at) != 2
+                        or any(type(value) is not int for value in exterior_at)
+                        or not 0 <= exterior_at[0] < MAP_WIDTH
+                        or not 0 <= exterior_at[1] < MAP_HEIGHT
+                    ):
+                        self.add_error(file_path, f"{context} entrance.exterior_at must be a two-integer coordinate within map bounds.")
+                        entrance_valid = False
+                    facing = entrance.get('facing')
+                    if not isinstance(facing, str) or facing not in CARDINAL_SIDES:
+                        self.add_error(file_path, f"{context} entrance.facing must be one of north, east, south, or west.")
+                        entrance_valid = False
+                    if not any(isinstance(endpoint, dict) and endpoint.get('kind') == 'exterior' for endpoint in endpoints):
+                        self.add_error(file_path, f"{context} entrance metadata requires a room-to-exterior connection.")
+                        entrance_valid = False
+            else:
+                entrance_valid = True
             if (
                 isinstance(connection_id, str) and connection_id
                 and isinstance(at, list) and len(at) == 2
                 and all(type(value) is int for value in at)
                 and 0 <= at[0] < MAP_WIDTH and 0 <= at[1] < MAP_HEIGHT
                 and type(z) is int and -10 <= z <= 10
+                and entrance_valid
             ):
                 validated_room_connections.append(connection)
 
