@@ -317,6 +317,29 @@ func _sanitize_room_connections(data: Dictionary) -> void:
 					return false
 			elif endpoint["kind"] != "exterior":
 				return false
+		if connection.has("entrance"):
+			var entrance: Variant = connection["entrance"]
+			var exterior_endpoint_count: int = 0
+			for endpoint in [connection["from"], connection["to"]]:
+				if endpoint is Dictionary and endpoint.get("kind") == "exterior":
+					exterior_endpoint_count += 1
+			if (
+				not entrance is Dictionary
+				or entrance.keys().size() != 2
+				or not entrance.has("exterior_at")
+				or not entrance.has("facing")
+				or not entrance["exterior_at"] is Array
+				or entrance["exterior_at"].size() != 2
+				or not entrance["exterior_at"].all(func(value): return value is int)
+				or entrance["exterior_at"][0] < 0
+				or entrance["exterior_at"][0] >= 32
+				or entrance["exterior_at"][1] < 0
+				or entrance["exterior_at"][1] >= 32
+				or not entrance["facing"] is String
+				or entrance["facing"] not in ["north", "east", "south", "west"]
+				or exterior_endpoint_count != 1
+			):
+				connection.erase("entrance")
 		return true
 	)
 	if data["room_connections"].is_empty():
