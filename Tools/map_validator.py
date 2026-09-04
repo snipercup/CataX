@@ -500,7 +500,7 @@ class MapValidator:
             if endpoints_valid and len(endpoints) == 2 and endpoints[0] == endpoints[1]:
                 self.add_error(file_path, f"{context} must connect distinct endpoints.")
             entrance = connection.get('entrance')
-            entrance_valid = entrance is None
+            entrance_valid = True
             if entrance is not None:
                 if not isinstance(entrance, dict):
                     self.add_error(file_path, f"{context} entrance must be an object.")

@@ -8584,7 +8584,14 @@
 			"target_at": [
 				11,
 				14
-			]
+			],
+			"entrance": {
+				"exterior_at": [
+					10,
+					14
+				],
+				"facing": "east"
+			}
 		}
 	],
 	"buildings": [
