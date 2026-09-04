@@ -449,9 +449,9 @@ This slice preserves `rooms` through `DMap`/content-editor save-load paths and v
 
 ### `room_connections`
 
-`room_connections` currently accepts only the existing fields `id`, `at`, `target_at`, `z`, `from`, and `to`. Phase 10.7 test-first coverage is now present for the proposed optional connection-level `entrance` object. The tests define the intended shape and diagnostics, but they are expected to fail until the generator and standalone validator implement the field.
+`room_connections` accepts the existing fields `id`, `at`, `target_at`, `z`, `from`, and `to`, plus the optional connection-level `entrance` object. Phase 10.7 implementation and focused tests now cover this object. It is valid only on room-to-exterior connections and must define exactly `exterior_at` and `facing`; both coordinates must be in bounds and facing must be cardinal. Generated connection data preserves the validated object. Conflicting legacy building entrance metadata is rejected during the compatibility window.
 
-The proposed form is:
+The supported form is:
 
 ```json
 {
@@ -465,7 +465,7 @@ The proposed form is:
 }
 ```
 
-Until Phase 10.7 implementation is complete, use the established building-level `entrance`/`entrances`, `exterior_context`, and `exterior_access_context` fields. Do not add `entrance` to a recipe yet merely because the test contract documents it.
+The connection-level form is implemented and may now be used for new recipes. Existing recipes may continue using the established building-level `entrance`/`entrances`, `exterior_context`, and `exterior_access_context` fields during migration. Do not remove legacy door anchors or entrance/context records until exact-equivalence coverage is in place.
 
 
 ```json
