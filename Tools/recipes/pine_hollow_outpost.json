@@ -81,7 +81,8 @@
 			"target_at": [11, 14],
 			"z": 0,
 			"from": {"kind": "room", "id": "outpost_cabin"},
-			"to": {"kind": "exterior"}
+			"to": {"kind": "exterior"},
+			"entrance": {"exterior_at": [10, 14], "facing": "east"}
 		}
 	],
 	"operations": [

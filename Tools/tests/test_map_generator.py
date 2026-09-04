@@ -1,3 +1,4 @@
+import copy
 import json
 import tempfile
 import unittest
@@ -3096,6 +3097,15 @@ class MapGeneratorTests(unittest.TestCase):
         validator = MapValidator()
         validator.validate_map(str(PRODUCTION_MAP_PATH))
         self.assertEqual(validator.errors, [])
+
+    def test_pine_hollow_migration_preserves_legacy_physical_output(self):
+        recipe = json.loads(PRODUCTION_RECIPE_PATH.read_text(encoding="utf-8"))
+        legacy_recipe = copy.deepcopy(recipe)
+        legacy_recipe["room_connections"][0].pop("entrance")
+        migrated = generate_map(recipe, TILES_PATH)
+        legacy = generate_map(legacy_recipe, TILES_PATH)
+        migrated["room_connections"][0].pop("entrance")
+        self.assertEqual(migrated, legacy)
 
     def test_maintained_recipe_suite_generates_validates_and_is_deterministic(self):
         recipes_dir = ROOT / "Tools" / "examples"
