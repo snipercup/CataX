@@ -87,7 +87,8 @@ OPPOSITE_SIDES = {"north": "south", "east": "west", "south": "north", "west": "e
 ROOM_KINDS = {"enclosed", "covered_open", "ruin"}
 ROOM_RECTANGLE_FIELDS = {"type", "room", "x", "y", "z", "width", "height"}
 ROOM_SURFACE_FIELDS = {"type", "room", "z", "tile", "outline_padding"}
-ROOM_CONNECTION_FIELDS = {"id", "at", "target_at", "z", "from", "to"}
+ROOM_CONNECTION_FIELDS = {"id", "at", "target_at", "z", "from", "to", "entrance"}
+ROOM_CONNECTION_ENTRANCE_FIELDS = {"exterior_at", "facing"}
 ROOM_CONNECTION_ENDPOINT_FIELDS = {"kind", "id"}
 ROOM_CONNECTION_ENDPOINT_KINDS = {"room", "exterior"}
 ROOM_BOUNDARY_FIELDS = {"id", "room", "at", "target_at", "room_at", "z", "element", "side"}
@@ -3040,6 +3041,29 @@ def _validate_recipe_room_connections(
         )
         if from_endpoint == to_endpoint:
             raise RecipeError(f"{context} must connect distinct endpoints")
+        entrance = connection.get("entrance")
+        if entrance is not None:
+            if not isinstance(entrance, dict):
+                raise RecipeError(f"{context}.entrance must be an object")
+            unknown_entrance_fields = sorted(set(entrance) - ROOM_CONNECTION_ENTRANCE_FIELDS)
+            if unknown_entrance_fields:
+                raise RecipeError(f"unknown {context}.entrance field '{unknown_entrance_fields[0]}'")
+            if set(entrance) != ROOM_CONNECTION_ENTRANCE_FIELDS:
+                raise RecipeError(f"{context}.entrance must define exterior_at and facing")
+            exterior_at = entrance["exterior_at"]
+            if (
+                not isinstance(exterior_at, list)
+                or len(exterior_at) != 2
+                or any(type(value) is not int for value in exterior_at)
+                or not 0 <= exterior_at[0] < MAP_WIDTH
+                or not 0 <= exterior_at[1] < MAP_HEIGHT
+            ):
+                raise RecipeError(f"{context}.entrance.exterior_at must be within map bounds as a two-integer array")
+            facing = entrance["facing"]
+            if not isinstance(facing, str) or facing not in CARDINAL_SIDES:
+                raise RecipeError(f"{context}.entrance.facing must be one of north, east, south, or west")
+            if to_endpoint["kind"] != "exterior" and from_endpoint["kind"] != "exterior":
+                raise RecipeError(f"{context}.entrance metadata requires a room-to-exterior connection")
         validated_connection = {
             "id": connection_id,
             "at": at,
@@ -3058,8 +3082,53 @@ def _validate_recipe_room_connections(
             ):
                 raise RecipeError(f"{context}.target_at must be within map bounds as a two-integer array")
             validated_connection["target_at"] = target_at
+        if entrance is not None:
+            validated_connection["entrance"] = {
+                "exterior_at": list(entrance["exterior_at"]),
+                "facing": entrance["facing"],
+            }
         validated.append(validated_connection)
     return validated
+
+
+def _validate_connection_entrance_compatibility(
+    buildings: list[dict[str, Any]], connections: list[dict[str, Any]]
+) -> None:
+    for connection in connections:
+        entrance = connection.get("entrance")
+        if entrance is None:
+            continue
+        room_ids = {
+            endpoint["id"]
+            for endpoint in (connection["from"], connection["to"])
+            if endpoint["kind"] == "room"
+        }
+        for building in buildings:
+            if not room_ids.intersection(building["rooms"]):
+                continue
+            legacy_entries: list[tuple[str | None, str | None]] = []
+            legacy_entrance = building.get("entrance")
+            if isinstance(legacy_entrance, dict):
+                legacy_entries.append((legacy_entrance.get("connection"), legacy_entrance.get("facing")))
+            for entry in building.get("entrances", []) or []:
+                if isinstance(entry, dict):
+                    legacy_entries.append((entry.get("connection"), entry.get("facing")))
+            legacy_access = building.get("exterior_access_context")
+            if isinstance(legacy_access, dict):
+                legacy_entries.append((legacy_access.get("connection"), None))
+            legacy_context = building.get("exterior_context")
+            exterior_at = legacy_context.get("at") if isinstance(legacy_context, dict) else None
+            for connection_id, facing in legacy_entries:
+                if connection_id is None:
+                    continue
+                if (
+                    connection_id != connection["id"]
+                    or exterior_at is not None and exterior_at != entrance["exterior_at"]
+                    or facing is not None and facing != entrance["facing"]
+                ):
+                    raise RecipeError(
+                        f"room_connections connection '{connection['id']}' conflicts with legacy building entrance metadata"
+                    )
 
 
 def _validate_room_connection_targets(
@@ -4123,6 +4192,7 @@ def generate_map(
     room_connections = _validate_recipe_room_connections(
         recipe.get("room_connections", []), known_room_ids
     )
+    _validate_connection_entrance_compatibility(buildings, room_connections)
     room_boundaries = _validate_recipe_room_boundaries(
         recipe.get("room_boundaries", []), known_room_ids
     )
