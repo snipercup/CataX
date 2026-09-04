@@ -139,13 +139,15 @@ func test_dmap_room_connections_roundtrip_and_sanitization():
 				"z": 0,
 				"from": {"kind": "room", "id": "office"},
 				"to": {"kind": "exterior"},
+				"entrance": {"exterior_at": [10, 10], "facing": "east"},
 			},
 			{
-				"id": "stale_link",
+				"id": "internal_link",
 				"at": [12, 10],
 				"z": 0,
-				"from": {"kind": "room", "id": "missing_room"},
-				"to": {"kind": "exterior"},
+				"from": {"kind": "room", "id": "office"},
+				"to": {"kind": "room", "id": "garage_bay"},
+				"entrance": {"exterior_at": [12, 10], "facing": "up"},
 			},
 		],
 		"levels": [[
@@ -161,6 +163,13 @@ func test_dmap_room_connections_roundtrip_and_sanitization():
 		"z": 0,
 		"from": {"kind": "room", "id": "office"},
 		"to": {"kind": "exterior"},
+		"entrance": {"exterior_at": [10, 10], "facing": "east"},
+	}, {
+		"id": "internal_link",
+		"at": [12, 10],
+		"z": 0,
+		"from": {"kind": "room", "id": "office"},
+		"to": {"kind": "room", "id": "garage_bay"},
 	}])
 
 
