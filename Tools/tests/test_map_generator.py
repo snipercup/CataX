@@ -3053,7 +3053,7 @@ class MapGeneratorTests(unittest.TestCase):
         building = generated["buildings"][0]
         self.assertEqual(building["id"], "pine_hollow_caretaker_cabin")
         self.assertEqual(building["building_levels"], [
-            {"z": 0, "rooms": ["outpost_cabin", "outpost_lean_to"], "furniture_anchors": ["outpost_front_door", "outpost_work_crate"]},
+            {"z": 0, "rooms": ["outpost_cabin", "outpost_lean_to"], "furniture_anchors": ["outpost_work_crate"]},
             {"z": 2, "rooms": ["outpost_loft"], "furniture_anchors": ["outpost_loft_crate"]},
         ])
         self.assertEqual(building["open_space_rooms"], ["outpost_lean_to"])
@@ -3097,6 +3097,39 @@ class MapGeneratorTests(unittest.TestCase):
         validator = MapValidator()
         validator.validate_map(str(PRODUCTION_MAP_PATH))
         self.assertEqual(validator.errors, [])
+
+    def test_pine_hollow_canonical_doorway_removes_redundant_declarations_without_changing_output(self):
+        canonical_recipe = json.loads(PRODUCTION_RECIPE_PATH.read_text(encoding="utf-8"))
+        legacy_recipe = copy.deepcopy(canonical_recipe)
+        building = legacy_recipe["buildings"][0]
+        building["building_levels"][0]["furniture_anchors"].insert(0, "outpost_front_door")
+        building["exterior_context"] = {"at": [10, 14], "z": 0}
+        building["exterior_access_context"] = {"connection": "outpost_front_door"}
+        building["entrances"] = [{
+            "id": "outpost_front_entrance",
+            "connection": "outpost_front_door",
+            "facing": "east",
+        }]
+        building["reachability_validation"]["required_entrances"] = ["outpost_front_entrance"]
+        building["furniture_anchors"].insert(0, {
+            "id": "outpost_front_door",
+            "at": [11, 14],
+            "z": 0,
+            "kind": "door",
+        })
+
+        canonical = generate_map(canonical_recipe, TILES_PATH)
+        legacy = generate_map(legacy_recipe, TILES_PATH)
+        legacy_building = legacy["buildings"][0]
+        legacy_building["building_levels"][0]["furniture_anchors"].remove("outpost_front_door")
+        legacy_building["furniture_anchors"] = [
+            anchor for anchor in legacy_building["furniture_anchors"]
+            if anchor["id"] != "outpost_front_door"
+        ]
+        for field in ("exterior_context", "exterior_access_context", "entrances"):
+            legacy_building.pop(field, None)
+        legacy_building["reachability_validation"].pop("required_entrances")
+        self.assertEqual(canonical, legacy)
 
     def test_pine_hollow_migration_preserves_legacy_physical_output(self):
         recipe = json.loads(PRODUCTION_RECIPE_PATH.read_text(encoding="utf-8"))
