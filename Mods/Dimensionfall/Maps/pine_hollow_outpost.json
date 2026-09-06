@@ -8617,7 +8617,6 @@
 						"outpost_lean_to"
 					],
 					"furniture_anchors": [
-						"outpost_front_door",
 						"outpost_work_crate"
 					]
 				},
@@ -8655,33 +8654,7 @@
 			"open_space_rooms": [
 				"outpost_lean_to"
 			],
-			"exterior_context": {
-				"at": [
-					10,
-					14
-				],
-				"z": 0
-			},
-			"exterior_access_context": {
-				"connection": "outpost_front_door"
-			},
-			"entrances": [
-				{
-					"id": "outpost_front_entrance",
-					"connection": "outpost_front_door",
-					"facing": "east"
-				}
-			],
 			"furniture_anchors": [
-				{
-					"id": "outpost_front_door",
-					"at": [
-						11,
-						14
-					],
-					"z": 0,
-					"kind": "door"
-				},
 				{
 					"id": "outpost_work_crate",
 					"at": [
@@ -8702,9 +8675,6 @@
 				}
 			],
 			"reachability_validation": {
-				"required_entrances": [
-					"outpost_front_entrance"
-				],
 				"required_furniture_anchors": [
 					"outpost_work_crate",
 					"outpost_loft_crate"

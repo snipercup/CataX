@@ -51,24 +51,19 @@
 				"roof_tile": {"id": "concrete_00"}
 			},
 			"building_levels": [
-				{"z": 0, "rooms": ["outpost_cabin", "outpost_lean_to"], "furniture_anchors": ["outpost_front_door", "outpost_work_crate"]},
+				{"z": 0, "rooms": ["outpost_cabin", "outpost_lean_to"], "furniture_anchors": ["outpost_work_crate"]},
 				{"z": 2, "rooms": ["outpost_loft"], "furniture_anchors": ["outpost_loft_crate"]}
 			],
 			"interior_rooms": ["outpost_cabin"],
 			"open_space_rooms": ["outpost_lean_to"],
-			"exterior_context": {"at": [10, 14], "z": 0},
-			"exterior_access_context": {"connection": "outpost_front_door"},
-			"entrances": [{"id": "outpost_front_entrance", "connection": "outpost_front_door", "facing": "east"}],
 			"staircases": [
 				{"id": "outpost_loft_staircase", "lower_at": [15, 15], "upper_at": [15, 14], "upper_clearance_at": [15, 16], "rotation": 0}
 			],
 			"reachability_validation": {
-				"required_entrances": ["outpost_front_entrance"],
 				"required_furniture_anchors": ["outpost_work_crate", "outpost_loft_crate"],
 				"required_building_levels": [0, 2]
 			},
 			"furniture_anchors": [
-				{"id": "outpost_front_door", "at": [11, 14], "z": 0, "kind": "door"},
 				{"id": "outpost_work_crate", "at": [20, 13], "z": 0, "kind": "storage"},
 				{"id": "outpost_loft_crate", "at": [13, 12], "z": 2, "kind": "storage"}
 			]
