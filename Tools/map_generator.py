@@ -3817,7 +3817,7 @@ def _generate_levels(
     known_room_ids: set[str],
     wall_tile_ids: set[str],
     slope_tile_ids: set[str],
-) -> list[list[dict[str, Any]]]:
+) -> tuple[list[list[dict[str, Any]]], list[tuple[dict[str, Any], str, int]]]:
     levels: list[list[dict[str, Any]]] = [[] for _ in range(LEVEL_COUNT)]
     room_surfaces: list[tuple[dict[str, Any], str, int]] = []
     if "levels" not in recipe:
@@ -3848,7 +3848,7 @@ def _generate_levels(
         _apply_room_surfaces(
             levels, room_surfaces, rng, known_tiles, palette, known_room_ids, slope_tile_ids
         )
-        return levels
+        return levels, room_surfaces
 
     conflicting_fields = [
         field for field in ("base_tile", "regions", "operations") if field in recipe
@@ -3914,7 +3914,7 @@ def _generate_levels(
     for index, level in enumerate(levels):
         if level and not any(level):
             levels[index] = []
-    return levels
+    return levels, room_surfaces
 
 
 def _validate_connections(connections: Any) -> dict[str, str]:
@@ -4202,7 +4202,7 @@ def generate_map(
     )
     _validate_generated_room_perimeter_declarations(rooms, room_boundaries)
     rng = random.Random(seed)
-    levels = _generate_levels(
+    levels, room_surfaces = _generate_levels(
         recipe,
         rng,
         known_tiles,
@@ -4227,6 +4227,9 @@ def generate_map(
         known_tiles,
         palette,
         tile_catalog,
+    )
+    _apply_room_surfaces(
+        levels, room_surfaces, rng, known_tiles, palette, known_room_ids, slope_tile_ids
     )
     _validate_room_connection_targets(room_connections, levels, door_furniture_ids)
     _validate_room_boundary_targets(
