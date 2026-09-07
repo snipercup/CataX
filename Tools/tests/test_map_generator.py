@@ -3046,10 +3046,16 @@ class MapGeneratorTests(unittest.TestCase):
         generated = generate_map(json.loads(recipe_path.read_text(encoding="utf-8")), TILES_PATH)
 
         self.assertEqual(generated["id"], "generated_pine_hollow_outpost")
-        self.assertEqual(generated["connections"]["west"], "road")
-        self.assertEqual(generated["road_endpoints"][0], {
-            "id": "outpost_west_road", "direction": "west", "at": [0, 14], "z": 0,
+        self.assertEqual(generated["categories"], ["Field"])
+        self.assertEqual(generated["connections"], {
+            "north": "ground", "east": "ground", "south": "ground", "west": "ground",
         })
+        self.assertNotIn("road_endpoints", generated)
+        self.assertNotIn("road_paths", generated)
+        self.assertEqual(
+            [generated["levels"][10][14 * 32 + x]["id"] for x in range(8, 11)],
+            ["dirt_light_00", "dirt_light_00", "dirt_light_00"],
+        )
         building = generated["buildings"][0]
         self.assertEqual(building["id"], "pine_hollow_caretaker_cabin")
         self.assertEqual(building["building_levels"], [
