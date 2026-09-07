@@ -3079,13 +3079,74 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertEqual(generated["levels"][11][15 * 32 + 15]["id"], "wood_stairs")
         self.assertEqual(generated["levels"][12][14 * 32 + 15]["id"], "wood_stairs")
         self.assertEqual(generated["levels"][12][16 * 32 + 15], {})
-        self.assertEqual(generated["levels"][12][12 * 32 + 13]["id"], "concrete_00")
+        self.assertEqual(generated["levels"][12][12 * 32 + 13]["id"], "floor_wood_shabby_00")
         self.assertEqual(generated["levels"][12][12 * 32 + 13]["feature"]["id"], "crate_wood_long")
         self.assertEqual(generated["levels"][12][13 * 32 + 20], {})
         self.assertEqual(generated["levels"][14][13 * 32 + 20], {})
         self.assertEqual(generated["levels"][14][10 * 32 + 11]["id"], "concrete_00")
         self.assertEqual(generated["levels"][14][10 * 32 + 19], {})
         self.assertEqual(generated["levels"][10][13 * 32 + 20]["feature"]["id"], "crate_wood")
+
+    def test_pine_hollow_detail_pass_adds_field_dressing_wood_floors_and_cabin_furniture(self):
+        recipe_path = ROOT / "Tools" / "examples" / "map_recipe_pine_hollow_outpost.json"
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        generated = generate_map(recipe, TILES_PATH)
+        ground_level = generated["levels"][10]
+        loft_level = generated["levels"][12]
+
+        self.assertEqual(recipe["base_tile"], {"palette": "outpost_field"})
+        self.assertNotIn("forest_underbrush_00", {
+            entry["id"] for entry in recipe["palette"]["outpost_field"]
+        })
+        self.assertNotIn("grass_dead_00", {
+            entry["id"] for entry in recipe["palette"]["outpost_field"]
+        })
+        yard_area = next(area for area in generated["areas"] if area["id"] == "outpost_yard")
+        self.assertGreaterEqual(len(yard_area["tiles"]), 2)
+        self.assertEqual(
+            {tile["id"] for tile in yard_area["tiles"]},
+            {"grass_dirt_00", "grass_dirt_01", "grass_dirt_02"},
+        )
+        nature_area = next(area for area in generated["areas"] if area["id"] == "outpost_field_nature")
+        self.assertEqual(nature_area["tiles"], [{"id": "null", "count": 100}])
+        self.assertEqual(
+            {entity["id"] for entity in nature_area["entities"]},
+            {"wild_vegetation_00", "rock_field_00", "PineTree_00", "burned_tree_stump"},
+        )
+        self.assertFalse(any(
+            operation["type"] == "furniture_scatter"
+            for operation in recipe["operations"]
+        ))
+        self.assertEqual(
+            recipe["buildings"][0]["building_geometry"]["floor_tile"],
+            {"id": "floor_wood_shabby_00"},
+        )
+        self.assertEqual(ground_level[13 * 32 + 14]["id"], "floor_wood_shabby_00")
+        self.assertEqual(ground_level[13 * 32 + 20]["id"], "concrete_00")
+        self.assertEqual(loft_level[12 * 32 + 13]["id"], "floor_wood_shabby_00")
+        self.assertEqual(ground_level[14 * 32 + 11]["id"], "concrete_00")
+        self.assertEqual(
+            [ground_level[14 * 32 + x]["id"] for x in range(8, 11)],
+            ["dirt_light_00", "dirt_light_00", "dirt_light_00"],
+        )
+
+        features = {
+            cell["feature"]["id"]
+            for cell in ground_level + loft_level
+            if cell.get("feature")
+        }
+        self.assertTrue({
+            "bed_wood_single_00", "table_round_wood", "chair_wood", "stove",
+            "cabinet_wood_00", "tool_bench",
+        }.issubset(features))
+        self.assertFalse(features & {"wild_vegetation_00", "rock_field_00", "PineTree_00", "burned_tree_stump"})
+        self.assertEqual(ground_level[12 * 32 + 12]["feature"]["rotation"], 270)
+        self.assertEqual(ground_level[15 * 32 + 12]["feature"]["rotation"], 270)
+        self.assertEqual(ground_level[13 * 32 + 16]["feature"]["rotation"], 180)
+        self.assertFalse(any(
+            cell.get("feature")
+            for cell in (ground_level[14 * 32 + x] for x in range(8, 11))
+        ))
 
     def test_pine_hollow_production_recipe_is_a_valid_published_map(self):
         recipe = json.loads(PRODUCTION_RECIPE_PATH.read_text(encoding="utf-8"))
