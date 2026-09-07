@@ -28,6 +28,7 @@ The root must be a JSON object with these fields:
 | `id` | string | Map ID using only letters, numbers, `_`, and `-`. |
 | `name` | non-empty string | Display name. |
 | `description` | non-empty string | Map description. |
+| `categories` | array of strings | Optional map-selection categories. Pine Hollow uses `["Field"]` so it participates as a generic field map rather than a road segment. |
 | `seed` | integer | Fixed seed used by tile and furniture palettes, random rotations, scatter, and pattern cells. Recipe input only; the map format does not store it. |
 | `base_tile` | tile object | Legacy-mode tile initially placed in every cell at `z: 0`. Required unless `levels` is used. |
 | `palette` | object | Named weighted tile sets that tile objects can reference. Optional; defaults to `{}`. |
@@ -93,7 +94,7 @@ Each key is one of `north`, `east`, `south`, or `west`; each value is one of `gr
 
 This field authors metadata only: it does not generate road tiles, path routing, or edge tile placement. It declares what the runtime should expect at each edge so the overworld generator can connect adjacent maps correctly.
 
-`Tools/examples/map_recipe_road_connections.json` demonstrates a simple outdoor map with roads entering from east and west.
+For a field location such as Pine Hollow, leave all four edge connections as `"ground"` and use an ordinary `line` operation for a local pedestrian/service path. That path is map-local geometry and does not imply that vehicles can enter the map from an edge. Pine Hollow's maintained recipe uses a short `dirt_light_00` line from `[8, 14]` to `[10, 14]`, ending at the connection-level exterior approach.
 
 ## Road endpoints
 

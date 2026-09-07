@@ -16,16 +16,16 @@ func after_each() -> void:
 	await fixture.teardown()
 
 
-func test_pine_hollow_outpost_connects_road_cabin_lean_to_and_loft() -> void:
+func test_pine_hollow_outpost_connects_service_path_cabin_lean_to_and_loft() -> void:
 	await fixture.begin_geometry()
 	_populate_outpost_geometry()
 	assert_true(await fixture.bake(), "The Pine Hollow Outpost navigation should finish baking.")
 
-	var road: Vector3 = fixture.grid_to_world(4, 14, 1.5)
+	var service_path: Vector3 = fixture.grid_to_world(9, 14, 1.5)
 	var cabin: Vector3 = fixture.grid_to_world(14, 13, 1.5)
 	var lean_to: Vector3 = fixture.grid_to_world(20, 14, 1.5)
 	var loft: Vector3 = fixture.grid_to_world(15, 14, 3.5)
-	fixture.assert_path_connects(road, cabin, "Outpost road to cabin")
+	fixture.assert_path_connects(service_path, cabin, "Outpost service path to cabin")
 	fixture.assert_path_connects(cabin, lean_to, "Outpost cabin to lean-to")
 	fixture.assert_path_crosses_levels(cabin, loft, "Outpost cabin to loft", 1.5, 3.0)
 	fixture.assert_path_crosses_levels(loft, cabin, "Outpost loft to cabin", 1.5, 3.0)

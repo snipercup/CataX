@@ -41,7 +41,7 @@ The maintained recipe examples are:
 | `Tools/examples/map_recipe_two_level_depression.json` | `Mods/Dimensionfall/Maps/generated_two_level_depression.json` | Ground level `z: 0`, lowered terrain at `z: -1`, and all four slope rotations. |
 | `Tools/examples/map_recipe_small_cabin_template.json` | `Mods/Dimensionfall/Maps/generated_small_cabin_template.json` | A reusable nested cabin template with relative levels, rotations, anchors, and composed placement. |
 | `Tools/examples/map_recipe_village_square_composition.json` | `Mods/Dimensionfall/Maps/generated_village_square_composition.json` | A maintained village square composed from reusable plaza and cabin templates. |
-| `Tools/examples/map_recipe_pine_hollow_outpost.json` | `Mods/Dimensionfall/Maps/generated_pine_hollow_outpost.json` | A new rural survival outpost acceptance fixture; its loft floor and padded roof use room-derived `room_surface` operations. |
+| `Tools/examples/map_recipe_pine_hollow_outpost.json` | `Mods/Dimensionfall/Maps/generated_pine_hollow_outpost.json` | A new rural field survival outpost acceptance fixture with a short pedestrian/service path; its loft floor and padded roof use room-derived `room_surface` operations. |
 | `Tools/recipes/pine_hollow_outpost.json` | `Mods/Dimensionfall/Maps/pine_hollow_outpost.json` | The published playable Pine Hollow Outpost map generated from the production recipe. |
 
 ## Publish the production Pine Hollow Outpost
@@ -138,7 +138,7 @@ python3 Tools/map_generator.py \
   Tools/examples/map_recipe_field_farmland.json \
   Mods/Dimensionfall/Maps/generated_field_farmland.json
 
-# New authored Pine Hollow Outpost with road approach, cabin, lean-to, and loft
+# New authored Pine Hollow Outpost with a short pedestrian/service path, cabin, lean-to, and loft
 python3 Tools/map_generator.py \
   Tools/examples/map_recipe_pine_hollow_outpost.json \
   Mods/Dimensionfall/Maps/generated_pine_hollow_outpost.json
@@ -419,7 +419,7 @@ Run the focused Pine Hollow Outpost runtime navigation acceptance from the repos
 godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://Tests/Unit -gprefix=test_pine_hollow_outpost_navigation -gexit
 ```
 
-This bakes the new outpost geometry through real `Chunk` and `NavigationServer3D` code. It verifies road-to-cabin, cabin-to-open-lean-to, and bidirectional cabin-to-loft traversal, and rejects an isolated north-wall crossing. Generate `generated_pine_hollow_outpost.json` with the command above and review it in the content editor for the remaining visual-composition acceptance.
+This bakes the new outpost geometry through real `Chunk` and `NavigationServer3D` code. It verifies the service-path-to-cabin, cabin-to-open-lean-to, and bidirectional cabin-to-loft traversal, and rejects an isolated north-wall crossing. Generate `generated_pine_hollow_outpost.json` with the command above and review it in the content editor for the remaining visual-composition acceptance.
 
 Run the focused Godot slope geometry and baked-navigation regression suites:
 

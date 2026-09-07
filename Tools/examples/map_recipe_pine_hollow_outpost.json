@@ -1,28 +1,16 @@
 {
 	"id": "generated_pine_hollow_outpost",
 	"name": "Generated Pine Hollow Outpost",
-	"description": "A new rural survival location: an abandoned roadside caretaker cabin, loft, covered wood-storage lean-to, work yard, and road approach.",
+	"description": "A rural survival location: an abandoned caretaker cabin, loft, covered wood-storage lean-to, work yard, and short pedestrian service path.",
 	"seed": 20260901,
+	"categories": ["Field"],
 	"base_tile": {"id": "grass_plain_01"},
 	"connections": {
 		"north": "ground",
-		"east": "road",
+		"east": "ground",
 		"south": "ground",
-		"west": "road"
+		"west": "ground"
 	},
-	"road_endpoints": [
-		{"id": "outpost_west_road", "direction": "west", "at": [0, 14], "z": 0},
-		{"id": "outpost_east_road", "direction": "east", "at": [31, 14], "z": 0}
-	],
-	"road_paths": [
-		{
-			"id": "outpost_through_road",
-			"from": "outpost_west_road",
-			"to": "outpost_east_road",
-			"waypoints": [[10, 14], [10, 18], [31, 18]],
-			"tile": {"id": "dirt_light_00"}
-		}
-	],
 	"areas": [
 		{
 			"id": "outpost_yard",
@@ -83,6 +71,7 @@
 	"operations": [
 		{"type": "rectangle", "x": 8, "y": 10, "width": 15, "height": 8, "tile": {"id": "grass_dirt_00"}},
 		{"type": "area_rectangle", "area": "outpost_yard", "x": 8, "y": 10, "width": 15, "height": 8, "z": 0, "rotation": 0},
+		{"type": "line", "from": [8, 14], "to": [10, 14], "tile": {"id": "dirt_light_00"}},
 		{"type": "room_rectangle", "room": "outpost_cabin", "x": 12, "y": 11, "width": 6, "height": 6},
 		{"type": "room_rectangle", "room": "outpost_lean_to", "x": 19, "y": 12, "width": 3, "height": 5},
 		{"type": "set", "x": 11, "y": 14, "z": 0, "tile": {"id": "concrete_00"}},
