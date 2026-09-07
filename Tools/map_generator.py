@@ -121,6 +121,7 @@ RECIPE_FIELDS = {
     "id",
     "name",
     "description",
+    "categories",
     "seed",
     "base_tile",
     "palette",
@@ -4125,6 +4126,9 @@ def generate_map(
         raise RecipeError(
             "id may contain only letters, numbers, underscores, and hyphens"
         )
+    categories = recipe.get("categories", [])
+    if not isinstance(categories, list) or any(not isinstance(category, str) or not category.strip() for category in categories):
+        raise RecipeError("categories must be an array of non-empty strings")
 
     seed = recipe.get("seed")
     if type(seed) is not int:
@@ -4258,7 +4262,7 @@ def generate_map(
         "id": recipe["id"],
         "name": recipe["name"],
         "description": recipe["description"],
-        "categories": [],
+        "categories": categories,
         "weight": 1000,
         "mapwidth": MAP_WIDTH,
         "mapheight": MAP_HEIGHT,

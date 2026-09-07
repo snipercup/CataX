@@ -1,8 +1,10 @@
 {
 	"id": "pine_hollow_outpost",
 	"name": "Pine Hollow Outpost",
-	"description": "A rural survival location: an abandoned roadside caretaker cabin, loft, covered wood-storage lean-to, work yard, and road approach.",
-	"categories": [],
+	"description": "A rural survival location: an abandoned caretaker cabin, loft, covered wood-storage lean-to, work yard, and short pedestrian service path.",
+	"categories": [
+		"Field"
+	],
 	"weight": 1000,
 	"mapwidth": 32,
 	"mapheight": 32,
@@ -1807,28 +1809,28 @@
 				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
 				"id": "dirt_light_00"
@@ -1999,7 +2001,7 @@
 				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
 				"id": "grass_plain_01"
@@ -2044,7 +2046,13 @@
 				]
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_dirt_00",
+				"areas": [
+					{
+						"id": "outpost_yard",
+						"rotation": 0
+					}
+				]
 			},
 			{
 				"id": "dirt_light_00",
@@ -2206,7 +2214,7 @@
 				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
 				"id": "grass_plain_01"
@@ -2251,7 +2259,13 @@
 				]
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_dirt_00",
+				"areas": [
+					{
+						"id": "outpost_yard",
+						"rotation": 0
+					}
+				]
 			},
 			{
 				"id": "dirt_light_00",
@@ -2413,7 +2427,7 @@
 				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
 				"id": "grass_plain_01"
@@ -2464,7 +2478,13 @@
 				}
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_dirt_00",
+				"areas": [
+					{
+						"id": "outpost_yard",
+						"rotation": 0
+					}
+				]
 			},
 			{
 				"id": "dirt_light_00",
@@ -2599,7 +2619,34 @@
 				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
+			},
+			{
+				"id": "grass_plain_01"
 			},
 			{
 				"id": "grass_plain_01"
@@ -2632,70 +2679,43 @@
 				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
-			},
-			{
-				"id": "dirt_light_00"
+				"id": "grass_plain_01"
 			},
 			{
 				"id": "grass_plain_01"
@@ -8531,9 +8551,9 @@
 	],
 	"connections": {
 		"north": "ground",
-		"east": "road",
+		"east": "ground",
 		"south": "ground",
-		"west": "road"
+		"west": "ground"
 	},
 	"areas": [
 		{
@@ -8697,50 +8717,6 @@
 				"roof_tile": {
 					"id": "concrete_00"
 				}
-			}
-		}
-	],
-	"road_endpoints": [
-		{
-			"id": "outpost_west_road",
-			"direction": "west",
-			"at": [
-				0,
-				14
-			],
-			"z": 0
-		},
-		{
-			"id": "outpost_east_road",
-			"direction": "east",
-			"at": [
-				31,
-				14
-			],
-			"z": 0
-		}
-	],
-	"road_paths": [
-		{
-			"id": "outpost_through_road",
-			"from": "outpost_west_road",
-			"to": "outpost_east_road",
-			"waypoints": [
-				[
-					10,
-					14
-				],
-				[
-					10,
-					18
-				],
-				[
-					31,
-					18
-				]
-			],
-			"tile": {
-				"id": "dirt_light_00"
 			}
 		}
 	]
