@@ -14,14 +14,6 @@
 			{"id": "grass_flowers_00", "weight": 2}
 		]
 	},
-	"furniture_palette": {
-		"outpost_nature": [
-			{"id": "wild_vegetation_00", "weight": 8},
-			{"id": "rock_field_00", "weight": 3},
-			{"id": "PineTree_00", "weight": 2},
-			{"id": "burned_tree_stump", "weight": 1}
-		]
-	},
 	"base_tile": {"palette": "outpost_field"},
 	"connections": {
 		"north": "ground",
@@ -43,15 +35,35 @@
 			"entities": []
 		},
 		{
+			"id": "outpost_ground",
+			"spawn_chance": 100,
+			"rotate_random": false,
+			"pick_one": false,
+			"tiles": [
+				{"id": "grass_plain_01", "count": 100},
+				{"id": "grass_dirt_00", "count": 15},
+				{"id": "grass_dirt_01", "count": 15},
+				{"id": "grass_dirt_02", "count": 15},
+				{"id": "grass_medium_dirt_00", "count": 1},
+				{"id": "grass_medium_dirt_01", "count": 1},
+				{"id": "grass_medium_dirt_02", "count": 1},
+				{"id": "grass_flowers_00", "count": 1},
+				{"id": "grass_flowers_01", "count": 1},
+				{"id": "grass_flowers_02", "count": 1},
+				{"id": "grass_flowers_03", "count": 1}
+			],
+			"entities": []
+		},
+		{
 			"id": "outpost_field_nature",
 			"spawn_chance": 100,
 			"rotate_random": true,
 			"pick_one": false,
-			"tiles": [{"id": "null", "count": 100}],
+			"tiles": [{"id": "null", "count": 1000}],
 			"entities": [
-				{"id": "wild_vegetation_00", "type": "furniture", "count": 2},
-				{"id": "rock_field_00", "type": "furniture", "count": 1},
-				{"id": "PineTree_00", "type": "furniture", "count": 1},
+				{"id": "wild_vegetation_00", "type": "furniture", "count": 20},
+				{"id": "rock_field_00", "type": "furniture", "count": 10},
+				{"id": "PineTree_00", "type": "furniture", "count": 10},
 				{"id": "burned_tree_stump", "type": "furniture", "count": 1}
 			]
 		}
@@ -105,13 +117,17 @@
 	],
 	"operations": [
 		{"type": "rectangle", "x": 8, "y": 10, "width": 15, "height": 8, "tile": {"id": "grass_dirt_00"}},
+		{"type": "line", "from": [8, 14], "to": [10, 14], "tile": {"id": "dirt_light_00"}},
+		{"type": "area_rectangle", "area": "outpost_ground", "x": 0, "y": 0, "width": 32, "height": 10, "z": 0, "rotation": 0},
+		{"type": "area_rectangle", "area": "outpost_ground", "x": 0, "y": 10, "width": 11, "height": 8, "z": 0, "rotation": 0},
+		{"type": "area_rectangle", "area": "outpost_ground", "x": 23, "y": 10, "width": 9, "height": 8, "z": 0, "rotation": 0},
+		{"type": "area_rectangle", "area": "outpost_ground", "x": 0, "y": 18, "width": 32, "height": 14, "z": 0, "rotation": 0},
 		{"type": "area_rectangle", "area": "outpost_yard", "x": 8, "y": 10, "width": 3, "height": 4, "z": 0, "rotation": 0},
 		{"type": "area_rectangle", "area": "outpost_yard", "x": 8, "y": 15, "width": 3, "height": 3, "z": 0, "rotation": 0},
 		{"type": "area_rectangle", "area": "outpost_field_nature", "x": 0, "y": 0, "width": 32, "height": 9, "z": 0, "rotation": 0},
 		{"type": "area_rectangle", "area": "outpost_field_nature", "x": 0, "y": 19, "width": 32, "height": 13, "z": 0, "rotation": 0},
 		{"type": "area_rectangle", "area": "outpost_field_nature", "x": 0, "y": 9, "width": 8, "height": 10, "z": 0, "rotation": 0},
 		{"type": "area_rectangle", "area": "outpost_field_nature", "x": 23, "y": 9, "width": 9, "height": 10, "z": 0, "rotation": 0},
-		{"type": "line", "from": [8, 14], "to": [10, 14], "tile": {"id": "dirt_light_00"}},
 		{"type": "room_rectangle", "room": "outpost_cabin", "x": 12, "y": 11, "width": 6, "height": 6},
 		{"type": "room_rectangle", "room": "outpost_lean_to", "x": 19, "y": 12, "width": 3, "height": 5},
 		{"type": "set", "x": 11, "y": 14, "z": 0, "tile": {"id": "concrete_00"}},
@@ -130,7 +146,7 @@
 		{"type": "furniture", "id": "stove", "x": 12, "y": 12, "rotation": 270},
 		{"type": "furniture", "id": "cabinet_wood_00", "x": 12, "y": 15, "rotation": 270},
 		{"type": "furniture", "id": "table_round_wood", "x": 16, "y": 12, "rotation": 0},
-		{"type": "furniture", "id": "chair_wood", "x": 16, "y": 13, "rotation": 180},
+		{"type": "furniture", "id": "chair_wood", "x": 16, "y": 13, "rotation": 0},
 		{"type": "furniture", "id": "tool_bench", "x": 20, "y": 15, "rotation": 90},
 		{"type": "room_surface", "room": "outpost_loft", "z": 4, "tile": {"id": "concrete_00"}, "outline_padding": 1}
 	]
