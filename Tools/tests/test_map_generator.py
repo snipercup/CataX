@@ -3108,11 +3108,52 @@ class MapGeneratorTests(unittest.TestCase):
             {"grass_dirt_00", "grass_dirt_01", "grass_dirt_02"},
         )
         nature_area = next(area for area in generated["areas"] if area["id"] == "outpost_field_nature")
-        self.assertEqual(nature_area["tiles"], [{"id": "null", "count": 100}])
+        self.assertEqual(nature_area["tiles"], [{"id": "null", "count": 1000}])
         self.assertEqual(
             {entity["id"] for entity in nature_area["entities"]},
             {"wild_vegetation_00", "rock_field_00", "PineTree_00", "burned_tree_stump"},
         )
+        self.assertEqual(
+            {
+                entity["id"]: entity["count"]
+                for entity in nature_area["entities"]
+            },
+            {
+                "wild_vegetation_00": 20,
+                "rock_field_00": 10,
+                "PineTree_00": 10,
+                "burned_tree_stump": 1,
+            },
+        )
+        ground_area = next(area for area in generated["areas"] if area["id"] == "outpost_ground")
+        self.assertEqual(
+            ground_area["tiles"],
+            [
+                {"id": "grass_plain_01", "count": 100},
+                {"id": "grass_dirt_00", "count": 15},
+                {"id": "grass_dirt_01", "count": 15},
+                {"id": "grass_dirt_02", "count": 15},
+                {"id": "grass_medium_dirt_00", "count": 1},
+                {"id": "grass_medium_dirt_01", "count": 1},
+                {"id": "grass_medium_dirt_02", "count": 1},
+                {"id": "grass_flowers_00", "count": 1},
+                {"id": "grass_flowers_01", "count": 1},
+                {"id": "grass_flowers_02", "count": 1},
+                {"id": "grass_flowers_03", "count": 1},
+            ],
+        )
+        self.assertEqual(ground_area["entities"], [])
+        ground_membership = {
+            (index % 32, index // 32)
+            for index, cell in enumerate(generated["levels"][10])
+            if any(area["id"] == "outpost_ground" for area in cell.get("areas", []))
+        }
+        cabin_footprint = {
+            (x, y) for x in range(11, 23) for y in range(10, 18)
+        }
+        self.assertEqual(ground_membership, {
+            (x, y) for x in range(32) for y in range(32)
+        } - cabin_footprint)
         self.assertFalse(any(
             operation["type"] == "furniture_scatter"
             for operation in recipe["operations"]
@@ -3142,7 +3183,7 @@ class MapGeneratorTests(unittest.TestCase):
         self.assertFalse(features & {"wild_vegetation_00", "rock_field_00", "PineTree_00", "burned_tree_stump"})
         self.assertEqual(ground_level[12 * 32 + 12]["feature"]["rotation"], 270)
         self.assertEqual(ground_level[15 * 32 + 12]["feature"]["rotation"], 270)
-        self.assertEqual(ground_level[13 * 32 + 16]["feature"]["rotation"], 180)
+        self.assertEqual(ground_level[13 * 32 + 16]["feature"]["rotation"], 0)
         self.assertFalse(any(
             cell.get("feature")
             for cell in (ground_level[14 * 32 + x] for x in range(8, 11))
