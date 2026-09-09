@@ -5283,7 +5283,9 @@
 					"type": "furniture",
 					"id": "crate_wood",
 					"rotation": 90,
-					"itemgroups": []
+					"itemgroups": [
+						"cabinet_general"
+					]
 				}
 			},
 			{
@@ -5884,7 +5886,9 @@
 					"type": "furniture",
 					"id": "cabinet_wood_00",
 					"rotation": 270,
-					"itemgroups": []
+					"itemgroups": [
+						"kitchen_cupboard"
+					]
 				}
 			},
 			{
@@ -14000,7 +14004,9 @@
 					"type": "furniture",
 					"id": "crate_wood_long",
 					"rotation": 0,
-					"itemgroups": []
+					"itemgroups": [
+						"cabinet_general"
+					]
 				}
 			},
 			{

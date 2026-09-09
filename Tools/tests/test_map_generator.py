@@ -890,6 +890,53 @@ class MapGeneratorTests(unittest.TestCase):
             },
         )
 
+    def test_furniture_operation_serializes_valid_itemgroup_overrides(self):
+        recipe = valid_recipe()
+        recipe["operations"] = [
+            {
+                "type": "furniture",
+                "x": 4,
+                "y": 5,
+                "id": "cabinet_wood_00",
+                "rotation": 270,
+                "itemgroups": ["kitchen_cupboard", "cabinet_general"],
+            },
+        ]
+
+        generated = generate_map(recipe, TILES_PATH, furnitures_path=FURNITURES_PATH)
+
+        self.assertEqual(
+            generated["levels"][10][5 * 32 + 4]["feature"],
+            {
+                "type": "furniture",
+                "id": "cabinet_wood_00",
+                "rotation": 270,
+                "itemgroups": ["kitchen_cupboard", "cabinet_general"],
+            },
+        )
+
+    def test_furniture_operation_rejects_malformed_or_unknown_itemgroups(self):
+        cases = [
+            (["missing_itemgroup"], "references unknown itemgroup 'missing_itemgroup'"),
+            ([], "itemgroups must be a non-empty array of non-empty strings"),
+            (["cabinet_general", 1], "itemgroups must be a non-empty array of non-empty strings"),
+        ]
+        for itemgroups, expected_message in cases:
+            with self.subTest(itemgroups=itemgroups):
+                recipe = valid_recipe()
+                recipe["operations"] = [
+                    {
+                        "type": "furniture",
+                        "x": 4,
+                        "y": 5,
+                        "id": "cabinet_wood_00",
+                        "itemgroups": itemgroups,
+                    },
+                ]
+
+                with self.assertRaisesRegex(RecipeError, expected_message):
+                    generate_map(recipe, TILES_PATH, furnitures_path=FURNITURES_PATH)
+
     def test_grouped_furniture_inherits_level_and_defaults_rotation(self):
         recipe = valid_recipe()
         del recipe["base_tile"]
@@ -3182,6 +3229,9 @@ class MapGeneratorTests(unittest.TestCase):
         }.issubset(features))
         self.assertFalse(features & {"wild_vegetation_00", "rock_field_00", "PineTree_00", "burned_tree_stump"})
         self.assertEqual(ground_level[12 * 32 + 12]["feature"]["rotation"], 270)
+        self.assertEqual(ground_level[15 * 32 + 12]["feature"]["itemgroups"], ["kitchen_cupboard"])
+        self.assertEqual(ground_level[13 * 32 + 20]["feature"]["itemgroups"], ["cabinet_general"])
+        self.assertEqual(loft_level[12 * 32 + 13]["feature"]["itemgroups"], ["cabinet_general"])
         self.assertEqual(ground_level[15 * 32 + 12]["feature"]["rotation"], 270)
         self.assertEqual(ground_level[13 * 32 + 16]["feature"]["rotation"], 0)
         self.assertFalse(any(

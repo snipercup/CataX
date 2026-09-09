@@ -570,7 +570,8 @@ Delivered:
 * strict operation fields, horizontal and vertical bounds, known furniture-ID checks, and fixed quarter-turn rotation validation;
 * required supporting terrain on the target cell and rejection when that tile already has a feature;
 * explicit ordered behavior: a duplicate furniture placement conflicts, while a later terrain operation replaces the complete earlier tile and feature;
-* established map/editor serialization with `type`, `id`, `rotation`, and empty `itemgroups`;
+* established map/editor serialization with `type`, `id`, `rotation`, and empty `itemgroups` when the recipe omits an override;
+* optional non-empty furniture-operation `itemgroups`, validated against `Itemgroups.json` and serialized as an authored container-loot override;
 * lazy furniture-database loading so terrain-only recipes remain compatible and do not require furniture data;
 * independent structural validator checks for furniture feature fields, ID shape, rotation, and itemgroup arrays;
 * a maintained `generated_furnished_clearing` recipe at logical `z: 0` using a garden bench, tree, and pine tree;
