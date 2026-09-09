@@ -59,7 +59,7 @@ SCATTER_FIELDS = {"type", "region", "z", "tile", "count", "density"}
 SCATTER_REGION_FIELDS = {"x", "y", "width", "height"}
 PATTERN_CELL_FIELDS = {"at", "tile"}
 PATTERN_OPERATION_FIELDS = {"type", "pattern", "at", "z", "rotation"}
-FURNITURE_OPERATION_FIELDS = {"type", "x", "y", "z", "id", "rotation"}
+FURNITURE_OPERATION_FIELDS = {"type", "x", "y", "z", "id", "rotation", "itemgroups"}
 FURNITURE_SCATTER_FIELDS = {"type", "region", "z", "palette", "count", "density"}
 AREA_RECTANGLE_FIELDS = {"type", "area", "x", "y", "z", "width", "height", "rotation"}
 AREA_DEFINITION_FIELDS = {
@@ -881,6 +881,25 @@ def _contains_furniture_operations(recipe: dict[str, Any]) -> bool:
     )
 
 
+def _contains_furniture_itemgroups(recipe: dict[str, Any]) -> bool:
+    operation_groups = [recipe.get("operations")]
+    levels = recipe.get("levels")
+    if isinstance(levels, list):
+        operation_groups.extend(
+            level.get("operations")
+            for level in levels
+            if isinstance(level, dict)
+        )
+    return any(
+        isinstance(operation, dict)
+        and operation.get("type") == "furniture"
+        and "itemgroups" in operation
+        for operations in operation_groups
+        if isinstance(operations, list)
+        for operation in operations
+    )
+
+
 def _contains_area_entities(recipe: dict[str, Any]) -> bool:
     areas = recipe.get("areas")
     return isinstance(areas, list) and any(
@@ -1430,6 +1449,7 @@ def _apply_furniture(
     level: list[dict[str, Any]],
     operation: dict[str, Any],
     known_furnitures: set[str],
+    known_itemgroups: set[str],
     context: str,
     allow_pending_surface_support: bool = False,
 ) -> None:
@@ -1449,6 +1469,20 @@ def _apply_furniture(
     rotation = operation.get("rotation", 0)
     if type(rotation) is not int or rotation not in VALID_ROTATIONS:
         raise RecipeError(f"{context}.rotation must be 0, 90, 180, or 270")
+    itemgroups = operation.get("itemgroups", [])
+    if "itemgroups" in operation:
+        if not isinstance(itemgroups, list) or not itemgroups or any(
+            not isinstance(itemgroup, str) or not itemgroup.strip()
+            for itemgroup in itemgroups
+        ):
+            raise RecipeError(
+                f"{context}.itemgroups must be a non-empty array of non-empty strings"
+            )
+        for itemgroup in itemgroups:
+            if itemgroup not in known_itemgroups:
+                raise RecipeError(
+                    f"{context}.itemgroups references unknown itemgroup '{itemgroup}'"
+                )
     tile = level[y * MAP_WIDTH + x]
     if (not allow_pending_surface_support
             and (not isinstance(tile.get("id"), str) or not tile["id"])):
@@ -1463,7 +1497,7 @@ def _apply_furniture(
         "type": "furniture",
         "id": furniture_id,
         "rotation": rotation,
-        "itemgroups": [],
+        "itemgroups": itemgroups,
     }
 
 
@@ -3709,6 +3743,7 @@ def _apply_layout(
     palette: dict[str, list[dict[str, Any]]],
     patterns: dict[str, list[dict[str, Any]]],
     known_furnitures: set[str],
+    known_itemgroups: set[str],
     furniture_palette: dict[str, list[dict[str, Any]]],
     known_area_ids: set[str],
     known_room_ids: set[str],
@@ -3780,6 +3815,7 @@ def _apply_layout(
                 level,
                 operation,
                 known_furnitures,
+                known_itemgroups,
                 context,
                 any((room_id, logical_z) in direct_room_surfaces for room_id in existing.get("rooms", [])),
             )
@@ -3812,6 +3848,7 @@ def _generate_levels(
     palette: dict[str, list[dict[str, Any]]],
     patterns: dict[str, list[dict[str, Any]]],
     known_furnitures: set[str],
+    known_itemgroups: set[str],
     furniture_palette: dict[str, list[dict[str, Any]]],
     known_area_ids: set[str],
     known_room_ids: set[str],
@@ -3839,6 +3876,7 @@ def _generate_levels(
             palette,
             patterns,
             known_furnitures,
+            known_itemgroups,
             furniture_palette,
             known_area_ids,
             known_room_ids,
@@ -3899,6 +3937,7 @@ def _generate_levels(
             palette,
             patterns,
             known_furnitures,
+            known_itemgroups,
             furniture_palette,
             known_area_ids,
             known_room_ids,
@@ -4137,6 +4176,7 @@ def generate_map(
     tile_catalog = _tile_catalog(Path(tiles_path))
     content_root = Path(tiles_path).parent.parent
     known_furnitures: set[str] = set()
+    known_itemgroups: set[str] = set()
     requires_furniture_catalog = (
         _contains_furniture_operations(recipe)
         or _contains_area_entities(recipe)
@@ -4147,6 +4187,10 @@ def generate_map(
         if furnitures_path is None:
             furnitures_path = content_root / "Furniture" / "Furniture.json"
         known_furnitures = _furniture_ids(Path(furnitures_path))
+    if _contains_furniture_itemgroups(recipe):
+        known_itemgroups = _content_ids(
+            content_root / "Itemgroups" / "Itemgroups.json", "itemgroup"
+        )
     door_furniture_ids: set[str] = set()
     if "room_connections" in recipe or "room_boundaries" in recipe:
         if furnitures_path is None:
@@ -4209,6 +4253,7 @@ def generate_map(
         palette,
         patterns,
         known_furnitures,
+        known_itemgroups,
         furniture_palette,
         known_area_ids,
         known_room_ids,

@@ -914,7 +914,7 @@ Offsets rotate around the anchor: `90` maps `[x, y]` to `[-y, x]`. The generator
 
 ### `furniture`
 
-Embeds one known single-cell furniture feature in an existing terrain tile. Fields: `type`, `x`, `y`, `id`, optional root-level `z`, and optional `rotation`. Rotation defaults to `0` and accepts fixed editor-facing quarter turns: `0`, `90`, `180`, or `270`.
+Embeds one known single-cell furniture feature in an existing terrain tile. Fields: `type`, `x`, `y`, `id`, optional root-level `z`, optional `rotation`, and optional `itemgroups`. Rotation defaults to `0` and accepts fixed editor-facing quarter turns: `0`, `90`, `180`, or `270`. When present, `itemgroups` must be a non-empty array of known IDs from the selected `Itemgroups/Itemgroups.json` catalog.
 
 ```json
 {
@@ -922,8 +922,9 @@ Embeds one known single-cell furniture feature in an existing terrain tile. Fiel
   "x": 16,
   "y": 16,
   "z": 0,
-  "id": "bench_garden",
-  "rotation": 90
+  "id": "cabinet_wood_00",
+  "rotation": 270,
+  "itemgroups": ["cabinet_general"]
 }
 ```
 
@@ -941,7 +942,7 @@ The target cell must already contain a terrain tile on the selected logical leve
 }
 ```
 
-The operation consumes no randomness. Repeating a furniture operation on the same cell is a conflict error. A later tile operation deliberately replaces the complete tile dictionary and therefore removes an earlier feature, following the established ordered tile-overwrite behavior.
+The operation consumes no randomness. Repeating a furniture operation on the same cell is a conflict error. A later tile operation deliberately replaces the complete tile dictionary and therefore removes an earlier feature, following the established ordered tile-overwrite behavior. For container furniture, a non-empty recipe `itemgroups` list overrides the furniture definition's default container group; runtime chooses one listed group at random when the map instance first creates loot. Omit the field to retain the furniture definition's default group.
 
 The serialized feature has no logical-level, static/movable, state, or mode field. `Chunk.process_level_data()` derives world height from the containing level-array index, and runtime furniture data selects the static or physics spawner from the referenced furniture definition's `moveable` property. Blueprint `mode` belongs to saved runtime furniture state and is not part of a newly generated map feature.
 
